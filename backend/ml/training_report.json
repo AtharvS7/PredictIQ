@@ -1,0 +1,221 @@
+{
+  "generated_at": "2026-04-10T23:08:12.722285",
+  "best_model": "RandomForest",
+  "training_samples": 740,
+  "dataset_shape": [
+    740,
+    30
+  ],
+  "dataset_sources": [
+    "albrecht",
+    "china",
+    "existing_desharnais_maxwell",
+    "nasa93"
+  ],
+  "n_features": 27,
+  "r2_score": 0.8953,
+  "pred25": 57.4,
+  "mmre": 37.2,
+  "results": [
+    {
+      "Model": "LinearRegression",
+      "MAE": 5358.5,
+      "RMSE": 25778.4,
+      "R2": -44.4892,
+      "PRED25%": 27.7,
+      "PRED50%": 58.8,
+      "MMRE%": 115.7,
+      "TrainTime_s": 0.0
+    },
+    {
+      "Model": "Ridge(a=1)",
+      "MAE": 4407.9,
+      "RMSE": 22137.0,
+      "R2": -32.5456,
+      "PRED25%": 26.4,
+      "PRED50%": 53.4,
+      "MMRE%": 109.5,
+      "TrainTime_s": 0.0
+    },
+    {
+      "Model": "Lasso(a=0.01)",
+      "MAE": 4150.9,
+      "RMSE": 20998.9,
+      "R2": -29.1848,
+      "PRED25%": 27.7,
+      "PRED50%": 52.0,
+      "MMRE%": 104.4,
+      "TrainTime_s": 0.0
+    },
+    {
+      "Model": "ExtraTrees",
+      "MAE": 679.2,
+      "RMSE": 1410.7,
+      "R2": 0.8638,
+      "PRED25%": 56.8,
+      "PRED50%": 88.5,
+      "MMRE%": 29.2,
+      "TrainTime_s": 0.3
+    },
+    {
+      "Model": "RandomForest",
+      "MAE": 555.9,
+      "RMSE": 1236.9,
+      "R2": 0.8953,
+      "PRED25%": 57.4,
+      "PRED50%": 85.8,
+      "MMRE%": 37.2,
+      "TrainTime_s": 0.4
+    },
+    {
+      "Model": "GradientBoosting",
+      "MAE": 556.3,
+      "RMSE": 1295.9,
+      "R2": 0.885,
+      "PRED25%": 61.5,
+      "PRED50%": 83.1,
+      "MMRE%": 30.8,
+      "TrainTime_s": 0.6
+    },
+    {
+      "Model": "XGBoost",
+      "MAE": 678.4,
+      "RMSE": 1508.0,
+      "R2": 0.8443,
+      "PRED25%": 60.8,
+      "PRED50%": 84.5,
+      "MMRE%": 29.5,
+      "TrainTime_s": 0.8
+    },
+    {
+      "Model": "XGBoost_Deep",
+      "MAE": 768.1,
+      "RMSE": 1618.3,
+      "R2": 0.8207,
+      "PRED25%": 58.1,
+      "PRED50%": 81.1,
+      "MMRE%": 32.3,
+      "TrainTime_s": 0.8
+    }
+  ],
+  "cross_validation": {
+    "RandomForest": {
+      "mean_r2": 0.9878,
+      "std_r2": 0.0085,
+      "scores": [
+        0.9822,
+        0.9894,
+        0.9904,
+        0.9937,
+        0.9883,
+        0.995,
+        0.9921,
+        0.9885,
+        0.9646,
+        0.9941
+      ]
+    },
+    "GradientBoosting": {
+      "mean_r2": 0.9889,
+      "std_r2": 0.0061,
+      "scores": [
+        0.9885,
+        0.9875,
+        0.9924,
+        0.9921,
+        0.9883,
+        0.9949,
+        0.9903,
+        0.989,
+        0.9719,
+        0.994
+      ]
+    },
+    "ExtraTrees": {
+      "mean_r2": 0.988,
+      "std_r2": 0.0042,
+      "scores": [
+        0.9843,
+        0.9905,
+        0.981,
+        0.9933,
+        0.9895,
+        0.9942,
+        0.9879,
+        0.9825,
+        0.9858,
+        0.9907
+      ]
+    }
+  },
+  "top_features": {
+    "Adjustment": 0.304283,
+    "Transactions": 0.293321,
+    "duration_months": 0.139015,
+    "PointsNonAdjust": 0.124259,
+    "T08": 0.02224,
+    "risk_score": 0.018418,
+    "T03": 0.016797,
+    "T04": 0.008065,
+    "T06": 0.007974,
+    "T02": 0.007902,
+    "T01": 0.006774,
+    "T13": 0.006744,
+    "T15": 0.005577,
+    "T10": 0.00465,
+    "T05": 0.004582
+  },
+  "feature_list": [
+    "TeamExp",
+    "ManagerExp",
+    "duration_months",
+    "Transactions",
+    "Entities",
+    "PointsNonAdjust",
+    "Adjustment",
+    "size_fp",
+    "T01",
+    "T02",
+    "T03",
+    "T04",
+    "T05",
+    "T06",
+    "T07",
+    "T08",
+    "T09",
+    "T10",
+    "T11",
+    "T12",
+    "T13",
+    "T14",
+    "T15",
+    "log_size_fp",
+    "complexity_score",
+    "team_skill_avg",
+    "risk_score"
+  ],
+  "production": {
+    "model_file": "predictiq_best_model.pkl",
+    "scaler_file": "predictiq_scaler.pkl",
+    "features_file": "predictiq_features.json",
+    "effort_range": {
+      "min": 1,
+      "max": 9586,
+      "mean": 2544
+    },
+    "effort_clamp": {
+      "min": 1,
+      "max": 9587
+    },
+    "cost_per_hour": 75,
+    "confidence_interval": {
+      "min_factor": 0.8,
+      "max_factor": 1.4
+    }
+  },
+  "methodology": {
+    "sizing": "IFPUG Function Points",
+    "prediction": "RandomForest ML Regression",
+    "cost": "Parametric (effort x hourly_rate)"
+  }
+}

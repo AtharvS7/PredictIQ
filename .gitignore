@@ -1,0 +1,48 @@
+# ═══════════════════════════════════════════
+# PredictIQ — Root .gitignore
+# ═══════════════════════════════════════════
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# ML artifacts (large binary — use Git LFS or cloud storage)
+backend/ml/*.pkl
+backend/ml/training_log_*.txt
+backend/ml/artifacts/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Antigravity
+.gemini/

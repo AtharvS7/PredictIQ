@@ -1,0 +1,50 @@
+# ═══════════════════════════════════════════════════════════════
+# PredictIQ — Docker Compose (Production)
+# ═══════════════════════════════════════════════════════════════
+#
+# Usage:
+#   docker-compose up --build
+#   Access: http://localhost:3000
+#
+# Prerequisites:
+#   1. Copy backend/.env.example -> backend/.env (fill real values)
+#   2. Ensure ML model artifacts exist in backend/ml/
+# ═══════════════════════════════════════════════════════════════
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - backend/.env
+    volumes:
+      - ./backend/ml:/app/ml:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+    networks:
+      - predictiq-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - predictiq-net
+
+networks:
+  predictiq-net:
+    driver: bridge
