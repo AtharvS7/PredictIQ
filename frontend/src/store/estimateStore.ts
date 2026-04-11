@@ -44,10 +44,18 @@ export const useEstimateStore = create<EstimateState>((set, get) => ({
         project_type: filterType || undefined,
       });
       set({
-        estimates: response.data.estimates,
-        totalEstimates: response.data.total,
+        estimates: response.data.estimates || [],
+        totalEstimates: response.data.total || 0,
       });
     } catch (error: unknown) {
+      // Don't show error for 401 — user is just not authenticated yet
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosErr = error as { response?: { status?: number } };
+        if (axiosErr.response?.status === 401) {
+          set({ estimates: [], totalEstimates: 0 });
+          return;
+        }
+      }
       const message = error instanceof Error ? error.message : 'Failed to fetch estimates';
       set({ error: message });
     } finally {

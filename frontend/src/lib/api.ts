@@ -10,6 +10,10 @@ const api = axios.create({
   },
 });
 
+// Track if a token refresh is already in progress to prevent stampede
+let isRefreshing = false;
+let refreshPromise: Promise<string | null> | null = null;
+
 // Request interceptor: attach JWT
 api.interceptors.request.use(async (config) => {
   const { data: { session } } = await supabase.auth.getSession();
@@ -19,17 +23,48 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Response interceptor: handle 401
+// Response interceptor: handle 401 with single-retry (no infinite loop)
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      const { data: { session } } = await supabase.auth.refreshSession();
-      if (session) {
-        error.config.headers.Authorization = `Bearer ${session.access_token}`;
-        return api.request(error.config);
+    const originalRequest = error.config;
+
+    // Only attempt refresh once per request — prevent infinite loop
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      // If already refreshing, wait for the in-flight refresh
+      if (isRefreshing && refreshPromise) {
+        const newToken = await refreshPromise;
+        if (newToken) {
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return api.request(originalRequest);
+        }
+        return Promise.reject(error);
       }
+
+      // Start a new refresh
+      isRefreshing = true;
+      refreshPromise = supabase.auth.refreshSession().then(({ data: { session } }) => {
+        isRefreshing = false;
+        refreshPromise = null;
+        return session?.access_token ?? null;
+      }).catch(() => {
+        isRefreshing = false;
+        refreshPromise = null;
+        return null;
+      });
+
+      const newToken = await refreshPromise;
+      if (newToken) {
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api.request(originalRequest);
+      }
+
+      // Refresh failed — user is not authenticated, don't retry
+      return Promise.reject(error);
     }
+
     return Promise.reject(error);
   }
 );
