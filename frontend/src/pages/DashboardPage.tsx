@@ -30,9 +30,11 @@ export default function DashboardPage() {
         <Sidebar />
         <main style={{ flex: 1, padding: '2rem', maxWidth: 1100 }}>
           {/* Welcome Banner */}
-          <div className="animate-fade-in" style={{
+          <div className="animate-fade-in gradient-mesh" style={{
             marginBottom: 32,
-            background: 'linear-gradient(135deg, #1A56DB, #3B82F6)',
+            background: 'linear-gradient(135deg, #1A56DB, #7C3AED, #3B82F6)',
+            backgroundSize: '200% 200%',
+            animation: 'gradient-shift 8s ease infinite',
             borderRadius: 16, padding: '28px 32px', color: 'white',
           }}>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 }}>
@@ -50,7 +52,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Stats */}
-          <div style={{
+          <div className="animate-stagger" style={{
             display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             gap: 16, marginBottom: 32,
           }}>
@@ -70,7 +72,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
-                    <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>{value}</p>
+                    <p className="tabular-nums" style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>{value}</p>
                   </div>
                 </div>
               </div>

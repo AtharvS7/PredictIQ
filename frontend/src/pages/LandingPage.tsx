@@ -30,7 +30,7 @@ export default function LandingPage() {
       <Navbar />
 
       {/* ── Hero ──────────────────────────────────────────── */}
-      <section style={{
+      <section className="gradient-mesh" style={{
         padding: '5rem 1.5rem 4rem',
         maxWidth: 1200, margin: '0 auto',
         textAlign: 'center',
@@ -54,7 +54,7 @@ export default function LandingPage() {
             marginBottom: 20, maxWidth: 800, margin: '0 auto 20px',
           }}>
             Predict Your Project Cost{' '}
-            <span className="gradient-text">Before You Build</span>
+            <span className="gradient-text-brand">Before You Build</span>
           </h1>
 
           <p style={{
@@ -104,7 +104,7 @@ export default function LandingPage() {
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {card.label}
                 </p>
-                <p style={{ fontSize: '1.75rem', fontWeight: 700, color: card.color, marginTop: 4 }}>
+                <p className="tabular-nums" style={{ fontSize: '1.75rem', fontWeight: 700, color: card.color, marginTop: 4 }}>
                   {card.value}
                 </p>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 2 }}>

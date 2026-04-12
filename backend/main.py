@@ -16,6 +16,7 @@ from app.api.v1.health import router as health_router
 from app.api.v1.documents import router as documents_router
 from app.api.v1.estimates import router as estimates_router
 from app.api.v1.export import router as export_router
+from app.api.v1.currencies import router as currencies_router
 
 # Configure structured logging
 structlog.configure(
@@ -97,6 +98,7 @@ app.include_router(health_router, prefix="/api/v1", tags=["Health"])
 app.include_router(documents_router, prefix="/api/v1", tags=["Documents"])
 app.include_router(estimates_router, prefix="/api/v1", tags=["Estimates"])
 app.include_router(export_router, prefix="/api/v1", tags=["Export"])
+app.include_router(currencies_router, prefix="/api/v1", tags=["Currencies"])
 
 
 @app.get("/")

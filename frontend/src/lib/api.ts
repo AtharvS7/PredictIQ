@@ -123,8 +123,11 @@ export const createShareLink = (id: string, data: {
 }) => api.post(`/estimates/${id}/share`, data);
 
 // Export
-export const exportPDF = (id: string) =>
-  api.get(`/estimates/${id}/export/pdf`, { responseType: 'blob' });
+export const exportPDF = (id: string, currency: string = 'USD') =>
+  api.get(`/estimates/${id}/export/pdf`, {
+    responseType: 'blob',
+    params: { currency },
+  });
 
 export const exportJSON = (id: string) =>
   api.get(`/estimates/${id}/export/json`);

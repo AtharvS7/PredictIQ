@@ -5,7 +5,7 @@ Handles document upload metadata and retrieval.
 from fastapi import APIRouter, Depends, HTTPException, status
 import structlog
 from app.core.security import get_current_user, CurrentUser
-from app.core.supabase import get_supabase
+from app.core.supabase import get_supabase_admin
 from app.models.document import DocumentUploadRequest, DocumentMetadata
 
 router = APIRouter()
@@ -22,7 +22,7 @@ async def confirm_document_upload(
     Stores metadata in the document_uploads table.
     """
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_admin()
         result = supabase.table("document_uploads").insert({
             "user_id": user.id,
             "storage_path": request.storage_path,
@@ -69,7 +69,7 @@ async def get_document(
 ):
     """Retrieve document metadata by ID."""
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_admin()
         result = supabase.table("document_uploads").select("*").eq(
             "id", document_id
         ).eq("user_id", user.id).single().execute()

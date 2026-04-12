@@ -90,3 +90,47 @@ class TestNLPExtraction:
         result = nlp_extractor.extract(sample_document_text)
         expected = {"project_type", "tech_stack", "complexity"}
         assert expected.issubset(set(result.keys()))
+
+    # ── v2.3.0 — New NLP tests ────────────────────────────
+
+    def test_no_name_pattern_returns_empty(self):
+        """Generic text with no project name pattern should return empty value."""
+        text = (
+            "The system shall provide user authentication. "
+            "Data shall be stored in a relational database. "
+            "The interface must support mobile devices."
+        )
+        result = nlp_extractor.extract(text)
+        pname = result.get("project_name", {})
+        assert isinstance(pname, dict)
+        # Should be empty string, NOT a first-line fallback
+        assert pname.get("value") == ""
+        assert pname.get("confidence") == 0.0
+
+    def test_react_dot_js_detected(self):
+        """'React.js' in text should be detected as 'React' in tech stack."""
+        text = "We will use React.js for the frontend and Express for the backend API."
+        result = nlp_extractor.extract(text)
+        tech = result.get("tech_stack", {})
+        assert isinstance(tech, dict)
+        detected = [t.lower() for t in tech.get("value", [])]
+        assert "react" in detected or "react.js" in detected
+
+    def test_nodejs_variant_detected(self):
+        """'Node.js' variants should be detected in tech stack."""
+        text = "The Node.js backend will handle API requests and serve data."
+        result = nlp_extractor.extract(text)
+        tech = result.get("tech_stack", {})
+        assert isinstance(tech, dict)
+        detected = [t.lower() for t in tech.get("value", [])]
+        assert any("node" in t for t in detected)
+
+    def test_version_number_stripped(self):
+        """'PostgreSQL 15' should be detected as PostgreSQL in tech stack."""
+        text = "The database layer uses PostgreSQL 15 for data persistence."
+        result = nlp_extractor.extract(text)
+        tech = result.get("tech_stack", {})
+        assert isinstance(tech, dict)
+        detected = [t.lower() for t in tech.get("value", [])]
+        assert "postgresql" in detected
+

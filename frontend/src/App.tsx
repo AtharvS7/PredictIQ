@@ -1,6 +1,7 @@
 import { useEffect, useState, createContext, useContext, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { useCurrencyStore } from '@/store/currencyStore';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LandingPage from '@/pages/LandingPage';
 import AuthPage from '@/pages/AuthPage';
@@ -140,6 +141,8 @@ export default function App() {
 
   useEffect(() => {
     initialize();
+    // Pre-fetch exchange rates on app mount
+    useCurrencyStore.getState().fetchRates();
   }, [initialize]);
 
   if (!initialized) {

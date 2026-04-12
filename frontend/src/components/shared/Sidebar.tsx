@@ -22,16 +22,23 @@ export default function Sidebar() {
       minHeight: 'calc(100vh - 64px)',
       background: 'var(--bg-surface)',
       borderRight: '1px solid var(--border-color)',
-      transition: 'width 0.2s ease',
+      transition: 'width 0.25s var(--transition-smooth, ease)',
       display: 'flex', flexDirection: 'column',
       padding: '0.75rem 0',
       position: 'relative',
       flexShrink: 0,
     }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '0 0.5rem' }}>
+      {/* Subtle gradient tint at top */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 80,
+        background: 'var(--gradient-brand-subtle, transparent)',
+        opacity: 0.5, pointerEvents: 'none', borderRadius: '0 0 20px 0',
+      }} />
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '0 0.5rem', position: 'relative', zIndex: 1 }}>
         {navItems.map(({ label, icon: Icon, route }) => {
           const isActive = location.pathname === route ||
-            (route === '/estimate/new' && location.pathname.startsWith('/estimate'));
+            (route === '/estimate/new' && location.pathname.startsWith('/estimate/'));
 
           return (
             <NavLink
@@ -46,7 +53,11 @@ export default function Sidebar() {
                 background: isActive ? 'rgba(26, 86, 219, 0.08)' : 'transparent',
                 fontWeight: isActive ? 600 : 500,
                 fontSize: '0.875rem',
-                transition: 'all 0.15s ease',
+                transition: 'all 0.2s ease',
+                borderLeft: isActive ? '4px solid transparent' : '4px solid transparent',
+                borderImage: isActive ? 'var(--gradient-brand) 1' : 'none',
+                paddingLeft: isActive ? (collapsed ? 0 : 8) : (collapsed ? 0 : 12),
+                position: 'relative',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) e.currentTarget.style.background = 'var(--bg-elevated)';
@@ -61,6 +72,26 @@ export default function Sidebar() {
           );
         })}
       </div>
+
+      {/* Version badge */}
+      {!collapsed && (
+        <div style={{
+          padding: '0 0.75rem', marginBottom: 40,
+          textAlign: 'center',
+        }}>
+          <span style={{
+            fontSize: '0.6875rem',
+            fontWeight: 500,
+            color: 'var(--text-tertiary)',
+            background: 'var(--bg-elevated)',
+            padding: '3px 10px',
+            borderRadius: 9999,
+            letterSpacing: '0.02em',
+          }}>
+            PredictIQ v2.3
+          </span>
+        </div>
+      )}
 
       <button
         onClick={() => setCollapsed(!collapsed)}

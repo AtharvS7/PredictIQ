@@ -2,7 +2,9 @@ import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
+import CurrencySelector from '@/components/shared/CurrencySelector';
 import { useEstimateStore } from '@/store/estimateStore';
+import { useCurrencyStore } from '@/store/currencyStore';
 import { useToast } from '@/App';
 import { exportPDF, duplicateEstimate, createShareLink } from '@/lib/api';
 import {
@@ -18,6 +20,8 @@ const PHASE_COLORS = ['#1A56DB', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8
 export default function ResultsPage() {
   const { id } = useParams<{ id: string }>();
   const { currentEstimate, loading, fetchEstimate } = useEstimateStore();
+  const { format, convert, symbol } = useCurrencyStore();
+  const sym = symbol();
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -27,11 +31,12 @@ export default function ResultsPage() {
   const handleExportPDF = async () => {
     if (!id) return;
     try {
-      const response = await exportPDF(id);
+      const currencyCode = useCurrencyStore.getState().currency;
+      const response = await exportPDF(id, currencyCode);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const a = document.createElement('a');
       a.href = url;
-      a.download = `PredictIQ_Report.pdf`;
+      a.download = `PredictIQ_Estimate_${id.slice(0, 8)}_${currencyCode}.pdf`;
       a.click();
       addToast('success', 'PDF exported!');
     } catch {
@@ -83,7 +88,7 @@ export default function ResultsPage() {
     name: p.phase.replace('& ', '').split(' ')[0],
     fullName: p.phase,
     hours: p.effort_hours,
-    cost: p.cost_usd,
+    cost: convert(p.cost_usd),
     pct: p.pct_of_total,
     fill: PHASE_COLORS[i % PHASE_COLORS.length],
   }));
@@ -91,6 +96,7 @@ export default function ResultsPage() {
   const riskColor = {
     Low: '#10B981', Medium: '#3B82F6', High: '#F59E0B', Critical: '#EF4444',
   }[outputs.risk_level] || '#64748B';
+
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
@@ -119,8 +125,9 @@ export default function ResultsPage() {
                 {new Date(currentEstimate.created_at).toLocaleDateString()}
               </p>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn-secondary" onClick={handleExportPDF}><Download size={15} /> PDF</button>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <CurrencySelector />
+              <button className="btn-secondary" onClick={handleExportPDF}><Download size={15} /> PDF ({sym})</button>
               <button className="btn-secondary" onClick={handleShare}><Share2 size={15} /> Share</button>
               <button className="btn-secondary" onClick={handleDuplicate}><Copy size={15} /> Duplicate</button>
             </div>
@@ -141,7 +148,7 @@ export default function ResultsPage() {
                   {card.label}
                 </p>
                 <p style={{ fontSize: card.primary ? '2rem' : '1.5rem', fontWeight: 700, color: card.color, marginTop: 4 }}>
-                  ${card.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {format(card.value)}
                 </p>
                 <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 2 }}>
                   {card.sub}
@@ -195,10 +202,10 @@ export default function ResultsPage() {
             <div style={{ height: 260 }}>
               <ResponsiveContainer>
                 <RechartsBarChart data={phaseData} layout="vertical" margin={{ left: 20 }}>
-                  <XAxis type="number" tickFormatter={(v: number) => `$${(v/1000).toFixed(0)}k`} />
+                  <XAxis type="number" tickFormatter={(v: number) => `${sym}${(v/1000).toFixed(0)}k`} />
                   <YAxis type="category" dataKey="name" width={100} fontSize={12} />
                   <Tooltip
-                    formatter={(val: unknown) => [`$${Number(val).toLocaleString()}`, 'Cost']}
+                    formatter={(val: unknown) => [format(Number(val) / (convert(1))), 'Cost']}
                     labelFormatter={(label: any) => phaseData.find(p => p.name === label)?.fullName || String(label)}
                     contentStyle={{
                       background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
@@ -221,7 +228,7 @@ export default function ResultsPage() {
                   <tr style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.6875rem' }}>
                     <th style={{ textAlign: 'left', padding: '8px 12px' }}>Phase</th>
                     <th style={{ textAlign: 'right', padding: '8px 12px' }}>Effort (hrs)</th>
-                    <th style={{ textAlign: 'right', padding: '8px 12px' }}>Cost (USD)</th>
+                    <th style={{ textAlign: 'right', padding: '8px 12px' }}>Cost</th>
                     <th style={{ textAlign: 'right', padding: '8px 12px' }}>Duration (wks)</th>
                     <th style={{ textAlign: 'right', padding: '8px 12px' }}>% Total</th>
                   </tr>
@@ -237,7 +244,7 @@ export default function ResultsPage() {
                         {phase.phase}
                       </td>
                       <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-secondary)' }}>{phase.effort_hours.toLocaleString()}</td>
-                      <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-primary)', fontWeight: 500 }}>${phase.cost_usd.toLocaleString()}</td>
+                      <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-primary)', fontWeight: 500 }}>{format(phase.cost_usd)}</td>
                       <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-secondary)' }}>{phase.duration_weeks}</td>
                       <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-secondary)' }}>{phase.pct_of_total}%</td>
                     </tr>

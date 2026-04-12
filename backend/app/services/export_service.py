@@ -1,9 +1,11 @@
 """
 PredictIQ Export Service
 Generates PDF reports for estimates using ReportLab.
+Supports multi-currency output with live exchange rates.
 """
 import io
 from datetime import datetime
+from typing import Optional
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -26,13 +28,51 @@ BRAND_AMBER = colors.HexColor("#F59E0B")
 BRAND_RED = colors.HexColor("#EF4444")
 LIGHT_BG = colors.HexColor("#F8FAFC")
 
+# Currency symbols for PDF display
+CURRENCY_SYMBOLS: dict[str, str] = {
+    "USD": "$", "INR": "₹", "EUR": "€", "GBP": "£",
+    "AED": "AED ", "SGD": "S$", "CAD": "CA$", "AUD": "A$",
+    "JPY": "¥", "CHF": "Fr ", "CNY": "¥", "HKD": "HK$",
+    "KRW": "₩", "BRL": "R$", "MXN": "$", "NZD": "NZ$",
+    "SEK": "kr ", "NOK": "kr ", "DKK": "kr ", "ZAR": "R",
+}
 
-def generate_pdf_report(estimate: dict) -> bytes:
+
+def _format_currency(
+    amount: float,
+    currency_code: str,
+    symbol: str,
+) -> str:
+    """Format an amount for PDF display, using Indian numbering for INR."""
+    if currency_code == "INR":
+        if amount >= 10_000_000:
+            return f"{symbol}{amount / 10_000_000:.2f}Cr"
+        elif amount >= 100_000:
+            return f"{symbol}{amount / 100_000:.2f}L"
+        else:
+            # Indian number formatting
+            s = f"{amount:,.0f}"
+            # Convert Western grouping to Indian grouping for <1L
+            return f"{symbol}{s}"
+    elif currency_code in ("JPY", "KRW", "VND", "IDR"):
+        # No decimals for these currencies
+        return f"{symbol}{amount:,.0f}"
+    else:
+        return f"{symbol}{amount:,.0f}"
+
+
+def generate_pdf_report(
+    estimate: dict,
+    currency_code: str = "USD",
+    exchange_rate: float = 1.0,
+) -> bytes:
     """
     Generate a branded PDF report for an estimate.
 
     Args:
         estimate: Full estimate result dictionary.
+        currency_code: Target currency code (e.g., "USD", "INR", "EUR").
+        exchange_rate: Exchange rate from USD to target currency.
 
     Returns:
         PDF file content as bytes.
@@ -48,6 +88,16 @@ def generate_pdf_report(estimate: dict) -> bytes:
     )
 
     styles = getSampleStyleSheet()
+    symbol = CURRENCY_SYMBOLS.get(currency_code.upper(), currency_code + " ")
+    cc = currency_code.upper()
+
+    def convert(usd_amount: float) -> float:
+        """Convert a USD amount to the target currency."""
+        return usd_amount * exchange_rate
+
+    def fmt(usd_amount: float) -> str:
+        """Convert and format a USD amount in the target currency."""
+        return _format_currency(convert(usd_amount), cc, symbol)
 
     # Custom styles
     title_style = ParagraphStyle(
@@ -107,14 +157,16 @@ def generate_pdf_report(estimate: dict) -> bytes:
     ))
 
     # Meta info
+    hourly_rate_display = fmt(inputs.get("hourly_rate_usd", 75))
     meta_data = [
         ["Generated:", datetime.now().strftime("%B %d, %Y at %I:%M %p")],
+        ["Currency:", f"{cc} ({symbol.strip()})"],
         ["Project Type:", inputs.get("project_type", "N/A")],
         ["Complexity:", inputs.get("complexity", "N/A")],
         ["Methodology:", inputs.get("methodology", "N/A")],
         ["Team Size:", str(inputs.get("team_size", "N/A"))],
         ["Duration:", f"{inputs.get('duration_months', 'N/A')} months"],
-        ["Hourly Rate:", f"${inputs.get('hourly_rate_usd', 75)}/hr"],
+        ["Hourly Rate:", f"{hourly_rate_display}/hr"],
     ]
     meta_table = Table(meta_data, colWidths=[3 * cm, 12 * cm])
     meta_table.setStyle(TableStyle([
@@ -132,10 +184,10 @@ def generate_pdf_report(estimate: dict) -> bytes:
     cost_data = [
         ["", "Optimistic", "Most Likely", "Conservative"],
         [
-            "Cost (USD)",
-            f"${outputs.get('cost_min_usd', 0):,.0f}",
-            f"${outputs.get('cost_likely_usd', 0):,.0f}",
-            f"${outputs.get('cost_max_usd', 0):,.0f}",
+            f"Cost ({cc})",
+            fmt(outputs.get("cost_min_usd", 0)),
+            fmt(outputs.get("cost_likely_usd", 0)),
+            fmt(outputs.get("cost_max_usd", 0)),
         ],
         [
             "Effort (hrs)",
@@ -177,13 +229,13 @@ def generate_pdf_report(estimate: dict) -> bytes:
     # ── Phase Breakdown ─────────────────────────────────────
     elements.append(Paragraph("Phase Breakdown", heading_style))
 
-    phase_header = ["Phase", "Effort (hrs)", "Cost (USD)", "Duration (wks)", "% of Total"]
+    phase_header = ["Phase", "Effort (hrs)", f"Cost ({cc})", "Duration (wks)", "% of Total"]
     phase_rows = [phase_header]
     for phase in outputs.get("phase_breakdown", []):
         phase_rows.append([
             phase.get("phase", ""),
             f"{phase.get('effort_hours', 0):,.0f}",
-            f"${phase.get('cost_usd', 0):,.0f}",
+            fmt(phase.get("cost_usd", 0)),
             f"{phase.get('duration_weeks', 0):.1f}",
             f"{phase.get('pct_of_total', 0):.0f}%",
         ])
@@ -231,6 +283,19 @@ def generate_pdf_report(estimate: dict) -> bytes:
     if outputs.get("model_explanation"):
         elements.append(Paragraph("AI Model Insights", heading_style))
         elements.append(Paragraph(outputs["model_explanation"], body_style))
+
+    # ── Exchange Rate Note ──────────────────────────────────
+    if cc != "USD":
+        elements.append(Spacer(1, 16))
+        rate_note_style = ParagraphStyle(
+            "RateNote", parent=styles["Normal"],
+            fontSize=8, textColor=BRAND_GRAY, alignment=TA_LEFT,
+        )
+        elements.append(Paragraph(
+            f"Exchange rate used: 1 USD = {exchange_rate:.4f} {cc} "
+            f"(Rate fetched on {datetime.now().strftime('%B %d, %Y')})",
+            rate_note_style,
+        ))
 
     # ── Footer ──────────────────────────────────────────────
     elements.append(Spacer(1, 30))

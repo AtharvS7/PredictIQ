@@ -1,15 +1,16 @@
 """
 PredictIQ API — Export Endpoints
-PDF and JSON export for estimates.
+PDF and JSON export for estimates with multi-currency support.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse, JSONResponse
 import io
 import structlog
 
 from app.core.security import get_current_user, CurrentUser
-from app.core.supabase import get_supabase
+from app.core.supabase import get_supabase_admin
 from app.services.export_service import generate_pdf_report
+from app.services.currency_service import currency_service
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -18,11 +19,12 @@ logger = structlog.get_logger()
 @router.get("/estimates/{estimate_id}/export/pdf")
 async def export_pdf(
     estimate_id: str,
+    currency: str = Query("USD", description="Target currency code (e.g., USD, INR, EUR)"),
     user: CurrentUser = Depends(get_current_user),
 ):
-    """Generate and stream a branded PDF report."""
+    """Generate and stream a branded PDF report in the selected currency."""
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_admin()
         result = supabase.table("estimates").select("*").eq(
             "id", estimate_id
         ).eq("user_id", user.id).single().execute()
@@ -37,9 +39,29 @@ async def export_pdf(
             "outputs": row.get("outputs_json", {}),
         }
 
-        pdf_bytes = generate_pdf_report(estimate)
+        # Fetch live exchange rate for the selected currency
+        currency_code = currency.upper().strip()
+        exchange_rate = 1.0
+        if currency_code != "USD":
+            rate = await currency_service.get_rate(currency_code)
+            if rate is not None:
+                exchange_rate = rate
+            else:
+                logger.warning(
+                    "pdf_export_unknown_currency",
+                    currency=currency_code,
+                    message="Falling back to USD",
+                )
+                currency_code = "USD"
 
-        filename = f"PredictIQ_{row['project_name'].replace(' ', '_')}_Report.pdf"
+        pdf_bytes = generate_pdf_report(
+            estimate,
+            currency_code=currency_code,
+            exchange_rate=exchange_rate,
+        )
+
+        safe_id = estimate_id[:8] if len(estimate_id) >= 8 else estimate_id
+        filename = f"PredictIQ_Estimate_{safe_id}_{currency_code}.pdf"
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
             media_type="application/pdf",
@@ -59,7 +81,7 @@ async def export_json(
 ):
     """Export estimate as JSON."""
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_admin()
         result = supabase.table("estimates").select("*").eq(
             "id", estimate_id
         ).eq("user_id", user.id).single().execute()

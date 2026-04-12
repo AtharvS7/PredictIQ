@@ -24,33 +24,69 @@ logger = structlog.get_logger()
 
 TECH_KEYWORDS: dict[str, list[str]] = {
     "frontend": [
-        "react", "vue", "angular", "svelte", "nextjs", "next.js", "nuxt",
-        "typescript", "javascript", "html", "css", "tailwind", "tailwindcss",
-        "bootstrap", "flutter", "swiftui", "webpack", "vite",
+        "react", "react.js", "reactjs", "react js",
+        "vue", "vue.js", "vuejs", "vue js",
+        "angular", "angular.js", "angularjs", "angular js",
+        "svelte", "nextjs", "next.js", "next js",
+        "nuxt", "nuxt.js", "nuxtjs",
+        "typescript", "javascript", "html", "css",
+        "tailwind", "tailwindcss",
+        "bootstrap", "flutter", "swiftui",
+        "webpack", "vite",
+        "electron", "electron.js", "electronjs",
+        "solid.js", "solidjs", "gatsby", "gatsby.js", "gatsbyjs",
+        "remix", "remix.js", "remixjs", "htmx", "astro",
     ],
     "backend": [
-        "fastapi", "django", "flask", "express", "nodejs", "node.js",
-        "spring", "spring boot", "laravel", "rails", "ruby on rails",
-        "dotnet", ".net", "go", "golang", "rust", "graphql", "rest api",
-        "nestjs", "deno", "bun",
+        "fastapi", "fast api", "django", "flask",
+        "express", "express.js", "expressjs",
+        "nodejs", "node.js", "node js", "node",
+        "spring", "spring boot",
+        "laravel", "rails", "ruby on rails",
+        "dotnet", ".net",
+        "go", "golang", "rust",
+        "graphql", "rest api",
+        "nestjs", "nest.js",
+        "deno", "bun", "hono",
+        "grpc", "django rest framework", "drf",
+        "python", "java", "c#", "c++", "php", "ruby",
+        "scala", "elixir",
     ],
     "database": [
-        "postgresql", "postgres", "mysql", "mongodb", "supabase", "firebase",
-        "redis", "sqlite", "dynamodb", "elasticsearch", "cassandra", "neo4j",
+        "postgresql", "postgres", "mysql", "mongodb",
+        "supabase", "firebase",
+        "redis", "sqlite", "dynamodb",
+        "elasticsearch", "cassandra", "neo4j",
+        "planetscale", "neon", "turso",
+        "drizzle", "prisma", "sqlalchemy",
+        "qdrant", "weaviate", "pinecone", "chroma",
+        "clickhouse", "snowflake", "bigquery",
     ],
     "ml": [
-        "machine learning", "deep learning", "tensorflow", "pytorch",
-        "scikit-learn", "xgboost", "nlp", "llm", "gpt", "bert",
+        "machine learning", "deep learning",
+        "tensorflow", "pytorch", "scikit-learn", "xgboost",
+        "nlp", "llm", "gpt", "bert",
         "neural network", "ai model", "computer vision", "opencv",
+        "langchain", "llamaindex", "llama index",
+        "openai", "anthropic", "gemini", "claude",
+        "hugging face", "huggingface", "transformers",
+        "ollama", "mistral", "llama 3",
+        "stable diffusion", "whisper", "tesseract",
     ],
     "mobile": [
         "android", "ios", "react native", "flutter", "swift", "kotlin",
         "xamarin", "objective-c",
     ],
     "devops": [
-        "docker", "kubernetes", "k8s", "aws", "azure", "gcp",
-        "google cloud", "ci/cd", "github actions", "gitlab ci",
+        "docker", "kubernetes", "k8s",
+        "aws", "azure", "gcp", "google cloud",
+        "ci/cd", "github actions", "gitlab ci",
         "terraform", "ansible", "nginx",
+        "vercel", "netlify", "fly.io", "render", "railway",
+        "heroku", "digitalocean",
+        "cloudflare workers", "cloudflare pages", "cloudflare",
+        "pulumi", "puppet", "chef",
+        "prometheus", "grafana", "datadog", "sentry",
     ],
 }
 
@@ -58,6 +94,56 @@ TECH_KEYWORDS: dict[str, list[str]] = {
 ALL_TECH_KEYWORDS: set[str] = set()
 for _cat_keywords in TECH_KEYWORDS.values():
     ALL_TECH_KEYWORDS.update(_cat_keywords)
+
+# Display name mapping for proper capitalization
+TECH_DISPLAY_NAMES: dict[str, str] = {
+    "react": "React", "react.js": "React", "reactjs": "React", "react js": "React",
+    "vue": "Vue", "vue.js": "Vue", "vuejs": "Vue", "vue js": "Vue",
+    "angular": "Angular", "angular.js": "Angular", "angularjs": "Angular",
+    "angular js": "Angular",
+    "svelte": "Svelte", "next.js": "Next.js", "nextjs": "Next.js",
+    "next js": "Next.js",
+    "nuxt": "Nuxt", "nuxt.js": "Nuxt", "nuxtjs": "Nuxt",
+    "node": "Node.js", "nodejs": "Node.js", "node.js": "Node.js",
+    "node js": "Node.js",
+    "express": "Express", "express.js": "Express", "expressjs": "Express",
+    "typescript": "TypeScript", "javascript": "JavaScript",
+    "fastapi": "FastAPI", "fast api": "FastAPI",
+    "django": "Django", "flask": "Flask", "laravel": "Laravel",
+    "spring": "Spring", "spring boot": "Spring Boot",
+    "postgresql": "PostgreSQL", "postgres": "PostgreSQL",
+    "mysql": "MySQL", "mongodb": "MongoDB",
+    "supabase": "Supabase", "firebase": "Firebase",
+    "redis": "Redis", "sqlite": "SQLite",
+    "dynamodb": "DynamoDB", "elasticsearch": "Elasticsearch",
+    "docker": "Docker", "kubernetes": "Kubernetes", "k8s": "Kubernetes",
+    "tensorflow": "TensorFlow", "pytorch": "PyTorch",
+    "scikit-learn": "Scikit-Learn", "xgboost": "XGBoost",
+    "graphql": "GraphQL", "rest api": "REST API",
+    "golang": "Go", "go": "Go", "rust": "Rust",
+    "python": "Python", "java": "Java", "c#": "C#", "c++": "C++",
+    "php": "PHP", "ruby": "Ruby", "scala": "Scala", "elixir": "Elixir",
+    "nestjs": "NestJS", "nest.js": "NestJS",
+    "prisma": "Prisma", "drizzle": "Drizzle", "sqlalchemy": "SQLAlchemy",
+    "langchain": "LangChain", "openai": "OpenAI",
+    "anthropic": "Anthropic", "gemini": "Gemini",
+    "vercel": "Vercel", "netlify": "Netlify", "heroku": "Heroku",
+    "cloudflare": "Cloudflare", "aws": "AWS", "azure": "Azure", "gcp": "GCP",
+    "react native": "React Native", "flutter": "Flutter",
+    "swift": "Swift", "kotlin": "Kotlin",
+    "html": "HTML", "css": "CSS",
+    "tailwind": "Tailwind CSS", "tailwindcss": "Tailwind CSS",
+    "bootstrap": "Bootstrap", "webpack": "Webpack", "vite": "Vite",
+    "remix": "Remix", "remix.js": "Remix", "remixjs": "Remix",
+    "astro": "Astro", "htmx": "HTMX",
+    "solid.js": "SolidJS", "solidjs": "SolidJS",
+    "gatsby": "Gatsby", "gatsby.js": "Gatsby", "gatsbyjs": "Gatsby",
+    "electron": "Electron", "electron.js": "Electron", "electronjs": "Electron",
+    "grpc": "gRPC", "deno": "Deno", "bun": "Bun", "hono": "Hono",
+    "sentry": "Sentry", "datadog": "Datadog",
+    "prometheus": "Prometheus", "grafana": "Grafana",
+    "nginx": "Nginx", "terraform": "Terraform",
+}
 
 PROJECT_TYPE_KEYWORDS: dict[str, list[str]] = {
     "Web App": [
@@ -261,23 +347,28 @@ class NLPExtractor:
     def _extract_tech_stack(self, text: str) -> dict:
         """Find technology mentions in the text."""
         found: list[str] = []
-        for tech in ALL_TECH_KEYWORDS:
-            # Use word boundary matching for short keywords
-            if len(tech) <= 3:
-                pattern = r"\b" + re.escape(tech) + r"\b"
-                if re.search(pattern, text, re.IGNORECASE):
-                    found.append(tech)
-            elif tech in text:
+
+        # Sort keywords by length descending so multi-word matches go first
+        sorted_keywords = sorted(ALL_TECH_KEYWORDS, key=len, reverse=True)
+
+        for tech in sorted_keywords:
+            # Use word boundary matching for ALL keywords to avoid false positives
+            pattern = r"\b" + re.escape(tech) + r"\b"
+            if re.search(pattern, text, re.IGNORECASE):
                 found.append(tech)
 
-        # Deduplicate and normalize
-        seen: set[str] = set()
+        # Deduplicate using display names to collapse variants
+        seen_display: set[str] = set()
         unique: list[str] = []
         for t in found:
             t_lower = t.lower()
-            if t_lower not in seen:
-                seen.add(t_lower)
+            # Use canonical display name if available
+            display = TECH_DISPLAY_NAMES.get(t_lower)
+            if display is None:
                 display = t.title() if len(t) > 3 else t.upper()
+
+            if display not in seen_display:
+                seen_display.add(display)
                 unique.append(display)
 
         confidence = min(0.95, len(unique) * 0.08) if unique else 0.2
@@ -411,25 +502,37 @@ class NLPExtractor:
         return {"value": 10, "confidence": 0.3}
 
     def _extract_project_name(self, text: str) -> dict:
-        """Try to extract the project name from the document."""
+        """
+        Extract the project name from document content only.
+
+        Never falls back to the uploaded filename. If no pattern matches,
+        returns an empty string so the user must fill it in manually.
+        """
         patterns = [
+            # Explicit labels: "Project Name: ...", "Title: ...", etc.
+            r"(?:project\s+name|system\s+name|application\s+name|product\s+name|title)\s*[:\-–]\s*[\"']?([\w][\w\s\-\.]{2,75})",
+            # Markdown heading with system/app suffix
+            r"(?:^|\n)#{1,3}\s+([A-Z][\w\s]{3,40}?)\s*(?:system|application|platform|portal|app|project)",
+            # "Proposal for ...", "Estimation for ...", "Quote for ..."
+            r"(?:proposal\s+for|estimation\s+for|quote\s+for)\s+([\w][\w\s]{2,50}?)(?:\.|\n|$)",
+            # Document type header: "XYZ SRS/PRD/BRD"
+            r"(?:^|\n)([A-Z][\w\s]{3,40}?)\s*(?:SRS|PRD|BRD|specification|requirements\s+document)",
+            # Simple "Project Name: ..." with quotes
             r"project\s*(?:name|title)?\s*:\s*[\"']?([A-Z][A-Za-z0-9\s\-]{2,30})",
+            # First markdown heading
             r"^#\s+(.{3,50})$",
         ]
         for pattern in patterns:
-            match = re.search(pattern, text, re.MULTILINE)
+            match = re.search(pattern, text, re.MULTILINE | re.IGNORECASE)
             if match:
-                name = match.group(1).strip().rstrip(".")
-                if 2 < len(name) <= 50:
-                    return {"value": name, "confidence": 0.65}
+                name = match.group(1).strip().rstrip(".,;:")
+                # Validate: skip very short or obviously non-name strings
+                if 2 < len(name) <= 80 and not name.lower().startswith(("http", "www", "file")):
+                    return {"value": name[:80], "confidence": 0.65}
 
-        # Fall back to first non-empty line
-        for line in text.strip().split("\n"):
-            line = line.strip()
-            if line and len(line) >= 3:
-                return {"value": line[:50], "confidence": 0.3}
-
-        return {"value": "Untitled Project", "confidence": 0.1}
+        # No pattern matched — return empty string so user must fill it in.
+        # NEVER use the first line or filename as a fallback.
+        return {"value": "", "confidence": 0.0}
 
 
 nlp_extractor = NLPExtractor()

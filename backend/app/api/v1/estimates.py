@@ -12,7 +12,7 @@ import secrets
 import bcrypt
 
 from app.core.security import get_current_user, CurrentUser
-from app.core.supabase import get_supabase
+from app.core.supabase import get_supabase, get_supabase_admin
 from app.core.config import settings
 from app.models.estimate import (
     EstimateRequest, ManualEstimateRequest, EstimateResult,
@@ -53,7 +53,7 @@ async def analyze_estimate(
     9. Save to database
     """
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_admin()
 
         # Step 1: Get document metadata
         doc_result = supabase.table("document_uploads").select("*").eq(
@@ -275,7 +275,7 @@ async def _run_estimation(
     )
 
     # Step 10: Save to database
-    supabase = get_supabase()
+    supabase = get_supabase_admin()
     estimate_data = {
         "user_id": user_id,
         "document_id": document_id,
@@ -321,7 +321,7 @@ async def list_estimates(
 ):
     """List all estimates for the authenticated user."""
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_admin()
         query = supabase.table("estimates").select(
             "*", count="exact"
         ).eq("user_id", user.id).neq("status", "deleted")
@@ -386,7 +386,7 @@ async def get_estimate(
 ):
     """Get full estimate details."""
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_admin()
         result = supabase.table("estimates").select("*").eq(
             "id", estimate_id
         ).eq("user_id", user.id).single().execute()
@@ -424,7 +424,7 @@ async def duplicate_estimate(
 ):
     """Duplicate an estimate as a new version."""
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_admin()
 
         # Get original
         original = supabase.table("estimates").select("*").eq(
@@ -497,7 +497,7 @@ async def delete_estimate(
 ):
     """Soft-delete an estimate."""
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_admin()
         result = supabase.table("estimates").update(
             {"status": "deleted"}
         ).eq("id", estimate_id).eq("user_id", user.id).execute()
@@ -521,7 +521,7 @@ async def create_share_link(
 ):
     """Generate a shareable read-only link for an estimate."""
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_admin()
 
         # Verify ownership
         est = supabase.table("estimates").select("id").eq(

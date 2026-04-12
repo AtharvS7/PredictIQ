@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
+import CurrencySelector from '@/components/shared/CurrencySelector';
 import { useEstimateStore } from '@/store/estimateStore';
+import { useCurrencyStore } from '@/store/currencyStore';
 import { useToast } from '@/App';
 import {
   Search, SortAsc, SortDesc, Trash2, Copy, ArrowRight, FolderOpen,
@@ -17,11 +19,15 @@ export default function EstimatesPage() {
     estimates, totalEstimates, loading, page, sort, filterType,
     fetchEstimates, removeEstimate, setPage, setSort, setFilterType,
   } = useEstimateStore();
+  const { format } = useCurrencyStore();
   const { addToast } = useToast();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
 
-  useEffect(() => { fetchEstimates(); }, [fetchEstimates, page, sort, filterType]);
+  useEffect(() => {
+    fetchEstimates();
+    useCurrencyStore.getState().refreshRatesIfStale();
+  }, [fetchEstimates, page, sort, filterType]);
 
   const filtered = search
     ? estimates.filter((e) =>
@@ -60,9 +66,12 @@ export default function EstimatesPage() {
               <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>My Estimates</h1>
               <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{totalEstimates} total estimates</p>
             </div>
-            <button className="btn-primary" onClick={() => navigate('/estimate/new')}>
-              <PlusCircle size={16} /> New Estimate
-            </button>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <CurrencySelector compact />
+              <button className="btn-primary" onClick={() => navigate('/estimate/new')}>
+                <PlusCircle size={16} /> New Estimate
+              </button>
+            </div>
           </div>
 
           {/* Filters & Search */}
@@ -149,10 +158,10 @@ export default function EstimatesPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
                     <div style={{ textAlign: 'right' }}>
                       <p style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
-                        ${est.cost_likely_usd?.toLocaleString(undefined, { maximumFractionDigits: 0 }) ?? '—'}
+                        {format(est.cost_likely_usd ?? 0)}
                       </p>
                       <p style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>
-                        ${est.cost_min_usd?.toLocaleString(undefined, { maximumFractionDigits: 0 })} – ${est.cost_max_usd?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        {format(est.cost_min_usd ?? 0)} – {format(est.cost_max_usd ?? 0)}
                       </p>
                     </div>
 

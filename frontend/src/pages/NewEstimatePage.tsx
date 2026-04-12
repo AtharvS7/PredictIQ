@@ -2,9 +2,11 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
+import CurrencySelector from '@/components/shared/CurrencySelector';
 import { useToast } from '@/App';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
+import { useCurrencyStore, CURRENCY_SYMBOLS } from '@/store/currencyStore';
 import { confirmDocumentUpload, analyzeEstimate, createManualEstimate } from '@/lib/api';
 import {
   Upload, FileText, Check, ArrowRight, ArrowLeft, Loader2, AlertTriangle,
@@ -92,7 +94,7 @@ export default function NewEstimatePage() {
     setUploadProgress(0);
 
     try {
-      const path = `project-docs/${user.id}/${crypto.randomUUID()}-${file.name}`;
+      const path = `${user.id}/${crypto.randomUUID()}-${file.name}`;
 
       // Simulate progress
       const progressInterval = setInterval(() => {
@@ -236,9 +238,15 @@ export default function NewEstimatePage() {
                       {(file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                     <button onClick={(e) => { e.stopPropagation(); setFile(null); }} style={{
-                      marginTop: 8, background: 'none', border: 'none', cursor: 'pointer',
-                      color: 'var(--color-danger)', fontSize: '0.8125rem',
-                    }}>
+                      marginTop: 12, background: 'none', border: '1px solid var(--color-danger)',
+                      cursor: 'pointer', color: 'var(--color-danger)', fontSize: '0.8125rem',
+                      padding: '6px 16px', borderRadius: 8, display: 'inline-flex',
+                      alignItems: 'center', gap: 6, fontWeight: 500,
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-danger)'; e.currentTarget.style.color = 'white'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--color-danger)'; }}
+                    >
                       <X size={14} /> Remove
                     </button>
                   </div>
@@ -370,14 +378,23 @@ export default function NewEstimatePage() {
                 </div>
 
                 <div>
-                  <label className="label">Hourly Rate (USD)</label>
-                  <input
-                    type="number"
-                    className="input-field"
-                    min={10} max={500}
-                    value={params.hourly_rate_usd}
-                    onChange={(e) => setParams({ ...params, hourly_rate_usd: Number(e.target.value) })}
-                  />
+                  <label className="label">Hourly Rate (per hour)</label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input
+                      type="number"
+                      className="input-field"
+                      style={{ flex: 1 }}
+                      min={10} max={50000}
+                      value={params.hourly_rate_usd}
+                      onChange={(e) => setParams({ ...params, hourly_rate_usd: Number(e.target.value) })}
+                    />
+                    <CurrencySelector compact />
+                  </div>
+                  {useCurrencyStore.getState().currency !== 'USD' && (
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 4 }}>
+                      ≈ ${(params.hourly_rate_usd / useCurrencyStore.getState().getRate()).toFixed(2)} USD/hr
+                    </p>
+                  )}
                 </div>
 
                 <div style={{ gridColumn: '1 / -1' }}>
