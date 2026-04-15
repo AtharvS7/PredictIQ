@@ -48,6 +48,9 @@ export default function NewEstimatePage() {
     methodology: 'Agile',
     hourly_rate_usd: 75,
     tech_stack: '' as string,
+    integration_count: 2,
+    volatility_score: 3,
+    team_experience: 'Mixed',
   });
 
   // Step 3: Processing
@@ -405,6 +408,49 @@ export default function NewEstimatePage() {
                     onChange={(e) => setParams({ ...params, tech_stack: e.target.value })}
                     placeholder="React, FastAPI, PostgreSQL, Python"
                   />
+                </div>
+
+                <div>
+                  <label className="label">External Integrations</label>
+                  <input
+                    type="number"
+                    className="input-field"
+                    min={0} max={30}
+                    value={params.integration_count}
+                    onChange={(e) => setParams({ ...params, integration_count: Number(e.target.value) })}
+                  />
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 4 }}>
+                    Third-party APIs, payment gateways, CRM integrations
+                  </p>
+                </div>
+
+                <div>
+                  <label className="label">Requirements Volatility</label>
+                  <select
+                    className="input-field"
+                    value={params.volatility_score}
+                    onChange={(e) => setParams({ ...params, volatility_score: Number(e.target.value) })}
+                  >
+                    <option value={1}>1 — Locked / Fixed Scope</option>
+                    <option value={2}>2 — Mostly Stable</option>
+                    <option value={3}>3 — Moderate Changes</option>
+                    <option value={4}>4 — Evolving / Iterative</option>
+                    <option value={5}>5 — Highly Volatile</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="label">Team Experience</label>
+                  <select
+                    className="input-field"
+                    value={params.team_experience}
+                    onChange={(e) => setParams({ ...params, team_experience: e.target.value })}
+                  >
+                    <option value="Junior">Junior (0-2 yrs avg)</option>
+                    <option value="Mixed">Mixed (2-5 yrs avg)</option>
+                    <option value="Senior">Senior (5-10 yrs avg)</option>
+                    <option value="Expert">Expert (10+ yrs avg)</option>
+                  </select>
                 </div>
               </div>
 

@@ -11,18 +11,43 @@ on:
     branches: [main]
 
 jobs:
-  # ── Backend Tests ─────────────────────────────────────────
-  backend-tests:
-    name: Backend Tests (Python 3.11)
+  # ── Security Scan ──────────────────────────────────────────
+  security-scan:
+    name: Security Scan
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
+
+      - name: Run pre-push security check
+        run: python scripts/pre_push_check.py
+
+      - name: Verify no .env files tracked
+        run: |
+          if git ls-files --cached | grep -E '\.env$|\.env\.' | grep -v '.example'; then
+            echo "::error::Environment files are tracked by git!"
+            exit 1
+          fi
+          echo "No .env files tracked — OK"
+
+  # ── Backend Tests ─────────────────────────────────────────
+  backend-tests:
+    name: Backend Tests (Python 3.13)
+    runs-on: ubuntu-latest
+    needs: [security-scan]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
           cache: 'pip'
 
       - name: Install dependencies
@@ -50,6 +75,7 @@ jobs:
   frontend-build:
     name: Frontend Build (Node 20)
     runs-on: ubuntu-latest
+    needs: [security-scan]
 
     steps:
       - uses: actions/checkout@v4
@@ -101,3 +127,4 @@ jobs:
         run: |
           docker images predictiq-backend:test
           docker images predictiq-frontend:test
+

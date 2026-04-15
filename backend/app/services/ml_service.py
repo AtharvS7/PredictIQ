@@ -98,8 +98,12 @@ class MLService:
         # Map complexity to T-factor scale (1–5)
         c_score = COMPLEXITY_MAP.get(complexity, 2.5)
 
-        # Team experience proxy from team size
-        team_exp = _team_size_to_exp(team_size)
+        # Team experience: prefer NLP-extracted value, fallback to size proxy
+        nlp_team_exp = params.get("team_experience")
+        if nlp_team_exp is not None and 1.0 <= float(nlp_team_exp) <= 4.0:
+            team_exp = float(nlp_team_exp)
+        else:
+            team_exp = _team_size_to_exp(team_size)
         manager_exp = min(4.0, team_exp + 0.5)
 
         # Derived FP components
@@ -116,7 +120,12 @@ class MLService:
         t05 = METHODOLOGY_T05.get(methodology, 3.0)    # Transaction rate
         t06 = 3.0                                       # Online data entry
         t07 = c_score                                   # End-user efficiency
-        t08 = min(5.0, max(1.0, 5 - team_exp))         # Req volatility (inverse exp)
+        # T08: Prefer NLP-extracted volatility score over inverse team_exp
+        nlp_volatility = params.get("volatility_score")
+        if nlp_volatility is not None and 1 <= int(nlp_volatility) <= 5:
+            t08 = float(nlp_volatility)
+        else:
+            t08 = min(5.0, max(1.0, 5 - team_exp))     # Req volatility (inverse exp)
         t09 = c_score                                   # Processing complexity
         t10 = min(5.0, max(1.0, c_score * 0.9))        # Reusability
         t11 = min(5.0, max(1.0, c_score * 0.85))       # Installation ease

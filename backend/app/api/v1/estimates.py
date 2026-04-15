@@ -121,6 +121,9 @@ async def analyze_estimate(
             or extracted.get("tech_stack", {}).get("value", [])
         )
         feature_count = extracted.get("feature_count", {}).get("value", 10)
+        integration_count = extracted.get("integration_count", {}).get("value", 2)
+        volatility_score = extracted.get("volatility_score", {}).get("value", 3)
+        team_experience = extracted.get("team_experience", {}).get("value", 2.0)
 
         # Build complete estimate
         return await _run_estimation(
@@ -135,6 +138,9 @@ async def analyze_estimate(
             hourly_rate=hourly_rate,
             tech_stack=tech_stack,
             feature_count=feature_count,
+            integration_count=integration_count,
+            volatility_score=volatility_score,
+            team_experience=team_experience,
         )
 
     except HTTPException:
@@ -183,6 +189,9 @@ async def _run_estimation(
     hourly_rate: float,
     tech_stack: list[str],
     feature_count: int,
+    integration_count: int = 2,
+    volatility_score: int = 3,
+    team_experience: float = 2.0,
 ) -> EstimateResult:
     """Shared estimation pipeline for both document and manual flows."""
 
@@ -191,6 +200,7 @@ async def _run_estimation(
         feature_count=feature_count,
         complexity=complexity,
         tech_stack_count=len(tech_stack),
+        external_interface_files=min(integration_count, 15),
     )
 
     # Step 6: ML Prediction
@@ -203,6 +213,8 @@ async def _run_estimation(
         "size_fp": size_fp,
         "feature_count": feature_count,
         "methodology": methodology,
+        "volatility_score": volatility_score,
+        "team_experience": team_experience,
     }
 
     # ── ML_PLACEHOLDER START ─────────────────────────────────────

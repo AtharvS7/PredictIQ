@@ -1,17 +1,17 @@
-# ═══════════════════════════════════════════════════════════════
-# PredictIQ Backend — Python Dependencies
-# Python 3.14 compatible | No C compilation required
+# =================================================================
+# PredictIQ Backend -- Python Dependencies
+# Python 3.13+ compatible | No C compilation required
 # Install: pip install -r requirements.txt
-# ═══════════════════════════════════════════════════════════════
+# =================================================================
 
-# ── Core API ──────────────────────────────────────────────────
+# -- Core API ------------------------------------------------------
 fastapi>=0.111.0
 uvicorn[standard]>=0.30.1
 python-multipart>=0.0.9
 pydantic>=2.7.1
 pydantic-settings>=2.3.1
 
-# ── Supabase ──────────────────────────────────────────────────
+# -- Supabase ------------------------------------------------------
 # Pin supabase to 2.4.2 with old sub-packages (no pyiceberg C dep)
 supabase==2.4.2
 storage3==0.7.7
@@ -21,29 +21,29 @@ realtime>=1.0.0,<2.0.0
 supafunc>=0.3.1,<0.5.0
 python-jose[cryptography]>=3.3.0
 
-# ── Document Parsing ──────────────────────────────────────────
+# -- Document Parsing ----------------------------------------------
 pdfplumber>=0.11.0
 python-docx>=1.1.2
 
-# ── NLP ───────────────────────────────────────────────────────
-# No spaCy needed — nlp_extractor.py uses pure regex/keyword matching
+# -- NLP -----------------------------------------------------------
+# No spaCy needed -- nlp_extractor.py uses pure regex/keyword matching
 
-# ── ML Inference ──────────────────────────────────────────────
+# -- ML Inference --------------------------------------------------
 scikit-learn>=1.5.0
 xgboost>=2.0.3
 numpy>=1.26.4
 pandas>=2.2.2
 
-# ── PDF Export ────────────────────────────────────────────────
+# -- PDF Export ----------------------------------------------------
 reportlab>=4.2.2
 Pillow>=10.3.0
 
-# ── Utilities ─────────────────────────────────────────────────
+# -- Utilities -----------------------------------------------------
 structlog>=24.2.0
 python-dotenv>=1.0.1
-httpx>=0.27.0
+httpx>=0.24.0,<0.26.0
 bcrypt>=4.1.3
 
-# ── Training (optional — only for: python backend/ml/train.py)
+# -- Training (optional -- only for: python backend/ml/train.py)
 matplotlib>=3.8.0
 seaborn>=0.13.0

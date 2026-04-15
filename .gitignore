@@ -14,14 +14,19 @@ dist/
 build/
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
 
 # Environment
 .env
 .env.*
 !.env.example
+!.env.test.example
 
 # ML artifacts (large binary — use Git LFS or cloud storage)
 backend/ml/*.pkl
+backend/ml/*.png
 backend/ml/training_log_*.txt
 backend/ml/artifacts/
 
@@ -29,20 +34,31 @@ backend/ml/artifacts/
 node_modules/
 frontend/dist/
 frontend/.vite/
+*.tsbuildinfo
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*.iml
 
 # OS
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # Logs
 *.log
 logs/
 
+# Docker
+.docker/
+
+# Code review graph
+.code-review-graph/
+tooling/code-review-graph/.cache/
+
 # Antigravity
 .gemini/
+
