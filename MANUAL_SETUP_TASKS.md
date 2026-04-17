@@ -51,20 +51,34 @@ Add these **Repository Secrets** (Actions → Secrets → New repository secret)
 
 **Location:** https://github.com/AtharvS7/PredictIQ/settings/environments
 
-### Create `staging` environment:
-1. Click **"New environment"** → Name: `staging`
-2. No protection rules needed
+> ⚠️ **The CD pipelines (staging + production) will NOT run until you push to `dev`
+> or create a version tag.** You can safely create empty environments now and add
+> deployment secrets later when you're ready to deploy. The CI pipeline (testing,
+> linting, security) works perfectly without any of these.
 
-### Create `production` environment:
+### ✅ Do NOW — Create empty environments:
+
+**Create `staging` environment:**
+1. Click **"New environment"** → Name: `staging`
+2. No protection rules needed — leave everything blank
+
+**Create `production` environment:**
 1. Click **"New environment"** → Name: `production`
 2. ✅ Required reviewers: Add `AtharvS7` (and optionally one teammate)
 3. ✅ Wait timer: 5 minutes (gives time to cancel a bad deploy)
-4. Add environment-specific secrets:
-   - `RAILWAY_TOKEN_PRODUCTION`
-   - `PRODUCTION_API_URL`
-   - `VERCEL_TOKEN`
-   - `VERCEL_ORG_ID`
-   - `VERCEL_PROJECT_ID`
+4. **Leave secrets empty for now**
+
+### 🔜 Do LATER — When ready to deploy (add these secrets to the environments):
+
+| Secret Name                  | Platform | How to get it |
+|------------------------------|----------|---------------|
+| `VERCEL_TOKEN`               | Vercel   | Settings → Tokens → Create Token |
+| `VERCEL_ORG_ID`              | Vercel   | Settings → General → Your ID |
+| `VERCEL_PROJECT_ID`          | Vercel   | Project → Settings → General → Project ID |
+| `RAILWAY_TOKEN_STAGING`      | Railway  | Account → Tokens → Create Token |
+| `RAILWAY_TOKEN_PRODUCTION`   | Railway  | Account → Tokens → Create Token |
+| `PRODUCTION_API_URL`         | Railway  | Your deployed service URL (e.g. `https://predictiq-api.up.railway.app`) |
+| `STAGING_API_URL`            | Railway  | Your staging service URL |
 
 ---
 
