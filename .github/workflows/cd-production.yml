@@ -73,7 +73,7 @@ jobs:
           curl -s "$PROD_URL/api/v1/health" | python3 -m json.tool
 
       - name: "Create GitHub Release"
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           TAG: ${{ steps.version.outputs.tag }}
         with:
