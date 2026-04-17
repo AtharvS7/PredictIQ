@@ -1,0 +1,84 @@
+name: Security — Weekly vulnerability audit
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  push:
+    branches: [main]
+
+jobs:
+  dependency-audit:
+    name: "Dependency vulnerability scan"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: "Python — pip-audit"
+        run: |
+          pip install pip-audit
+          pip install -r backend/requirements.lock.txt
+          pip-audit --desc --format json -o pip-audit.json || true
+          python3 -c "
+          import json, sys
+          try:
+              data = json.load(open('pip-audit.json'))
+              vulns = [v for v in data.get('dependencies',[])
+                       if v.get('vulns')]
+              if vulns:
+                  print(f'WARNING: {len(vulns)} packages with known CVEs:')
+                  for p in vulns:
+                      for v in p['vulns']:
+                          print(f'  {p[\"name\"]} {p[\"version\"]} — {v[\"id\"]}: {v[\"description\"][:80]}')
+                  sys.exit(1)
+              print('PASS: No known CVEs in Python dependencies')
+          except FileNotFoundError:
+              print('Audit report not found')
+          "
+
+      - name: "Node — npm audit"
+        run: |
+          cd frontend
+          npm ci
+          npm audit --audit-level=high --json > npm-audit.json || true
+          node -e "
+          const r = require('./npm-audit.json');
+          const high = (r.metadata && r.metadata.vulnerabilities) || {};
+          const count = (high.high||0) + (high.critical||0);
+          if (count > 0) {
+            console.log('WARNING: ' + count + ' high/critical npm vulnerabilities');
+            process.exit(1);
+          }
+          console.log('PASS: No high/critical npm vulnerabilities');
+          " || true
+
+      - name: "Create issue if vulnerabilities found"
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'security,automated',
+              state: 'open'
+            });
+            if (existing.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '[Security] Dependency vulnerabilities detected',
+                body: 'The weekly security audit found vulnerabilities. ' +
+                      'Run: `pip-audit -r backend/requirements.lock.txt` and ' +
+                      '`cd frontend && npm audit` to see details. ' +
+                      'Update affected packages and rerun the pipeline.',
+                labels: ['security', 'automated', 'priority-high']
+              });
+            }

@@ -1,0 +1,41 @@
+version: 2
+updates:
+
+  # Python backend — check weekly
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - backend
+    reviewers:
+      - AtharvS7
+
+  # Node.js frontend — check weekly
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - frontend
+    reviewers:
+      - AtharvS7
+
+  # GitHub Actions — keep action versions current
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+      - ci-cd
+    reviewers:
+      - AtharvS7

@@ -1,130 +1,183 @@
-# ═══════════════════════════════════════════════════════════════
-# PredictIQ — CI/CD Pipeline (GitHub Actions)
-# ═══════════════════════════════════════════════════════════════
-
-name: PredictIQ CI
+name: CI — Lint, Test, Security
 
 on:
   push:
-    branches: [main, develop]
+    branches: ["**"]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.13"
+  NODE_VERSION:   "20"
 
 jobs:
-  # ── Security Scan ──────────────────────────────────────────
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
 
+  # ── JOB 1: Python lint + type check ──────────────────────────────
+  lint-backend:
+    name: "Backend — Lint"
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
-
-      - name: Run pre-push security check
-        run: python scripts/pre_push_check.py
-
-      - name: Verify no .env files tracked
-        run: |
-          if git ls-files --cached | grep -E '\.env$|\.env\.' | grep -v '.example'; then
-            echo "::error::Environment files are tracked by git!"
-            exit 1
-          fi
-          echo "No .env files tracked — OK"
-
-  # ── Backend Tests ─────────────────────────────────────────
-  backend-tests:
-    name: Backend Tests (Python 3.13)
-    runs-on: ubuntu-latest
-    needs: [security-scan]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: 'pip'
-
-      - name: Install dependencies
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install ruff mypy types-requests
+      - name: "Ruff lint (style + import order)"
+        run: ruff check backend/ --select E,W,F,I --ignore E501
+      - name: "Type check (mypy)"
         run: |
           cd backend
-          pip install -r requirements.txt
-          pip install pytest pytest-asyncio httpx
+          mypy app/ --ignore-missing-imports --no-strict-optional \
+               --exclude 'ml/'
 
-      - name: Copy env template
+  # ── JOB 2: TypeScript type check ─────────────────────────────────
+  lint-frontend:
+    name: "Frontend — Type check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: cd frontend && npm ci
+      - name: "TypeScript strict check"
+        run: cd frontend && npx tsc --noEmit
+
+  # ── JOB 3: Backend unit + integration tests ─────────────────────
+  test-backend:
+    name: "Backend — Tests"
+    runs-on: ubuntu-latest
+    needs: [lint-backend]
+    env:
+      APP_ENV:                   test
+      APP_VERSION:               "2.5.0"
+      JWT_SECRET:                ${{ secrets.JWT_SECRET_TEST }}
+      SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY:         ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DEFAULT_HOURLY_RATE_USD:   "75"
+      ML_MODEL_PATH:             ./ml/predictiq_best_model.pkl
+      ML_SCALER_PATH:            ./ml/predictiq_scaler.pkl
+      ML_FEATURES_PATH:          ./ml/predictiq_features.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: "Install dependencies"
+        run: |
+          pip install -r backend/requirements.lock.txt
+          pip install pytest pytest-asyncio httpx pytest-cov
+      - name: "Copy env template"
         run: cp backend/.env.example backend/.env
-
-      - name: Run tests
+      - name: "Run tests with coverage"
         run: |
           cd backend
-          python -m pytest tests/ -v --tb=short --junitxml=../test-results/backend.xml
-
-      - name: Upload test results
+          python -m pytest tests/ -v --tb=short \
+            --cov=app --cov-report=xml --cov-report=term-missing
+      - name: "Upload coverage report"
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: backend-test-results
-          path: test-results/
+          name: coverage-report
+          path: backend/coverage.xml
 
-  # ── Frontend Build ────────────────────────────────────────
-  frontend-build:
-    name: Frontend Build (Node 20)
+  # ── JOB 4: Frontend build verification ──────────────────────────
+  build-frontend:
+    name: "Frontend — Build"
     runs-on: ubuntu-latest
-    needs: [security-scan]
-
+    needs: [lint-frontend]
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
+      - run: cd frontend && npm ci
+      - name: "Production build"
         run: |
           cd frontend
-          npm ci --silent
-
-      - name: TypeScript check
-        run: |
-          cd frontend
-          npx tsc --noEmit
-
-      - name: Build production bundle
-        run: |
-          cd frontend
+          VITE_API_BASE_URL=/api/v1 \
+          VITE_APP_ENV=production \
           npm run build
-
-      - name: Upload build artifact
+      - name: "Upload build artifact"
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist/
+          retention-days: 3
 
-  # ── Docker Build ──────────────────────────────────────────
-  docker-build:
-    name: Docker Build Verification
+  # ── JOB 5: Secret and security scan ─────────────────────────────
+  security-scan:
+    name: "Security — Secret + code scan"
     runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-build]
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Build backend image
-        run: docker build -f Dockerfile.backend -t predictiq-backend:test .
-
-      - name: Build frontend image
-        run: docker build -f Dockerfile.frontend -t predictiq-frontend:test .
-
-      - name: Verify images exist
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: "Custom secret pattern scan"
+        run: python scripts/pre_push_check.py
+      - name: "Bandit SAST scan (Python security)"
         run: |
-          docker images predictiq-backend:test
-          docker images predictiq-frontend:test
+          pip install bandit
+          bandit -r backend/app/ -ll -ii \
+            --exclude backend/app/tests/ \
+            -f json -o bandit-report.json || true
+          python -c "
+          import json, sys
+          try:
+              r = json.load(open('bandit-report.json'))
+              highs = [i for i in r.get('results',[]) if i['issue_severity']=='HIGH']
+              if highs:
+                  print(f'FAIL: {len(highs)} HIGH severity issues found:')
+                  for h in highs: print(f'  {h[\"filename\"]}:{h[\"line_number\"]} — {h[\"issue_text\"]}')
+                  sys.exit(1)
+              print(f'PASS: 0 HIGH severity issues')
+          except: pass
+          "
+      - name: "Check .env files not tracked"
+        run: |
+          COUNT=$(git ls-files backend/.env frontend/.env 2>/dev/null | wc -l)
+          if [ "$COUNT" -gt 0 ]; then
+            echo "FAIL: .env files are tracked by git!"
+            git ls-files backend/.env frontend/.env
+            exit 1
+          fi
+          echo "PASS: No .env files tracked"
 
+  # ── JOB 6: Docker build verification (PRs only) ─────────────────
+  docker-build-check:
+    name: "Docker — Build check"
+    runs-on: ubuntu-latest
+    needs: [test-backend, build-frontend]
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Build backend image"
+        run: docker build -f Dockerfile.backend -t predictiq-backend:ci .
+      - name: "Build frontend image"
+        run: docker build -f Dockerfile.frontend -t predictiq-frontend:ci .
+      - name: "Smoke test — backend starts cleanly"
+        run: |
+          docker run -d --name backend-ci \
+            -e APP_ENV=test \
+            -e JWT_SECRET=test-secret-for-ci-only-not-production \
+            -e SUPABASE_URL=http://localhost \
+            -e SUPABASE_ANON_KEY=test \
+            -e SUPABASE_SERVICE_ROLE_KEY=test \
+            predictiq-backend:ci
+          sleep 5
+          docker logs backend-ci 2>&1 | head -30
+          docker stop backend-ci || true

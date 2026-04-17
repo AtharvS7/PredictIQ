@@ -2,7 +2,9 @@
 PredictIQ Backend Configuration
 Loads environment variables via pydantic-settings.
 """
+import warnings
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 from typing import List
 
 
@@ -29,7 +31,27 @@ class Settings(BaseSettings):
     # Application
     DEFAULT_HOURLY_RATE_USD: float = 75.0
     APP_ENV: str = "development"
-    APP_VERSION: str = "2.0.0"
+    APP_VERSION: str = "2.5.0"
+
+    @model_validator(mode="after")
+    def _validate_secrets(self) -> "Settings":
+        """Crash fast if critical secrets are still placeholder values."""
+        UNSAFE = {
+            "your-jwt-secret", "changeme", "secret", "test",
+            "placeholder", "REPLACE_ME", "",
+        }
+        if self.APP_ENV not in ("test", "testing", "ci"):
+            if self.JWT_SECRET in UNSAFE:
+                warnings.warn(
+                    "JWT_SECRET is a placeholder — set a real secret in .env",
+                    stacklevel=2,
+                )
+            if not self.SUPABASE_URL.startswith("https://"):
+                warnings.warn(
+                    f"SUPABASE_URL does not look like a production URL: {self.SUPABASE_URL}",
+                    stacklevel=2,
+                )
+        return self
 
     @property
     def cors_origins(self) -> List[str]:

@@ -1,0 +1,90 @@
+name: CD — Deploy to Production
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version tag to deploy (e.g. v2.5.0)"
+        required: true
+
+jobs:
+  deploy-production:
+    name: "Deploy production"
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: "Determine version"
+        id: version
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [ -z "$TAG" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Deploying version: $TAG"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.version.outputs.tag }}
+
+      - name: "Build frontend for production"
+        run: |
+          npm ci --prefix frontend
+          cd frontend
+          VITE_API_BASE_URL="${{ secrets.PRODUCTION_API_URL }}" \
+          VITE_APP_ENV=production \
+          npm run build
+
+      - name: "Deploy backend to Railway (production)"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+        run: |
+          npm install -g @railway/cli
+          railway up \
+            --service predictiq-backend-production \
+            --detach
+
+      - name: "Deploy frontend to Vercel (production)"
+        env:
+          VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm install -g vercel
+          vercel deploy frontend/dist \
+            --token $VERCEL_TOKEN \
+            --prod \
+            --no-wait
+
+      - name: "Production smoke test"
+        env:
+          PROD_URL: ${{ secrets.PRODUCTION_API_URL }}
+        run: |
+          sleep 45
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "$PROD_URL/api/v1/health")
+          if [ "$STATUS" != "200" ]; then
+            echo "CRITICAL: Production health check FAILED ($STATUS)"
+            exit 1
+          fi
+          curl -s "$PROD_URL/api/v1/health" | python3 -m json.tool
+
+      - name: "Create GitHub Release"
+        uses: actions/github-script@v7
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        with:
+          script: |
+            const tag = process.env.TAG;
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              tag_name:    tag,
+              name:        `PredictIQ ${tag}`,
+              body:        `## PredictIQ ${tag}\n\nSee [CHANGELOG.md](CHANGELOG.md) for details.`,
+              draft:       false,
+              prerelease:  false
+            });
