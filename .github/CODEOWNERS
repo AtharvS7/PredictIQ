@@ -2,32 +2,32 @@
 # Format: <pattern> <github-username> <github-username>
 # GitHub auto-requests review from owners when their files change.
 # AT LEAST ONE owner must approve before the PR can be merged.
-# ⚠️ Replace @TeammateXGithub with actual GitHub usernames.
+# @AtharvS7 is listed on EVERY rule — all PRs ping the project lead.
 
 # ── Global fallback — all PRs need at least one of these ──────────
-*                         @AtharvS7 @TeammateCGithub
+*                         @AtharvS7 @Shravani0605
 
 # ── ML model and training ─────────────────────────────────────────
-backend/ml/               @AtharvS7 @TeammateDGithub
+backend/ml/               @AtharvS7 @Shekhar2006
 
 # ── Backend services and API ──────────────────────────────────────
-backend/app/              @AtharvS7 @TeammateCGithub
+backend/app/              @AtharvS7 @Shekhar2006
 
 # ── Frontend ──────────────────────────────────────────────────────
-frontend/src/             @TeammateAGithub @TeammateBGithub
+frontend/src/             @AtharvS7 @Shravani0605 @Shruti10101-1
 
 # ── Database migrations — must always have owner review ───────────
 supabase/migrations/      @AtharvS7
 
 # ── CI/CD and deployment ─────────────────────────────────────────
-.github/                  @AtharvS7 @TeammateCGithub
-Dockerfile*               @AtharvS7 @TeammateCGithub
-docker-compose*.yml       @AtharvS7 @TeammateCGithub
+.github/                  @AtharvS7 @RohiniJanardhanPhad
+Dockerfile*               @AtharvS7 @RohiniJanardhanPhad
+docker-compose*.yml       @AtharvS7 @RohiniJanardhanPhad
 
 # ── Security-sensitive files ──────────────────────────────────────
-scripts/pre_push_check.py @AtharvS7 @TeammateCGithub
-*.env.example             @AtharvS7
+scripts/pre_push_check.py @AtharvS7 @RohiniJanardhanPhad
+*.env.example             @Shekhar2006
 
 # ── Documentation ─────────────────────────────────────────────────
-docs/                     @TeammateCGithub @AtharvS7
-README.md                 @TeammateCGithub @AtharvS7
+docs/                     @AtharvS7 
+README.md                 @AtharvS7 

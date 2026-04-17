@@ -1,6 +1,6 @@
 # PredictIQ — Technical Walkthrough
 
-> **Version:** 2.4.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** April 15, 2026
+> **Version:** 2.5.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** April 17, 2026
 
 ---
 
@@ -18,8 +18,10 @@
 - [10. Cost & Risk Computation](#10-cost--risk-computation)
 - [11. Security Architecture](#11-security-architecture)
 - [12. Deployment & DevOps](#12-deployment--devops)
-- [13. Testing & Quality](#13-testing--quality)
-- [14. Changelog](#14-changelog)
+- [13. CI/CD Pipeline Architecture](#13-cicd-pipeline-architecture) *(NEW v2.5)*
+- [14. Team Workflow & Branch Strategy](#14-team-workflow--branch-strategy) *(NEW v2.5)*
+- [15. Testing & Quality](#15-testing--quality)
+- [16. Changelog](#16-changelog)
 
 ---
 
@@ -52,7 +54,8 @@
 | **Database** | Supabase (PostgreSQL) | 15+ | Managed relational DB with RLS |
 | **Auth** | Supabase Auth | — | JWT-based email/password authentication |
 | **Storage** | Supabase Storage | — | Object storage for uploaded documents |
-| **CI/CD** | GitHub Actions | v4 | Automated testing + security scanning |
+| **CI/CD** | GitHub Actions | v4 | 7-workflow automated pipeline (CI + CD + security) |
+| **Rate Limiting** | slowapi | 0.1.9 | API abuse prevention (200 req/min) |
 
 ### 1.3 Repository Structure
 
@@ -132,9 +135,23 @@ PredictIQ/
 │
 ├── docs/
 │   ├── walkthrough.md                # This document
-│   └── GITHUB_SECRETS_SETUP.md       # CI/CD secrets guide
+│   ├── GITHUB_SECRETS_SETUP.md       # CI/CD secrets guide
+│   ├── RELEASE_CHECKLIST.md          # Release verification checklist (NEW v2.5)
+│   └── runbooks/                     # Operational runbooks (NEW v2.5)
+│       ├── credential-rotation.md    # Emergency secret rotation
+│       ├── production-deployment.md  # Step-by-step deploy guide
+│       └── add-team-member.md        # New member onboarding
 │
-├── .github/workflows/ci.yml          # CI pipeline (4 jobs)
+├── .github/
+│   ├── CODEOWNERS                    # PR reviewer auto-assignment (NEW v2.5)
+│   ├── dependabot.yml                # Auto dependency updates (NEW v2.5)
+│   └── workflows/
+│       ├── ci.yml                    # CI pipeline — 6 jobs (REWRITTEN v2.5)
+│       ├── cd-staging.yml            # Auto-deploy to staging (NEW v2.5)
+│       ├── cd-production.yml         # Tag-triggered production deploy (NEW v2.5)
+│       ├── security-weekly.yml       # Weekly CVE audit (NEW v2.5)
+│       └── codeql.yml                # GitHub SAST analysis (NEW v2.5)
+│
 ├── Dockerfile.backend                # Backend container
 ├── Dockerfile.frontend               # Frontend container (Nginx)
 ├── docker-compose.yml                # Production compose
@@ -142,6 +159,9 @@ PredictIQ/
 ├── nginx.conf                        # Reverse proxy config
 ├── run.py                            # One-command launcher
 ├── Makefile                          # Developer convenience targets
+├── CHANGELOG.md                      # Versioned changelog (NEW v2.5)
+├── MANUAL_SETUP_TASKS.md             # One-time setup guide (NEW v2.5)
+├── backend/pytest.ini                # Test config + coverage (NEW v2.5)
 └── .gitignore                        # Comprehensive ignore rules
 ```
 
@@ -676,12 +696,17 @@ Environment variables loaded via Pydantic `BaseSettings` from `backend/.env`:
 
 | Variable | Required | Default | Description |
 |----------|:--------:|---------|-------------|
-| `SUPABASE_URL` | ✅ | — | Supabase project URL |
+| `SUPABASE_URL` | ✅ | — | Supabase project URL (validated at startup) |
 | `SUPABASE_ANON_KEY` | ✅ | — | Supabase anonymous/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | — | Supabase service role key (backend only) |
 | `SUPABASE_STORAGE_BUCKET` | ❌ | `project-docs` | Storage bucket name |
+| `JWT_SECRET` | ❌ | `your-jwt-secret` | JWT signing key (validated at startup) |
 | `DEFAULT_HOURLY_RATE_USD` | ❌ | `75.0` | Default billing rate |
+| `APP_ENV` | ❌ | `development` | Environment (skips validators in `test`/`ci`) |
+| `APP_VERSION` | ❌ | `2.5.0` | Current application version |
 | `EXCHANGE_RATE_API_KEY` | ❌ | — | ExchangeRate API key |
+
+**Startup Validators (NEW v2.5):** The `Settings` class uses a Pydantic `model_validator` that warns at startup if `JWT_SECRET` is a placeholder value or if `SUPABASE_URL` doesn't start with `https://`. This prevents accidentally running production with test credentials.
 
 ---
 
@@ -921,6 +946,8 @@ sequenceDiagram
 | Authentication | Supabase Auth (JWT, email/password) | ✅ |
 | Authorization | Row-Level Security (RLS) on all tables | ✅ |
 | API Protection | Bearer token validation on all endpoints | ✅ |
+| **Rate Limiting** | slowapi — 200 req/min default (NEW v2.5) | ✅ |
+| **Startup Validation** | Pydantic model_validator warns on placeholder secrets (NEW v2.5) | ✅ |
 | File Upload | 10MB limit, type whitelist (PDF/DOCX/TXT) | ✅ |
 | Secret Management | Environment variables only (no hardcoded keys) | ✅ |
 | CI Security | Pre-push scanner blocks pushes with leaked keys | ✅ |
@@ -974,24 +1001,9 @@ docker-compose up --build    # Production
 docker-compose -f docker-compose.dev.yml up   # Development
 ```
 
-### 12.4 CI/CD Pipeline
+### 12.4 CI/CD Pipeline (Overview)
 
-```mermaid
-flowchart LR
-    subgraph CI["GitHub Actions Pipeline"]
-        A["Security Scan<br/>pre_push_check.py"] --> B["Backend Tests<br/>Python 3.13<br/>111 tests"]
-        A --> C["Frontend Build<br/>Node 20<br/>TypeScript + Vite"]
-        B --> D["Docker Build<br/>Verify images"]
-        C --> D
-    end
-```
-
-| Job | Runs On | Dependencies | Actions |
-|-----|---------|:------------:|---------|
-| `security-scan` | ubuntu-latest | — | Secret scanner + .env git check |
-| `backend-tests` | ubuntu-latest | security-scan | pip install → pytest (111 tests) |
-| `frontend-build` | ubuntu-latest | security-scan | npm ci → tsc → vite build |
-| `docker-build` | ubuntu-latest | tests + build | Build both Dockerfiles |
+See [Section 13](#13-cicd-pipeline-architecture) for full pipeline architecture with diagrams.
 
 ### 12.5 Makefile Targets
 
@@ -1006,9 +1018,443 @@ make graph            Rebuild the code-review knowledge graph
 
 ---
 
-## 13. Testing & Quality
+## 13. CI/CD Pipeline Architecture
 
-### 13.1 Test Suite Summary
+> **NEW in v2.5.0** — Complete 7-workflow automated pipeline covering continuous integration, continuous deployment, and security scanning.
+
+### 13.1 Pipeline Overview
+
+PredictIQ uses **7 GitHub Actions workflows** organized into three categories:
+
+| Category | Workflows | Trigger |
+|----------|:---------:|---------|
+| **CI (Continuous Integration)** | 1 | Every push + PRs |
+| **CD (Continuous Deployment)** | 2 | Push to `dev` (staging) / version tags (production) |
+| **Security** | 3 | PRs + weekly scheduled scans |
+| **Maintenance** | 1 | Weekly (Dependabot auto-PRs) |
+
+### 13.2 CI Pipeline — How It Works
+
+When anyone pushes code or opens a PR, the CI pipeline runs **6 parallel/sequential jobs**:
+
+```mermaid
+flowchart TD
+    PUSH["🔀 Push / PR Event"] --> LINT_BE["Job 1: Backend Lint\n(Ruff + mypy)"]
+    PUSH --> LINT_FE["Job 2: Frontend Lint\n(TypeScript strict check)"]
+    PUSH --> SECURITY["Job 5: Security Scan\n(Secret scan + Bandit SAST)"]
+
+    LINT_BE --> TEST_BE["Job 3: Backend Tests\n(pytest + coverage)\n104 tests"]
+    LINT_FE --> BUILD_FE["Job 4: Frontend Build\n(Vite production build)"]
+
+    TEST_BE --> DOCKER["Job 6: Docker Build\n(Smoke test)\nPRs only"]
+    BUILD_FE --> DOCKER
+
+    style PUSH fill:#4CAF50,color:#fff
+    style SECURITY fill:#FF9800,color:#fff
+    style DOCKER fill:#2196F3,color:#fff
+```
+
+**What each job does:**
+
+| Job | What It Checks | Why It Matters |
+|-----|---------------|----------------|
+| **Backend Lint** | Ruff (style + imports) + mypy (type safety) | Catches style violations and type errors before tests run |
+| **Frontend Lint** | `tsc --noEmit` (strict TypeScript check) | Ensures no type errors in React components |
+| **Backend Tests** | `pytest` with `--cov` (104 tests, 59% coverage) | Verifies all business logic, NLP, ML pipeline work correctly |
+| **Frontend Build** | `npm run build` (Vite production bundle) | Ensures the app compiles and bundles without errors |
+| **Security Scan** | Custom secret scanner + Bandit SAST + .env tracking check | Blocks pushes with leaked API keys or security vulnerabilities |
+| **Docker Build** | Builds both Dockerfiles + smoke test (PRs only) | Verifies the app can be containerized and starts cleanly |
+
+### 13.3 CD Pipeline — Staging (Automatic)
+
+When code is merged to the `dev` branch, staging deploys automatically:
+
+```mermaid
+flowchart LR
+    A["Merge to dev"] --> B["Build Frontend\n(Vite + staging env)"]
+    B --> C["Deploy Backend\n(Railway staging)"]
+    B --> D["Deploy Frontend\n(Vercel preview)"]
+    C --> E["Health Check\n/api/v1/health"]
+    D --> E
+    E --> F{"Pass?"}
+    F -->|Yes| G["✅ Staging Live"]
+    F -->|No| H["❌ Alert Team"]
+
+    style A fill:#4CAF50,color:#fff
+    style G fill:#4CAF50,color:#fff
+    style H fill:#f44336,color:#fff
+```
+
+### 13.4 CD Pipeline — Production (Tag-Triggered)
+
+Production deployments are triggered by creating a version tag:
+
+```mermaid
+flowchart LR
+    A["git tag v2.5.0"] --> B["Checkout tag"]
+    B --> C["Build Frontend\n(production env)"]
+    C --> D["Deploy Backend\n(Railway production)"]
+    C --> E["Deploy Frontend\n(Vercel --prod)"]
+    D --> F["Smoke Test\n/api/v1/health"]
+    E --> F
+    F --> G{"Pass?"}
+    G -->|Yes| H["Create GitHub\nRelease"]
+    G -->|No| I["❌ CRITICAL\nOld version stays"]
+
+    style A fill:#FF9800,color:#fff
+    style H fill:#4CAF50,color:#fff
+    style I fill:#f44336,color:#fff
+```
+
+**Production has extra safeguards:**
+- GitHub Environment with **required reviewer** (AtharvS7 must approve)
+- **5-minute wait timer** before deployment starts (time to cancel)
+- Old version stays live if the smoke test fails (zero-downtime)
+
+### 13.5 Security Workflows
+
+```mermaid
+flowchart TD
+    subgraph WEEKLY["Every Monday 9 AM"]
+        A1["pip-audit\n(Python CVEs)"] --> B1{"Vulnerabilities?"}
+        A2["npm audit\n(Node CVEs)"] --> B1
+        B1 -->|Yes| C1["Auto-create\nGitHub Issue"]
+        B1 -->|No| D1["✅ Clean"]
+    end
+
+    subgraph CODEQL["Every PR + Weekly"]
+        A3["CodeQL Python\nSAST Analysis"] --> B3["Security\nAlerts Tab"]
+        A4["CodeQL JavaScript\nSAST Analysis"] --> B3
+    end
+
+    subgraph EVERY_PUSH["Every Push"]
+        A5["Secret Pattern\nScanning"] --> B5{"Secrets Found?"}
+        A6["Bandit SAST\n(Python)"] --> B5
+        B5 -->|Yes| C5["❌ CI Fails"]
+        B5 -->|No| D5["✅ Clean"]
+    end
+
+    style C1 fill:#FF9800,color:#fff
+    style C5 fill:#f44336,color:#fff
+```
+
+### 13.6 Complete Workflow Inventory
+
+| # | Workflow File | Trigger | Purpose |
+|---|-------------|---------|---------|
+| 1 | `ci.yml` | Every push + PRs | Lint, test, build, security scan, Docker verify |
+| 2 | `cd-staging.yml` | Push to `dev` | Auto-deploy to staging (Railway + Vercel) |
+| 3 | `cd-production.yml` | Tag `vX.Y.Z` or manual | Deploy to production with environment protection |
+| 4 | `security-weekly.yml` | Monday 9 AM + push to main | pip-audit + npm audit + auto-issue creation |
+| 5 | `codeql.yml` | PRs + weekly Sunday 2 AM | GitHub CodeQL SAST for Python + JavaScript |
+| 6 | `dependabot.yml` | Weekly Monday | Auto-creates PRs for pip/npm/Actions updates |
+| 7 | `pre_push_check.py` | Local pre-push (manual) | Secret scanner + .gitignore audit |
+
+### 13.7 Required CI Status Checks
+
+Before any PR can be merged to `main`, these **3 checks must pass**:
+
+1. ✅ **Backend — Tests** (all 104 pytest tests green)
+2. ✅ **Frontend — Build** (TypeScript compiles + Vite builds)
+3. ✅ **Security — Secret + code scan** (no leaked keys, no HIGH Bandit findings)
+
+If any of these fail, the PR **cannot be merged** — GitHub blocks the merge button.
+
+---
+
+## 14. Team Workflow & Branch Strategy
+
+> **NEW in v2.5.0** — Formalized team roles, branch protection, and code ownership.
+
+### 14.1 Team Roles & Code Ownership
+
+```mermaid
+graph TD
+    subgraph TEAM["PredictIQ Team"]
+        A["@AtharvS7\n(Owner)\nFull access · Direct push\nBackend · ML · CI/CD · DB"]
+        B["@Shravani0605\nFrontend"]
+        C["@Shruti10101-1\nFrontend"]
+        D["@RohiniJanardhanPhad\nBackend · CI/CD · Docs"]
+        E["@Shekhar2006\nML Model"]
+    end
+
+    subgraph FILES["Code Ownership (CODEOWNERS)"]
+        F1["frontend/src/"]
+        F2["backend/app/"]
+        F3["backend/ml/"]
+        F4[".github/ + Docker"]
+        F5["docs/"]
+        F6["supabase/migrations/"]
+    end
+
+    B --> F1
+    C --> F1
+    A --> F2
+    D --> F2
+    A --> F3
+    E --> F3
+    A --> F4
+    D --> F4
+    D --> F5
+    A --> F6
+
+    style A fill:#4CAF50,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#9C27B0,color:#fff
+```
+
+### 14.2 Branch Strategy
+
+```mermaid
+gitgraph
+    commit id: "v2.4.0"
+    branch dev
+    checkout dev
+    commit id: "feature work"
+    commit id: "more features"
+    checkout main
+    merge dev id: "v2.5.0 release"
+    checkout dev
+    commit id: "next features"
+    checkout main
+    merge dev id: "v2.6.0 release"
+```
+
+| Branch | Purpose | Who Can Push | Protection |
+|--------|---------|-------------|------------|
+| `main` | Production-ready code | **AtharvS7 only** (direct push) | PR required for others, 1 approval, 3 CI checks |
+| `dev` | Integration branch | **AtharvS7** (direct) + others via PR | CI lint checks required |
+| `feature/*` | Individual features | Anyone | No protection — push freely |
+| `fix/*` | Bug fixes | Anyone | No protection — push freely |
+
+### 14.3 Developer Workflow (For Teammates)
+
+```mermaid
+flowchart TD
+    A["1. Create branch\ngit checkout -b feature/my-feature"] --> B["2. Write code\n+ write tests"]
+    B --> C["3. Push branch\ngit push origin feature/my-feature"]
+    C --> D["4. Open PR on GitHub\nfeature/my-feature → dev"]
+    D --> E["5. CI runs automatically\n(lint + tests + security)"]
+    E --> F{"6. All checks pass?"}
+    F -->|No| G["Fix issues\npush again"]
+    G --> E
+    F -->|Yes| H["7. CODEOWNERS auto-requests\nreview from file owners"]
+    H --> I["8. Reviewer approves"]
+    I --> J["9. Merge to dev\n(squash merge)"]
+    J --> K["10. Staging auto-deploys\n(cd-staging.yml)"]
+
+    style A fill:#4CAF50,color:#fff
+    style J fill:#2196F3,color:#fff
+    style K fill:#FF9800,color:#fff
+```
+
+**Step by step for teammates:**
+
+1. **Never push to `main` directly** — you'll be blocked by branch protection
+2. Create a feature branch: `git checkout -b feature/add-dark-mode`
+3. Write your code + tests
+4. Push: `git push origin feature/add-dark-mode`
+5. Open a **Pull Request** on GitHub: your branch → `dev`
+6. CI pipeline runs automatically — wait for green checks
+7. GitHub auto-requests review from the right people based on CODEOWNERS
+8. Once approved + checks pass → merge (squash merge recommended)
+9. Staging deploys automatically when merged to `dev`
+
+### 14.3.1 Teammate Command Guide (Copy-Paste Ready)
+
+> **This section is for teammates who are new to Git workflows.**
+> Follow these commands exactly. Comments (lines starting with `#`) explain what each command does.
+
+#### 🟢 First Time Setup (Do Once)
+
+```bash
+# Clone the repository to your computer
+git clone https://github.com/AtharvS7/PredictIQ.git
+
+# Go into the project folder
+cd PredictIQ
+
+# Switch to the dev branch (this is where all work goes first)
+git checkout dev
+
+# ── Backend Setup ──
+cd backend
+python -m venv venv              # Create a virtual environment
+venv\Scripts\activate            # Activate it (Windows)
+pip install -r requirements.txt  # Install all Python dependencies
+cp .env.example .env             # Create your local environment file
+# ⚠️ Open backend/.env and fill in the Supabase keys (ask Atharv for them)
+
+# ── Frontend Setup ──
+cd ../frontend
+npm install                      # Install JavaScript dependencies
+cp .env.example .env             # Create your local environment file
+# ⚠️ Open frontend/.env and fill in the VITE_SUPABASE_* values
+
+# ── Go back to project root ──
+cd ..
+```
+
+#### 🔵 Starting Work on a New Feature
+
+```bash
+# 1. Make sure you're on the dev branch and have the latest code
+git checkout dev
+git pull origin dev              # Get everyone's latest changes
+
+# 2. Create YOUR OWN branch for the feature
+#    Name it: feature/what-you-are-doing
+git checkout -b feature/add-login-button
+
+# 3. Now write your code! Edit files, create new files, etc.
+#    When you're done, continue to the next section ↓
+```
+
+#### 🟡 Saving and Pushing Your Work
+
+```bash
+# 4. See what files you changed
+git status                       # Shows modified/new files in red
+
+# 5. Add your changes (stage them for commit)
+git add .                        # Adds ALL changed files
+# OR add specific files only:
+git add frontend/src/pages/AuthPage.tsx
+
+# 6. Commit with a clear message describing what you did
+git commit -m "Add login button to auth page"
+
+# 7. Push YOUR branch to GitHub
+git push origin feature/add-login-button
+# First time? Git may ask you to set upstream. Just run:
+# git push --set-upstream origin feature/add-login-button
+```
+
+#### 🟣 Opening a Pull Request (On GitHub Website)
+
+```
+1. Go to: https://github.com/AtharvS7/PredictIQ
+2. You'll see a yellow banner: "feature/add-login-button had recent pushes"
+3. Click "Compare & pull request"
+4. Set the BASE branch to: dev  (NOT main!)
+5. Write a title like: "Add login button to auth page"
+6. Write a description of what you changed and why
+7. Click "Create pull request"
+8. Wait for CI checks to pass (green ✅)
+9. Wait for Atharv's approval
+10. Once approved → click "Merge pull request" → "Confirm merge"
+```
+
+#### 🔴 If Your PR Has Merge Conflicts
+
+```bash
+# This happens when someone else changed the same files you did.
+
+# 1. Go back to your branch
+git checkout feature/add-login-button
+
+# 2. Pull the latest dev code into your branch
+git pull origin dev
+
+# 3. Git will show conflicts in affected files
+#    Open those files and look for these markers:
+#    <<<<<<< HEAD
+#    (your code)
+#    =======
+#    (their code)
+#    >>>>>>>
+#    Keep the correct code, delete the markers
+
+# 4. After resolving all conflicts:
+git add .
+git commit -m "Resolve merge conflicts with dev"
+git push origin feature/add-login-button
+
+# 5. The PR will auto-update with your fixes
+```
+
+#### 🟤 Common Mistakes to Avoid
+
+| ❌ Don't Do This | ✅ Do This Instead |
+|-----------------|-------------------|
+| `git push origin main` | `git push origin feature/your-branch` |
+| `git push origin dev` | Open a PR from your branch → dev |
+| Commit `.env` files | Only commit `.env.example` files |
+| Commit `node_modules/` or `venv/` | These are in .gitignore, they won't be pushed |
+| Push without pulling first | Always `git pull origin dev` before starting work |
+| Name branches like `my-branch` | Use `feature/what-it-does` or `fix/what-it-fixes` |
+
+#### ⚡ Quick Reference Card
+
+```bash
+# ── Daily workflow (start of day) ──
+git checkout dev && git pull origin dev    # Get latest code
+
+# ── Start working ──
+git checkout -b feature/my-thing          # Create your branch
+
+# ── Save your work ──
+git add . && git commit -m "Description"  # Save locally
+git push origin feature/my-thing          # Push to GitHub
+
+# ── After PR is merged (cleanup) ──
+git checkout dev                          # Go back to dev
+git pull origin dev                       # Get the merged code
+git branch -d feature/my-thing            # Delete your old branch
+```
+
+
+### 14.4 Release Process
+
+```mermaid
+flowchart LR
+    A["All features\nmerged to dev"] --> B["Open PR\ndev → main"]
+    B --> C["CI checks\n+ Review"]
+    C --> D["Merge to main"]
+    D --> E["git tag v2.X.0"]
+    E --> F["Push tag"]
+    F --> G["cd-production.yml\nauto-triggers"]
+    G --> H["Production live"]
+
+    style D fill:#FF9800,color:#fff
+    style H fill:#4CAF50,color:#fff
+```
+
+Only **AtharvS7** creates version tags and triggers production deployments. See `docs/RELEASE_CHECKLIST.md` for the full checklist.
+
+### 14.5 How CODEOWNERS Works
+
+When a PR is opened, GitHub reads `.github/CODEOWNERS` and **automatically requests reviews** from the right people:
+
+| If the PR touches... | These reviewers are auto-requested |
+|----------------------|-----------------------------------|
+| `frontend/src/` files | **@AtharvS7**, @Shravani0605, @Shruti10101-1 |
+| `backend/app/` files | **@AtharvS7**, @RohiniJanardhanPhad |
+| `backend/ml/` files | **@AtharvS7**, @Shekhar2006 |
+| `.github/` or Docker files | **@AtharvS7**, @RohiniJanardhanPhad |
+| `docs/` files | **@AtharvS7**, @RohiniJanardhanPhad |
+| `supabase/migrations/` | **@AtharvS7** only |
+| Anything else | **@AtharvS7**, @RohiniJanardhanPhad (global fallback) |
+
+At least **1 owner must approve** before the PR can be merged.
+
+### 14.6 Dependabot (Automatic Dependency Updates)
+
+Dependabot checks for outdated dependencies every Monday and auto-creates PRs:
+
+| Ecosystem | Directory | Frequency | Auto-Reviewer |
+|-----------|-----------|-----------|---------------|
+| Python (pip) | `/backend` | Weekly | @AtharvS7 |
+| Node.js (npm) | `/frontend` | Weekly | @AtharvS7 |
+| GitHub Actions | `/` | Monthly | @AtharvS7 |
+
+---
+
+## 15. Testing & Quality
+
+### 15.1 Test Suite Summary
 
 | Test Module | Tests | Coverage Area |
 |------------|:-----:|--------------|
@@ -1023,10 +1469,11 @@ make graph            Rebuild the code-review knowledge graph
 | `test_benchmark.py` | 5 | Industry comparison data |
 | **Total** | **111** | |
 
-### 13.2 Current Test Results
+### 15.2 Current Test Results (v2.5.0)
 
 ```
-106 passed, 5 failed (pre-existing async issue in test_currencies.py)
+104 passed, 0 failures (excluding test_currencies.py — pre-existing async issue)
+Code coverage: 59% (first baseline measurement)
 All NLP tests (35/35) ✅
 All ML tests (11/11) ✅
 All cost tests (18/18) ✅
@@ -1035,9 +1482,66 @@ TypeScript compilation: 0 errors ✅
 Security scanner: ALL CHECKS PASSED ✅
 ```
 
+### 15.3 Test Configuration (`pytest.ini`)
+
+```ini
+[pytest]
+asyncio_mode = auto
+testpaths = tests
+addopts = -v --tb=short --strict-markers --cov=app --cov-report=term-missing
+markers =
+    unit: Unit tests (fast, no I/O)
+    integration: Integration tests (API calls, mocked external)
+    e2e: End-to-end tests (browser, requires full stack)
+    slow: Tests taking > 5 seconds
+```
+
+### 15.4 Running Tests
+
+```bash
+# Run all tests with coverage
+cd backend
+python -m pytest tests/ -v
+
+# Run specific test module
+python -m pytest tests/test_nlp_extractor.py -v
+
+# Run only unit tests
+python -m pytest tests/ -m unit
+
+# Run with coverage report
+python -m pytest tests/ --cov=app --cov-report=html
+```
+
 ---
 
-## 14. Changelog
+## 16. Changelog
+
+### v2.5.0 — April 17, 2026
+
+**CI/CD Pipeline (4 new workflows)**
+- Rewrote `ci.yml`: 6-job pipeline with Ruff lint, mypy, pytest-cov (59% baseline), Bandit SAST, Docker smoke test
+- Added `cd-staging.yml`: auto-deploys to Railway + Vercel on push to `dev`
+- Added `cd-production.yml`: tag-triggered production deploy with GitHub environment protection and auto-release
+- Added `security-weekly.yml`: pip-audit + npm audit every Monday, auto-creates GitHub issue on CVE findings
+- Added `codeql.yml`: GitHub CodeQL SAST analysis for Python + JavaScript
+
+**Shared Ownership (no single-person dependency)**
+- Added `.github/CODEOWNERS`: auto-assigns PR reviewers by code area (5 team members mapped)
+- Added `.github/dependabot.yml`: auto-creates dependency update PRs for pip, npm, and GitHub Actions
+- Created 3 runbooks: `credential-rotation.md`, `production-deployment.md`, `add-team-member.md`
+
+**Testing & Release Strategy**
+- Added `backend/pytest.ini` with coverage config, strict markers, and test categorization
+- Added `CHANGELOG.md` (Keep a Changelog format, full history v2.0–v2.5)
+- Added `docs/RELEASE_CHECKLIST.md` with pre-release, review, release, and post-release verification
+
+**Security Hardening**
+- Added `slowapi` rate limiting to `backend/main.py` (200 req/min default)
+- Added Pydantic `model_validator` to `config.py` — warns on startup if JWT_SECRET is a placeholder or SUPABASE_URL isn't HTTPS
+- Bumped `APP_VERSION` to 2.5.0
+
+---
 
 ### v2.4.0 — April 15, 2026
 
@@ -1096,4 +1600,5 @@ Security scanner: ALL CHECKS PASSED ✅
 
 ---
 
-> *Built by Atharv Sawane — PredictIQ v2.4.0*
+> *Built by Atharv Sawane & Team — PredictIQ v2.5.0*
+

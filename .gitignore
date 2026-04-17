@@ -62,3 +62,19 @@ tooling/code-review-graph/.cache/
 # Antigravity
 .gemini/
 
+# AI tool configs (editor-specific, not project code)
+.claude/
+.cursorrules
+.windsurfrules
+.mcp.json
+.opencode.json
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+
+# Tooling (local dev utilities)
+tooling/
+
+# Jupyter notebooks at root (keep only in backend/ml/)
+/*.ipynb
+

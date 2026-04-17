@@ -8,8 +8,11 @@
 
 **Location:** https://github.com/AtharvS7/PredictIQ/settings/branches
 
+> **Goal:** AtharvS7 (`@AtharvS7`) can push directly to `main` and `dev` without
+> needing any approvals. Everyone else must create a PR and get approval before merging.
+
 ### Protect `main` branch:
-1. Click **"Add branch protection rule"**
+1. Click **"Add branch protection rule"** (or edit existing rule)
 2. Branch name pattern: `main`
 3. ✅ Require a pull request before merging
    - ✅ Require approvals: **1**
@@ -20,15 +23,22 @@
      - `Frontend — Build`
      - `Security — Secret + code scan`
 5. ✅ Require conversation resolution before merging
-6. ✅ Do not allow bypassing the above settings
-7. Click **"Create"**
+6. ❌ **Do NOT check** "Do not allow bypassing the above settings" (leave this UNCHECKED)
+7. Scroll down to **"Allow specified actors to bypass required pull requests"**
+   - Click the search box and type `AtharvS7`
+   - Select your account — it will appear as a user
+   - This lets YOU push directly. Everyone else still needs a PR + approval.
+8. Click **"Create"** (or **"Save changes"** if editing)
 
 ### Protect `dev` branch:
 1. Click **"Add another rule"**
 2. Branch name pattern: `dev`
 3. ✅ Require status checks to pass before merging
    - Add: `Backend — Lint`, `Frontend — Type check`
-4. Click **"Create"**
+4. ❌ **Do NOT check** "Do not allow bypassing the above settings"
+5. Scroll down to **"Allow specified actors to bypass required pull requests"**
+   - Add `AtharvS7` here too
+6. Click **"Create"
 
 ---
 
@@ -82,15 +92,19 @@ Add these **Repository Secrets** (Actions → Secrets → New repository secret)
 
 ---
 
-## 4. Update CODEOWNERS (Replace Placeholders)
+## 4. ~~Update CODEOWNERS~~ ✅ DONE
 
-**File:** `.github/CODEOWNERS`
+**File:** `.github/CODEOWNERS` — already updated with real usernames.
 
-Replace these placeholder usernames with your actual teammates' GitHub usernames:
-- `@TeammateAGithub` → e.g. `@john-doe`
-- `@TeammateBGithub` → e.g. `@jane-smith`
-- `@TeammateCGithub` → e.g. `@bob-dev`
-- `@TeammateDGithub` → e.g. `@alice-ml`
+| Code Area | Owners |
+|-----------|--------|
+| Global fallback | `@AtharvS7` + `@RohiniJanardhanPhad` |
+| Frontend (`frontend/src/`) | `@AtharvS7` + `@Shravani0605` + `@Shruti10101-1` |
+| Backend (`backend/app/`) | `@AtharvS7` + `@RohiniJanardhanPhad` |
+| ML Model (`backend/ml/`) | `@AtharvS7` + `@Shekhar2006` |
+| CI/CD (`.github/`) | `@AtharvS7` + `@RohiniJanardhanPhad` |
+| Documentation (`docs/`) | `@AtharvS7` + `@RohiniJanardhanPhad` |
+| Database migrations | `@AtharvS7` only |
 
 ---
 
@@ -164,6 +178,32 @@ git checkout -b test/verify-ci
 git push origin test/verify-ci
 # Check GitHub Actions tab — all jobs should trigger
 ```
+
+---
+
+## 9. Fix: Allow AtharvS7 to Push Directly (If Already Blocked)
+
+If you already created branch protection and now you're blocked from pushing:
+
+1. Go to: https://github.com/AtharvS7/PredictIQ/settings/branches
+2. Click **"Edit"** next to the `main` rule
+3. Find **"Do not allow bypassing the above settings"** → **UNCHECK it**
+4. Find **"Allow specified actors to bypass required pull requests"**:
+   - Type `AtharvS7` in the search box
+   - Select your account
+5. Click **"Save changes"**
+6. Repeat for the `dev` rule if it exists
+
+**What this does:**
+- ✅ `AtharvS7` → can `git push origin main` directly, no PR needed
+- ❌ Everyone else → must create a PR → needs 1 approval → then merge
+
+**Test it:** After saving, try pushing from your terminal:
+```bash
+git checkout main
+git push origin main
+```
+If it works, you're set. If it still fails, double-check that "Do not allow bypassing" is **unchecked**.
 
 ---
 
