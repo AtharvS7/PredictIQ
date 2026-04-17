@@ -1152,13 +1152,20 @@ flowchart TD
 
 ### 13.7 Required CI Status Checks
 
-Before any PR can be merged to `main`, these **3 checks must pass**:
+GitHub branch protection enforces that these checks pass before merging PRs:
 
-1. ✅ **Backend — Tests** (all 104 pytest tests green)
-2. ✅ **Frontend — Build** (TypeScript compiles + Vite builds)
+#### For `main` Branch (Production Ready)
+Before any PR can be merged to `main`, these **3 checks must pass**:
+1. ✅ **Backend — Tests** (all 104 pytest tests green, 59%+ coverage)
+2. ✅ **Frontend — Build** (TypeScript compiles + Vite builds for production)
 3. ✅ **Security — Secret + code scan** (no leaked keys, no HIGH Bandit findings)
 
-If any of these fail, the PR **cannot be merged** — GitHub blocks the merge button.
+#### For `dev` Branch (Integration/Staging)
+Since `dev` is for intermediate feature integration, the required checks are faster and focus on code quality and structure:
+1. ✅ **Backend — Lint** (Ruff formatting and mypy type checks)
+2. ✅ **Frontend — Type check** (TypeScript compiler passes)
+
+If any required checks fail on their respective branches, GitHub **blocks the merge button**.
 
 ---
 
