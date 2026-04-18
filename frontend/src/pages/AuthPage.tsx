@@ -79,15 +79,7 @@ export default function AuthPage() {
       background: 'white',
       position: 'relative', overflow: 'hidden',
     }}>
-      {/* ── Decorative Orbs ──────────────────────────────── 
-      <div style={{ position: 'absolute', top: -80, right: -80, width: 260, height: 260, borderRadius: '50%', background: '#78dbe233' }} />
-      <div style={{ position: 'absolute', bottom: -60, left: -60, width: 220, height: 220, borderRadius: '50%', background: '#78dbe233' }} />
-      <div style={{ position: 'absolute', top: '20%', left: '8%', width: 140, height: 140, borderRadius: '50%', background: '#78dbe233' }} />
-      <div style={{ position: 'absolute', bottom: '15%', right: '10%', width: 180, height: 180, borderRadius: '50%', background: '#78dbe233' }} />
-      <div style={{ position: 'absolute', top: '60%', left: '50%', width: 100, height: 100, borderRadius: '50%', background: '#78dbe233', transform: 'translateX(-50%)' }} />
-      <div style={{ position: 'absolute', top: '5%', left: '40%', width: 80, height: 80, borderRadius: '50%', background: '#78dbe233' }} />
-      <div style={{ position: 'absolute', bottom: '5%', right: '35%', width: 120, height: 120, borderRadius: '50%', background: '#78dbe233' }} />
-*/}
+
       {/* ── Top Navbar ───────────────────────────────────── */}
       <nav style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -396,65 +388,7 @@ export default function AuthPage() {
         )}
       </div>
 
-      {/* ── Footer ───────────────────────────────────────── 
-      <footer style={{
-        borderTop: '1px solid #e0e0e0',
-        padding: '48px 48px 0',
-        position: 'relative', zIndex: 2,
-      }}>*/}
-      {/* Logo + Columns 
-        <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap', marginBottom: 40 }}>
-          {/* Brand 
-          <div style={{ minWidth: 160 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <img src={logoImg} alt="PredictIQ" style={{ width: 36, height: 36, objectFit: 'contain' }} />
-              <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'black' }}>PredictIQ</span>
-            </div>
-          </div>*/}
 
-      {/* Products 
-          <div style={{ minWidth: 140 }}>
-            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'black', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Products</h4>
-            {['Cost Estimator', 'Phase Breakdown', 'Risk Analysis', 'Report Generator'].map(item => (
-              <p key={item} style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}>{item}</p>
-            ))}
-          </div>*/}
-
-      {/* Use Cases 
-          <div style={{ minWidth: 140 }}>
-            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'black', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Use Cases</h4>
-            {['Software Teams', 'Freelancers', 'Agencies', 'Enterprise'].map(item => (
-              <p key={item} style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}>{item}</p>
-            ))}
-          </div> */}
-
-      {/* Company 
-          <div style={{ minWidth: 140 }}>
-            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'black', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Company</h4>
-            {['About Us', 'Our Approach', 'News & Updates', 'Careers', 'Contact'].map(item => (
-              <p key={item} style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}>{item}</p>
-            ))}
-          </div> */}
-
-      {/* Resources 
-          <div style={{ minWidth: 140 }}>
-            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'black', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Resources</h4>
-            {['Documentation', 'API Reference', 'User Guides', 'Blog'].map(item => (
-              <p key={item} style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}>{item}</p>
-            ))}
-          </div> */}
-
-      {/* Application 
-          <div style={{ minWidth: 120 }}>
-            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'black', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Application</h4>
-            <p style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}
-              onClick={() => setMode('login')}
-            >Log In ↗</p>
-            <p style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}
-              onClick={() => setMode('register')}
-            >Sign Up ↗</p>
-          </div>
-        </div> */}
 
       {/* Copyright bar */}
       <div style={{
