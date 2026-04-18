@@ -97,7 +97,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Appearance */}
+          {/* Appearance 
           <div className="card" style={{ padding: 24, marginBottom: 20 }}>
             <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', color: 'var(--text-primary)' }}>
               <Palette size={18} /> Appearance
@@ -110,7 +110,7 @@ export default function SettingsPage() {
                   style={{
                     flex: 1, padding: '12px 16px', borderRadius: 12,
                     border: `2px solid ${theme === t ? 'var(--color-primary)' : 'var(--border-color)'}`,
-                    background: theme === t ? 'rgba(26, 86, 219, 0.05)' : 'var(--bg-surface)',
+                    background: theme === t ? '#c1ace80d' : 'var(--bg-surface)',
                     cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem',
                     color: theme === t ? 'var(--color-primary)' : 'var(--text-secondary)',
                     transition: 'all 0.2s', textTransform: 'capitalize',
@@ -120,7 +120,7 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Save */}
           <button className="btn-primary" onClick={handleSave} disabled={saving} style={{
@@ -135,9 +135,9 @@ export default function SettingsPage() {
               <h3 style={{ fontWeight: 600, marginBottom: 4, display: 'flex', gap: 8, alignItems: 'center', color: 'var(--text-primary)' }}>
                 <LogOut size={18} /> Sign Out
               </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+              {/*<p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
                 Sign out of your PredictIQ account
-              </p>
+              </p>*/}
             </div>
             <button
               id="logout-button"
@@ -167,6 +167,7 @@ export default function SettingsPage() {
             >
               <LogOut size={16} /> Logout
             </button>
+
           </div>
         </main>
       </div>
