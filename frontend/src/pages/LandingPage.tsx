@@ -61,7 +61,7 @@ export default function LandingPage() {
             fontSize: '1.125rem', color: 'var(--text-secondary)',
             maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.7,
           }}>
-            AI-powered cost and timeline estimation for software teams.
+            AI-powered cost and timeline estimation for software teamsssssssssssssssss.
             Upload a project document and get a detailed prediction in seconds.
           </p>
 
