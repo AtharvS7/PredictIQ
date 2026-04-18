@@ -2,16 +2,18 @@ import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/App';
-import { Mail, Lock, User, Eye, EyeOff, BarChart3, GitBranch } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, GitBranch, ArrowLeft } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import logoImg from '@/assets/logo.png';
 
-type AuthMode = 'login' | 'register' | 'forgot';
+type AuthMode = 'landing' | 'login' | 'register' | 'forgot';
 
 export default function AuthPage() {
   const { session, signIn, signUp, signInWithOAuth, loading } = useAuthStore();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState<AuthMode>('login');
+  const [mode, setMode] = useState<AuthMode>('landing');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,6 +47,13 @@ export default function AuthPage() {
         await signUp(email, password, fullName);
         addToast('success', 'Account created! Check your email for verification.');
         navigate('/dashboard');
+      } else if (mode === 'forgot') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/auth',
+        });
+        if (error) throw error;
+        addToast('success', 'Password reset link sent! Check your email.');
+        setMode('login');
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Authentication failed';
@@ -61,277 +70,410 @@ export default function AuthPage() {
     }
   };
 
+  const showForm = mode !== 'landing';
+
   return (
     <div style={{
       minHeight: '100vh', display: 'flex',
-      background: 'var(--bg-primary)',
+      flexDirection: 'column',
+      background: 'white',
+      position: 'relative', overflow: 'hidden',
     }}>
-      {/* ── Brand Panel (desktop only, ≥768px) ──────────── */}
-      <div className="gradient-mesh" style={{
-        flex: '0 0 420px',
-        background: 'var(--gradient-brand)',
-        display: 'flex', flexDirection: 'column',
-        justifyContent: 'center', alignItems: 'center',
-        padding: '3rem 2rem', color: 'white',
-        position: 'relative', overflow: 'hidden',
+      {/* ── Decorative Orbs ──────────────────────────────── 
+      <div style={{ position: 'absolute', top: -80, right: -80, width: 260, height: 260, borderRadius: '50%', background: '#78dbe233' }} />
+      <div style={{ position: 'absolute', bottom: -60, left: -60, width: 220, height: 220, borderRadius: '50%', background: '#78dbe233' }} />
+      <div style={{ position: 'absolute', top: '20%', left: '8%', width: 140, height: 140, borderRadius: '50%', background: '#78dbe233' }} />
+      <div style={{ position: 'absolute', bottom: '15%', right: '10%', width: 180, height: 180, borderRadius: '50%', background: '#78dbe233' }} />
+      <div style={{ position: 'absolute', top: '60%', left: '50%', width: 100, height: 100, borderRadius: '50%', background: '#78dbe233', transform: 'translateX(-50%)' }} />
+      <div style={{ position: 'absolute', top: '5%', left: '40%', width: 80, height: 80, borderRadius: '50%', background: '#78dbe233' }} />
+      <div style={{ position: 'absolute', bottom: '5%', right: '35%', width: 120, height: 120, borderRadius: '50%', background: '#78dbe233' }} />
+*/}
+      {/* ── Top Navbar ───────────────────────────────────── */}
+      <nav style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '16px 32px',
+        position: 'relative', zIndex: 2,
+        borderBottom: '2px solid black',
       }}>
-        {/* Decorative orbs */}
-        <div style={{
-          position: 'absolute', top: -60, right: -60, width: 200, height: 200,
-          borderRadius: '50%', background: 'rgba(255,255,255,0.08)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: -40, left: -40, width: 160, height: 160,
-          borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
-        }} />
-
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: 16,
-            background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 24,
-          }}>
-            <BarChart3 size={28} color="white" />
-          </div>
-
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: 8, letterSpacing: '-0.02em' }}>
+        {/* Left: Logo + Name */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+          onClick={() => setMode('landing')}
+        >
+          <img src={logoImg} alt="PredictIQ" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+          <span style={{ fontSize: '1.15rem', fontWeight: 700, color: 'black' }}>
             PredictIQ
-          </h2>
-          <p style={{ opacity: 0.85, fontSize: '1rem', lineHeight: 1.6, maxWidth: 300 }}>
-            AI-powered cost estimation for software teams. Upload a doc, get a prediction.
-          </p>
 
-          {/* Stats row */}
-          <div style={{
-            display: 'flex', gap: 24, marginTop: 40, justifyContent: 'center',
-          }}>
-            {[
-              { label: 'Accuracy', value: '92%' },
-              { label: 'Estimates', value: '10K+' },
-              { label: 'Currencies', value: '200+' },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ textAlign: 'center' }}>
-                <p className="tabular-nums" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{value}</p>
-                <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>{label}</p>
-              </div>
-            ))}
-          </div>
+          </span>
         </div>
 
-        <style>{`
-          @media (max-width: 767px) {
-            .gradient-mesh[style] { display: none !important; }
-          }
-        `}</style>
-      </div>
+        {/* Right: Sign Up / Login buttons */}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button
+            onClick={() => setMode('login')}
+            style={{
+              padding: '8px 20px', borderRadius: 10,
+              border: '1.5px solid var(--border-color)',
+              background: 'white',
+              color: 'black',
+              fontWeight: 600, fontSize: '0.85rem',
+              cursor: 'pointer', transition: 'all 0.2s',
+            }}
+          >
+            Login
+          </button>
+          <button
+            onClick={() => setMode('register')}
+            style={{
+              padding: '8px 20px', borderRadius: 10,
+              border: '1.5px solid var(--border-color)',
+              background: 'white',
+              color: 'black',
+              fontWeight: 600, fontSize: '0.85rem',
+              cursor: 'pointer', transition: 'all 0.2s',
+            }}
+          >
+            Sign Up
+          </button>
+        </div>
+      </nav>
 
-      {/* ── Form Panel ──────────────────────────────────── */}
-      <div style={{
-        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 24,
-      }}>
-        <div className="animate-fade-in" style={{
-          width: '100%', maxWidth: 420,
-          background: 'var(--bg-surface)', borderRadius: 20,
-          border: '1px solid var(--border-color)',
-          boxShadow: 'var(--shadow-lg)', padding: 40,
-        }}>
-          {/* Logo (mobile only visible) */}
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{
-              width: 48, height: 48, borderRadius: 14,
-              background: 'var(--gradient-brand)',
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              marginBottom: 16,
+      {/* ── Main Content ─────────────────────────────────── */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1 }}>
+
+        {/* ── Landing View (branding in center) ──────────── */}
+        {!showForm && (
+          <div className="animate-fade-in" style={{ textAlign: 'center', maxWidth: 600, padding: '0 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <img src={logoImg} alt="PredictIQ" style={{ width: 100, height: 100, objectFit: 'contain', marginBottom: 16 }} />
+            <h1 style={{
+              fontSize: '2.75rem', fontWeight: 800, color: 'black',
+              letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 16,
             }}>
-              <BarChart3 size={24} color="white" />
-            </div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-              {mode === 'login' ? 'Welcome back' : mode === 'register' ? 'Create account' : 'Reset password'}
+              PredictIQ
             </h1>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: 4 }}>
-              {mode === 'login' ? 'Sign in to your PredictIQ account' :
-               mode === 'register' ? 'Start estimating in seconds' :
-               'Enter your email to reset password'}
-            </p>
-          </div>
-
-          {/* OAuth buttons */}
-          {mode !== 'forgot' && (
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-              <button onClick={() => handleOAuth('google')} className="btn-secondary" style={{
-                flex: 1, justifyContent: 'center', padding: '10px 0',
-              }}>
-                <svg width="16" height="16" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Google
-              </button>
-              <button onClick={() => handleOAuth('github')} className="btn-secondary" style={{
-                flex: 1, justifyContent: 'center', padding: '10px 0',
-              }}>
-                <GitBranch size={16} /> GitHub
-              </button>
-            </div>
-          )}
-
-          {mode !== 'forgot' && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0',
-              color: 'var(--text-tertiary)', fontSize: '0.75rem',
+            <p style={{
+              fontSize: '1.15rem', color: 'black',
+              lineHeight: 1.7, marginBottom: 12,
             }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
-              <span>or continue with email</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
-            </div>
-          )}
+              AI-powered cost estimation for software teams.
+              <br />Designed for Engineers by Engineers.
+              <br />Upload a doc, get a prediction.
+            </p>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {mode === 'register' && (
-              <div>
-                <label className="label">Full Name</label>
-                <div style={{ position: 'relative' }}>
-                  <User size={16} style={{
-                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                    color: 'var(--text-tertiary)',
-                  }} />
-                  <input
-                    type="text"
-                    className="input-field"
-                    style={{ paddingLeft: 36 }}
-                    placeholder="John Smith"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
+            {/* Stats */}
+            <div style={{
+              display: 'flex', gap: 40, justifyContent: 'center', marginTop: 36,
+            }}>
+              {[
+                { label: 'Accuracy', value: '92%' },
+                { label: 'Estimates', value: '10K+' },
+                { label: 'Currencies', value: '200+' },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ textAlign: 'center' }}>
+                  <p className="tabular-nums" style={{
+                    fontSize: '1.75rem', fontWeight: 700, color: 'black', margin: 0,
+                  }}>{value}</p>
+                  <p style={{ fontSize: '0.8rem', color: 'black', opacity: 0.7, margin: '4px 0 0' }}>{label}</p>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Auth Form Card ──────────────────────────────── */}
+        {showForm && (
+          <div className="animate-fade-in" style={{
+            width: '100%', maxWidth: 440,
+            background: 'var(--bg-surface)', borderRadius: 20,
+            border: '1px solid var(--border-color)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.12)',
+            padding: 40, margin: '24px',
+          }}>
+            {/* Header with back button */}
+            <div style={{ textAlign: 'center', marginBottom: 28 }}>
+              <button
+                onClick={() => setMode('landing')}
+                style={{
+                  position: 'absolute', left: 16, top: 16,
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4,
+                  fontSize: '0.8rem',
+                }}
+              >
+                <ArrowLeft size={14} /> Back
+              </button>
+              <img src={logoImg} alt="PredictIQ Logo" style={{ width: 48, height: 48, objectFit: 'contain', marginBottom: 12 }} />
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                {mode === 'login' ? 'Welcome back' : mode === 'register' ? 'Create account' : 'Reset password'}
+              </h1>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: 4 }}>
+                {mode === 'login' ? 'Sign in to your PredictIQ account' :
+                  mode === 'register' ? 'Start estimating in seconds' :
+                    'Enter your email to reset password'}
+              </p>
+            </div>
+
+            {/* OAuth buttons */}
+            {mode !== 'forgot' && (
+              <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+                <button onClick={() => handleOAuth('google')} className="btn-secondary" style={{
+                  flex: 1, justifyContent: 'center', padding: '10px 0',
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Google
+                </button>
+                <button onClick={() => handleOAuth('github')} className="btn-secondary" style={{
+                  flex: 1, justifyContent: 'center', padding: '10px 0',
+                }}>
+                  <GitBranch size={16} /> GitHub
+                </button>
               </div>
             )}
-
-            <div>
-              <label className="label">Email</label>
-              <div style={{ position: 'relative' }}>
-                <Mail size={16} style={{
-                  position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                  color: 'var(--text-tertiary)',
-                }} />
-                <input
-                  type="email"
-                  className="input-field"
-                  style={{ paddingLeft: 36 }}
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
 
             {mode !== 'forgot' && (
-              <div>
-                <label className="label">Password</label>
-                <div style={{ position: 'relative' }}>
-                  <Lock size={16} style={{
-                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                    color: 'var(--text-tertiary)',
-                  }} />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="input-field"
-                    style={{ paddingLeft: 36, paddingRight: 40 }}
-                    placeholder={mode === 'register' ? 'Min 10 characters' : 'Enter password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={mode === 'register' ? 10 : undefined}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      color: 'var(--text-tertiary)', padding: 0,
-                    }}
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0',
+                color: 'var(--text-tertiary)', fontSize: '0.75rem',
+              }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
+                <span>or continue with email</span>
+                <div style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
               </div>
             )}
 
-            {mode === 'register' && (
+            {/* Form */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {mode === 'register' && (
+                <div>
+                  <label className="label">Full Name</label>
+                  <div style={{ position: 'relative' }}>
+                    <User size={16} style={{
+                      position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                      color: 'var(--text-tertiary)',
+                    }} />
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ paddingLeft: 36 }}
+                      placeholder="John Smith"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
               <div>
-                <label className="label">Confirm Password</label>
+                <label className="label">Email</label>
                 <div style={{ position: 'relative' }}>
-                  <Lock size={16} style={{
+                  <Mail size={16} style={{
                     position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
                     color: 'var(--text-tertiary)',
                   }} />
                   <input
-                    type="password"
+                    type="email"
                     className="input-field"
                     style={{ paddingLeft: 36 }}
-                    placeholder="Re-enter password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
               </div>
-            )}
 
-            <button type="submit" className="btn-primary" style={{
-              width: '100%', justifyContent: 'center', marginTop: 8, padding: '12px 0',
-              opacity: loading ? 0.7 : 1, pointerEvents: loading ? 'none' : 'auto',
-            }}>
-              {loading ? (
-                <div style={{
-                  width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)',
-                  borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite',
-                }} />
-              ) : (
-                mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : 'Send Reset Link'
+              {mode !== 'forgot' && (
+                <div>
+                  <label className="label">Password</label>
+                  <div style={{ position: 'relative' }}>
+                    <Lock size={16} style={{
+                      position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                      color: 'var(--text-tertiary)',
+                    }} />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className="input-field"
+                      style={{ paddingLeft: 36, paddingRight: 40 }}
+                      placeholder={mode === 'register' ? 'Min 10 characters' : 'Enter password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={mode === 'register' ? 10 : undefined}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: 'var(--text-tertiary)', padding: 0,
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
               )}
-            </button>
-          </form>
 
-          {/* Mode switch */}
-          <div style={{
-            marginTop: 20, textAlign: 'center', fontSize: '0.8125rem',
-            color: 'var(--text-secondary)',
-          }}>
-            {mode === 'login' ? (
-              <>
-                Don&apos;t have an account?{' '}
-                <button onClick={() => setMode('register')} style={{
-                  background: 'none', border: 'none', color: 'var(--color-primary)',
-                  cursor: 'pointer', fontWeight: 600,
-                }}>Sign up</button>
-                <br />
-                <button onClick={() => setMode('forgot')} style={{
-                  background: 'none', border: 'none', color: 'var(--text-tertiary)',
-                  cursor: 'pointer', marginTop: 8, fontSize: '0.8125rem',
-                }}>Forgot password?</button>
-              </>
-            ) : (
-              <>
-                Already have an account?{' '}
-                <button onClick={() => setMode('login')} style={{
-                  background: 'none', border: 'none', color: 'var(--color-primary)',
-                  cursor: 'pointer', fontWeight: 600,
-                }}>Sign in</button>
-              </>
-            )}
+              {mode === 'register' && (
+                <div>
+                  <label className="label">Confirm Password</label>
+                  <div style={{ position: 'relative' }}>
+                    <Lock size={16} style={{
+                      position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                      color: 'var(--text-tertiary)',
+                    }} />
+                    <input
+                      type="password"
+                      className="input-field"
+                      style={{ paddingLeft: 36 }}
+                      placeholder="Re-enter password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              <button type="submit" className="btn-primary" style={{
+                width: '100%', justifyContent: 'center', marginTop: 8, padding: '12px 0',
+                opacity: loading ? 0.7 : 1, pointerEvents: loading ? 'none' : 'auto',
+              }}>
+                {loading ? (
+                  <div style={{
+                    width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)',
+                    borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+                  }} />
+                ) : (
+                  mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : 'Send Reset Link'
+                )}
+              </button>
+            </form>
+
+            {/* Mode switch */}
+            <div style={{
+              marginTop: 20, textAlign: 'center', fontSize: '0.8125rem',
+              color: 'var(--text-secondary)',
+            }}>
+              {mode === 'login' ? (
+                <>
+                  Don&apos;t have an account?{' '}
+                  <button onClick={() => setMode('register')} style={{
+                    background: 'none', border: 'none', color: 'var(--color-primary)',
+                    cursor: 'pointer', fontWeight: 600,
+                  }}>Sign up</button>
+                  <br />
+                  <button onClick={() => setMode('forgot')} style={{
+                    background: 'none', border: 'none', color: 'var(--text-tertiary)',
+                    cursor: 'pointer', marginTop: 8, fontSize: '0.8125rem',
+                  }}>Forgot password?</button>
+                </>
+              ) : mode === 'register' ? (
+                <>
+                  Already have an account?{' '}
+                  <button onClick={() => setMode('login')} style={{
+                    background: 'none', border: 'none', color: 'var(--color-primary)',
+                    cursor: 'pointer', fontWeight: 600,
+                  }}>Sign in</button>
+                </>
+              ) : (
+                <>
+                  Remember your password?{' '}
+                  <button onClick={() => setMode('login')} style={{
+                    background: 'none', border: 'none', color: 'var(--color-primary)',
+                    cursor: 'pointer', fontWeight: 600,
+                  }}>Sign in</button>
+                </>
+              )}
+            </div>
           </div>
+        )}
+      </div>
+
+      {/* ── Footer ───────────────────────────────────────── 
+      <footer style={{
+        borderTop: '1px solid #e0e0e0',
+        padding: '48px 48px 0',
+        position: 'relative', zIndex: 2,
+      }}>*/}
+      {/* Logo + Columns 
+        <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap', marginBottom: 40 }}>
+          {/* Brand 
+          <div style={{ minWidth: 160 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <img src={logoImg} alt="PredictIQ" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+              <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'black' }}>PredictIQ</span>
+            </div>
+          </div>*/}
+
+      {/* Products 
+          <div style={{ minWidth: 140 }}>
+            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'black', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Products</h4>
+            {['Cost Estimator', 'Phase Breakdown', 'Risk Analysis', 'Report Generator'].map(item => (
+              <p key={item} style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}>{item}</p>
+            ))}
+          </div>*/}
+
+      {/* Use Cases 
+          <div style={{ minWidth: 140 }}>
+            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'black', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Use Cases</h4>
+            {['Software Teams', 'Freelancers', 'Agencies', 'Enterprise'].map(item => (
+              <p key={item} style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}>{item}</p>
+            ))}
+          </div> */}
+
+      {/* Company 
+          <div style={{ minWidth: 140 }}>
+            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'black', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Company</h4>
+            {['About Us', 'Our Approach', 'News & Updates', 'Careers', 'Contact'].map(item => (
+              <p key={item} style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}>{item}</p>
+            ))}
+          </div> */}
+
+      {/* Resources 
+          <div style={{ minWidth: 140 }}>
+            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'black', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Resources</h4>
+            {['Documentation', 'API Reference', 'User Guides', 'Blog'].map(item => (
+              <p key={item} style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}>{item}</p>
+            ))}
+          </div> */}
+
+      {/* Application 
+          <div style={{ minWidth: 120 }}>
+            <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'black', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Application</h4>
+            <p style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}
+              onClick={() => setMode('login')}
+            >Log In ↗</p>
+            <p style={{ fontSize: '0.85rem', color: '#555', margin: '6px 0', cursor: 'pointer' }}
+              onClick={() => setMode('register')}
+            >Sign Up ↗</p>
+          </div>
+        </div> */}
+
+      {/* Copyright bar */}
+      <div style={{
+        borderTop: '1px solid #e0e0e0',
+        margin: '0 48px',
+        padding: '24px 0 20px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 16,
+        position: 'relative', zIndex: 2,
+      }}>
+        <p style={{ fontSize: '0.8rem', color: '#888', margin: 0 }}>
+          Copyright © {new Date().getFullYear()} PredictIQ
+        </p>
+        <div style={{ display: 'flex', gap: 24 }}>
+          {['Transparency Act', 'Support Policy', 'Security Policy', 'Privacy Policy'].map(link => (
+            <span key={link} style={{ fontSize: '0.8rem', color: '#555', cursor: 'pointer' }}>{link}</span>
+          ))}
         </div>
       </div>
     </div>
   );
 }
-

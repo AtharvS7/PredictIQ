@@ -20,7 +20,7 @@ interface ThemeContextType {
 
 export const ThemeContext = createContext<ThemeContextType>({
   theme: 'dark',
-  setTheme: () => {},
+  setTheme: () => { },
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -69,8 +69,8 @@ interface ToastContextType {
 
 export const ToastContext = createContext<ToastContextType>({
   toasts: [],
-  addToast: () => {},
-  removeToast: () => {},
+  addToast: () => { },
+  removeToast: () => { },
 });
 
 export const useToast = () => useContext(ToastContext);
