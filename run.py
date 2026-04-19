@@ -19,8 +19,15 @@ ROOT = Path(__file__).resolve().parent
 BACKEND_DIR = ROOT / "backend"
 FRONTEND_DIR = ROOT / "frontend"
 VENV_DIR = ROOT / "venv"
-VENV_PYTHON = VENV_DIR / "Scripts" / "python.exe"
-VENV_PIP = VENV_DIR / "Scripts" / "pip.exe"
+
+# Platform-aware virtual environment paths
+# Windows uses Scripts/, Linux/macOS uses bin/
+if sys.platform == "win32":
+    VENV_PYTHON = VENV_DIR / "Scripts" / "python.exe"
+    VENV_PIP = VENV_DIR / "Scripts" / "pip.exe"
+else:
+    VENV_PYTHON = VENV_DIR / "bin" / "python"
+    VENV_PIP = VENV_DIR / "bin" / "pip"
 
 # ANSI colors (safe on modern Windows 10+ terminals)
 CYAN = "\033[96m"
@@ -49,7 +56,7 @@ def banner():
     safe_print(f"""
 {CYAN}{BOLD}+==================================================+
 |           PredictIQ  --  Dev Launcher            |
-|          v2.3.0  |  FastAPI + Vite + AI          |
+|          v2.5.0  |  FastAPI + Vite + AI          |
 +==================================================+{RESET}
 """)
 
