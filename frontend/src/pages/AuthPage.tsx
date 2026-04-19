@@ -187,14 +187,17 @@ export default function AuthPage() {
                 style={{
                   position: 'absolute', left: 16, top: 16,
                   background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4,
+                  color: 'black', display: 'flex', alignItems: 'center', gap: 4,
                   fontSize: '0.8rem',
                 }}
               >
                 <ArrowLeft size={14} /> Back
               </button>
-              <img src={logoImg} alt="PredictIQ Logo" style={{ width: 48, height: 48, objectFit: 'contain', marginBottom: 12 }} />
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              <img src={logoImg} alt="PredictIQ Logo" style={{
+                width: 48, height: 48, objectFit: 'contain', marginBottom: 12,
+                adisplay: 'block', marginLeft: 'auto', marginRight: 'auto'
+              }} />
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'black' }}>
                 {mode === 'login' ? 'Welcome back' : mode === 'register' ? 'Create account' : 'Reset password'}
               </h1>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: 4 }}>
@@ -333,10 +336,23 @@ export default function AuthPage() {
                 </div>
               )}
 
-              <button type="submit" className="btn-primary" style={{
-                width: '100%', justifyContent: 'center', marginTop: 8, padding: '12px 0',
-                opacity: loading ? 0.7 : 1, pointerEvents: loading ? 'none' : 'auto',
-              }}>
+              <button
+                type="submit"
+                className="btn-primary"
+                style={{
+                  width: '100%',
+                  justifyContent: 'center',
+                  marginTop: 8,
+                  padding: '12px 0',
+
+                  background: 'none',      // remove background color
+                  color: 'black',          // text color black
+                  border: '1px solid black', // optional: keep visible border
+
+                  opacity: loading ? 0.7 : 1,
+                  pointerEvents: loading ? 'none' : 'auto',
+                }}
+              >
                 {loading ? (
                   <div style={{
                     width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)',
@@ -356,21 +372,38 @@ export default function AuthPage() {
               {mode === 'login' ? (
                 <>
                   Don&apos;t have an account?{' '}
-                  <button onClick={() => setMode('register')} style={{
-                    background: 'none', border: 'none', color: 'var(--color-primary)',
-                    cursor: 'pointer', fontWeight: 600,
-                  }}>Sign up</button>
+                  <button
+                    onClick={() => setMode('register')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'black',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Sign up
+                  </button>
                   <br />
-                  <button onClick={() => setMode('forgot')} style={{
-                    background: 'none', border: 'none', color: 'var(--text-tertiary)',
-                    cursor: 'pointer', marginTop: 8, fontSize: '0.8125rem',
-                  }}>Forgot password?</button>
+                  <button
+                    onClick={() => setMode('forgot')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'red',
+                      cursor: 'pointer',
+                      marginTop: 8,
+                      fontSize: '0.8125rem'
+                    }}
+                  >
+                    Forgot password?
+                  </button>
                 </>
               ) : mode === 'register' ? (
                 <>
                   Already have an account?{' '}
                   <button onClick={() => setMode('login')} style={{
-                    background: 'none', border: 'none', color: 'var(--color-primary)',
+                    background: 'none', border: 'none', color: 'Black',
                     cursor: 'pointer', fontWeight: 600,
                   }}>Sign in</button>
                 </>
@@ -378,7 +411,7 @@ export default function AuthPage() {
                 <>
                   Remember your password?{' '}
                   <button onClick={() => setMode('login')} style={{
-                    background: 'none', border: 'none', color: 'var(--color-primary)',
+                    background: 'none', border: 'none', color: 'black',
                     cursor: 'pointer', fontWeight: 600,
                   }}>Sign in</button>
                 </>
