@@ -1,6 +1,6 @@
 # PredictIQ — Technical Walkthrough
 
-> **Version:** 2.5.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** April 17, 2026
+> **Version:** 2.5.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** April 19, 2026
 
 ---
 
@@ -27,14 +27,14 @@
 
 ## 1. Project Overview
 
-**PredictIQ** is an AI-powered SaaS platform that predicts software project **cost**, **timeline**, and **effort** from uploaded project documentation. Users upload SRS/PRD/RFP documents which are parsed by a 4-strategy NLP cascade, analyzed through an XGBoost ML model trained on **740 real-world project records**, and returned as PERT-style estimates with full risk analysis.
+**PredictIQ** is an AI-powered SaaS platform that predicts software project **cost**, **timeline**, and **effort** from uploaded project documentation. Users upload SRS/PRD/RFP documents which are parsed by a 4-strategy NLP cascade, analyzed through a **RandomForest ML model** (R² = 0.8953) trained on **740 real-world project records** from 4 benchmark datasets, and returned as PERT-style estimates with full risk analysis.
 
 ### 1.1 Core Value Proposition
 
 | Capability | Description |
 |-----------|-------------|
 | **Document Intelligence** | Upload PDF/DOCX/TXT → AI extracts 11 project parameters automatically |
-| **ML-Powered Prediction** | XGBoost model trained on ISBSG + COCOMO + Desharnais benchmarks |
+| **ML-Powered Prediction** | RandomForest model trained on Albrecht + China + Desharnais-Maxwell + NASA93 benchmarks |
 | **PERT Estimation** | Min / Likely / Max effort-hours with confidence percentage |
 | **Risk Analysis** | 10-factor weighted risk scoring with actionable mitigation |
 | **Multi-Currency** | 10 currencies with real-time exchange rates |
@@ -49,7 +49,7 @@
 | **State** | Zustand | 5.x | Lightweight global state management |
 | **Charts** | Recharts | 2.x | Data visualization for results |
 | **Backend** | FastAPI + Uvicorn | 0.115+ | Async Python REST API |
-| **ML Engine** | XGBoost + scikit-learn | 2.1 / 1.6 | Regression model for effort prediction |
+| **ML Engine** | RandomForest (scikit-learn) | 1.8 | Best-of-8 regression model for effort prediction (R² = 0.8953) |
 | **NLP** | Custom Cascade Engine | v2.4 | 4-strategy document parameter extraction |
 | **Database** | Supabase (PostgreSQL) | 15+ | Managed relational DB with RLS |
 | **Auth** | Supabase Auth | — | JWT-based email/password authentication |
@@ -73,11 +73,11 @@ PredictIQ/
 │   │   ├── core/                    # Framework config
 │   │   │   ├── config.py            # Pydantic BaseSettings
 │   │   │   ├── security.py          # JWT auth middleware
-│   │   │   └── supabase_client.py   # Supabase SDK wrapper
+│   │   │   └── supabase.py          # Supabase SDK wrapper
 │   │   ├── models/                  # Pydantic request/response schemas
 │   │   └── services/                # Business logic layer
 │   │       ├── nlp_extractor.py     # 4-strategy NLP cascade (v2.4)
-│   │       ├── ml_service.py        # Feature vector + XGBoost bridge
+│   │       ├── ml_service.py        # Feature vector + ML model bridge
 │   │       ├── cost_calculator.py   # IFPUG FP + cost conversion
 │   │       ├── risk_analyzer.py     # 10-factor risk scoring
 │   │       ├── document_parser.py   # PDF/DOCX/TXT text extraction
@@ -85,7 +85,7 @@ PredictIQ/
 │   │       ├── currency_service.py  # Multi-currency via ExchangeRate API
 │   │       └── export_service.py    # Report generation (PDF/Excel/CSV)
 │   ├── ml/                          # ML artifacts & training
-│   │   ├── train.py                 # XGBoost training pipeline
+│   │   ├── train.py                 # Multi-model training pipeline (8 algorithms)
 │   │   ├── evaluate.py              # Model evaluation + visualization
 │   │   ├── inference.py             # Runtime prediction engine
 │   │   ├── predictiq_features.json  # 27-feature schema definition
@@ -112,7 +112,9 @@ PredictIQ/
 │       │   ├── AuthPage.tsx          # Login / signup
 │       │   ├── DashboardPage.tsx     # Estimate list + stats
 │       │   ├── NewEstimatePage.tsx   # 3-step estimation wizard
-│       │   └── EstimateResultsPage.tsx  # Full results dashboard
+│       │   ├── ResultsPage.tsx       # Full results dashboard
+│       │   ├── EstimatesPage.tsx     # Estimates history list
+│       │   └── SettingsPage.tsx      # User settings
 │       ├── components/shared/
 │       │   ├── Navbar.tsx            # Top navigation bar
 │       │   ├── Sidebar.tsx           # Side navigation
@@ -120,7 +122,8 @@ PredictIQ/
 │       │   └── LoadingSkeleton.tsx   # Loading states
 │       ├── store/
 │       │   ├── authStore.ts          # Auth state (Zustand)
-│       │   └── currencyStore.ts      # Currency state (Zustand)
+│       │   ├── currencyStore.ts      # Currency state (Zustand)
+│       │   └── estimateStore.ts      # Estimate state (Zustand)
 │       └── lib/
 │           ├── api.ts                # Backend API client
 │           └── supabase.ts           # Supabase client init
@@ -577,20 +580,20 @@ All keywords map to canonical display names (e.g., `"react.js"` → `"React"`, `
 
 ### 6.1 Training Dataset
 
-The model is trained on **740 real-world software project records** merged from three established benchmarks:
+The model is trained on **740 real-world software project records** merged from 4 established benchmarks:
 
-| Source | Records | Key Features | Origin |
-|--------|:-------:|-------------|--------|
-| **ISBSG Release 12** | ~500 (filtered) | Function points, effort, team, methodology | International Software Benchmarking Standards Group |
-| **COCOMO 81/II** | 63 | LOC, effort multipliers, T-factors | Boehm, 1981/2000 |
-| **Desharnais** | 81 | FP, effort, language, methodology | Desharnais, 1988 |
-| **Synthetic augmentation** | ~96 | Bridging missing feature combinations | Generated via domain rules |
+| Source | Key Features | Origin |
+|--------|-------------|--------|
+| **Albrecht** | Function points, effort, team experience | Albrecht & Gaffney, 1983 |
+| **China** | Function points, effort, methodology, team | CSBSG Chinese dataset |
+| **Desharnais-Maxwell** | FP, effort, language, methodology, duration | Desharnais 1988 / Maxwell 2002 |
+| **NASA93** | LOC, effort multipliers, COCOMO T-factors | NASA Cost model dataset |
 
 **Merged output:** `backend/ml/predictiq_merged_dataset.csv` (740 rows × 30 columns)
 
 ### 6.2 Feature Vector (27 Features)
 
-The XGBoost model expects exactly **27 numeric features** as defined in `predictiq_features.json`:
+The ML model expects exactly **27 numeric features** as defined in `predictiq_features.json`:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -615,25 +618,42 @@ The XGBoost model expects exactly **27 numeric features** as defined in `predict
 | `team_experience` | TeamExp, ManagerExp | NLP (NEW v2.4) |
 | `integration_count` | Via external_interface_files → size_fp | NLP (NEW v2.4) |
 
-### 6.3 Model Performance Metrics
+### 6.3 Model Selection & Performance
 
-| Metric | Value | Industry Benchmark |
-|--------|:-----:|:------------------:|
-| **Algorithm** | XGBoost Regressor | — |
-| **R² Score** | 0.82 | 0.70-0.85 (good) |
-| **MAE** | 1,247 hours | — |
-| **MAPE** | 23.4% | 20-30% (acceptable) |
-| **Training Size** | 740 records | — |
-| **Cross-Validation** | 5-fold | — |
-| **Model File** | 6.4 MB (.pkl) | — |
+8 algorithms were trained and compared. **RandomForest** was selected as the production model:
+
+| Model | R² | MAE | PRED25% | MMRE% |
+|-------|:--:|:---:|:------:|:----:|
+| **RandomForest** ✅ | **0.8953** | **555.9** | **57.4%** | **37.2%** |
+| GradientBoosting | 0.8850 | 556.3 | 61.5% | 30.8% |
+| XGBoost | 0.8443 | 678.4 | 60.8% | 29.5% |
+| ExtraTrees | 0.8638 | 679.2 | 56.8% | 29.2% |
+| XGBoost_Deep | 0.8207 | 768.1 | 58.1% | 32.3% |
+| Lasso | -29.18 | 4150.9 | 27.7% | 104.4% |
+| Ridge | -32.55 | 4407.9 | 26.4% | 109.5% |
+| LinearRegression | -44.49 | 5358.5 | 27.7% | 115.7% |
+
+**Cross-validation (10-fold):**
+- RandomForest: mean R² = **0.9878** ± 0.0085
+- GradientBoosting: mean R² = 0.9889 ± 0.0061
+- ExtraTrees: mean R² = 0.9880 ± 0.0042
+
+**Top 5 most important features (RandomForest):**
+1. `Adjustment` — 30.4%
+2. `Transactions` — 29.3%
+3. `duration_months` — 13.9%
+4. `PointsNonAdjust` — 12.4%
+5. `T08` (requirements volatility) — 2.2%
 
 ### 6.4 PERT Estimation Bounds
 
 ```
-effort_min  = effort_likely × 0.70    (optimistic)
-effort_max  = effort_likely × 1.45    (pessimistic)
-confidence  = derived from training residual analysis
+effort_min  = effort_likely × 0.80    (optimistic)
+effort_max  = effort_likely × 1.40    (pessimistic)
+cost        = effort × hourly_rate    (default $75/hr)
 ```
+
+Production effort range: min 1 hour, max 9,587 hours (mean 2,544 hours)
 
 ---
 
@@ -1598,7 +1618,7 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 ### v2.0.0 — April 9, 2026
 
-- XGBoost model trained on 740-record merged dataset
+- RandomForest model (best of 8 algorithms) trained on 740-record merged dataset
 - IFPUG function point estimation pipeline
 - PERT-style min/likely/max predictions
 - Supabase Auth + PostgreSQL integration
