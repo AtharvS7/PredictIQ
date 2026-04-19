@@ -79,4 +79,6 @@ export interface UserProfile {
   currency: string;
   theme: string;
   timezone: string;
+  phone: string | null;
+  country_code: string | null;
 }
