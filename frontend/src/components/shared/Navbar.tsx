@@ -1,139 +1,247 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
-import { useTheme } from '@/App';
-import { Sun, Moon, LogOut, User, BarChart3 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { LogOut, User, LogIn, Sun, Moon } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import logoImg from '@/assets/logo.png';
 
 export default function Navbar() {
   const { user, profile, signOut } = useAuthStore();
-  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // Theme state
+  const [theme, setTheme] = useState<'light' | 'dark'>(
+    document.documentElement.getAttribute('data-theme') === 'dark'
+      ? 'dark'
+      : 'light'
+  );
+
+  // Load saved theme
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+
+    if (savedTheme) {
+      setTheme(savedTheme as 'light' | 'dark');
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+  }, []);
+
+  // Save theme
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  // Toggle theme
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setShowMenu(false);
       }
     };
+
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   const handleSignOut = async () => {
+    setShowMenu(false);
     await signOut();
-    navigate('/');
+    navigate('/auth');
   };
 
-  const isDark = theme === 'dark' || (theme === 'system' &&
-    window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const handleSignIn = () => {
+    setShowMenu(false);
+    navigate('/auth');
+  };
+
+  const menuItemStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '8px 12px',
+    borderRadius: 8,
+    width: '100%',
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    color: 'var(--text-primary)',
+    textAlign: 'left',
+    transition: 'background 0.15s',
+  };
 
   return (
-    <nav style={{
-      position: 'sticky', top: 0, zIndex: 50,
-      background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-color)',
-      padding: '0 1.5rem', height: 64,
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      backdropFilter: 'blur(12px)',
-    }}>
-      <Link to={user ? '/dashboard' : '/'} style={{
-        display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none',
-      }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: 8,
-          background: 'linear-gradient(135deg, #1A56DB, #3B82F6)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <BarChart3 size={18} color="white" />
-        </div>
-        <span style={{
-          fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)',
-          letterSpacing: '-0.025em',
-        }}>
+    <nav
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        background: 'var(--bg-surface)',
+        borderBottom: '1px solid var(--border-color)',
+        padding: '0 1.5rem',
+        height: 64,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backdropFilter: 'blur(12px)',
+      }}
+    >
+      {/* Logo */}
+      <Link
+        to={user ? '/dashboard' : '/'}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          textDecoration: 'none',
+        }}
+      >
+        <img
+          src={logoImg}
+          alt="PredictIQ Logo"
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            objectFit: 'contain',
+          }}
+        />
+
+        <span
+          style={{
+            fontSize: '1.125rem',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+          }}
+        >
           PredictIQ
+          <span
+            style={{
+              display: 'block',
+              fontSize: '0.75rem',
+              color: 'var(--text-secondary)',
+              fontWeight: 400,
+            }}
+          >
+            Designed for Engineers by Engineers
+          </span>
         </span>
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* Right Side Controls */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+
+        {/* Theme Toggle */}
         <button
-          onClick={() => setTheme(isDark ? 'light' : 'dark')}
+          onClick={toggleTheme}
+          title="Toggle appearance"
           style={{
-            width: 36, height: 36, borderRadius: 8, border: '1px solid var(--border-color)',
-            background: 'transparent', cursor: 'pointer', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)',
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            border: '1px solid var(--border-color)',
+            background: 'var(--bg-surface)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--text-primary)',
             transition: 'all 0.2s',
           }}
-          title="Toggle theme"
         >
-          {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          {theme === 'light'
+            ? <Sun size={18} />
+            : <Moon size={18} />
+          }
         </button>
 
-        {user && (
-          <div ref={menuRef} style={{ position: 'relative' }}>
-            <button
-              onClick={() => setShowMenu(!showMenu)}
+        {/* User Menu */}
+        <div ref={menuRef} style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: 'white',              // changed
+              border: '1px solid var(--border-color)', // added
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'black',                   // changed
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+            }}
+          >
+            {user
+              ? (profile?.full_name || user.email || '?')[0].toUpperCase()
+              : <User size={18} />}
+          </button>
+
+          {/* Dropdown */}
+          {showMenu && (
+            <div
               style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: 'linear-gradient(135deg, #1A56DB, #3B82F6)',
-                border: 'none', cursor: 'pointer', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', color: 'white',
-                fontSize: '0.8125rem', fontWeight: 600,
+                position: 'absolute',
+                right: 0,
+                top: 44,
+                background: 'var(--bg-surface)',
+                border: '1px solid #e5e7eb',
+                borderRadius: 12,
+                padding: 8,
+                minWidth: 180,
+                boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
               }}
             >
-              {(profile?.full_name || user.email || '?')[0].toUpperCase()}
-            </button>
+              {user && (
+                <>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      navigate('/settings');
+                    }}
+                    style={menuItemStyle}
+                  >
+                    <User size={15} />
+                    Settings
+                  </button>
 
-            {showMenu && (
-              <div style={{
-                position: 'absolute', right: 0, top: 44,
-                background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
-                borderRadius: 12, boxShadow: 'var(--shadow-lg)',
-                padding: 8, minWidth: 200, animation: 'fadeIn 0.15s ease',
-              }}>
-                <div style={{
-                  padding: '8px 12px', borderBottom: '1px solid var(--border-color)',
-                  marginBottom: 4,
-                }}>
-                  <p style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
-                    {profile?.full_name || 'User'}
-                  </p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                    {user.email}
-                  </p>
-                </div>
-                <Link
-                  to="/settings"
-                  onClick={() => setShowMenu(false)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '8px 12px', borderRadius: 8, textDecoration: 'none',
-                    color: 'var(--text-primary)', fontSize: '0.875rem',
-                    transition: 'background 0.15s',
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-elevated)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  <User size={15} /> Settings
-                </Link>
+                  <button
+                    onClick={handleSignOut}
+                    style={{
+                      ...menuItemStyle,
+                      color: '#EF4444',
+                    }}
+                  >
+                    <LogOut size={15} />
+                    Sign Out
+                  </button>
+                </>
+              )}
+
+              {!user && (
                 <button
-                  onClick={handleSignOut}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '8px 12px', borderRadius: 8, width: '100%',
-                    border: 'none', background: 'transparent', cursor: 'pointer',
-                    color: '#EF4444', fontSize: '0.875rem', textAlign: 'left',
-                    transition: 'background 0.15s',
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-elevated)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  onClick={handleSignIn}
+                  style={menuItemStyle}
                 >
-                  <LogOut size={15} /> Sign out
+                  <LogIn size={15} />
+                  Sign In
                 </button>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
     </nav>
   );

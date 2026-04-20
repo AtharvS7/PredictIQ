@@ -97,7 +97,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Appearance */}
+          {/* Appearance 
           <div className="card" style={{ padding: 24, marginBottom: 20 }}>
             <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', color: 'var(--text-primary)' }}>
               <Palette size={18} /> Appearance
@@ -120,7 +120,7 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Save */}
           <button className="btn-primary" onClick={handleSave} disabled={saving} style={{
