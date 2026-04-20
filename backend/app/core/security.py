@@ -1,124 +1,95 @@
 """
 PredictIQ Security Module
-Hybrid JWT verification: local HS256 (fast) with Supabase API fallback.
+Firebase Admin SDK token verification.
 
 Strategy:
-  1. Primary — Local HMAC-SHA256 verification using Supabase's legacy JWT secret.
-     This is instant (< 1ms), requires no network call, and is the industry-standard
-     approach for stateless token validation.
-  2. Fallback — If local verification fails (e.g. token signed with the newer ECC
-     P-256 key after key rotation), we call supabase.auth.get_user(token) which
-     validates through Supabase's API. Adds ~100ms latency but covers all key types.
+  Verify Firebase ID tokens using the Firebase Admin SDK.
+  This validates the token signature, expiration, audience, and issuer
+  against Google's public keys — no shared secret needed.
 """
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError, jwt
 from pydantic import BaseModel
 from typing import Optional
 import structlog
 
+import firebase_admin
+from firebase_admin import auth as firebase_auth, credentials
+
 from app.core.config import settings
-from app.core.supabase import get_supabase
 
 logger = structlog.get_logger()
 security = HTTPBearer()
 
+# ── Firebase Admin SDK initialization ──────────────────────────
+_firebase_app = None
+
+
+def init_firebase():
+    """Initialize Firebase Admin SDK. Called once during app startup."""
+    global _firebase_app
+    if _firebase_app is None:
+        cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
+        _firebase_app = firebase_admin.initialize_app(cred)
+        logger.info("firebase_admin_initialized", project_id=cred.project_id)
+
 
 class CurrentUser(BaseModel):
-    """Represents the authenticated user extracted from a Supabase JWT."""
+    """Represents the authenticated user extracted from a Firebase ID token."""
     id: str
     email: Optional[str] = None
     role: str = "authenticated"
-
-
-def _verify_jwt_local(token: str) -> dict:
-    """
-    Verify a Supabase JWT locally using the legacy HS256 shared secret.
-    Returns the decoded payload if verification succeeds.
-    Raises JWTError if the signature is invalid or the token is expired.
-    """
-    payload = jwt.decode(
-        token,
-        settings.JWT_SECRET,
-        algorithms=["HS256"],
-        audience="authenticated",
-        options={"verify_aud": True},
-    )
-    return payload
-
-
-async def _verify_jwt_remote(token: str) -> dict:
-    """
-    Verify a JWT via Supabase's auth.get_user() API.
-    Fallback for tokens signed with newer ECC (P-256) keys.
-    Returns a dict with 'sub', 'email', and 'role' keys.
-    """
-    sb = get_supabase()
-    user_response = sb.auth.get_user(token)
-
-    if not user_response or not user_response.user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired authentication token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    user = user_response.user
-    return {
-        "sub": user.id,
-        "email": user.email,
-        "role": user.role or "authenticated",
-    }
 
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> CurrentUser:
     """
-    FastAPI dependency — extracts the current user from a Supabase JWT.
+    FastAPI dependency — extracts the current user from a Firebase ID token.
 
-    Uses a two-tier verification strategy:
-      1. Local HS256 verification (instant, no network call)
-      2. Supabase API fallback (for ECC-signed tokens after key rotation)
+    Verifies the token using Firebase Admin SDK, which checks:
+      - Token signature against Google's public keys
+      - Token expiration
+      - Audience matches our Firebase project
+      - Issuer is correct
     """
     token = credentials.credentials
 
-    # ── Tier 1: Local HS256 verification ──────────────────────
     try:
-        payload = _verify_jwt_local(token)
-        user_id = payload.get("sub")
-        if not user_id:
-            raise JWTError("Missing 'sub' claim")
-
-        logger.debug("jwt_verified", method="local_hs256", user_id=user_id)
-        return CurrentUser(
-            id=user_id,
-            email=payload.get("email"),
-            role=payload.get("role", "authenticated"),
-        )
-    except JWTError:
-        # HS256 verification failed — token may be signed with ECC key
-        pass
-
-    # ── Tier 2: Supabase API fallback ────────────────────────
-    try:
-        payload = await _verify_jwt_remote(token)
-        user_id = payload.get("sub")
+        decoded = firebase_auth.verify_id_token(token)
+        user_id = decoded.get("uid")
         if not user_id:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token: missing user ID",
             )
 
-        logger.debug("jwt_verified", method="supabase_api", user_id=user_id)
+        logger.debug("jwt_verified", method="firebase_admin", user_id=user_id)
         return CurrentUser(
             id=user_id,
-            email=payload.get("email"),
-            role=payload.get("role", "authenticated"),
+            email=decoded.get("email"),
+            role="authenticated",
         )
-    except HTTPException:
-        raise
+    except firebase_auth.ExpiredIdTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except firebase_auth.InvalidIdTokenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid authentication token: {str(e)}",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except firebase_auth.RevokedIdTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     except Exception as e:
+        logger.error("auth_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Authentication failed: {str(e)}",

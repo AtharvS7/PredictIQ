@@ -4,10 +4,9 @@ import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
 import CurrencySelector from '@/components/shared/CurrencySelector';
 import { useToast } from '@/App';
-import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@/store/currencyStore';
-import { confirmDocumentUpload, analyzeEstimate, createManualEstimate } from '@/lib/api';
+import { uploadDocumentFile, analyzeEstimate, createManualEstimate } from '@/lib/api';
 import {
   Upload, FileText, Check, ArrowRight, ArrowLeft, Loader2, AlertTriangle,
   X, Brain, BarChart3, Zap,
@@ -97,29 +96,15 @@ export default function NewEstimatePage() {
     setUploadProgress(0);
 
     try {
-      const path = `${user.id}/${crypto.randomUUID()}-${file.name}`;
-
-      // Simulate progress
+      // Simulate progress while uploading
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => Math.min(prev + 15, 90));
       }, 200);
 
-      const { error: uploadError } = await supabase.storage
-        .from('project-docs')
-        .upload(path, file);
+      // Upload file directly to backend API
+      const { data } = await uploadDocumentFile(file);
 
       clearInterval(progressInterval);
-
-      if (uploadError) throw uploadError;
-      setUploadProgress(95);
-
-      const { data } = await confirmDocumentUpload({
-        storage_path: path,
-        original_filename: file.name,
-        file_size_bytes: file.size,
-        mime_type: file.type,
-      });
-
       setUploadProgress(100);
       setDocumentId(data.id);
       setParams((prev) => ({ ...prev, project_name: file.name.replace(/\.[^/.]+$/, '') }));

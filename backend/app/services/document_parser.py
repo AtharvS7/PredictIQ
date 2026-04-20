@@ -1,8 +1,8 @@
 """
 PredictIQ Document Parser Service
 ===================================
-Extracts raw text from PDF, DOCX, and TXT files uploaded to
-Supabase Storage. Returns clean text for NLP extraction.
+Extracts raw text from PDF, DOCX, and TXT files stored in the
+Neon PostgreSQL database. Returns clean text for NLP extraction.
 
 Handles corrupt files gracefully — never crashes the API.
 """

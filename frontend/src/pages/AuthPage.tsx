@@ -9,7 +9,7 @@ import logoImg from '@/assets/logo.png';
 type AuthMode = 'landing' | 'login' | 'register' | 'forgot';
 
 export default function AuthPage() {
-  const { session, signIn, signUp, signInWithOAuth, loading } = useAuthStore();
+  const { user, signIn, signUp, signInWithOAuth, resetPassword, loading } = useAuthStore();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
@@ -20,7 +20,7 @@ export default function AuthPage() {
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  if (session) {
+  if (user) {
     return <Navigate to="/dashboard" replace />;
   }
 
