@@ -2,7 +2,6 @@
 PredictIQ — Inference Engine Tests
 Tests for ml/inference.py PredictIQInference singleton.
 """
-import pytest
 from ml.inference import predictor
 
 

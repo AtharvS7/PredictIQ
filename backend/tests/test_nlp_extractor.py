@@ -3,7 +3,6 @@ PredictIQ — NLP Extractor Tests v2.4
 =====================================
 30+ tests covering the 4-strategy cascade extraction engine.
 """
-import pytest
 from app.services.nlp_extractor import nlp_extractor
 
 

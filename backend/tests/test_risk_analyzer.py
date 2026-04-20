@@ -2,7 +2,6 @@
 PredictIQ — Risk Analyzer Tests
 Tests for risk scoring, severity mapping, and risk factor detection.
 """
-import pytest
 from app.services.risk_analyzer import analyze_risk
 
 

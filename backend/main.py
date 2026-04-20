@@ -14,12 +14,12 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-from app.core.config import settings
-from app.api.v1.health import router as health_router
-from app.api.v1.documents import router as documents_router
-from app.api.v1.estimates import router as estimates_router
-from app.api.v1.export import router as export_router
-from app.api.v1.currencies import router as currencies_router
+from app.core.config import settings  # noqa: E402
+from app.api.v1.health import router as health_router  # noqa: E402
+from app.api.v1.documents import router as documents_router  # noqa: E402
+from app.api.v1.estimates import router as estimates_router  # noqa: E402
+from app.api.v1.export import router as export_router  # noqa: E402
+from app.api.v1.currencies import router as currencies_router  # noqa: E402
 
 # Configure structured logging
 structlog.configure(

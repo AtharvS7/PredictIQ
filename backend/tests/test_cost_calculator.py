@@ -2,7 +2,6 @@
 PredictIQ — Cost Calculator Tests
 Tests for IFPUG function point estimation and cost conversion.
 """
-import pytest
 from app.services.cost_calculator import (
     estimate_function_points,
     calculate_cost,

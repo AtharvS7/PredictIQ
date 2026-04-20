@@ -17,7 +17,7 @@ All values feed into ml_service._build_feature_vector().
 import re
 import structlog
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 logger = structlog.get_logger()
 

@@ -5,7 +5,7 @@ Tests the live exchange rate fetching, caching, and conversion logic.
 
 import pytest
 import asyncio
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch
 
 from app.services.currency_service import (
     CurrencyService,

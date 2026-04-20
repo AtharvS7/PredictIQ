@@ -10,7 +10,6 @@ Handles corrupt files gracefully — never crashes the API.
 import io
 import re
 import structlog
-from typing import Optional
 
 logger = structlog.get_logger()
 

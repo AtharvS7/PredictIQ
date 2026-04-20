@@ -103,11 +103,11 @@ def evaluate_on_dataset(model: Any, scaler: Any, features: list[str]) -> None:
     print(f"  MMRE     = {mmre:.1f}%")
 
     if r2 >= 0.70:
-        print(f"  Status   : [OK] EXCELLENT (R2>=0.70)")
+        print("  Status   : [OK] EXCELLENT (R2>=0.70)")
     elif r2 >= 0.55:
-        print(f"  Status   : [OK] PASS (R2>=0.55)")
+        print("  Status   : [OK] PASS (R2>=0.55)")
     else:
-        print(f"  Status   : [!]  BELOW TARGET (R2<0.55)")
+        print("  Status   : [!]  BELOW TARGET (R2<0.55)")
 
     # Show individual predictions
     print("\n  Sample predictions:")
@@ -212,9 +212,9 @@ def test_synthetic_prediction(
 
         # Sanity check: effort should be reasonable
         if 200 <= effort <= 20000:
-            print(f"    Sanity:          [OK] In range (200-20K hrs)")
+            print("    Sanity:          [OK] In range (200-20K hrs)")
         else:
-            print(f"    Sanity:          [!]  Outside expected range")
+            print("    Sanity:          [!]  Outside expected range")
 
 
 def test_inference_module() -> None:
@@ -222,7 +222,6 @@ def test_inference_module() -> None:
     print("\n-- Inference Module Test --")
     try:
         # Import the inference singleton
-        import importlib
         import sys
 
         # Add backend to path if needed
@@ -251,12 +250,12 @@ def test_inference_module() -> None:
             "risk_score": 3.0,
         }
         result = predictor.predict(test_features)
-        print(f"\n  Test prediction (size_fp=150, 6mo):")
+        print("\n  Test prediction (size_fp=150, 6mo):")
         print(f"    Effort:     {result['effort_hours_likely']:,.0f} hrs")
         print(f"    Range:      {result['effort_hours_min']:,.0f} - {result['effort_hours_max']:,.0f} hrs")
         print(f"    Confidence: {result['confidence_pct']}%")
         print(f"    Mode:       {result['model_mode']}")
-        print(f"  Status:     [OK] Inference module working")
+        print("  Status:     [OK] Inference module working")
 
     except Exception as e:
         print(f"  [!]  Inference module test failed: {e}")

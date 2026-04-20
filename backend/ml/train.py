@@ -18,7 +18,6 @@ Run: python backend/ml/train.py
 Fully autonomous -- no user interaction required.
 """
 
-import os
 import sys
 import json
 import pickle
@@ -34,21 +33,20 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")  # Non-interactive backend
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 warnings.filterwarnings("ignore")
 
-from sklearn.model_selection import train_test_split, cross_val_score, KFold
-from sklearn.preprocessing import StandardScaler, RobustScaler
-from sklearn.linear_model import LinearRegression, Ridge, Lasso
-from sklearn.ensemble import (
+from sklearn.model_selection import train_test_split, cross_val_score, KFold  # noqa: E402
+from sklearn.preprocessing import StandardScaler  # noqa: E402
+from sklearn.linear_model import LinearRegression, Ridge, Lasso  # noqa: E402
+from sklearn.ensemble import (  # noqa: E402
     RandomForestRegressor,
     GradientBoostingRegressor,
     ExtraTreesRegressor,
 )
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score  # noqa: E402
 
-import xgboost as xgb
+import xgboost as xgb  # noqa: E402
 
 
 # -- Paths -------------------------------------------------------------
@@ -80,7 +78,7 @@ def load_data() -> pd.DataFrame:
     """Load and validate the 740-row multi-source training dataset."""
     log("=" * 60)
     log("PredictIQ ML Training Pipeline v2.0 -- Starting")
-    log(f"Dataset: 740 projects (4 international sources)")
+    log("Dataset: 740 projects (4 international sources)")
     log(f"XGBoost version: {xgb.__version__}")
     log(f"NumPy version:   {np.__version__}")
     log(f"Pandas version:  {pd.__version__}")
@@ -509,8 +507,6 @@ def save_artifacts(
     log(f"  Best model saved -> {model_path} ({size_kb:.1f} KB)")
 
     # Compute final evaluation metrics for best model
-    y_pred_log = best_model.predict(X_test_s)
-    y_pred = np.expm1(y_pred_log)
     y_true = np.expm1(np.array(y_test))
 
     # Find best model metrics from results
@@ -612,7 +608,7 @@ def main() -> None:
     plot_predictions(best_model, X_te, y_te, best_name, n_samples)
 
     # Save everything
-    report = save_artifacts(
+    _report = save_artifacts(
         best_name, best_model, results, cv_results,
         fnames, top_features, X_te, y_te, n_samples,
     )

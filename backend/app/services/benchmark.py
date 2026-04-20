@@ -3,7 +3,6 @@ PredictIQ Benchmark Service
 Compares current estimate against historical training dataset.
 """
 import pandas as pd
-import numpy as np
 import structlog
 from pathlib import Path
 
@@ -65,12 +64,10 @@ def get_benchmark_comparison(
 
     # Calculate comparison metrics
     median_effort = similar["effort_hours"].median()
-    mean_effort = similar["effort_hours"].mean()
     p25_effort = similar["effort_hours"].quantile(0.25)
     p75_effort = similar["effort_hours"].quantile(0.75)
 
     median_cost = median_effort * hourly_rate
-    mean_cost = mean_effort * hourly_rate
 
     # Percentile of current estimate
     percentile = (similar["effort_hours"] <= effort_hours_likely).mean() * 100

@@ -2,17 +2,15 @@
 PredictIQ API — Estimate Endpoints
 Core estimation pipeline: analyze, list, get, duplicate, delete, share.
 """
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional
-from uuid import uuid4
 from datetime import datetime, timedelta, timezone
 import structlog
-import json
 import secrets
 import bcrypt
 
 from app.core.security import get_current_user, CurrentUser
-from app.core.supabase import get_supabase, get_supabase_admin
+from app.core.supabase import get_supabase_admin
 from app.core.config import settings
 from app.models.estimate import (
     EstimateRequest, ManualEstimateRequest, EstimateResult,
@@ -23,7 +21,6 @@ from app.services.ml_service import ml_service
 from app.services.cost_calculator import (
     estimate_function_points, calculate_cost,
     calculate_timeline, calculate_phase_breakdown,
-    build_feature_vector_params,
 )
 from app.services.risk_analyzer import analyze_risk
 from app.services.benchmark import get_benchmark_comparison, get_model_explanation

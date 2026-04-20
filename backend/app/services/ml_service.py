@@ -10,7 +10,6 @@ Used by estimates.py via: ml_service.predict(params)
 
 import numpy as np
 import structlog
-from typing import Any
 
 from ml.inference import predictor
 

@@ -5,16 +5,15 @@ Supports multi-currency output with live exchange rates.
 """
 import io
 from datetime import datetime
-from typing import Optional
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch, cm
+from reportlab.lib.units import cm
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    HRFlowable, PageBreak
+    HRFlowable
 )
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 import structlog
 
 logger = structlog.get_logger()
@@ -129,19 +128,6 @@ def generate_pdf_report(
         textColor=BRAND_DARK,
         leading=14,
     )
-    metric_label = ParagraphStyle(
-        "MetricLabel",
-        parent=styles["Normal"],
-        fontSize=9,
-        textColor=BRAND_GRAY,
-    )
-    metric_value = ParagraphStyle(
-        "MetricValue",
-        parent=styles["Normal"],
-        fontSize=18,
-        textColor=BRAND_DARK,
-    )
-
     elements = []
     inputs = estimate.get("inputs", {})
     outputs = estimate.get("outputs", {})

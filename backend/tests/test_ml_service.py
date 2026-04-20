@@ -4,7 +4,6 @@ Tests for feature vector construction and prediction pipeline.
 """
 import json
 import numpy as np
-import pytest
 from pathlib import Path
 from app.services.ml_service import MLService
 
