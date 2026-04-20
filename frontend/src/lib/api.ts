@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { supabase } from './supabase';
+import { auth } from './firebase';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
@@ -14,16 +14,17 @@ const api = axios.create({
 let isRefreshing = false;
 let refreshPromise: Promise<string | null> | null = null;
 
-// Request interceptor: attach JWT
+// Request interceptor: attach Firebase ID token
 api.interceptors.request.use(async (config) => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) {
-    config.headers.Authorization = `Bearer ${session.access_token}`;
+  const user = auth.currentUser;
+  if (user) {
+    const token = await user.getIdToken();
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-// Response interceptor: handle 401 with single-retry (no infinite loop)
+// Response interceptor: handle 401 with single-retry (force token refresh)
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -43,17 +44,22 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // Start a new refresh
+      // Start a new refresh (force token refresh)
       isRefreshing = true;
-      refreshPromise = supabase.auth.refreshSession().then(({ data: { session } }) => {
-        isRefreshing = false;
-        refreshPromise = null;
-        return session?.access_token ?? null;
-      }).catch(() => {
-        isRefreshing = false;
-        refreshPromise = null;
-        return null;
-      });
+      refreshPromise = (async () => {
+        try {
+          const user = auth.currentUser;
+          if (!user) return null;
+          // Force refresh the ID token
+          const token = await user.getIdToken(true);
+          return token;
+        } catch {
+          return null;
+        } finally {
+          isRefreshing = false;
+          refreshPromise = null;
+        }
+      })();
 
       const newToken = await refreshPromise;
       if (newToken) {
@@ -82,6 +88,14 @@ export const confirmDocumentUpload = (data: {
   file_size_bytes: number;
   mime_type: string;
 }) => api.post('/documents/upload', data);
+
+export const uploadDocumentFile = (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post('/documents/upload-file', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
 
 export const getDocument = (id: string) => api.get(`/documents/${id}`);
 

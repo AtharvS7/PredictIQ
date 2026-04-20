@@ -24,6 +24,10 @@ htmlcov/
 !.env.example
 !.env.test.example
 
+# Firebase credentials (NEVER commit)
+firebase-service-account.json
+**/firebase-service-account.json
+
 # ML artifacts (large binary — use Git LFS or cloud storage)
 backend/ml/*.pkl
 backend/ml/*.png

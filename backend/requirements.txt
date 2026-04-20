@@ -11,14 +11,13 @@ python-multipart>=0.0.9
 pydantic>=2.7.1
 pydantic-settings>=2.3.1
 
-# -- Supabase ------------------------------------------------------
-# Pin supabase to 2.4.2 with old sub-packages (no pyiceberg C dep)
-supabase==2.4.2
-storage3==0.7.7
-gotrue==2.4.2
-postgrest==0.16.1
-realtime>=1.0.0,<2.0.0
-supafunc>=0.3.1,<0.5.0
+# -- Database (Neon PostgreSQL) ------------------------------------
+asyncpg>=0.30.0
+
+# -- Firebase Auth -------------------------------------------------
+firebase-admin>=6.5.0
+
+# -- JWT -----------------------------------------------------------
 python-jose[cryptography]>=3.3.0
 
 # -- Document Parsing ----------------------------------------------
@@ -41,7 +40,7 @@ Pillow>=10.3.0
 # -- Utilities -----------------------------------------------------
 structlog>=24.2.0
 python-dotenv>=1.0.1
-httpx>=0.24.0,<0.26.0
+httpx>=0.24.0
 slowapi>=0.1.9
 bcrypt>=4.1.3
 

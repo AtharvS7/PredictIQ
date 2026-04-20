@@ -1,14 +1,16 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme, useToast } from '@/App';
-import { User, DollarSign, Palette, Shield, Save } from 'lucide-react';
+import { User, DollarSign, Palette, Save, LogOut } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { profile, updateProfile } = useAuthStore();
+  const { profile, updateProfile, signOut } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { addToast } = useToast();
+  const navigate = useNavigate();
 
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [hourlyRate, setHourlyRate] = useState(profile?.hourly_rate_usd?.toString() || '75');
@@ -32,12 +34,17 @@ export default function SettingsPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <Navbar />
       <div style={{ display: 'flex' }}>
         <Sidebar />
-        <main style={{ flex: 1, padding: '2rem', maxWidth: 700 }}>
+        <main style={{ flex: 1, padding: '2rem', maxWidth: 700, margin: '0 auto' }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 24, color: 'var(--text-primary)' }}>Settings</h1>
 
           {/* Profile */}
@@ -121,6 +128,46 @@ export default function SettingsPage() {
           }}>
             <Save size={16} /> {saving ? 'Saving...' : 'Save Changes'}
           </button>
+
+          {/* Logout */}
+          <div className="card" style={{ padding: 24, marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <h3 style={{ fontWeight: 600, marginBottom: 4, display: 'flex', gap: 8, alignItems: 'center', color: 'var(--text-primary)' }}>
+                <LogOut size={18} /> Sign Out
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                Sign out of your PredictIQ account
+              </p>
+            </div>
+            <button
+              id="logout-button"
+              onClick={handleLogout}
+              style={{
+                padding: '10px 24px',
+                borderRadius: 12,
+                border: '2px solid #ef4444',
+                background: 'rgba(239, 68, 68, 0.08)',
+                color: '#ef4444',
+                fontWeight: 600,
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#ef4444';
+                e.currentTarget.style.color = '#fff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
+                e.currentTarget.style.color = '#ef4444';
+              }}
+            >
+              <LogOut size={16} /> Logout
+            </button>
+          </div>
         </main>
       </div>
     </div>

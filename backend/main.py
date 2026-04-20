@@ -15,11 +15,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.core.config import settings
+from app.core.database import init_db_pool, close_db_pool
+from app.core.security import init_firebase
 from app.api.v1.health import router as health_router
 from app.api.v1.documents import router as documents_router
 from app.api.v1.estimates import router as estimates_router
 from app.api.v1.export import router as export_router
 from app.api.v1.currencies import router as currencies_router
+from app.api.v1.profile import router as profile_router
 
 # Configure structured logging
 structlog.configure(
@@ -41,6 +44,12 @@ async def lifespan(app: FastAPI):
     """Application startup and shutdown events."""
     # Startup
     logger.info("starting_predictiq", env=settings.APP_ENV, version=settings.APP_VERSION)
+
+    # Initialize Firebase Admin SDK
+    init_firebase()
+
+    # Initialize database connection pool
+    await init_db_pool()
 
     # Load ML model
     from ml.inference import predictor
@@ -64,6 +73,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
+    await close_db_pool()
     logger.info("shutting_down_predictiq")
 
 
@@ -107,6 +117,7 @@ app.include_router(documents_router, prefix="/api/v1", tags=["Documents"])
 app.include_router(estimates_router, prefix="/api/v1", tags=["Estimates"])
 app.include_router(export_router, prefix="/api/v1", tags=["Export"])
 app.include_router(currencies_router, prefix="/api/v1", tags=["Currencies"])
+app.include_router(profile_router, prefix="/api/v1", tags=["Profile"])
 
 
 @app.get("/")
@@ -118,4 +129,3 @@ async def root():
         "docs": "/docs",
         "health": "/api/v1/health",
     }
-

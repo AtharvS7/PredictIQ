@@ -5,10 +5,11 @@ PDF and JSON export for estimates with multi-currency support.
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse, JSONResponse
 import io
+import json
 import structlog
 
 from app.core.security import get_current_user, CurrentUser
-from app.core.supabase import get_supabase_admin
+from app.core.database import get_db
 from app.services.export_service import generate_pdf_report
 from app.services.currency_service import currency_service
 
@@ -24,19 +25,26 @@ async def export_pdf(
 ):
     """Generate and stream a branded PDF report in the selected currency."""
     try:
-        supabase = get_supabase_admin()
-        result = supabase.table("estimates").select("*").eq(
-            "id", estimate_id
-        ).eq("user_id", user.id).single().execute()
+        pool = await get_db()
+        row = await pool.fetchrow(
+            """SELECT * FROM estimates WHERE id = $1 AND user_id = $2""",
+            estimate_id, user.id,
+        )
 
-        if not result.data:
+        if not row:
             raise HTTPException(status_code=404, detail="Estimate not found")
 
-        row = result.data
+        inputs_json = row.get("inputs_json") or {}
+        outputs_json = row.get("outputs_json") or {}
+        if isinstance(inputs_json, str):
+            inputs_json = json.loads(inputs_json)
+        if isinstance(outputs_json, str):
+            outputs_json = json.loads(outputs_json)
+
         estimate = {
             "project_name": row["project_name"],
-            "inputs": row.get("inputs_json", {}),
-            "outputs": row.get("outputs_json", {}),
+            "inputs": inputs_json,
+            "outputs": outputs_json,
         }
 
         # Fetch live exchange rate for the selected currency
@@ -81,15 +89,25 @@ async def export_json(
 ):
     """Export estimate as JSON."""
     try:
-        supabase = get_supabase_admin()
-        result = supabase.table("estimates").select("*").eq(
-            "id", estimate_id
-        ).eq("user_id", user.id).single().execute()
+        pool = await get_db()
+        row = await pool.fetchrow(
+            """SELECT * FROM estimates WHERE id = $1 AND user_id = $2""",
+            estimate_id, user.id,
+        )
 
-        if not result.data:
+        if not row:
             raise HTTPException(status_code=404, detail="Estimate not found")
 
-        return JSONResponse(content=result.data)
+        # Convert asyncpg Record to dict
+        result_dict = dict(row)
+        # Convert non-JSON-serializable types
+        for key, value in result_dict.items():
+            if hasattr(value, "isoformat"):
+                result_dict[key] = value.isoformat()
+            elif isinstance(value, bytes):
+                del result_dict[key]  # Don't include binary data in JSON export
+
+        return JSONResponse(content=result_dict)
     except HTTPException:
         raise
     except Exception as e:

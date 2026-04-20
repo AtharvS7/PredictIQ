@@ -1,6 +1,7 @@
 """
 PredictIQ API — Estimate Endpoints
 Core estimation pipeline: analyze, list, get, duplicate, delete, share.
+All database access via asyncpg (Neon PostgreSQL).
 """
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import Optional
@@ -12,7 +13,7 @@ import secrets
 import bcrypt
 
 from app.core.security import get_current_user, CurrentUser
-from app.core.supabase import get_supabase, get_supabase_admin
+from app.core.database import get_db
 from app.core.config import settings
 from app.models.estimate import (
     EstimateRequest, ManualEstimateRequest, EstimateResult,
@@ -42,7 +43,7 @@ async def analyze_estimate(
 ):
     """
     Core estimation endpoint. Full pipeline:
-    1. Fetch document from Supabase Storage
+    1. Fetch document from database (BYTEA)
     2. Parse document text
     3. NLP extraction → project parameters
     4. Apply user overrides
@@ -53,24 +54,31 @@ async def analyze_estimate(
     9. Save to database
     """
     try:
-        supabase = get_supabase_admin()
+        pool = await get_db()
 
-        # Step 1: Get document metadata
-        doc_result = supabase.table("document_uploads").select("*").eq(
-            "id", str(request.document_id)
-        ).eq("user_id", user.id).single().execute()
+        # Step 1: Get document metadata + file data
+        doc = await pool.fetchrow(
+            """SELECT * FROM document_uploads
+               WHERE id = $1 AND user_id = $2""",
+            str(request.document_id),
+            user.id,
+        )
 
-        if not doc_result.data:
+        if not doc:
             raise HTTPException(status_code=404, detail="Document not found")
-
-        doc = doc_result.data
 
         # Step 2: Download and parse document
         try:
-            file_response = supabase.storage.from_(
-                settings.SUPABASE_STORAGE_BUCKET
-            ).download(doc["storage_path"])
-            parse_result = document_parser.parse(file_response, doc["mime_type"])
+            file_data = doc["file_data"]
+            if file_data:
+                parse_result = document_parser.parse(bytes(file_data), doc["mime_type"])
+            else:
+                parse_result = {
+                    "raw_text": "",
+                    "text_preview": "",
+                    "word_count": 0,
+                    "page_count": None,
+                }
         except Exception as parse_err:
             logger.warning("document_parse_fallback", error=str(parse_err))
             parse_result = {
@@ -286,36 +294,40 @@ async def _run_estimation(
         benchmark_comparison=benchmark,
     )
 
-    # Step 10: Save to database
-    supabase = get_supabase_admin()
-    estimate_data = {
-        "user_id": user_id,
-        "document_id": document_id,
-        "project_name": project_name,
-        "status": "complete",
-        "inputs_json": inputs.model_dump(),
-        "outputs_json": outputs.model_dump(),
-        "effort_likely_hours": effort_likely,
-        "cost_likely_usd": costs["cost_likely_usd"],
-        "duration_likely_weeks": timeline["timeline_likely_weeks"],
-        "risk_score": risk_result["risk_score"],
-        "confidence_pct": confidence,
-    }
+    # Step 10: Save to database via asyncpg
+    pool = await get_db()
+    inputs_dict = inputs.model_dump()
+    outputs_dict = outputs.model_dump()
 
-    result = supabase.table("estimates").insert(estimate_data).execute()
+    saved = await pool.fetchrow(
+        """INSERT INTO estimates
+           (user_id, document_id, project_name, status, inputs_json, outputs_json,
+            effort_likely_hours, cost_likely_usd, duration_likely_weeks, risk_score, confidence_pct)
+           VALUES ($1, $2, $3, 'complete', $4, $5, $6, $7, $8, $9, $10)
+           RETURNING *""",
+        user_id,
+        document_id,
+        project_name,
+        json.dumps(inputs_dict),
+        json.dumps(outputs_dict),
+        effort_likely,
+        costs["cost_likely_usd"],
+        timeline["timeline_likely_weeks"],
+        risk_result["risk_score"],
+        confidence,
+    )
 
-    if not result.data:
+    if not saved:
         raise HTTPException(status_code=500, detail="Failed to save estimate")
 
-    saved = result.data[0]
-    logger.info("estimate_created", id=saved["id"], user_id=user_id)
+    logger.info("estimate_created", id=str(saved["id"]), user_id=user_id)
 
     return EstimateResult(
-        estimate_id=saved["id"],
+        estimate_id=str(saved["id"]),
         document_id=document_id,
         user_id=user_id,
         project_name=project_name,
-        created_at=saved["created_at"],
+        created_at=str(saved["created_at"]),
         version=saved.get("version", 1),
         status="complete",
         inputs=inputs,
@@ -333,37 +345,61 @@ async def list_estimates(
 ):
     """List all estimates for the authenticated user."""
     try:
-        supabase = get_supabase_admin()
-        query = supabase.table("estimates").select(
-            "*", count="exact"
-        ).eq("user_id", user.id).neq("status", "deleted")
+        pool = await get_db()
 
-        if project_type:
-            query = query.eq("inputs_json->>project_type", project_type)
-
-        # Sorting
+        # Build sort clause
         sort_map = {
-            "created_at_desc": ("created_at", {"desc": True}),
-            "created_at_asc": ("created_at", {"desc": False}),
-            "cost_asc": ("cost_likely_usd", {"desc": False}),
-            "cost_desc": ("cost_likely_usd", {"desc": True}),
-            "risk_desc": ("risk_score", {"desc": True}),
+            "created_at_desc": "created_at DESC",
+            "created_at_asc": "created_at ASC",
+            "cost_asc": "cost_likely_usd ASC",
+            "cost_desc": "cost_likely_usd DESC",
+            "risk_desc": "risk_score DESC",
         }
-        sort_col, sort_opts = sort_map.get(sort, ("created_at", {"desc": True}))
-        query = query.order(sort_col, desc=sort_opts["desc"])
+        order_clause = sort_map.get(sort, "created_at DESC")
+        offset = (page - 1) * per_page
 
-        # Pagination
-        start = (page - 1) * per_page
-        query = query.range(start, start + per_page - 1)
-
-        result = query.execute()
+        # Build query with optional project_type filter
+        if project_type:
+            rows = await pool.fetch(
+                f"""SELECT * FROM estimates
+                    WHERE user_id = $1 AND status != 'deleted'
+                      AND inputs_json->>'project_type' = $2
+                    ORDER BY {order_clause}
+                    LIMIT $3 OFFSET $4""",
+                user.id, project_type, per_page, offset,
+            )
+            count_row = await pool.fetchval(
+                """SELECT COUNT(*) FROM estimates
+                   WHERE user_id = $1 AND status != 'deleted'
+                     AND inputs_json->>'project_type' = $2""",
+                user.id, project_type,
+            )
+        else:
+            rows = await pool.fetch(
+                f"""SELECT * FROM estimates
+                    WHERE user_id = $1 AND status != 'deleted'
+                    ORDER BY {order_clause}
+                    LIMIT $2 OFFSET $3""",
+                user.id, per_page, offset,
+            )
+            count_row = await pool.fetchval(
+                """SELECT COUNT(*) FROM estimates
+                   WHERE user_id = $1 AND status != 'deleted'""",
+                user.id,
+            )
 
         estimates = []
-        for row in (result.data or []):
+        for row in rows:
             inputs_json = row.get("inputs_json") or {}
             outputs_json = row.get("outputs_json") or {}
+            # asyncpg returns JSONB as dict already, but handle string case
+            if isinstance(inputs_json, str):
+                inputs_json = json.loads(inputs_json)
+            if isinstance(outputs_json, str):
+                outputs_json = json.loads(outputs_json)
+
             estimates.append(EstimateSummary(
-                id=row["id"],
+                id=str(row["id"]),
                 project_name=row["project_name"],
                 project_type=inputs_json.get("project_type", "Unknown"),
                 cost_likely_usd=row.get("cost_likely_usd") or 0,
@@ -375,11 +411,11 @@ async def list_estimates(
                 duration_likely_weeks=row.get("duration_likely_weeks") or 0,
                 status=row["status"],
                 version=row.get("version", 1),
-                created_at=row["created_at"],
-                updated_at=row.get("updated_at"),
+                created_at=str(row["created_at"]),
+                updated_at=str(row["updated_at"]) if row.get("updated_at") else None,
             ))
 
-        total = result.count or len(estimates)
+        total = count_row or len(estimates)
         return EstimateListResponse(
             estimates=estimates,
             total=total,
@@ -398,24 +434,28 @@ async def get_estimate(
 ):
     """Get full estimate details."""
     try:
-        supabase = get_supabase_admin()
-        result = supabase.table("estimates").select("*").eq(
-            "id", estimate_id
-        ).eq("user_id", user.id).single().execute()
+        pool = await get_db()
+        row = await pool.fetchrow(
+            """SELECT * FROM estimates WHERE id = $1 AND user_id = $2""",
+            estimate_id, user.id,
+        )
 
-        if not result.data:
+        if not row:
             raise HTTPException(status_code=404, detail="Estimate not found")
 
-        row = result.data
         inputs_json = row.get("inputs_json") or {}
         outputs_json = row.get("outputs_json") or {}
+        if isinstance(inputs_json, str):
+            inputs_json = json.loads(inputs_json)
+        if isinstance(outputs_json, str):
+            outputs_json = json.loads(outputs_json)
 
         return EstimateResult(
-            estimate_id=row["id"],
-            document_id=row.get("document_id"),
+            estimate_id=str(row["id"]),
+            document_id=str(row["document_id"]) if row.get("document_id") else None,
             user_id=row["user_id"],
             project_name=row["project_name"],
-            created_at=row["created_at"],
+            created_at=str(row["created_at"]),
             version=row.get("version", 1),
             status=row["status"],
             inputs=EstimateInputs(**inputs_json),
@@ -436,52 +476,57 @@ async def duplicate_estimate(
 ):
     """Duplicate an estimate as a new version."""
     try:
-        supabase = get_supabase_admin()
+        pool = await get_db()
 
         # Get original
-        original = supabase.table("estimates").select("*").eq(
-            "id", estimate_id
-        ).eq("user_id", user.id).single().execute()
-
-        if not original.data:
+        row = await pool.fetchrow(
+            """SELECT * FROM estimates WHERE id = $1 AND user_id = $2""",
+            estimate_id, user.id,
+        )
+        if not row:
             raise HTTPException(status_code=404, detail="Estimate not found")
 
-        row = original.data
-
         # Get max version for this project
-        version_result = supabase.table("estimates").select("version").eq(
-            "user_id", user.id
-        ).eq("project_name", row["project_name"]).order(
-            "version", desc=True
-        ).limit(1).execute()
-
-        new_version = (version_result.data[0]["version"] + 1) if version_result.data else 2
+        max_version = await pool.fetchval(
+            """SELECT MAX(version) FROM estimates
+               WHERE user_id = $1 AND project_name = $2""",
+            user.id, row["project_name"],
+        )
+        new_version = (max_version or 1) + 1
 
         # Insert duplicate
-        new_data = {
-            "user_id": user.id,
-            "document_id": row.get("document_id"),
-            "project_name": row["project_name"],
-            "version": new_version,
-            "status": "complete",
-            "inputs_json": row["inputs_json"],
-            "outputs_json": row["outputs_json"],
-            "effort_likely_hours": row.get("effort_likely_hours"),
-            "cost_likely_usd": row.get("cost_likely_usd"),
-            "duration_likely_weeks": row.get("duration_likely_weeks"),
-            "risk_score": row.get("risk_score"),
-            "confidence_pct": row.get("confidence_pct"),
-        }
+        dup = await pool.fetchrow(
+            """INSERT INTO estimates
+               (user_id, document_id, project_name, version, status,
+                inputs_json, outputs_json, effort_likely_hours, cost_likely_usd,
+                duration_likely_weeks, risk_score, confidence_pct)
+               VALUES ($1, $2, $3, $4, 'complete', $5, $6, $7, $8, $9, $10, $11)
+               RETURNING *""",
+            user.id,
+            row.get("document_id"),
+            row["project_name"],
+            new_version,
+            json.dumps(row["inputs_json"]) if isinstance(row["inputs_json"], dict) else row["inputs_json"],
+            json.dumps(row["outputs_json"]) if isinstance(row["outputs_json"], dict) else row["outputs_json"],
+            row.get("effort_likely_hours"),
+            row.get("cost_likely_usd"),
+            row.get("duration_likely_weeks"),
+            row.get("risk_score"),
+            row.get("confidence_pct"),
+        )
 
-        result = supabase.table("estimates").insert(new_data).execute()
-        if not result.data:
+        if not dup:
             raise HTTPException(status_code=500, detail="Duplication failed")
 
-        dup = result.data[0]
         outputs_json = dup.get("outputs_json") or {}
         inputs_json = dup.get("inputs_json") or {}
+        if isinstance(inputs_json, str):
+            inputs_json = json.loads(inputs_json)
+        if isinstance(outputs_json, str):
+            outputs_json = json.loads(outputs_json)
+
         return EstimateSummary(
-            id=dup["id"],
+            id=str(dup["id"]),
             project_name=dup["project_name"],
             project_type=inputs_json.get("project_type", "Unknown"),
             cost_likely_usd=dup.get("cost_likely_usd") or 0,
@@ -493,7 +538,7 @@ async def duplicate_estimate(
             duration_likely_weeks=dup.get("duration_likely_weeks") or 0,
             status=dup["status"],
             version=dup["version"],
-            created_at=dup["created_at"],
+            created_at=str(dup["created_at"]),
         )
     except HTTPException:
         raise
@@ -509,12 +554,15 @@ async def delete_estimate(
 ):
     """Soft-delete an estimate."""
     try:
-        supabase = get_supabase_admin()
-        result = supabase.table("estimates").update(
-            {"status": "deleted"}
-        ).eq("id", estimate_id).eq("user_id", user.id).execute()
+        pool = await get_db()
+        result = await pool.execute(
+            """UPDATE estimates SET status = 'deleted', updated_at = NOW()
+               WHERE id = $1 AND user_id = $2""",
+            estimate_id, user.id,
+        )
 
-        if not result.data:
+        # asyncpg execute returns a string like "UPDATE 1"
+        if result == "UPDATE 0":
             raise HTTPException(status_code=404, detail="Estimate not found")
 
         return {"deleted": True}
@@ -533,39 +581,35 @@ async def create_share_link(
 ):
     """Generate a shareable read-only link for an estimate."""
     try:
-        supabase = get_supabase_admin()
+        pool = await get_db()
 
         # Verify ownership
-        est = supabase.table("estimates").select("id").eq(
-            "id", estimate_id
-        ).eq("user_id", user.id).single().execute()
-
-        if not est.data:
+        est = await pool.fetchrow(
+            """SELECT id FROM estimates WHERE id = $1 AND user_id = $2""",
+            estimate_id, user.id,
+        )
+        if not est:
             raise HTTPException(status_code=404, detail="Estimate not found")
 
         token = secrets.token_urlsafe(32)
-        expires_at = (
-            datetime.now(timezone.utc) + timedelta(days=request.expires_in_days)
-        ).isoformat()
+        expires_at = datetime.now(timezone.utc) + timedelta(days=request.expires_in_days)
 
-        share_data = {
-            "estimate_id": estimate_id,
-            "token": token,
-            "expires_at": expires_at,
-        }
+        password_hash = None
         if request.password:
-            share_data["password_hash"] = bcrypt.hashpw(
+            password_hash = bcrypt.hashpw(
                 request.password.encode(), bcrypt.gensalt()
             ).decode()
 
-        result = supabase.table("share_links").insert(share_data).execute()
-        if not result.data:
-            raise HTTPException(status_code=500, detail="Failed to create share link")
+        await pool.execute(
+            """INSERT INTO share_links (estimate_id, token, password_hash, expires_at)
+               VALUES ($1, $2, $3, $4)""",
+            estimate_id, token, password_hash, expires_at,
+        )
 
         return ShareLinkResponse(
             share_url=f"/share/{token}",
             token=token,
-            expires_at=expires_at,
+            expires_at=expires_at.isoformat(),
         )
     except HTTPException:
         raise
