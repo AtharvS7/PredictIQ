@@ -14,8 +14,9 @@ class Settings(BaseSettings):
     # Neon PostgreSQL
     DATABASE_URL: str
 
-    # Firebase
+    # Firebase — provide EITHER a file path OR raw JSON string
     FIREBASE_CREDENTIALS_PATH: str = "./firebase-service-account.json"
+    FIREBASE_CREDENTIALS_JSON: str = ""  # Raw JSON string (for Codespaces/Railway)
 
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000"

@@ -26,12 +26,45 @@ _firebase_app = None
 
 
 def init_firebase():
-    """Initialize Firebase Admin SDK. Called once during app startup."""
+    """Initialize Firebase Admin SDK. Called once during app startup.
+
+    Supports two credential sources (checked in order):
+      1. FIREBASE_CREDENTIALS_JSON env var — raw JSON string (Codespaces / Railway)
+      2. FIREBASE_CREDENTIALS_PATH — path to a .json file (local dev)
+    """
     global _firebase_app
-    if _firebase_app is None:
-        cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
+    if _firebase_app is not None:
+        return
+
+    import json
+    import os
+
+    # Option 1: Raw JSON from environment variable
+    json_str = settings.FIREBASE_CREDENTIALS_JSON
+    if json_str:
+        try:
+            cert_dict = json.loads(json_str)
+            cred = credentials.Certificate(cert_dict)
+            _firebase_app = firebase_admin.initialize_app(cred)
+            logger.info("firebase_admin_initialized", source="env_var",
+                        project_id=cert_dict.get("project_id"))
+            return
+        except Exception as e:
+            logger.error("firebase_json_env_parse_error", error=str(e))
+
+    # Option 2: JSON file on disk
+    cred_path = settings.FIREBASE_CREDENTIALS_PATH
+    if os.path.exists(cred_path):
+        cred = credentials.Certificate(cred_path)
         _firebase_app = firebase_admin.initialize_app(cred)
-        logger.info("firebase_admin_initialized", project_id=cred.project_id)
+        logger.info("firebase_admin_initialized", source="file", project_id=cred.project_id)
+        return
+
+    raise FileNotFoundError(
+        f"Firebase credentials not found. Either:\n"
+        f"  1. Set FIREBASE_CREDENTIALS_JSON env var with the JSON content, or\n"
+        f"  2. Place the service account file at: {cred_path}"
+    )
 
 
 class CurrentUser(BaseModel):
