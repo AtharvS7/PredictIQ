@@ -6,6 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="PredictIQ — AI-powered software project cost and timeline estimation. Know Before You Build." />
     <title>PredictIQ — Know Before You Build</title>
+
+    <!-- Preconnect to Google Fonts (eliminates DNS+TLS round-trip) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Non-blocking font load (was previously a render-blocking CSS @import) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" /></noscript>
+
+    <!-- DNS prefetch for Supabase -->
+    <link rel="dns-prefetch" href="https://supabase.co" />
   </head>
   <body>
     <div id="root"></div>

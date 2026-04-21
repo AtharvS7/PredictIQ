@@ -1,16 +1,33 @@
-import { useEffect, useState, createContext, useContext, type ReactNode } from 'react';
+import { useEffect, useState, createContext, useContext, lazy, Suspense, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useCurrencyStore } from '@/store/currencyStore';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import LandingPage from '@/pages/LandingPage';
-import AuthPage from '@/pages/AuthPage';
-import DashboardPage from '@/pages/DashboardPage';
-import NewEstimatePage from '@/pages/NewEstimatePage';
-import ResultsPage from '@/pages/ResultsPage';
-import EstimatesPage from '@/pages/EstimatesPage';
-import SettingsPage from '@/pages/SettingsPage';
-import './index.css';
+
+// ── Lazy-loaded pages (code splitting) ───────────────────
+const LandingPage = lazy(() => import('@/pages/LandingPage'));
+const AuthPage = lazy(() => import('@/pages/AuthPage'));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const NewEstimatePage = lazy(() => import('@/pages/NewEstimatePage'));
+const ResultsPage = lazy(() => import('@/pages/ResultsPage'));
+const EstimatesPage = lazy(() => import('@/pages/EstimatesPage'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+
+// ── Page Loading Spinner ─────────────────────────────────
+function PageSpinner() {
+  return (
+    <div style={{
+      display: 'flex', justifyContent: 'center', alignItems: 'center',
+      height: '60vh',
+    }}>
+      <div style={{
+        width: 36, height: 36, border: '3px solid var(--border-color)',
+        borderTopColor: 'var(--color-primary)', borderRadius: '50%',
+        animation: 'spin 0.8s linear infinite',
+      }} />
+    </div>
+  );
+}
 
 // ── Theme Context ────────────────────────────────────────
 interface ThemeContextType {
@@ -20,7 +37,7 @@ interface ThemeContextType {
 
 export const ThemeContext = createContext<ThemeContextType>({
   theme: 'dark',
-  setTheme: () => { },
+  setTheme: () => {},
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -69,8 +86,8 @@ interface ToastContextType {
 
 export const ToastContext = createContext<ToastContextType>({
   toasts: [],
-  addToast: () => { },
-  removeToast: () => { },
+  addToast: () => {},
+  removeToast: () => {},
 });
 
 export const useToast = () => useContext(ToastContext);
@@ -111,7 +128,15 @@ function ToastProvider({ children }: { children: ReactNode }) {
 
 // ── Auth Guard ───────────────────────────────────────────
 function RequireAuth({ children }: { children: ReactNode }) {
-  const { session, initialized } = useAuthStore();
+  // Firebase auth uses `user` instead of Supabase `session`
+  const { user, initialized } = useAuthStore();
+
+  // Pre-fetch exchange rates only for authenticated users
+  useEffect(() => {
+    if (user) {
+      useCurrencyStore.getState().refreshRatesIfStale();
+    }
+  }, [user]);
 
   if (!initialized) {
     return (
@@ -128,7 +153,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!session) {
+  if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
@@ -141,8 +166,6 @@ export default function App() {
 
   useEffect(() => {
     initialize();
-    // Pre-fetch exchange rates on app mount
-    useCurrencyStore.getState().fetchRates();
   }, [initialize]);
 
   if (!initialized) {
@@ -167,31 +190,33 @@ export default function App() {
       <ThemeProvider>
         <ToastProvider>
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route
-                path="/dashboard"
-                element={<RequireAuth><DashboardPage /></RequireAuth>}
-              />
-              <Route
-                path="/estimate/new"
-                element={<RequireAuth><NewEstimatePage /></RequireAuth>}
-              />
-              <Route
-                path="/estimate/:id/results"
-                element={<RequireAuth><ResultsPage /></RequireAuth>}
-              />
-              <Route
-                path="/estimates"
-                element={<RequireAuth><EstimatesPage /></RequireAuth>}
-              />
-              <Route
-                path="/settings"
-                element={<RequireAuth><SettingsPage /></RequireAuth>}
-              />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+            <Suspense fallback={<PageSpinner />}>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route
+                  path="/dashboard"
+                  element={<RequireAuth><DashboardPage /></RequireAuth>}
+                />
+                <Route
+                  path="/estimate/new"
+                  element={<RequireAuth><NewEstimatePage /></RequireAuth>}
+                />
+                <Route
+                  path="/estimate/:id/results"
+                  element={<RequireAuth><ResultsPage /></RequireAuth>}
+                />
+                <Route
+                  path="/estimates"
+                  element={<RequireAuth><EstimatesPage /></RequireAuth>}
+                />
+                <Route
+                  path="/settings"
+                  element={<RequireAuth><SettingsPage /></RequireAuth>}
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
           </BrowserRouter>
         </ToastProvider>
       </ThemeProvider>

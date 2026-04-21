@@ -1,11 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
 import { useAuthStore } from '@/store/authStore';
-import { useToast, useTheme } from '@/App';
-import { supabase } from '@/lib/supabase';
-import { User, DollarSign, Save, LogOut, Phone, Lock } from 'lucide-react';
+import { useTheme, useToast } from '@/App';
+import { User, DollarSign, Save, LogOut } from 'lucide-react';
 
 export default function SettingsPage() {
   const { profile, updateProfile, signOut } = useAuthStore();
@@ -18,28 +17,15 @@ export default function SettingsPage() {
     profile?.hourly_rate_usd?.toString() || '75'
   );
   const [currency, setCurrency] = useState(profile?.currency || 'USD');
-  const [phone, setPhone] = useState(profile?.phone || '');
   const [saving, setSaving] = useState(false);
 
-  const countryDropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (
-        countryDropdownRef.current &&
-        !countryDropdownRef.current.contains(e.target as Node)
-      ) {
-        // dropdown closed (if implemented later)
-      }
-    };
-
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [changingPassword, setChangingPassword] = useState(false);
+  const cardStyle = {
+    padding: 24,
+    marginBottom: 20,
+    border: '1px solid var(--border-color)',
+    borderRadius: 12,
+    background: 'var(--bg-surface)',
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -50,7 +36,6 @@ export default function SettingsPage() {
         hourly_rate_usd: parseFloat(hourlyRate) || 75,
         currency,
         theme,
-        phone,
       });
 
       addToast('success', 'Settings saved!');
@@ -61,48 +46,18 @@ export default function SettingsPage() {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (newPassword.length < 10) {
-      addToast('error', 'Password must be at least 10 characters');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      addToast('error', 'Passwords do not match');
-      return;
-    }
-
-    setChangingPassword(true);
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (error) throw error;
-
-      addToast('success', 'Password updated successfully!');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : 'Failed to update password';
-
-      addToast('error', message);
-    } finally {
-      setChangingPassword(false);
-    }
-  };
-
   const handleLogout = async () => {
     await signOut();
     navigate('/');
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--bg-primary)',
+      }}
+    >
       <Navbar />
 
       <div style={{ display: 'flex' }}>
@@ -128,7 +83,8 @@ export default function SettingsPage() {
           </h1>
 
           {/* Profile */}
-          <div className="card" style={{ padding: 24, marginBottom: 20 }}>
+
+          <div className="card" style={cardStyle}>
             <h3
               style={{
                 fontWeight: 600,
@@ -152,34 +108,9 @@ export default function SettingsPage() {
             />
           </div>
 
-          {/* Contact 
-          <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-            <h3
-              style={{
-                fontWeight: 600,
-                marginBottom: 16,
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-                color: 'var(--text-primary)',
-              }}
-            >
-              <Phone size={18} /> Contact Number
-            </h3>
-*/}
-          {/* <label className="label">Phone Number</label>
-
-            <input
-              type="tel"
-              className="input-field"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="1234567890"
-            />
-          </div>  */}
-
           {/* Default Rate */}
-          <div className="card" style={{ padding: 24, marginBottom: 20 }}>
+
+          <div className="card" style={cardStyle}>
             <h3
               style={{
                 fontWeight: 600,
@@ -207,9 +138,7 @@ export default function SettingsPage() {
                   type="number"
                   className="input-field"
                   value={hourlyRate}
-                  onChange={(e) =>
-                    setHourlyRate(e.target.value)
-                  }
+                  onChange={(e) => setHourlyRate(e.target.value)}
                   min={10}
                   max={500}
                 />
@@ -221,9 +150,7 @@ export default function SettingsPage() {
                 <select
                   className="input-field"
                   value={currency}
-                  onChange={(e) =>
-                    setCurrency(e.target.value)
-                  }
+                  onChange={(e) => setCurrency(e.target.value)}
                 >
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
@@ -234,119 +161,113 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Change Password */}
-          <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-            <h3
-              style={{
-                fontWeight: 600,
-                marginBottom: 16,
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-                color: 'var(--text-primary)',
-              }}
-            >
-              <Lock size={18} /> Change Password
-            </h3>
+          {/* Save Changes — SAME THEME LOGIC AS ESTIMATE PAGE */}
 
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 14,
-              }}
-            >
-              <input
-                type="password"
-                className="input-field"
-                value={newPassword}
-                onChange={(e) =>
-                  setNewPassword(e.target.value)
-                }
-                placeholder="Min 10 characters"
-              />
-
-              <input
-                type="password"
-                className="input-field"
-                value={confirmPassword}
-                onChange={(e) =>
-                  setConfirmPassword(e.target.value)
-                }
-                placeholder="Re-enter new password"
-              />
-
-              <button
-                onClick={handleChangePassword}
-                disabled={
-                  changingPassword ||
-                  !newPassword ||
-                  !confirmPassword
-                }
-                className="btn-secondary"
-                style={{
-                  alignSelf: 'flex-start',
-                  padding: '10px 20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                <Lock size={14} />
-                {changingPassword
-                  ? 'Updating...'
-                  : 'Update Password'}
-              </button>
-            </div>
-          </div>
-
-          {/* Save + Logout */}
-          <div
+          <button
+            onClick={handleSave}
+            disabled={saving}
             style={{
+              padding: '10px 18px',
+              borderRadius: 8,
+
+              background: 'transparent',
+
+              color: 'var(--text-primary)',
+
+              border: '1px solid var(--text-primary)',
+
+              cursor: 'pointer',
+
               display: 'flex',
-              justifyContent: 'center',
-              gap: 16,
-              marginTop: 24,
+              alignItems: 'center',
+              gap: 6,
+
+              transition: 'all 0.2s',
+
+              opacity: saving ? 0.7 : 1,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background =
+                'var(--text-primary)';
+              e.currentTarget.style.color =
+                'var(--bg-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background =
+                'transparent';
+              e.currentTarget.style.color =
+                'var(--text-primary)';
             }}
           >
-            <button
-              className="btn-primary"
-              onClick={handleSave}
-              disabled={saving}
-              style={{
-                flex: 1,
-                maxWidth: 220,
-                padding: '12px 24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-              }}
-            >
-              <Save size={16} />
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+            <Save size={16} />
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+
+          {/* Logout */}
+
+          <div
+            className="card"
+            style={{
+              ...cardStyle,
+              marginTop: 20,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div>
+              <h3
+                style={{
+                  fontWeight: 600,
+                  marginBottom: 4,
+                  display: 'flex',
+                  gap: 8,
+                  alignItems: 'center',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <LogOut size={18} /> Sign Out
+              </h3>
+
+              <p
+                style={{
+                  fontSize: '0.85rem',
+                  color: 'var(--text-secondary)',
+                  margin: 0,
+                }}
+              >
+                Sign out of your PredictIQ account
+              </p>
+            </div>
 
             <button
               onClick={handleLogout}
               style={{
-                flex: 1,
-                maxWidth: 220,
-                padding: '12px 24px',
+                padding: '10px 24px',
                 borderRadius: 12,
                 border: '2px solid #ef4444',
-                background: 'rgba(239,68,68,0.08)',
+                background: 'rgba(239, 68, 68, 0.08)',
                 color: '#ef4444',
                 fontWeight: 600,
+                fontSize: '0.875rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
                 gap: 8,
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background =
+                  '#ef4444';
+                e.currentTarget.style.color = '#fff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background =
+                  'rgba(239, 68, 68, 0.08)';
+                e.currentTarget.style.color = '#ef4444';
               }}
             >
-              <LogOut size={16} />
-              Sign Out
+              <LogOut size={16} /> Logout
             </button>
           </div>
         </main>
