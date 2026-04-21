@@ -370,11 +370,10 @@ export default function NewEstimatePage() {
                   document.getElementById('file-input')?.click()
                 }
                 style={{
-                  border: `2px dashed ${
-                    dragOver
+                  border: `2px dashed ${dragOver
                       ? 'var(--color-primary)'
                       : 'var(--border-color)'
-                  }`,
+                    }`,
                   borderRadius: 16,
                   padding: 48,
                   cursor: 'pointer',
