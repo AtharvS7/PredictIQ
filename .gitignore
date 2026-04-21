@@ -27,6 +27,7 @@ htmlcov/
 # Firebase credentials (NEVER commit)
 firebase-service-account.json
 **/firebase-service-account.json
+predictiq-*-firebase-adminsdk-*.json
 
 # ML artifacts (large binary — use Git LFS or cloud storage)
 backend/ml/*.pkl
