@@ -29,8 +29,8 @@ firebase-service-account.json
 **/firebase-service-account.json
 predictiq-*-firebase-adminsdk-*.json
 
-# ML artifacts (large binary — use Git LFS or cloud storage)
-backend/ml/*.pkl
+# ML artifacts (keep .pkl models tracked — they're essential and <10MB)
+# backend/ml/*.pkl  ← TRACKED: required for app to work
 backend/ml/*.png
 backend/ml/training_log_*.txt
 backend/ml/artifacts/
