@@ -100,6 +100,14 @@ export const confirmDocumentUpload = (data: {
   mime_type: string;
 }) => api.post('/documents/upload', data);
 
+export const uploadDocumentFile = (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post('/documents/upload-file', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
 export const getDocument = (id: string) => api.get(`/documents/${id}`);
 
 // Estimates
