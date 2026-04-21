@@ -10,15 +10,28 @@ const api = axios.create({
   },
 });
 
+// ── Session Token Cache ──────────────────────────────────
+// Avoids expensive async supabase.auth.getSession() on every request
+let _cachedToken: string | null = null;
+
+// Listen for auth state changes and update the cached token
+supabase.auth.onAuthStateChange((_event, session) => {
+  _cachedToken = session?.access_token ?? null;
+});
+
+// Bootstrap: seed the cache once on module load
+supabase.auth.getSession().then(({ data: { session } }) => {
+  _cachedToken = session?.access_token ?? null;
+});
+
 // Track if a token refresh is already in progress to prevent stampede
 let isRefreshing = false;
 let refreshPromise: Promise<string | null> | null = null;
 
-// Request interceptor: attach JWT
-api.interceptors.request.use(async (config) => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) {
-    config.headers.Authorization = `Bearer ${session.access_token}`;
+// Request interceptor: attach cached JWT (synchronous — no await!)
+api.interceptors.request.use((config) => {
+  if (_cachedToken) {
+    config.headers.Authorization = `Bearer ${_cachedToken}`;
   }
   return config;
 });
@@ -37,6 +50,7 @@ api.interceptors.response.use(
       if (isRefreshing && refreshPromise) {
         const newToken = await refreshPromise;
         if (newToken) {
+          _cachedToken = newToken;
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return api.request(originalRequest);
         }
@@ -48,10 +62,13 @@ api.interceptors.response.use(
       refreshPromise = supabase.auth.refreshSession().then(({ data: { session } }) => {
         isRefreshing = false;
         refreshPromise = null;
-        return session?.access_token ?? null;
+        const token = session?.access_token ?? null;
+        _cachedToken = token;
+        return token;
       }).catch(() => {
         isRefreshing = false;
         refreshPromise = null;
+        _cachedToken = null;
         return null;
       });
 

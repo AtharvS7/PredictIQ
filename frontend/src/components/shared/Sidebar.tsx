@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -16,11 +17,14 @@ const navItems = [
 ];
 
 interface SidebarProps {
-  collapsed: boolean;
-  setCollapsed: (val: boolean) => void;
+  collapsed?: boolean;
+  setCollapsed?: (val: boolean) => void;
 }
 
-export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
+export default function Sidebar({ collapsed: controlledCollapsed, setCollapsed: controlledSetCollapsed }: SidebarProps) {
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const collapsed = controlledCollapsed ?? internalCollapsed;
+  const setCollapsed = controlledSetCollapsed ?? setInternalCollapsed;
   const location = useLocation();
 
   const textColor = "var(--text-primary)";

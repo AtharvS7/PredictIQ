@@ -108,6 +108,9 @@ export default function Navbar() {
         <img
           src={logoImg}
           alt="PredictIQ Logo"
+          width={32}
+          height={32}
+          fetchPriority="high"
           style={{
             width: 32,
             height: 32,

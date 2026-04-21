@@ -4,21 +4,32 @@ import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme, useToast } from '@/App';
-import { User, DollarSign, Palette, Save, LogOut } from 'lucide-react';
+import { User, DollarSign, Save, LogOut } from 'lucide-react';
 
 export default function SettingsPage() {
   const { profile, updateProfile, signOut } = useAuthStore();
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState(profile?.full_name || '');
-  const [hourlyRate, setHourlyRate] = useState(profile?.hourly_rate_usd?.toString() || '75');
+  const [hourlyRate, setHourlyRate] = useState(
+    profile?.hourly_rate_usd?.toString() || '75'
+  );
   const [currency, setCurrency] = useState(profile?.currency || 'USD');
   const [saving, setSaving] = useState(false);
 
+  const cardStyle = {
+    padding: 24,
+    marginBottom: 20,
+    border: '1px solid var(--border-color)',
+    borderRadius: 12,
+    background: 'var(--bg-surface)',
+  };
+
   const handleSave = async () => {
     setSaving(true);
+
     try {
       await updateProfile({
         full_name: fullName,
@@ -26,6 +37,7 @@ export default function SettingsPage() {
         currency,
         theme,
       });
+
       addToast('success', 'Settings saved!');
     } catch {
       addToast('error', 'Failed to save settings');
@@ -40,49 +52,101 @@ export default function SettingsPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--bg-primary)',
+      }}
+    >
       <Navbar />
+
       <div style={{ display: 'flex' }}>
         <Sidebar />
-        <main style={{ flex: 1, padding: '2rem', maxWidth: 700, margin: '0 auto' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 24, color: 'var(--text-primary)' }}>Settings</h1>
+
+        <main
+          style={{
+            flex: 1,
+            padding: '2rem',
+            maxWidth: 700,
+            margin: '0 auto',
+          }}
+        >
+          <h1
+            style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              marginBottom: 24,
+              color: 'var(--text-primary)',
+            }}
+          >
+            Settings
+          </h1>
 
           {/* Profile */}
-          <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-            <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', color: 'var(--text-primary)' }}>
+
+          <div className="card" style={cardStyle}>
+            <h3
+              style={{
+                fontWeight: 600,
+                marginBottom: 16,
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                color: 'var(--text-primary)',
+              }}
+            >
               <User size={18} /> Profile
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label className="label">Full Name</label>
-                <input
-                  className="input-field"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="John Smith"
-                />
-              </div>
-            </div>
+
+            <label className="label">Full Name</label>
+
+            <input
+              className="input-field"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="John Smith"
+            />
           </div>
 
           {/* Default Rate */}
-          <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-            <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', color: 'var(--text-primary)' }}>
+
+          <div className="card" style={cardStyle}>
+            <h3
+              style={{
+                fontWeight: 600,
+                marginBottom: 16,
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                color: 'var(--text-primary)',
+              }}
+            >
               <DollarSign size={18} /> Default Rate
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 14,
+              }}
+            >
               <div>
                 <label className="label">Hourly Rate</label>
+
                 <input
                   type="number"
                   className="input-field"
                   value={hourlyRate}
                   onChange={(e) => setHourlyRate(e.target.value)}
-                  min={10} max={500}
+                  min={10}
+                  max={500}
                 />
               </div>
+
               <div>
                 <label className="label">Currency</label>
+
                 <select
                   className="input-field"
                   value={currency}
@@ -97,50 +161,86 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Appearance 
-          <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-            <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', color: 'var(--text-primary)' }}>
-              <Palette size={18} /> Appearance
-            </h3>
-            <div style={{ display: 'flex', gap: 12 }}>
-              {['light', 'dark', 'system'].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTheme(t)}
-                  style={{
-                    flex: 1, padding: '12px 16px', borderRadius: 12,
-                    border: `2px solid ${theme === t ? 'var(--color-primary)' : 'var(--border-color)'}`,
-                    background: theme === t ? 'rgba(26, 86, 219, 0.05)' : 'var(--bg-surface)',
-                    cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem',
-                    color: theme === t ? 'var(--color-primary)' : 'var(--text-secondary)',
-                    transition: 'all 0.2s', textTransform: 'capitalize',
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div> */}
+          {/* Save Changes — SAME THEME LOGIC AS ESTIMATE PAGE */}
 
-          {/* Save */}
-          <button className="btn-primary" onClick={handleSave} disabled={saving} style={{
-            opacity: saving ? 0.7 : 1,
-          }}>
-            <Save size={16} /> {saving ? 'Saving...' : 'Save Changes'}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              padding: '10px 18px',
+              borderRadius: 8,
+
+              background: 'transparent',
+
+              color: 'var(--text-primary)',
+
+              border: '1px solid var(--text-primary)',
+
+              cursor: 'pointer',
+
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+
+              transition: 'all 0.2s',
+
+              opacity: saving ? 0.7 : 1,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background =
+                'var(--text-primary)';
+              e.currentTarget.style.color =
+                'var(--bg-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background =
+                'transparent';
+              e.currentTarget.style.color =
+                'var(--text-primary)';
+            }}
+          >
+            <Save size={16} />
+            {saving ? 'Saving...' : 'Save Changes'}
           </button>
 
           {/* Logout */}
-          <div className="card" style={{ padding: 24, marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+
+          <div
+            className="card"
+            style={{
+              ...cardStyle,
+              marginTop: 20,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
             <div>
-              <h3 style={{ fontWeight: 600, marginBottom: 4, display: 'flex', gap: 8, alignItems: 'center', color: 'var(--text-primary)' }}>
+              <h3
+                style={{
+                  fontWeight: 600,
+                  marginBottom: 4,
+                  display: 'flex',
+                  gap: 8,
+                  alignItems: 'center',
+                  color: 'var(--text-primary)',
+                }}
+              >
                 <LogOut size={18} /> Sign Out
               </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+
+              <p
+                style={{
+                  fontSize: '0.85rem',
+                  color: 'var(--text-secondary)',
+                  margin: 0,
+                }}
+              >
                 Sign out of your PredictIQ account
               </p>
             </div>
+
             <button
-              id="logout-button"
               onClick={handleLogout}
               style={{
                 padding: '10px 24px',
@@ -151,17 +251,19 @@ export default function SettingsPage() {
                 fontWeight: 600,
                 fontSize: '0.875rem',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
+                transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#ef4444';
+                e.currentTarget.style.background =
+                  '#ef4444';
                 e.currentTarget.style.color = '#fff';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
+                e.currentTarget.style.background =
+                  'rgba(239, 68, 68, 0.08)';
                 e.currentTarget.style.color = '#ef4444';
               }}
             >

@@ -96,6 +96,9 @@ export default function AuthPage() {
             <img
               src={logoImg}
               alt="PredictIQ Logo"
+              width={56}
+              height={56}
+              loading="eager"
               style={{
                 width: 56,
                 height: 56,
