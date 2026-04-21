@@ -188,3 +188,92 @@ async def get_document(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
+
+
+@router.post("/documents/{document_id}/extract")
+async def extract_document_parameters(
+    document_id: str,
+    user: CurrentUser = Depends(get_current_user),
+):
+    """
+    Run NLP extraction on an uploaded document and return extracted parameters.
+    Called by the frontend after upload to pre-fill the Step 2 form.
+    """
+    from app.services.document_parser import document_parser
+    from app.services.nlp_extractor import nlp_extractor
+
+    try:
+        pool = await get_db()
+        doc = await pool.fetchrow(
+            """SELECT id, file_data, mime_type, original_filename
+               FROM document_uploads
+               WHERE id = $1 AND user_id = $2""",
+            document_id,
+            user.id,
+        )
+
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        # Parse document to extract raw text
+        file_data = doc["file_data"]
+        if not file_data:
+            raise HTTPException(status_code=400, detail="No file data stored")
+
+        try:
+            parse_result = document_parser.parse(bytes(file_data), doc["mime_type"])
+        except Exception as parse_err:
+            logger.warning("document_parse_error_extract", error=str(parse_err))
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not parse document: {str(parse_err)}",
+            )
+
+        raw_text = parse_result.get("raw_text", "")
+        if not raw_text or len(raw_text.strip()) < 20:
+            raise HTTPException(
+                status_code=422,
+                detail="Document contains too little text for extraction",
+            )
+
+        # Run NLP extraction
+        extracted = nlp_extractor.extract(raw_text)
+
+        # Map to frontend-friendly format
+        result = {
+            "project_name": extracted.get("project_name", {}).get("value", ""),
+            "project_type": extracted.get("project_type", {}).get("value", "Web App"),
+            "team_size": extracted.get("team_size", {}).get("value", 5),
+            "duration_months": extracted.get("duration_months", {}).get("value", 6.0),
+            "complexity": extracted.get("complexity", {}).get("value", "Medium"),
+            "methodology": extracted.get("methodology", {}).get("value", "Agile"),
+            "tech_stack": extracted.get("tech_stack", {}).get("value", []),
+            "integration_count": extracted.get("integration_count", {}).get("value", 2),
+            "volatility_score": extracted.get("volatility_score", {}).get("value", 3),
+            "team_experience": extracted.get("team_experience", {}).get("value", 3.0),
+            "feature_count": extracted.get("feature_count", {}).get("value", 10),
+            # Include raw confidence scores for transparency
+            "confidence": {
+                k: extracted.get(k, {}).get("confidence", 0.0)
+                for k in extracted
+            },
+            "word_count": parse_result.get("word_count", 0),
+        }
+
+        logger.info(
+            "document_nlp_extracted",
+            doc_id=document_id,
+            project_name=result["project_name"],
+            tech_count=len(result["tech_stack"]),
+        )
+
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("document_extract_error", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Extraction failed: {str(e)}",
+        )

@@ -537,9 +537,9 @@ class NLPExtractor:
         NEVER uses the filename. Returns empty string if nothing found.
         """
         patterns = [
-            # Explicit labels
+            # Explicit labels — stop at newline, period, or comma
             (r"(?:project\s+name|system\s+name|application\s+name|product\s+name|title)"
-             r"\s*[:\-–]\s*[\"']?([\w][\w\s\-\.]{2,75})", 0.95),
+             r"\s*[:\-–]\s*[\"']?([\w][\w \-\.]{2,60}?)(?:\n|\r|\.|\,|$)", 0.95),
             # Markdown heading with system/app suffix
             (r"(?:^|\n)#{1,3}\s+([A-Z][\w\s]{3,40}?)\s*(?:system|application|platform|portal|app|project)",
              0.85),
@@ -623,10 +623,18 @@ class NLPExtractor:
         found: list[str] = []
         evidence: list[str] = []
 
+        # Ambiguous keywords that match common English words —
+        # only accept these from tech-related sections
+        AMBIGUOUS_TECHS = {
+            "less", "go", "helm", "render", "dart", "hono", "bun",
+            "solid.js", "expo", "ionic", "lambda", "remix",
+        }
+
         # Combine search targets: full text + table rows + list items
         search_texts = [doc.text_lower]
 
         # Also search in technology-related sections specifically
+        tech_section_text = ""
         for header_key, body in doc.sections.items():
             if any(kw in header_key for kw in [
                 "technology", "tech stack", "tools", "framework", "architecture",
@@ -634,6 +642,7 @@ class NLPExtractor:
                 "technical"
             ]):
                 search_texts.append(body.lower())
+                tech_section_text += " " + body.lower()
                 if len(evidence) < 3:
                     evidence.append(f"Section: {header_key[:60]}")
 
@@ -644,6 +653,13 @@ class NLPExtractor:
 
         for tech in sorted_keywords:
             pattern = r"\b" + re.escape(tech) + r"\b"
+
+            # For ambiguous words, only match in tech-related sections
+            if tech.lower() in AMBIGUOUS_TECHS:
+                if tech_section_text and re.search(pattern, tech_section_text, re.IGNORECASE):
+                    found.append(tech)
+                continue
+
             if re.search(pattern, combined_text, re.IGNORECASE):
                 found.append(tech)
 

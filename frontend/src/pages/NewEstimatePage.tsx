@@ -6,7 +6,7 @@ import CurrencySelector from '@/components/shared/CurrencySelector';
 import { useToast } from '@/App';
 import { useAuthStore } from '@/store/authStore';
 import { useCurrencyStore } from '@/store/currencyStore';
-import { uploadDocumentFile, analyzeEstimate, createManualEstimate } from '@/lib/api';
+import api, { uploadDocumentFile, analyzeEstimate, createManualEstimate } from '@/lib/api';
 import {
   Upload,
   FileText,
@@ -157,22 +157,59 @@ export default function NewEstimatePage() {
 
     try {
       const interval = setInterval(() => {
-        setUploadProgress((p) => Math.min(p + 15, 90));
+        setUploadProgress((p) => Math.min(p + 10, 60));
       }, 200);
 
+      // Step 1: Upload the file
       const { data } = await uploadDocumentFile(file);
 
       clearInterval(interval);
-      setUploadProgress(100);
-
+      setUploadProgress(70);
       setDocumentId(data.id);
 
-      setParams((prev) => ({
-        ...prev,
-        project_name: file.name.replace(/\.[^/.]+$/, ''),
-      }));
+      // Step 2: Run NLP extraction to pre-fill parameters
+      try {
+        setUploadProgress(80);
+        const extractRes = await api.post(`/documents/${data.id}/extract`);
+        const nlp = extractRes.data;
+        setUploadProgress(95);
 
-      addToast('success', 'Document uploaded successfully!');
+        // Map NLP results to form fields
+        const techArray: string[] = nlp.tech_stack || [];
+        const expValue = nlp.team_experience;
+        let expLabel = 'Mixed';
+        if (typeof expValue === 'number') {
+          if (expValue <= 1.5) expLabel = 'Junior';
+          else if (expValue <= 3.5) expLabel = 'Mixed';
+          else expLabel = 'Senior';
+        }
+
+        setParams({
+          project_name: nlp.project_name || file.name.replace(/\.[^/.]+$/, ''),
+          project_type: nlp.project_type || 'Web App',
+          team_size: nlp.team_size || 5,
+          duration_months: nlp.duration_months || 6,
+          complexity: nlp.complexity || 'Medium',
+          methodology: nlp.methodology || 'Agile',
+          hourly_rate_usd: 75,
+          tech_stack: techArray.join(', '),
+          integration_count: nlp.integration_count || 2,
+          volatility_score: nlp.volatility_score || 3,
+          team_experience: expLabel,
+        });
+
+        addToast('success', 'Document analyzed — parameters extracted!');
+      } catch (extractErr) {
+        // NLP extraction failed — fallback to filename only
+        console.warn('NLP extraction failed, using defaults', extractErr);
+        setParams((prev) => ({
+          ...prev,
+          project_name: file.name.replace(/\.[^/.]+$/, ''),
+        }));
+        addToast('success', 'Document uploaded (extraction unavailable, enter manually)');
+      }
+
+      setUploadProgress(100);
       setStep(2);
     } catch {
       addToast('error', 'Upload failed');
