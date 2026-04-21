@@ -116,14 +116,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signInWithOAuth: async (provider) => {
     const authProvider = provider === 'google' ? googleProvider : githubProvider;
+
     try {
       const { user } = await signInWithPopup(auth, authProvider);
+
+      // Step 1: Get Firebase ID Token
+      const token = await user.getIdToken();
+
+      // Step 2: Send token to backend — verifies + syncs user in DB
+      await api.post(
+        '/auth/firebase',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Step 3: Set session locally
       set({
         user,
         session: { user },
       });
 
-      // Create/update profile in backend
+      // Step 4: Create/update profile (now authenticated)
       try {
         await api.post('/profile', {
           full_name: user.displayName || '',
@@ -133,12 +150,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Non-critical
       }
     } catch (error: any) {
-      // Re-throw with a friendly message
       if (error?.code === 'auth/popup-closed-by-user') {
         throw new Error('Sign-in popup was closed');
       }
       if (error?.code === 'auth/unauthorized-domain') {
-        throw new Error('This domain is not authorized for OAuth. Add it in Firebase Console.');
+        throw new Error('Add domain in Firebase console');
       }
       throw error;
     }
