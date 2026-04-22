@@ -146,4 +146,5 @@ export const exportPDF = (id: string, currency: string = 'USD') =>
 export const exportJSON = (id: string) =>
   api.get(`/estimates/${id}/export/json`);
 
-export default api;
+export const extractDocumentParams = (documentId: string) =>
+  api.post(`/documents/${documentId}/extract`);

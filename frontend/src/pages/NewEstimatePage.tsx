@@ -6,7 +6,7 @@ import CurrencySelector from '@/components/shared/CurrencySelector';
 import { useToast } from '@/App';
 import { useAuthStore } from '@/store/authStore';
 import { useCurrencyStore } from '@/store/currencyStore';
-import api, { uploadDocumentFile, analyzeEstimate, createManualEstimate } from '@/lib/api';
+import { uploadDocumentFile, analyzeEstimate, createManualEstimate, extractDocumentParams } from '@/lib/api';
 import {
   Upload,
   FileText,
@@ -170,7 +170,7 @@ export default function NewEstimatePage() {
       // Step 2: Run NLP extraction to pre-fill parameters
       try {
         setUploadProgress(80);
-        const extractRes = await api.post(`/documents/${data.id}/extract`);
+        const extractRes = await extractDocumentParams(data.id);
         const nlp = extractRes.data;
         setUploadProgress(95);
 
