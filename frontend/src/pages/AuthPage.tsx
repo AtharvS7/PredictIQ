@@ -9,7 +9,7 @@ import { Mail, Lock, User, Eye, EyeOff, GitBranch } from 'lucide-react';
 type AuthMode = 'login' | 'register' | 'forgot';
 
 export default function AuthPage() {
-  const { session, signIn, signUp, signInWithOAuth, loading } = useAuthStore();
+  const { session, signIn, signUp, signInWithOAuth, loading,resetPassword } = useAuthStore();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
@@ -26,6 +26,17 @@ export default function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (mode === 'forgot') {
+      try {
+        await resetPassword(email);
+        addToast('success', 'Password reset email sent!');
+        setMode('login');
+      } catch (err) {
+        addToast('error', 'Failed to send reset email');
+      }
+      return;
+    }
 
     if (mode === 'register') {
       if (password.length < 10) {
