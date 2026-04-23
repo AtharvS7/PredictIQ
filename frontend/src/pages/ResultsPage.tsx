@@ -28,6 +28,13 @@ ChartJS.register(
 
 const PHASE_COLORS = ['#1A56DB', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
+/** Read a CSS custom property's computed value — Chart.js can't parse var() tokens. */
+function getThemeColor(varName: string, fallback: string): string {
+  if (typeof document === 'undefined') return fallback;
+  const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  return value || fallback;
+}
+
 type ChartType = 'bar' | 'polar' | 'pie' | 'line';
 
 export default function ResultsPage() {
@@ -127,10 +134,14 @@ export default function ResultsPage() {
     },
   };
 
+  const textSecondary = getThemeColor('--text-secondary', '#94A3B8');
+  const textPrimary = getThemeColor('--text-primary', '#F1F5F9');
+  const borderColor = getThemeColor('--border-color', '#334155');
+
   const legendConfig = {
     position: 'right' as const,
     labels: {
-      color: 'var(--text-primary)',
+      color: textPrimary,
       font: { size: 12 },
       padding: 14,
       usePointStyle: true,
@@ -178,13 +189,13 @@ export default function ResultsPage() {
               scales: {
                 x: {
                   ticks: {
-                    color: 'var(--text-secondary)',
+                    color: textSecondary,
                     callback: (v) => `${sym}${(Number(v) / 1000).toFixed(0)}k`,
                   },
-                  grid: { color: 'var(--border-color)' },
+                  grid: { color: borderColor },
                 },
                 y: {
-                  ticks: { color: 'var(--text-secondary)', font: { size: 12 } },
+                  ticks: { color: textSecondary, font: { size: 12 } },
                   grid: { display: false },
                 },
               },
@@ -213,7 +224,7 @@ export default function ResultsPage() {
               scales: {
                 r: {
                   ticks: { display: false },
-                  grid: { color: 'var(--border-color)' },
+                  grid: { color: borderColor },
                 },
               },
             }}
@@ -269,15 +280,15 @@ export default function ResultsPage() {
               },
               scales: {
                 x: {
-                  ticks: { color: 'var(--text-secondary)', maxRotation: 30 },
-                  grid: { color: 'var(--border-color)' },
+                  ticks: { color: textSecondary, maxRotation: 30 },
+                  grid: { color: borderColor },
                 },
                 y: {
                   ticks: {
-                    color: 'var(--text-secondary)',
+                    color: textSecondary,
                     callback: (v) => `${sym}${(Number(v) / 1000).toFixed(0)}k`,
                   },
-                  grid: { color: 'var(--border-color)' },
+                  grid: { color: borderColor },
                 },
               },
             }}

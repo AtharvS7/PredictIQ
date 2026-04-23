@@ -40,6 +40,30 @@ interface AuthState {
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
 
+/**
+ * Maps raw Firebase error codes to user-friendly messages.
+ * Firebase v9+ merged user-not-found and wrong-password into
+ * a single 'auth/invalid-credential' code for security.
+ */
+function mapFirebaseError(error: any): Error {
+  const code = error?.code || '';
+  const messages: Record<string, string> = {
+    'auth/invalid-credential': 'Invalid email or password. Please check your credentials or sign up first.',
+    'auth/user-not-found': 'No account found with this email. Please sign up first.',
+    'auth/wrong-password': 'Incorrect password. Please try again.',
+    'auth/email-already-in-use': 'An account with this email already exists. Try signing in instead.',
+    'auth/weak-password': 'Password is too weak. Use at least 6 characters.',
+    'auth/invalid-email': 'Please enter a valid email address.',
+    'auth/too-many-requests': 'Too many failed attempts. Please wait a moment and try again.',
+    'auth/network-request-failed': 'Network error. Please check your connection.',
+    'auth/operation-not-allowed': 'Email/password sign-in is not enabled. Contact support.',
+    'auth/popup-closed-by-user': 'Sign-in popup was closed.',
+    'auth/unauthorized-domain': 'This domain is not authorized. Add it in the Firebase console.',
+    'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method (e.g., Google or GitHub).',
+  };
+  return new Error(messages[code] || error?.message || 'Authentication failed. Please try again.');
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
@@ -85,6 +109,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Set display name in Firebase
       await updateProfile(user, { displayName: fullName });
 
+      // Get fresh ID token
+      const token = await user.getIdToken();
+
+      // Sync user with backend (verify + create DB record)
+      try {
+        await api.post(
+          '/auth/firebase',
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch {
+        // Non-critical — backend may not have /auth/firebase endpoint yet
+      }
+
       // Create profile in backend
       try {
         await api.post('/profile', { full_name: fullName });
@@ -96,6 +134,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user,
         session: { user },
       });
+    } catch (error: any) {
+      throw mapFirebaseError(error);
     } finally {
       set({ loading: false });
     }
@@ -105,10 +145,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ loading: true });
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
+
+      // Sync token with backend
+      const token = await user.getIdToken();
+      try {
+        await api.post(
+          '/auth/firebase',
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch {
+        // Non-critical
+      }
+
       set({
         user,
         session: { user },
       });
+    } catch (error: any) {
+      throw mapFirebaseError(error);
     } finally {
       set({ loading: false });
     }
