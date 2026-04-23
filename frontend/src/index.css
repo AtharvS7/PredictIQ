@@ -334,14 +334,14 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.025em;
 }
 
-.risk-low { background: #ECFDF5; color: #065F46; }
+.risk-low { background: #FEF2F2; color: #991B1B; }
 .risk-medium { background: #EFF6FF; color: #1E40AF; }
-.risk-high { background: #FFFBEB; color: #92400E; }
+.risk-high { background: #ECFDF5; color: #065F46; }
 .risk-critical { background: #FEF2F2; color: #991B1B; }
 
-[data-theme="dark"] .risk-low { background: #064E3B; color: #6EE7B7; }
+[data-theme="dark"] .risk-low { background: #7F1D1D; color: #FCA5A5; }
 [data-theme="dark"] .risk-medium { background: #1E3A5F; color: #93C5FD; }
-[data-theme="dark"] .risk-high { background: #78350F; color: #FCD34D; }
+[data-theme="dark"] .risk-high { background: #064E3B; color: #6EE7B7; }
 [data-theme="dark"] .risk-critical { background: #7F1D1D; color: #FCA5A5; }
 
 /* ── Skeleton Loading ─────────────────────────────────── */

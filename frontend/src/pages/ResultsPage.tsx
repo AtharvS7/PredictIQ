@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
@@ -7,15 +7,28 @@ import { useEstimateStore } from '@/store/estimateStore';
 import { useCurrencyStore } from '@/store/currencyStore';
 import { useToast } from '@/App';
 import { exportPDF, duplicateEstimate, createShareLink } from '@/lib/api';
+import { Bar, PolarArea, Pie, Line } from 'react-chartjs-2';
 import {
-  BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-} from 'recharts';
+  Chart as ChartJS, CategoryScale, LinearScale, BarElement,
+  RadialLinearScale, ArcElement, PointElement, LineElement, Filler,
+  Tooltip as ChartTooltip, Legend,
+} from 'chart.js';
 import {
-  Download, Copy, Share2, Edit3, ArrowLeft, Clock, DollarSign,
+  Download, Copy, Share2, ArrowLeft, Clock,
   Shield, TrendingUp, AlertTriangle, Info, FileText,
+  BarChart3, PieChart, CircleDot, LineChart,
 } from 'lucide-react';
 
+/* ── Chart.js Registration ─────────────────────────────────────────────── */
+ChartJS.register(
+  CategoryScale, LinearScale, BarElement,
+  RadialLinearScale, ArcElement, PointElement, LineElement, Filler,
+  ChartTooltip, Legend,
+);
+
 const PHASE_COLORS = ['#1A56DB', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+
+type ChartType = 'bar' | 'polar' | 'pie' | 'line';
 
 export default function ResultsPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +36,7 @@ export default function ResultsPage() {
   const { format, convert, symbol } = useCurrencyStore();
   const sym = symbol();
   const { addToast } = useToast();
+  const [chartType, setChartType] = useState<ChartType>('bar');
 
   useEffect(() => {
     if (id) fetchEstimate(id);
@@ -94,16 +108,190 @@ export default function ResultsPage() {
   }));
 
   const riskColor = {
-    Low: '#10B981', Medium: '#3B82F6', High: '#F59E0B', Critical: '#EF4444',
+    Low: '#EF4444', Medium: '#3B82F6', High: '#10B981', Critical: '#EF4444',
   }[outputs.risk_level] || '#64748B';
 
+  /* ── Shared Chart Config ─────────────────────────────────────────────── */
+  const tooltipConfig = {
+    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+    titleColor: '#F1F5F9',
+    bodyColor: '#F1F5F9',
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    cornerRadius: 10,
+    padding: 12,
+    titleFont: { size: 13, weight: 'bold' as const },
+    bodyFont: { size: 12 },
+    callbacks: {
+      label: (ctx: any) => `Cost: ${format(ctx.raw / convert(1))}`,
+    },
+  };
+
+  const legendConfig = {
+    position: 'right' as const,
+    labels: {
+      color: 'var(--text-primary)',
+      font: { size: 12 },
+      padding: 14,
+      usePointStyle: true,
+      pointStyleWidth: 10,
+    },
+  };
+
+  const labels = phaseData.map(p => p.name);
+  const costValues = phaseData.map(p => p.cost);
+  const bgColors = phaseData.map(p => p.fill);
+  const bgColorsAlpha = bgColors.map(c => c + 'CC');
+
+  /* ── Chart Toggle Buttons ────────────────────────────────────────────── */
+  const chartOptions: { key: ChartType; icon: React.ReactNode; label: string }[] = [
+    { key: 'bar', icon: <BarChart3 size={14} />, label: 'Bar' },
+    { key: 'polar', icon: <CircleDot size={14} />, label: 'Polar' },
+    { key: 'pie', icon: <PieChart size={14} />, label: 'Pie' },
+    { key: 'line', icon: <LineChart size={14} />, label: 'Line' },
+  ];
+
+  /* ── Render Active Chart ─────────────────────────────────────────────── */
+  const renderChart = () => {
+    switch (chartType) {
+      case 'bar':
+        return (
+          <Bar
+            data={{
+              labels,
+              datasets: [{
+                label: 'Cost',
+                data: costValues,
+                backgroundColor: bgColors,
+                borderRadius: 6,
+                borderSkipped: false,
+              }],
+            }}
+            options={{
+              indexAxis: 'y' as const,
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: tooltipConfig,
+              },
+              scales: {
+                x: {
+                  ticks: {
+                    color: 'var(--text-secondary)',
+                    callback: (v) => `${sym}${(Number(v) / 1000).toFixed(0)}k`,
+                  },
+                  grid: { color: 'var(--border-color)' },
+                },
+                y: {
+                  ticks: { color: 'var(--text-secondary)', font: { size: 12 } },
+                  grid: { display: false },
+                },
+              },
+            }}
+          />
+        );
+      case 'polar':
+        return (
+          <PolarArea
+            data={{
+              labels: phaseData.map(p => p.fullName),
+              datasets: [{
+                data: costValues,
+                backgroundColor: bgColorsAlpha,
+                borderColor: bgColors,
+                borderWidth: 2,
+              }],
+            }}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: legendConfig,
+                tooltip: tooltipConfig,
+              },
+              scales: {
+                r: {
+                  ticks: { display: false },
+                  grid: { color: 'var(--border-color)' },
+                },
+              },
+            }}
+          />
+        );
+      case 'pie':
+        return (
+          <Pie
+            data={{
+              labels: phaseData.map(p => p.fullName),
+              datasets: [{
+                data: costValues,
+                backgroundColor: bgColorsAlpha,
+                borderColor: bgColors,
+                borderWidth: 2,
+                hoverOffset: 8,
+              }],
+            }}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: legendConfig,
+                tooltip: tooltipConfig,
+              },
+            }}
+          />
+        );
+      case 'line':
+        return (
+          <Line
+            data={{
+              labels,
+              datasets: [{
+                label: 'Cost',
+                data: costValues,
+                borderColor: '#1A56DB',
+                backgroundColor: 'rgba(26, 86, 219, 0.15)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: bgColors,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+              }],
+            }}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: tooltipConfig,
+              },
+              scales: {
+                x: {
+                  ticks: { color: 'var(--text-secondary)', maxRotation: 30 },
+                  grid: { color: 'var(--border-color)' },
+                },
+                y: {
+                  ticks: {
+                    color: 'var(--text-secondary)',
+                    callback: (v) => `${sym}${(Number(v) / 1000).toFixed(0)}k`,
+                  },
+                  grid: { color: 'var(--border-color)' },
+                },
+              },
+            }}
+          />
+        );
+    }
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <Navbar />
       <div style={{ display: 'flex' }}>
         <Sidebar />
-        <main style={{ flex: 1, padding: '2rem', maxWidth: 1100 }}>
+        <main style={{ flex: 1, padding: '2rem', maxWidth: 1100, margin: '0 auto' }}>
           {/* Header */}
           <div className="animate-fade-in" style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
@@ -195,30 +383,36 @@ export default function ResultsPage() {
 
           {/* Phase Breakdown Chart */}
           <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-            <h3 style={{ fontWeight: 600, marginBottom: 16, color: 'var(--text-primary)' }}>
-              <TrendingUp size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-              Phase Breakdown
-            </h3>
-            <div style={{ height: 260 }}>
-              <ResponsiveContainer>
-                <RechartsBarChart data={phaseData} layout="vertical" margin={{ left: 20 }}>
-                  <XAxis type="number" tickFormatter={(v: number) => `${sym}${(v/1000).toFixed(0)}k`} />
-                  <YAxis type="category" dataKey="name" width={100} fontSize={12} />
-                  <Tooltip
-                    formatter={(val: unknown) => [format(Number(val) / (convert(1))), 'Cost']}
-                    labelFormatter={(label: any) => phaseData.find(p => p.name === label)?.fullName || String(label)}
-                    contentStyle={{
-                      background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
-                      borderRadius: 10, fontSize: '0.8125rem',
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                <TrendingUp size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+                Phase Breakdown
+              </h3>
+              {/* Chart Type Switcher */}
+              <div style={{
+                display: 'flex', gap: 4,
+                background: 'var(--bg-elevated)', borderRadius: 10, padding: 3,
+              }}>
+                {chartOptions.map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setChartType(opt.key)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      padding: '6px 12px', borderRadius: 8, border: 'none',
+                      fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      background: chartType === opt.key ? 'var(--color-primary)' : 'transparent',
+                      color: chartType === opt.key ? '#fff' : 'var(--text-secondary)',
                     }}
-                  />
-                  <Bar dataKey="cost" radius={[0, 6, 6, 0]}>
-                    {phaseData.map((entry, i) => (
-                      <Cell key={i} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </RechartsBarChart>
-              </ResponsiveContainer>
+                  >
+                    {opt.icon} {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ height: 280 }}>
+              {renderChart()}
             </div>
 
             {/* Phase Table */}
@@ -265,7 +459,7 @@ export default function ResultsPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {outputs.top_risks.map((risk, i) => {
                   const sevColor = {
-                    Low: '#10B981', Medium: '#3B82F6', High: '#F59E0B', Critical: '#EF4444',
+                    Low: '#EF4444', Medium: '#3B82F6', High: '#10B981', Critical: '#EF4444',
                   }[risk.severity];
                   return (
                     <div key={i} style={{
