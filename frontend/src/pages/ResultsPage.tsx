@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
@@ -7,13 +7,25 @@ import { useEstimateStore } from '@/store/estimateStore';
 import { useCurrencyStore } from '@/store/currencyStore';
 import { useToast } from '@/App';
 import { exportPDF, duplicateEstimate, createShareLink } from '@/lib/api';
+import { Bar, PolarArea, Pie, Line } from 'react-chartjs-2';
 import {
-  BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-} from 'recharts';
+  Chart as ChartJS, CategoryScale, LinearScale, BarElement,
+  RadialLinearScale, ArcElement, PointElement, LineElement, Filler,
+  Tooltip as ChartTooltip, Legend,
+} from 'chart.js';
 import {
   Download, Copy, Share2, Edit3, ArrowLeft, Clock, DollarSign,
   Shield, TrendingUp, AlertTriangle, Info, FileText,
+  BarChart3, PieChart, CircleDot, LineChart,
 } from 'lucide-react';
+
+ChartJS.register(
+  CategoryScale, LinearScale, BarElement,
+  RadialLinearScale, ArcElement, PointElement, LineElement, Filler,
+  ChartTooltip, Legend,
+);
+
+type ChartType = 'bar' | 'polar' | 'pie' | 'line';
 
 const PHASE_COLORS = ['#1A56DB', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
@@ -23,6 +35,33 @@ export default function ResultsPage() {
   const { format, convert, symbol } = useCurrencyStore();
   const sym = symbol();
   const { addToast } = useToast();
+  const [chartType, setChartType] = useState<ChartType>('bar');
+
+  const tooltipConfig = {
+    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+    titleColor: '#F1F5F9',
+    bodyColor: '#F1F5F9',
+    borderColor: 'rgba(255,255,255,0.1)' as const,
+    borderWidth: 1,
+    cornerRadius: 10,
+    padding: 12,
+    titleFont: { size: 13, weight: 'bold' as const },
+    bodyFont: { size: 12 },
+    callbacks: {
+      label: (ctx: any) => `Cost: ${format(ctx.raw / convert(1))}`,
+    },
+  };
+
+  const legendConfig = {
+    position: 'right' as const,
+    labels: {
+      color: 'var(--text-primary)',
+      font: { size: 12 },
+      padding: 14,
+      usePointStyle: true,
+      pointStyleWidth: 10,
+    },
+  };
 
   useEffect(() => {
     if (id) fetchEstimate(id);
@@ -103,7 +142,7 @@ export default function ResultsPage() {
       <Navbar />
       <div style={{ display: 'flex' }}>
         <Sidebar />
-        <main style={{ flex: 1, padding: '2rem', maxWidth: 1100 }}>
+        <main style={{ flex: 1, padding: '2rem', maxWidth: 1100, margin: '0 auto' }}>
           {/* Header */}
           <div className="animate-fade-in" style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
@@ -195,37 +234,145 @@ export default function ResultsPage() {
 
           {/* Phase Breakdown Chart */}
           <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-            <h3 style={{ fontWeight: 600, marginBottom: 16, color: 'var(--text-primary)' }}>
-              <TrendingUp size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-              Phase Breakdown
-            </h3>
-            <div style={{ height: 260 }}>
-              <ResponsiveContainer>
-                <RechartsBarChart data={phaseData} layout="vertical" margin={{ left: 20 }}>
-                  <XAxis type="number" tickFormatter={(v: number) => `${sym}${(v/1000).toFixed(0)}k`} />
-                  <YAxis type="category" dataKey="name" width={100} fontSize={12} />
-                  <Tooltip
-                    formatter={(val: unknown) => [format(Number(val) / (convert(1))), 'Cost']}
-                    labelFormatter={(label: any) => phaseData.find(p => p.name === label)?.fullName || String(label)}
-                    contentStyle={{
-                      background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
-                      borderRadius: 10, fontSize: '0.8125rem',
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+              <h3 style={{ fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                <TrendingUp size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+                Phase Breakdown
+              </h3>
+              <div style={{ display: 'flex', gap: 4, background: 'var(--bg-elevated)', borderRadius: 10, padding: 3 }}>
+                {([
+                  { key: 'bar' as ChartType, icon: BarChart3, label: 'Bar' },
+                  { key: 'polar' as ChartType, icon: CircleDot, label: 'Polar' },
+                  { key: 'pie' as ChartType, icon: PieChart, label: 'Pie' },
+                  { key: 'line' as ChartType, icon: LineChart, label: 'Line' },
+                ]).map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setChartType(opt.key)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '6px 12px', border: 'none', borderRadius: 8,
+                      fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      background: chartType === opt.key ? 'var(--color-primary)' : 'transparent',
+                      color: chartType === opt.key ? '#fff' : 'var(--text-secondary)',
                     }}
-                  />
-                  <Bar dataKey="cost" radius={[0, 6, 6, 0]}>
-                    {phaseData.map((entry, i) => (
-                      <Cell key={i} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </RechartsBarChart>
-              </ResponsiveContainer>
+                  >
+                    <opt.icon size={14} />
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ height: 320, display: 'flex', justifyContent: 'center' }}>
+              {chartType === 'bar' && (
+                <Bar
+                  data={{
+                    labels: phaseData.map(p => p.fullName),
+                    datasets: [{
+                      label: 'Cost',
+                      data: phaseData.map(p => p.cost),
+                      backgroundColor: phaseData.map(p => p.fill),
+                      borderRadius: 6,
+                      borderSkipped: 'start' as const,
+                    }],
+                  }}
+                  options={{
+                    indexAxis: 'y' as const,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: tooltipConfig },
+                    scales: {
+                      x: {
+                        grid: { color: 'var(--border-color)' },
+                        ticks: { color: 'var(--text-secondary)', callback: (v: any) => `${sym}${(Number(v) / 1000).toFixed(0)}k` },
+                      },
+                      y: { grid: { display: false }, ticks: { color: 'var(--text-secondary)', font: { size: 12 } } },
+                    },
+                  }}
+                />
+              )}
+              {chartType === 'polar' && (
+                <PolarArea
+                  data={{
+                    labels: phaseData.map(p => p.fullName),
+                    datasets: [{
+                      data: phaseData.map(p => p.cost),
+                      backgroundColor: phaseData.map(p => p.fill + 'CC'),
+                      borderColor: phaseData.map(p => p.fill),
+                      borderWidth: 2,
+                    }],
+                  }}
+                  options={{
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: legendConfig, tooltip: tooltipConfig },
+                    scales: { r: { grid: { color: 'var(--border-color)' }, ticks: { display: false } } },
+                  }}
+                />
+              )}
+              {chartType === 'pie' && (
+                <Pie
+                  data={{
+                    labels: phaseData.map(p => p.fullName),
+                    datasets: [{
+                      data: phaseData.map(p => p.cost),
+                      backgroundColor: phaseData.map(p => p.fill + 'CC'),
+                      borderColor: phaseData.map(p => p.fill),
+                      borderWidth: 2,
+                      hoverOffset: 8,
+                    }],
+                  }}
+                  options={{
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: legendConfig, tooltip: tooltipConfig },
+                  }}
+                />
+              )}
+              {chartType === 'line' && (
+                <Line
+                  data={{
+                    labels: phaseData.map(p => p.fullName),
+                    datasets: [{
+                      label: 'Cost',
+                      data: phaseData.map(p => p.cost),
+                      borderColor: '#1A56DB',
+                      backgroundColor: 'rgba(26, 86, 219, 0.1)',
+                      borderWidth: 2.5,
+                      pointBackgroundColor: phaseData.map(p => p.fill),
+                      pointBorderColor: '#fff',
+                      pointRadius: 6,
+                      pointHoverRadius: 8,
+                      tension: 0.4,
+                      fill: true,
+                    }],
+                  }}
+                  options={{
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: tooltipConfig },
+                    scales: {
+                      x: {
+                        grid: { display: false },
+                        ticks: { color: 'var(--text-secondary)', font: { size: 11 }, maxRotation: 30 },
+                      },
+                      y: {
+                        grid: { color: 'var(--border-color)' },
+                        ticks: {
+                          color: 'var(--text-secondary)',
+                          callback: (v: any) => `${sym}${(Number(v) / 1000).toFixed(0)}k`,
+                        },
+                      },
+                    },
+                  }}
+                />
+              )}
             </div>
 
             {/* Phase Table */}
             <div style={{ marginTop: 16, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 4px', fontSize: '0.8125rem' }}>
                 <thead>
-                  <tr style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.6875rem' }}>
+                  <tr style={{ color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.6875rem' }}>
                     <th style={{ textAlign: 'left', padding: '8px 12px' }}>Phase</th>
                     <th style={{ textAlign: 'right', padding: '8px 12px' }}>Effort (hrs)</th>
                     <th style={{ textAlign: 'right', padding: '8px 12px' }}>Cost</th>
@@ -243,10 +390,10 @@ export default function ResultsPage() {
                         }} />
                         {phase.phase}
                       </td>
-                      <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-secondary)' }}>{phase.effort_hours.toLocaleString()}</td>
+                      <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-primary)' }}>{phase.effort_hours.toLocaleString()}</td>
                       <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-primary)', fontWeight: 500 }}>{format(phase.cost_usd)}</td>
-                      <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-secondary)' }}>{phase.duration_weeks}</td>
-                      <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-secondary)' }}>{phase.pct_of_total}%</td>
+                      <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-primary)' }}>{phase.duration_weeks}</td>
+                      <td style={{ textAlign: 'right', padding: '8px 12px', color: 'var(--text-primary)' }}>{phase.pct_of_total}%</td>
                     </tr>
                   ))}
                 </tbody>
@@ -265,7 +412,7 @@ export default function ResultsPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {outputs.top_risks.map((risk, i) => {
                   const sevColor = {
-                    Low: '#10B981', Medium: '#3B82F6', High: '#F59E0B', Critical: '#EF4444',
+                    Low: '#EF4444', Medium: '#3B82F6', High: '#10B981', Critical: '#EF4444',
                   }[risk.severity];
                   return (
                     <div key={i} style={{
