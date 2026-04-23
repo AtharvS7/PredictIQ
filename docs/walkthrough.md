@@ -1,6 +1,6 @@
 # PredictIQ — Technical Walkthrough
 
-> **Version:** 2.5.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** April 19, 2026
+> **Version:** 3.0.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** April 23, 2026
 
 ---
 
@@ -51,9 +51,9 @@
 | **Backend** | FastAPI + Uvicorn | 0.115+ | Async Python REST API |
 | **ML Engine** | RandomForest (scikit-learn) | 1.8 | Best-of-8 regression model for effort prediction (R² = 0.8953) |
 | **NLP** | Custom Cascade Engine | v2.4 | 4-strategy document parameter extraction |
-| **Database** | Supabase (PostgreSQL) | 15+ | Managed relational DB with RLS |
-| **Auth** | Supabase Auth | — | JWT-based email/password authentication |
-| **Storage** | Supabase Storage | — | Object storage for uploaded documents |
+| **Database** | Neon PostgreSQL (asyncpg) | 17+ | Serverless Postgres with connection pooling |
+| **Auth** | Firebase Auth (Admin SDK) | 6.x | Email/password + Google/GitHub OAuth |
+| **Storage** | PostgreSQL BYTEA | — | Documents stored directly in DB (no external bucket) |
 | **CI/CD** | GitHub Actions | v4 | 7-workflow automated pipeline (CI + CD + security) |
 | **Rate Limiting** | slowapi | 0.1.9 | API abuse prevention (200 req/min) |
 
@@ -72,8 +72,8 @@ PredictIQ/
 │   │   │   └── export.py            # PDF/Excel/CSV export
 │   │   ├── core/                    # Framework config
 │   │   │   ├── config.py            # Pydantic BaseSettings
-│   │   │   ├── security.py          # JWT auth middleware
-│   │   │   └── supabase.py          # Supabase SDK wrapper
+│   │   │   ├── security.py          # Firebase Admin SDK token verification
+│   │   │   └── database.py          # Neon PostgreSQL async connection pool
 │   │   ├── models/                  # Pydantic request/response schemas
 │   │   └── services/                # Business logic layer
 │   │       ├── nlp_extractor.py     # 4-strategy NLP cascade (v2.4)
@@ -90,8 +90,8 @@ PredictIQ/
 │   │   ├── inference.py             # Runtime prediction engine
 │   │   ├── predictiq_features.json  # 27-feature schema definition
 │   │   ├── predictiq_merged_dataset.csv  # 740-row training data
-│   │   ├── predictiq_best_model.pkl # Trained model (gitignored)
-│   │   └── predictiq_scaler.pkl     # Fitted scaler (gitignored)
+│   │   ├── predictiq_best_model.pkl # Trained model (committed to repo)
+│   │   └── predictiq_scaler.pkl     # Fitted scaler (committed to repo)
 │   └── tests/                       # 111 pytest tests
 │       ├── conftest.py              # Shared fixtures
 │       ├── test_nlp_extractor.py    # 35 NLP tests
@@ -125,13 +125,11 @@ PredictIQ/
 │       │   ├── currencyStore.ts      # Currency state (Zustand)
 │       │   └── estimateStore.ts      # Estimate state (Zustand)
 │       └── lib/
-│           ├── api.ts                # Backend API client
-│           └── supabase.ts           # Supabase client init
+│           ├── api.ts                # Backend API client + extractDocumentParams
+│           └── firebase.ts           # Firebase client initialization
 │
-├── supabase/migrations/              # Database schema
-│   ├── 001_initial_schema.sql        # Tables: profiles, documents, estimates
-│   ├── 002_rls_policies.sql          # Row-Level Security policies
-│   └── 003_functions.sql             # DB functions & triggers
+├── backend/migrations/               # Database schema
+│   └── 001_initial_schema.sql        # Tables: profiles, documents, estimates, share_links
 │
 ├── scripts/
 │   └── pre_push_check.py             # Pre-push security scanner
@@ -202,15 +200,14 @@ graph TB
     end
 
     subgraph ML["ML Engine"]
-        XGB["XGBoost Model"]
+        XGB["RandomForest Model"]
         SCL["StandardScaler"]
         INF["Inference Engine"]
     end
 
-    subgraph SUPABASE["Supabase Cloud"]
-        AUTH["Supabase Auth"]
-        DB["PostgreSQL 15"]
-        STR["Object Storage"]
+    subgraph INFRA["Infrastructure"]
+        AUTH["Firebase Auth"]
+        DB["Neon PostgreSQL"]
     end
 
     subgraph EXTERNAL["External APIs"]
@@ -230,9 +227,8 @@ graph TB
     SVC --> EX
     MLS --> ML
     CS --> ERA
-    RT -->|SDK| SUPABASE
-    CLIENT -->|Direct| AUTH
-    CLIENT -->|Upload| STR
+    RT -->|asyncpg| DB
+    CLIENT -->|Firebase SDK| AUTH
 ```
 
 ### 2.2 Request-Response Flow
@@ -241,27 +237,27 @@ graph TB
 sequenceDiagram
     participant U as User Browser
     participant F as React Frontend
-    participant SA as Supabase Auth
-    participant SS as Supabase Storage
+    participant FA as Firebase Auth
     participant B as FastAPI Backend
     participant NLP as NLP Extractor
-    participant ML as XGBoost Model
-    participant DB as PostgreSQL
+    participant ML as RandomForest Model
+    participant DB as Neon PostgreSQL
 
     Note over U,DB: Document Upload Flow
     U->>F: Select & upload document
-    F->>SA: Authenticate (JWT)
-    SA-->>F: Access token
-    F->>SS: Upload file to project-docs bucket
-    SS-->>F: Storage path
-    F->>B: POST /documents/confirm (storage_path)
-    B->>DB: INSERT document_uploads record
+    F->>FA: Get ID token
+    FA-->>F: Firebase ID token
+    F->>B: POST /documents/upload-file (multipart)
+    B->>DB: INSERT document_uploads (file as BYTEA)
     B-->>F: document_id
+    F->>B: POST /documents/{id}/extract
+    B->>B: Parse document + NLP extract
+    B-->>F: Extracted params (auto-fill form)
 
     Note over U,DB: Estimation Pipeline
     U->>F: Confirm parameters (Step 2)
     F->>B: POST /estimates/analyze (document_id, overrides)
-    B->>SS: Download document text
+    B->>DB: Fetch document BYTEA data
     B->>B: Parse document (PDF/DOCX/TXT)
     B->>NLP: Extract 11 parameters
     NLP-->>B: Extracted params + confidence
@@ -354,7 +350,7 @@ erDiagram
 #### `profiles`
 | Column | Type | Default | Description |
 |--------|------|---------|-------------|
-| `id` | UUID (PK, FK→auth.users) | — | Links 1:1 to Supabase Auth user |
+| `id` | TEXT (PK) | — | Firebase UID (from Firebase Auth) |
 | `full_name` | TEXT | NULL | Display name |
 | `avatar_url` | TEXT | NULL | Profile image URL |
 | `hourly_rate_usd` | NUMERIC(10,2) | 75.00 | Default billing rate |
@@ -369,7 +365,7 @@ erDiagram
 |--------|------|---------|-------------|
 | `id` | UUID (PK) | gen_random_uuid() | Document ID |
 | `user_id` | UUID (FK→auth.users) | NOT NULL | Owner |
-| `storage_path` | TEXT | NOT NULL | Supabase Storage path |
+| `storage_path` | TEXT | NULL | Legacy field (unused — files stored as BYTEA) |
 | `original_filename` | TEXT | NOT NULL | User's filename |
 | `file_size_bytes` | BIGINT | NULL | File size |
 | `mime_type` | TEXT | NULL | MIME type (pdf/docx/txt) |
@@ -398,18 +394,7 @@ erDiagram
 | `share_password_hash` | TEXT | NULL | Optional password for sharing |
 | `share_expires_at` | TIMESTAMPTZ | NULL | Share link expiry |
 
-### 3.3 Row-Level Security (RLS)
-
-All tables have RLS enabled. Policies enforce user-scoped access:
-
-| Table | SELECT | INSERT | UPDATE | DELETE |
-|-------|--------|--------|--------|--------|
-| `profiles` | Own profile only | Own ID only | Own profile only | — |
-| `document_uploads` | Own documents | Own user_id | — | Own documents |
-| `estimates` | Own + non-deleted | Own user_id | Own estimates | Own estimates |
-| `storage.objects` | Own folder | Own folder | — | Own folder |
-
-Storage path convention: `project-docs/{user_id}/{filename}`
+Documents are stored as BYTEA directly in the `document_uploads.file_data` column. No external object storage is used.
 
 ### 3.4 Database Functions & Triggers
 
@@ -486,7 +471,7 @@ flowchart LR
 | **8. PERT Bounds** | effort_likely | min / likely / max | `estimates.py` |
 | **9. Cost Convert** | effort × rate × currency | cost in target currency | `cost_calculator.py` |
 | **10. Risk Score** | all params | risk_score + top_risks | `risk_analyzer.py` |
-| **11. Persist** | full result | estimate record | `estimates.py` → Supabase |
+| **11. Persist** | full result | estimate record | `estimates.py` → Neon PostgreSQL |
 
 ---
 
@@ -684,7 +669,7 @@ graph LR
 
     subgraph INFRA["Infrastructure"]
         I1["XGBoost Model"]
-        I2["Supabase SDK"]
+        I2["Neon PostgreSQL"]
         I3["ExchangeRate API"]
     end
 
@@ -716,17 +701,16 @@ Environment variables loaded via Pydantic `BaseSettings` from `backend/.env`:
 
 | Variable | Required | Default | Description |
 |----------|:--------:|---------|-------------|
-| `SUPABASE_URL` | ✅ | — | Supabase project URL (validated at startup) |
-| `SUPABASE_ANON_KEY` | ✅ | — | Supabase anonymous/public key |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | — | Supabase service role key (backend only) |
-| `SUPABASE_STORAGE_BUCKET` | ❌ | `project-docs` | Storage bucket name |
-| `JWT_SECRET` | ❌ | `your-jwt-secret` | JWT signing key (validated at startup) |
+| `DATABASE_URL` | ✅ | — | Neon PostgreSQL connection string |
+| `FIREBASE_CREDENTIALS_PATH` | ❌ | `./firebase-service-account.json` | Path to Firebase service account JSON (local dev) |
+| `FIREBASE_CREDENTIALS_JSON` | ❌ | `""` | Raw JSON string for Firebase credentials (production) |
+| `ALLOWED_ORIGINS` | ❌ | `http://localhost:5173,...` | CORS allowed origins |
+| `ML_MODEL_PATH` | ❌ | `./ml/predictiq_best_model.pkl` | Trained ML model path |
 | `DEFAULT_HOURLY_RATE_USD` | ❌ | `75.0` | Default billing rate |
 | `APP_ENV` | ❌ | `development` | Environment (skips validators in `test`/`ci`) |
-| `APP_VERSION` | ❌ | `2.5.0` | Current application version |
-| `EXCHANGE_RATE_API_KEY` | ❌ | — | ExchangeRate API key |
+| `APP_VERSION` | ❌ | `3.0.0` | Current application version |
 
-**Startup Validators (NEW v2.5):** The `Settings` class uses a Pydantic `model_validator` that warns at startup if `JWT_SECRET` is a placeholder value or if `SUPABASE_URL` doesn't start with `https://`. This prevents accidentally running production with test credentials.
+**Startup Validators:** The `Settings` class uses a Pydantic `model_validator` that warns at startup if `DATABASE_URL` is a placeholder value. This prevents accidentally running production with test credentials.
 
 ---
 
@@ -825,7 +809,7 @@ Environment variables loaded via Pydantic `BaseSettings` from `backend/.env`:
 | Page | Route | Key Components |
 |------|-------|---------------|
 | **Landing** | `/` | Hero, features grid, stats counter, CTA |
-| **Auth** | `/auth` | Login / signup tabs, Supabase Auth integration |
+| **Auth** | `/auth` | Login / signup tabs, Firebase Auth (email + Google/GitHub OAuth) |
 | **Dashboard** | `/dashboard` | Estimate cards, stat summary, sort/filter |
 | **New Estimate** | `/new-estimate` | 3-step wizard: Upload → Parameters → Generate |
 | **Results** | `/estimate/:id/results` | Charts, risk gauge, phase breakdown, export |
@@ -946,16 +930,16 @@ Function points use a tiered complexity distribution across feature count:
 sequenceDiagram
     participant U as User
     participant F as React App
-    participant SA as Supabase Auth
+    participant FA as Firebase Auth
     participant B as FastAPI
 
     U->>F: Enter email + password
-    F->>SA: signInWithPassword()
-    SA-->>F: JWT access_token + refresh_token
+    F->>FA: signInWithEmailAndPassword()
+    FA-->>F: Firebase ID token
     F->>F: Store in authStore (Zustand)
-    F->>B: API request + Authorization: Bearer <JWT>
-    B->>B: Decode JWT, validate with Supabase JWKS
-    B->>B: Extract user_id from token claims
+    F->>B: API request + Authorization: Bearer <ID token>
+    B->>B: firebase_admin.auth.verify_id_token()
+    B->>B: Extract user_id (Firebase UID) from decoded token
     B-->>F: Protected response (user-scoped data)
 ```
 
@@ -963,16 +947,16 @@ sequenceDiagram
 
 | Layer | Implementation | Status |
 |-------|---------------|:------:|
-| Authentication | Supabase Auth (JWT, email/password) | ✅ |
-| Authorization | Row-Level Security (RLS) on all tables | ✅ |
+| Authentication | Firebase Auth (email/password + Google/GitHub OAuth) | ✅ |
+| Token Verification | Firebase Admin SDK (`verify_id_token`) on backend | ✅ |
 | API Protection | Bearer token validation on all endpoints | ✅ |
-| **Rate Limiting** | slowapi — 200 req/min default (NEW v2.5) | ✅ |
-| **Startup Validation** | Pydantic model_validator warns on placeholder secrets (NEW v2.5) | ✅ |
-| File Upload | 10MB limit, type whitelist (PDF/DOCX/TXT) | ✅ |
+| **Rate Limiting** | slowapi — 200 req/min default | ✅ |
+| **Startup Validation** | Pydantic model_validator warns on placeholder DATABASE_URL | ✅ |
+| File Upload | 10MB limit, type whitelist (PDF/DOCX/TXT), stored as BYTEA | ✅ |
 | Secret Management | Environment variables only (no hardcoded keys) | ✅ |
 | CI Security | Pre-push scanner blocks pushes with leaked keys | ✅ |
 | CORS | Configured for frontend origin only | ✅ |
-| Storage RLS | User-scoped folder isolation | ✅ |
+| Credential Dual-Mode | File path (local dev) OR JSON env var (production) | ✅ |
 
 ### 11.3 Pre-Push Security Scanner (`scripts/pre_push_check.py`)
 
@@ -980,7 +964,7 @@ Automated checks run before every push:
 
 | Check | Scans For |
 |-------|----------|
-| **Secret Scanning** | Supabase URLs, JWT tokens, AWS keys, private keys, hardcoded passwords, DB connection strings |
+| **Secret Scanning** | Firebase credentials, database URLs, AWS keys, private keys, hardcoded passwords, connection strings |
 | **Git Tracking** | Verifies no `.env` files are tracked |
 | **.gitignore Audit** | Validates 6 required patterns exist |
 | **Env Templates** | Confirms `.env.example` exists for backend + frontend |
@@ -1004,13 +988,13 @@ This automatically: creates venv → installs deps → starts backend (port 8000
 cd backend
 python -m venv venv && venv\Scripts\activate   # Windows
 pip install -r requirements.txt
-cp .env.example .env    # Fill in Supabase credentials
+cp .env.example .env    # Fill in DATABASE_URL + Firebase config
 uvicorn app.main:app --reload --port 8000
 
 # Frontend
 cd frontend
 npm install
-cp .env.example .env    # Fill in VITE_SUPABASE_* vars
+cp .env.example .env    # Fill in VITE_FIREBASE_* vars
 npm run dev
 ```
 
@@ -1211,7 +1195,7 @@ graph TD
         F3["backend/ml/"]
         F4[".github/ + Docker"]
         F5["docs/"]
-        F6["supabase/migrations/"]
+        F6["backend/migrations/"]
     end
 
     B --> F1
@@ -1312,13 +1296,14 @@ python -m venv venv              # Create a virtual environment
 venv\Scripts\activate            # Activate it (Windows)
 pip install -r requirements.txt  # Install all Python dependencies
 cp .env.example .env             # Create your local environment file
-# ⚠️ Open backend/.env and fill in the Supabase keys (ask Atharv for them)
+# ⚠️ Place firebase-service-account.json in backend/ (ask Atharv for the file)
+# ⚠️ Open backend/.env and fill in DATABASE_URL (ask Atharv for it)
 
 # ── Frontend Setup ──
 cd ../frontend
 npm install                      # Install JavaScript dependencies
 cp .env.example .env             # Create your local environment file
-# ⚠️ Open frontend/.env and fill in the VITE_SUPABASE_* values
+# ⚠️ Open frontend/.env and fill in the VITE_FIREBASE_* values (ask Atharv)
 
 # ── Go back to project root ──
 cd ..
@@ -1462,7 +1447,7 @@ When a PR is opened, GitHub reads `.github/CODEOWNERS` and **automatically reque
 | `backend/ml/` files | **@AtharvS7**, @Shekhar2006 |
 | `.github/` or Docker files | **@AtharvS7**, @RohiniJanardhanPhad |
 | `docs/` files | **@AtharvS7**, @RohiniJanardhanPhad |
-| `supabase/migrations/` | **@AtharvS7** only |
+| `backend/migrations/` | **@AtharvS7** only |
 | Anything else | **@AtharvS7**, @RohiniJanardhanPhad (global fallback) |
 
 At least **1 owner must approve** before the PR can be merged.
@@ -1544,6 +1529,37 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 ## 16. Changelog
 
+### v3.0.0 — April 23, 2026
+
+**Infrastructure Migration (Supabase → Firebase + Neon)**
+- Replaced Supabase Auth with Firebase Auth (email/password + Google/GitHub OAuth)
+- Replaced Supabase PostgreSQL with Neon serverless PostgreSQL (asyncpg driver)
+- Replaced Supabase Storage with BYTEA column storage (documents stored directly in DB)
+- Dual-mode Firebase credentials: file path (local) or JSON env var (production)
+- Added `backend/app/core/database.py` — async connection pool via asyncpg
+- Rewrote `backend/app/core/security.py` — Firebase Admin SDK token verification
+- Added `backend/migrations/001_initial_schema.sql` — Neon-compatible schema
+
+**NLP Auto-Fill Pipeline**
+- Added `POST /documents/{id}/extract` endpoint — runs NLP extraction immediately after upload
+- Frontend auto-fills ALL 10+ Step 2 form fields from extracted data
+- Fixed project name regex (was greedy, captured multi-line headers)
+- Fixed tech stack false positives ("Less", "Go", etc. filtered in general prose)
+- Added `extractDocumentParams()` named export in `api.ts`
+
+**Bug Fixes**
+- Fixed white screen crash caused by `export default api` Vite ESM collision
+- ML model files (`predictiq_best_model.pkl`, `predictiq_scaler.pkl`) now committed to repo
+- Resolved merge conflicts between integration and dev branches
+
+**Frontend**
+- Added Google and GitHub OAuth sign-in buttons
+- Added `POST /auth/firebase` backend endpoint for OAuth token verification
+- Auth store rewritten for Firebase (`onAuthStateChanged` listener)
+- Removed all Supabase client dependencies
+
+---
+
 ### v2.5.0 — April 17, 2026
 
 **CI/CD Pipeline (4 new workflows)**
@@ -1565,7 +1581,7 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 **Security Hardening**
 - Added `slowapi` rate limiting to `backend/main.py` (200 req/min default)
-- Added Pydantic `model_validator` to `config.py` — warns on startup if JWT_SECRET is a placeholder or SUPABASE_URL isn't HTTPS
+- Added Pydantic `model_validator` to `config.py` — warns on startup if DATABASE_URL is a placeholder
 - Bumped `APP_VERSION` to 2.5.0
 
 ---
@@ -1589,7 +1605,7 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 **Security Hardening**
 - Created `scripts/pre_push_check.py` — secret detection, .gitignore audit, env template check
-- Removed hardcoded Supabase keys from `frontend/src/lib/supabase.ts` (critical fix)
+- Removed hardcoded credentials from frontend (migrated to env vars)
 - Hardened `.gitignore` with 15+ new patterns (.ruff_cache, .coverage, *.tsbuildinfo, etc.)
 - Created `docs/GITHUB_SECRETS_SETUP.md` for CI/CD secret configuration
 - Added `security-scan` job to CI pipeline (runs before all tests)
@@ -1621,11 +1637,11 @@ python -m pytest tests/ --cov=app --cov-report=html
 - RandomForest model (best of 8 algorithms) trained on 740-record merged dataset
 - IFPUG function point estimation pipeline
 - PERT-style min/likely/max predictions
-- Supabase Auth + PostgreSQL integration
+- Firebase Auth + Neon PostgreSQL integration
 - React + TypeScript frontend with 3-step estimation wizard
 - 10-factor risk analysis engine
 
 ---
 
-> *Built by Atharv Sawane & Team — PredictIQ v2.5.0*
+> *Built by Atharv Sawane & Team — PredictIQ v3.0.0*
 
