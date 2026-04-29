@@ -105,7 +105,7 @@ export default function AuthPage() {
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <img
               src={logoImg}
-              alt="PredictIQ Logo"
+              alt="Predictify Logo"
               width={56}
               height={56}
               loading="eager"

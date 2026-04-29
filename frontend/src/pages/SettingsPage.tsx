@@ -236,7 +236,7 @@ export default function SettingsPage() {
                   margin: 0,
                 }}
               >
-                Sign out of your PredictIQ account
+                Sign out of your Predictify account
               </p>
             </div>
 

@@ -57,7 +57,7 @@ export default function ResultsPage() {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const a = document.createElement('a');
       a.href = url;
-      a.download = `PredictIQ_Estimate_${id.slice(0, 8)}_${currencyCode}.pdf`;
+      a.download = `Predictify_Estimate_${id.slice(0, 8)}_${currencyCode}.pdf`;
       a.click();
       addToast('success', 'PDF exported!');
     } catch {

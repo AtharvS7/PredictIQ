@@ -26,7 +26,7 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     this.setState({ errorInfo });
-    console.error('[PredictIQ ErrorBoundary]', error, errorInfo);
+    console.error('[Predictify ErrorBoundary]', error, errorInfo);
   }
 
   handleReload = (): void => {
@@ -91,7 +91,7 @@ class ErrorBoundary extends Component<Props, State> {
               margin: '0 0 2rem',
               fontFamily: "'Inter', system-ui, sans-serif",
             }}>
-              An unexpected error occurred. Please refresh the page to continue using PredictIQ.
+              An unexpected error occurred. Please refresh the page to continue using Predictify.
             </p>
 
             <button

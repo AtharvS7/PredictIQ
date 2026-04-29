@@ -1,5 +1,5 @@
 /**
- * PredictIQ — Auth Store (Firebase Auth)
+ * Predictify — Auth Store (Firebase Auth)
  * Zustand store managing authentication state via Firebase.
  */
 import { create } from 'zustand';
