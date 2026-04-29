@@ -1,5 +1,5 @@
 /**
- * PredictIQ Currency Store v2
+ * Predictify Currency Store v2
  * ============================
  * Fetches live exchange rates from backend (/api/v1/currencies/rates).
  * Supports ALL currencies available from the exchange API (200+).
@@ -162,7 +162,7 @@ export const useCurrencyStore = create<CurrencyState>()(
       },
     }),
     {
-      name: 'predictiq-currency-v2',
+      name: 'Predictify-currency-v2',
       storage: createJSONStorage(() => localStorage),
       // Only persist currency selection, not the rates (re-fetch on load)
       partialize: (state) => ({ currency: state.currency }),

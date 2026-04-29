@@ -278,7 +278,7 @@ export default function LandingPage() {
             margin: 0,
           }}
         >
-          © 2026 PredictIQ. Know Before You Build.
+          © 2026 Predictify. Know Before You Build.
         </p>
       </footer>
     </div>

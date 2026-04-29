@@ -107,7 +107,7 @@ export default function Navbar() {
       >
         <img
           src={logoImg}
-          alt="PredictIQ Logo"
+          alt="Predictify Logo"
           width={32}
           height={32}
           fetchPriority="high"
@@ -126,7 +126,7 @@ export default function Navbar() {
             color: 'var(--text-primary)',
           }}
         >
-          PredictIQ
+          Predictify
           <span
             style={{
               display: 'block',

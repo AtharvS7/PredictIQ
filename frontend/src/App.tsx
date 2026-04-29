@@ -44,7 +44,7 @@ export const useTheme = () => useContext(ThemeContext);
 
 function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState(() => {
-    const saved = localStorage.getItem('predictiq-theme');
+    const saved = localStorage.getItem('Predictify-theme');
     if (saved) return saved;
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
@@ -56,7 +56,7 @@ function ThemeProvider({ children }: { children: ReactNode }) {
     } else {
       document.documentElement.setAttribute('data-theme', newTheme);
     }
-    localStorage.setItem('predictiq-theme', newTheme);
+    localStorage.setItem('Predictify-theme', newTheme);
     setThemeState(newTheme);
   };
 
@@ -180,7 +180,7 @@ export default function App() {
           borderTopColor: '#1A56DB', borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
         }} />
-        <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>Loading PredictIQ...</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>Loading Predictify...</p>
       </div>
     );
   }

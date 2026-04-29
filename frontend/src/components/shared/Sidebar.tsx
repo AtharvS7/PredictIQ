@@ -120,7 +120,7 @@ export default function Sidebar({ collapsed: controlledCollapsed, setCollapsed: 
               color: textColor,
             }}
           >
-            PredictIQ v2.3
+            Predictify v2.3
           </span>
         </div>
       )}
