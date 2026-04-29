@@ -4,12 +4,17 @@ Loads environment variables via pydantic-settings.
 """
 import warnings
 from pydantic_settings import BaseSettings
-from pydantic import model_validator
+from pydantic import ConfigDict, model_validator
 from typing import List
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
+
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
     # Neon PostgreSQL
     DATABASE_URL: str
@@ -29,7 +34,7 @@ class Settings(BaseSettings):
     # Application
     DEFAULT_HOURLY_RATE_USD: float = 75.0
     APP_ENV: str = "development"
-    APP_VERSION: str = "3.0.0"
+    APP_VERSION: str = "3.1.0"
 
     @model_validator(mode="after")
     def _validate_secrets(self) -> "Settings":
@@ -45,10 +50,6 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> List[str]:
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 
 
 settings = Settings()

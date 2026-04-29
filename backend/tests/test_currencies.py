@@ -25,25 +25,19 @@ class TestCurrencyService:
     def test_convert_usd_to_usd_is_identity(self):
         """Converting USD to USD should return the original amount."""
         service = CurrencyService()
-        result = asyncio.get_event_loop().run_until_complete(
-            service.convert(100.0, "USD")
-        )
+        result = asyncio.run(service.convert(100.0, "USD"))
         assert result == 100.0
 
     def test_convert_usd_uppercase(self):
         """Currency codes should be case-insensitive."""
         service = CurrencyService()
-        result = asyncio.get_event_loop().run_until_complete(
-            service.convert(100.0, "usd")
-        )
+        result = asyncio.run(service.convert(100.0, "usd"))
         assert result == 100.0
 
     def test_convert_unknown_currency_returns_usd(self):
         """Unknown currency codes should return the original USD amount."""
         service = CurrencyService()
-        result = asyncio.get_event_loop().run_until_complete(
-            service.convert(100.0, "XYZ")
-        )
+        result = asyncio.run(service.convert(100.0, "XYZ"))
         assert result == 100.0
 
     def test_currency_service_has_fallback(self):
@@ -55,9 +49,7 @@ class TestCurrencyService:
             return {}
 
         with patch.object(service, "_fetch_rates", mock_fetch):
-            rates = asyncio.get_event_loop().run_until_complete(
-                service.get_rates()
-            )
+            rates = asyncio.run(service.get_rates())
             assert len(rates) > 0
             assert "inr" in rates
             assert rates["inr"] == EMERGENCY_FALLBACK_RATES["inr"]
@@ -65,9 +57,7 @@ class TestCurrencyService:
     def test_get_rate_usd(self):
         """get_rate('USD') should always return 1.0."""
         service = CurrencyService()
-        rate = asyncio.get_event_loop().run_until_complete(
-            service.get_rate("USD")
-        )
+        rate = asyncio.run(service.get_rate("USD"))
         assert rate == 1.0
 
     def test_get_status_initial(self):

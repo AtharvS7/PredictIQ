@@ -57,11 +57,9 @@ jobs:
     needs: [lint-backend]
     env:
       APP_ENV:                   test
-      APP_VERSION:               "2.5.0"
-      JWT_SECRET:                ${{ secrets.JWT_SECRET_TEST }}
-      SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
-      SUPABASE_ANON_KEY:         ${{ secrets.SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      APP_VERSION:               "3.1.0"
+      DATABASE_URL:              ${{ secrets.DATABASE_URL || 'postgresql://test:test@localhost/test' }}
+      FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
       DEFAULT_HOURLY_RATE_USD:   "75"
       ML_MODEL_PATH:             ./ml/Predictify_best_model.pkl
       ML_SCALER_PATH:            ./ml/Predictify_scaler.pkl
@@ -173,10 +171,8 @@ jobs:
         run: |
           docker run -d --name backend-ci \
             -e APP_ENV=test \
-            -e JWT_SECRET=test-secret-for-ci-only-not-production \
-            -e SUPABASE_URL=http://localhost \
-            -e SUPABASE_ANON_KEY=test \
-            -e SUPABASE_SERVICE_ROLE_KEY=test \
+            -e DATABASE_URL=postgresql://test:test@localhost/test \
+            -e FIREBASE_CREDENTIALS_JSON='{}' \
             Predictify-backend:ci
           sleep 5
           docker logs backend-ci 2>&1 | head -30
