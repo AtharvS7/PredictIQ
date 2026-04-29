@@ -1,5 +1,5 @@
 """
-PredictIQ Cost Calculator Service
+Predictify Cost Calculator Service
 Implements the 3-layer hybrid estimation pipeline:
 Layer 1: IFPUG Function Point Estimation
 Layer 2: XGBoost ML Prediction (via ml_service)

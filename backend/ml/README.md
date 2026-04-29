@@ -1,4 +1,4 @@
-# PredictIQ ML Artifacts
+# Predictify ML Artifacts
 
 This directory contains the trained ML model and supporting files for effort prediction.
 
@@ -6,11 +6,11 @@ This directory contains the trained ML model and supporting files for effort pre
 
 | File | Description | Git-tracked? |
 |------|-------------|:---:|
-| `predictiq_best_model.pkl` | Trained XGBoost regressor (≈6.4 MB) | ❌ `.gitignore` |
-| `predictiq_scaler.pkl` | StandardScaler fitted on training data | ❌ `.gitignore` |
-| `predictiq_features.json` | Ordered list of 27 model features | ✅ |
-| `predictiq_merged_dataset.csv` | 740-row training dataset | ✅ |
-| `predictiq_model_report.json` | Training metrics (R², MAE, MAPE) | ✅ |
+| `Predictify_best_model.pkl` | Trained XGBoost regressor (≈6.4 MB) | ❌ `.gitignore` |
+| `Predictify_scaler.pkl` | StandardScaler fitted on training data | ❌ `.gitignore` |
+| `Predictify_features.json` | Ordered list of 27 model features | ✅ |
+| `Predictify_merged_dataset.csv` | 740-row training dataset | ✅ |
+| `Predictify_model_report.json` | Training metrics (R², MAE, MAPE) | ✅ |
 | `train.py` | Training pipeline script | ✅ |
 | `evaluate.py` | Model evaluation & visualization | ✅ |
 | `inference.py` | Prediction engine used at runtime | ✅ |
@@ -24,7 +24,7 @@ cd backend
 python -m ml.train
 ```
 
-This reads `predictiq_merged_dataset.csv`, trains the XGBoost model, and writes the `.pkl` artifacts.
+This reads `Predictify_merged_dataset.csv`, trains the XGBoost model, and writes the `.pkl` artifacts.
 
 ## Model Architecture
 

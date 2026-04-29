@@ -1,5 +1,5 @@
 """
-PredictIQ API — Estimate Endpoints
+Predictify API — Estimate Endpoints
 Core estimation pipeline: analyze, list, get, duplicate, delete, share.
 All database access via asyncpg (Neon PostgreSQL).
 """

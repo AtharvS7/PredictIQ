@@ -1,5 +1,5 @@
 """
-PredictIQ API — Health Check
+Predictify API — Health Check
 Exposes model status, training metrics, and dataset info.
 """
 from fastapi import APIRouter

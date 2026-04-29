@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════
--- PredictIQ — Row-Level Security Policies
+-- Predictify — Row-Level Security Policies
 -- Migration 002: Enable RLS and create access policies
 -- ═══════════════════════════════════════════════════════════════
 

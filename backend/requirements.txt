@@ -1,5 +1,5 @@
 # =================================================================
-# PredictIQ Backend -- Python Dependencies
+# Predictify Backend -- Python Dependencies
 # Python 3.13+ compatible | No C compilation required
 # Install: pip install -r requirements.txt
 # =================================================================

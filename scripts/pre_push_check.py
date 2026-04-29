@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PredictIQ — Pre-Push Security Validator
+Predictify — Pre-Push Security Validator
 ========================================
 Scans the repository for hardcoded secrets, untracked .env files, and
 .gitignore gaps before pushing to GitHub.
@@ -215,7 +215,7 @@ def check_env_examples() -> list[str]:
 def main() -> int:
     """Run all security checks. Returns exit code."""
     print(f"\n{Colors.BOLD}{'=' * 60}")
-    print(f"  PredictIQ -- Pre-Push Security Validator")
+    print(f"  Predictify -- Pre-Push Security Validator")
     print(f"{'=' * 60}{Colors.RESET}\n")
 
     all_issues: list[str] = []

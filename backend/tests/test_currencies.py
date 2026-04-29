@@ -1,5 +1,5 @@
 """
-PredictIQ — Currency Service & Endpoint Tests
+Predictify — Currency Service & Endpoint Tests
 Tests the live exchange rate fetching, caching, and conversion logic.
 """
 

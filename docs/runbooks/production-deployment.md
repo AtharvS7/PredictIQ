@@ -50,7 +50,7 @@ git push origin dev
 ```bash
 git checkout main
 git pull origin main
-git tag -a v2.X.0 -m "PredictIQ v2.X.0 — brief summary of changes"
+git tag -a v2.X.0 -m "Predictify v2.X.0 — brief summary of changes"
 git push origin v2.X.0
 ```
 

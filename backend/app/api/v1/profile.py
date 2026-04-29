@@ -1,5 +1,5 @@
 """
-PredictIQ API — Profile Endpoints
+Predictify API — Profile Endpoints
 User profile management (backed by Neon PostgreSQL).
 """
 from fastapi import APIRouter, Depends, HTTPException

@@ -1,1 +1,1 @@
-"""PredictIQ — Test Suite Package."""
+"""Predictify — Test Suite Package."""

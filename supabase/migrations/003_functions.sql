@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════
--- PredictIQ — Database Functions and Triggers
+-- Predictify — Database Functions and Triggers
 -- Migration 003: Utility functions for the application
 -- ═══════════════════════════════════════════════════════════════
 

@@ -6,7 +6,7 @@
 
 ## Step 1 — GitHub Repository Access
 
-1. Go to: `https://github.com/AtharvS7/PredictIQ/settings/collaborators`
+1. Go to: `https://github.com/AtharvS7/Predictify/settings/collaborators`
 2. Click **"Add people"**
 3. Enter their GitHub username
 4. Set role to **Write** (not Admin)
@@ -30,8 +30,8 @@ Have the new member follow the [QUICK_START.md](../../QUICK_START.md) guide, the
 
 ```bash
 # Clone
-git clone https://github.com/AtharvS7/PredictIQ.git
-cd PredictIQ
+git clone https://github.com/AtharvS7/Predictify.git
+cd Predictify
 
 # Setup environment
 copy backend\.env.example backend\.env

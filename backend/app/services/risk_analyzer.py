@@ -1,5 +1,5 @@
 """
-PredictIQ Risk Analyzer Service
+Predictify Risk Analyzer Service
 Computes risk scores and identifies top risk factors.
 """
 from app.models.estimate import RiskItem

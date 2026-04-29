@@ -1,6 +1,6 @@
 """
-PredictIQ — Inference Engine Tests
-Tests for ml/inference.py PredictIQInference singleton.
+Predictify — Inference Engine Tests
+Tests for ml/inference.py PredictifyInference singleton.
 """
 import pytest
 from ml.inference import predictor

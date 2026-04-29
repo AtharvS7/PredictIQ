@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════
-# PredictIQ — Docker Compose (Production)
+# Predictify — Docker Compose (Production)
 # ═══════════════════════════════════════════════════════════════
 #
 # Usage:
@@ -30,7 +30,7 @@ services:
       start_period: 15s
       retries: 3
     networks:
-      - predictiq-net
+      - Predictify-net
 
   frontend:
     build:
@@ -43,8 +43,8 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - predictiq-net
+      - Predictify-net
 
 networks:
-  predictiq-net:
+  Predictify-net:
     driver: bridge

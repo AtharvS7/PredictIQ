@@ -1,5 +1,5 @@
 -- ============================================================
--- PredictIQ — Neon PostgreSQL Initial Schema
+-- Predictify — Neon PostgreSQL Initial Schema
 -- Migrated from Supabase
 -- ============================================================
 

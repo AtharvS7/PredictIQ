@@ -44,7 +44,7 @@ jobs:
         run: |
           npm install -g @railway/cli
           railway up \
-            --service predictiq-backend-production \
+            --service Predictify-backend-production \
             --detach
 
       - name: "Deploy frontend to Vercel (production)"
@@ -83,8 +83,8 @@ jobs:
               owner: context.repo.owner,
               repo:  context.repo.repo,
               tag_name:    tag,
-              name:        `PredictIQ ${tag}`,
-              body:        `## PredictIQ ${tag}\n\nSee [CHANGELOG.md](CHANGELOG.md) for details.`,
+              name:        `Predictify ${tag}`,
+              body:        `## Predictify ${tag}\n\nSee [CHANGELOG.md](CHANGELOG.md) for details.`,
               draft:       false,
               prerelease:  false
             });

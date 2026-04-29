@@ -1,5 +1,5 @@
 """
-PredictIQ API — Document Endpoints
+Predictify API — Document Endpoints
 Handles document upload (direct file + metadata) and retrieval.
 Files are stored as BYTEA in Neon PostgreSQL.
 """

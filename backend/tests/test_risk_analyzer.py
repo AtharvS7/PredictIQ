@@ -1,5 +1,5 @@
 """
-PredictIQ — Risk Analyzer Tests
+Predictify — Risk Analyzer Tests
 Tests for risk scoring, severity mapping, and risk factor detection.
 """
 import pytest

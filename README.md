@@ -1,4 +1,4 @@
-# PredictIQ — AI-Powered Software Project Cost & Timeline Predictor
+# Predictify — AI-Powered Software Project Cost & Timeline Predictor
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![Node](https://img.shields.io/badge/Node.js-20+-339933?logo=nodedotjs&logoColor=white)
@@ -6,9 +6,9 @@
 ![ML](https://img.shields.io/badge/ML-RandomForest-orange)
 ![R²](https://img.shields.io/badge/R²-0.8953-blue)
 
-## What is PredictIQ?
+## What is Predictify?
 
-PredictIQ is a full-stack SaaS application that predicts software project **cost**, **timeline**, and **effort** from uploaded project documentation. Users upload a PDF, DOCX, or plain-text requirements specification, and PredictIQ uses NLP-based feature extraction combined with a machine learning model trained on **740 real-world software projects** from 4 countries to generate data-driven estimates with confidence intervals, risk scores, phase breakdowns, and benchmark comparisons against historical projects.
+Predictify is a full-stack SaaS application that predicts software project **cost**, **timeline**, and **effort** from uploaded project documentation. Users upload a PDF, DOCX, or plain-text requirements specification, and Predictify uses NLP-based feature extraction combined with a machine learning model trained on **740 real-world software projects** from 4 countries to generate data-driven estimates with confidence intervals, risk scores, phase breakdowns, and benchmark comparisons against historical projects.
 
 ---
 
@@ -124,7 +124,7 @@ flowchart TB
 ## Project Structure
 
 ```
-PredictIQ/
+Predictify/
 ├── backend/
 │   ├── main.py                  # FastAPI app entry point
 │   ├── requirements.txt         # Python dependencies
@@ -149,9 +149,9 @@ PredictIQ/
 │   ├── ml/
 │   │   ├── train.py             # Model training pipeline
 │   │   ├── inference.py         # Singleton inference engine
-│   │   ├── predictiq_best_model.pkl
-│   │   ├── predictiq_scaler.pkl
-│   │   └── predictiq_features.json
+│   │   ├── Predictify_best_model.pkl
+│   │   ├── Predictify_scaler.pkl
+│   │   └── Predictify_features.json
 │   └── tests/                   # Pytest test suite (8 modules)
 ├── frontend/
 │   ├── src/
@@ -184,8 +184,8 @@ PredictIQ/
 
 ### 1. Clone the repository
 ```powershell
-git clone https://github.com/your-org/PredictIQ.git
-cd PredictIQ
+git clone https://github.com/your-org/Predictify.git
+cd Predictify
 ```
 
 ### 2. Backend setup
@@ -278,7 +278,7 @@ python backend/ml/train.py
 ```
 
 GPU auto-detected (CUDA). Falls back to CPU if no GPU available.
-Outputs: `predictiq_best_model.pkl`, `predictiq_scaler.pkl`, `training_report.json`
+Outputs: `Predictify_best_model.pkl`, `Predictify_scaler.pkl`, `training_report.json`
 
 ---
 

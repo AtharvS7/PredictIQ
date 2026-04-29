@@ -1,5 +1,5 @@
 """
-PredictIQ — ML Service Tests
+Predictify — ML Service Tests
 Tests for feature vector construction and prediction pipeline.
 """
 import json
@@ -26,8 +26,8 @@ class TestBuildFeatureVector:
         assert len(vector) == 27
 
     def test_keys_match_features_json(self, sample_project_params):
-        """All vector keys must match the features listed in predictiq_features.json."""
-        features_path = Path(__file__).parent.parent / "ml" / "predictiq_features.json"
+        """All vector keys must match the features listed in Predictify_features.json."""
+        features_path = Path(__file__).parent.parent / "ml" / "Predictify_features.json"
         if features_path.exists():
             with open(features_path) as f:
                 expected_features = json.load(f)

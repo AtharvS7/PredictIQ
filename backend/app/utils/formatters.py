@@ -1,5 +1,5 @@
 """
-PredictIQ — Response Formatting Utilities
+Predictify — Response Formatting Utilities
 Standard formatting for API responses, currency, and metrics.
 """
 

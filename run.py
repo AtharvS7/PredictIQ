@@ -1,5 +1,5 @@
 """
-PredictIQ -- Run both backend and frontend with a single command.
+Predictify -- Run both backend and frontend with a single command.
 
 Usage:
     python run.py              # Start both servers
@@ -55,7 +55,7 @@ def safe_print(msg: str):
 def banner():
     safe_print(f"""
 {CYAN}{BOLD}+==================================================+
-|           PredictIQ  --  Dev Launcher            |
+|           Predictify  --  Dev Launcher            |
 |          v2.5.0  |  FastAPI + Vite + AI          |
 +==================================================+{RESET}
 """)

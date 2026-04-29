@@ -1,5 +1,5 @@
 """
-PredictIQ Pydantic Models — User
+Predictify Pydantic Models — User
 Schemas for user profile operations.
 """
 from pydantic import BaseModel, Field

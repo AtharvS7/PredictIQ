@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════
--- PredictIQ — Initial Database Schema
+-- Predictify — Initial Database Schema
 -- Migration 001: Create all application tables
 -- ═══════════════════════════════════════════════════════════════
 

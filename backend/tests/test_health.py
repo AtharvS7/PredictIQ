@@ -1,5 +1,5 @@
 """
-PredictIQ — Health Endpoint Tests
+Predictify — Health Endpoint Tests
 Tests for GET /api/v1/health to verify model status reporting.
 """
 from fastapi.testclient import TestClient

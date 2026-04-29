@@ -1,5 +1,5 @@
 """
-PredictIQ Security Module
+Predictify Security Module
 Firebase Admin SDK token verification.
 
 Strategy:

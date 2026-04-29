@@ -1,4 +1,4 @@
-# PredictIQ — Technical Walkthrough
+# Predictify — Technical Walkthrough
 
 > **Version:** 3.0.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** April 23, 2026
 
@@ -31,7 +31,7 @@
 
 ## 1. Project Overview
 
-**PredictIQ** is an AI-powered SaaS platform that predicts software project **cost**, **timeline**, and **effort** from uploaded project documentation. Users upload SRS/PRD/RFP documents which are parsed by a 4-strategy NLP cascade, analyzed through a **RandomForest ML model** (R² = 0.8953) trained on **740 real-world project records** from 4 benchmark datasets, and returned as PERT-style estimates with full risk analysis.
+**Predictify** is an AI-powered SaaS platform that predicts software project **cost**, **timeline**, and **effort** from uploaded project documentation. Users upload SRS/PRD/RFP documents which are parsed by a 4-strategy NLP cascade, analyzed through a **RandomForest ML model** (R² = 0.8953) trained on **740 real-world project records** from 4 benchmark datasets, and returned as PERT-style estimates with full risk analysis.
 
 ### 1.1 Core Value Proposition
 
@@ -64,7 +64,7 @@
 ### 1.3 Repository Structure
 
 ```
-PredictIQ/
+Predictify/
 │
 ├── backend/                          # Python — FastAPI server
 │   ├── app/
@@ -92,10 +92,10 @@ PredictIQ/
 │   │   ├── train.py                 # Multi-model training pipeline (8 algorithms)
 │   │   ├── evaluate.py              # Model evaluation + visualization
 │   │   ├── inference.py             # Runtime prediction engine
-│   │   ├── predictiq_features.json  # 27-feature schema definition
-│   │   ├── predictiq_merged_dataset.csv  # 740-row training data
-│   │   ├── predictiq_best_model.pkl # Trained model (committed to repo)
-│   │   └── predictiq_scaler.pkl     # Fitted scaler (committed to repo)
+│   │   ├── Predictify_features.json  # 27-feature schema definition
+│   │   ├── Predictify_merged_dataset.csv  # 740-row training data
+│   │   ├── Predictify_best_model.pkl # Trained model (committed to repo)
+│   │   └── Predictify_scaler.pkl     # Fitted scaler (committed to repo)
 │   └── tests/                       # 111 pytest tests
 │       ├── conftest.py              # Shared fixtures
 │       ├── test_nlp_extractor.py    # 35 NLP tests
@@ -565,7 +565,7 @@ All keywords map to canonical display names (e.g., `"react.js"` → `"React"`, `
 
 ### 5.6 NLP Techniques & Evaluation Metrics
 
-PredictIQ's NLP pipeline does **not** use heavyweight transformer models (BERT, GPT) for parameter extraction. Instead, it employs a deterministic, rule-based approach optimized for structured technical documents (SRS, PRD, RFP):
+Predictify's NLP pipeline does **not** use heavyweight transformer models (BERT, GPT) for parameter extraction. Instead, it employs a deterministic, rule-based approach optimized for structured technical documents (SRS, PRD, RFP):
 
 #### Techniques Implemented
 
@@ -613,9 +613,9 @@ flowchart LR
 
 ## 5A. Literature Review — Software Cost Estimation Methods
 
-### 5A.1 Comparative Analysis: COCOMO vs ML-Based vs PredictIQ
+### 5A.1 Comparative Analysis: COCOMO vs ML-Based vs Predictify
 
-| Dimension | COCOMO II (Boehm, 2000) | ML-Based (Idri et al., 2022) | PredictIQ (This Work) |
+| Dimension | COCOMO II (Boehm, 2000) | ML-Based (Idri et al., 2022) | Predictify (This Work) |
 |-----------|:---:|:---:|:---:|
 | **Approach** | Parametric (calibrated equations) | Data-driven regression | Hybrid (IFPUG FP + ML + Parametric) |
 | **Input Type** | KSLOC / FP (manually provided) | Historical project features | NLP-extracted from SRS documents |
@@ -630,19 +630,19 @@ flowchart LR
 
 ### 5A.2 Recent Research Context (2022–2025)
 
-| # | Reference | Key Finding | Relevance to PredictIQ |
+| # | Reference | Key Finding | Relevance to Predictify |
 |---|-----------|-------------|----------------------|
-| [1] | A. Idri, I. Abnane, and A. Abran, "Missing data techniques in analogy-based software development effort estimation," *J. Syst. Softw.*, vol. 117, pp. 595–611, 2022. | Analogy-based methods achieve MMRE of 25–40% but require complete feature vectors | PredictIQ's NLP auto-fills missing features with confidence-weighted defaults |
-| [2] | S. Bhatia and J. Malhotra, "Software effort estimation using machine learning techniques," *7th Int. Conf. Computing for Sustainable Global Development (INDIACom)*, IEEE, 2023. | Random Forest outperforms SVR and ANN on ISBSG dataset with R² = 0.87 | Validates our model choice; PredictIQ achieves R² = 0.8953 on heterogeneous 740-project dataset |
-| [3] | M. Azzeh, A. B. Nassif, and L. Minku, "An empirical evaluation of ensemble adjustment factors for software effort estimation," *Inf. Softw. Technol.*, vol. 138, 2022. | Adjustment factors improve ensemble model accuracy by 12–18% | PredictIQ uses 15 T-factors as adjustment features (T01–T15) |
-| [4] | P. Kumari and R. Sharma, "A systematic review of software cost estimation with deep learning," *ACM Computing Surveys*, vol. 55, no. 3, 2023. | Deep learning models require 2000+ samples; underperform RF/XGBoost on small-medium datasets (<1000) | Justifies PredictIQ's choice of RandomForest over neural networks for 740-sample dataset |
-| [5] | F. Sarro, A. Petrozziello, and M. Harman, "Multi-objective software effort estimation," *IEEE Trans. Softw. Eng.*, vol. 48, no. 12, pp. 4801–4820, 2022. | Multi-objective optimization balances accuracy and stability in effort estimation | PredictIQ uses composite R² + PRED25 scoring for model selection |
-| [6] | A. Alhamed and R. Storer, "Function point analysis with NLP: automating software sizing," *Int. Conf. Software Engineering (ICSE-SEIP)*, IEEE, 2024. | NLP-based FP extraction achieves 85% agreement with manual IFPUG counting | Directly validates PredictIQ's document→FP→effort pipeline architecture |
-| [7] | J. Wen, S. Li, and Z. Lin, "Systematic literature review of ML-based software cost estimation models," *Expert Systems with Applications*, vol. 202, 2024. | Ensemble methods (RF, GB, XGB) consistently outperform single learners across 18 benchmark datasets | Supports PredictIQ's 8-model tournament approach with ensemble winners |
+| [1] | A. Idri, I. Abnane, and A. Abran, "Missing data techniques in analogy-based software development effort estimation," *J. Syst. Softw.*, vol. 117, pp. 595–611, 2022. | Analogy-based methods achieve MMRE of 25–40% but require complete feature vectors | Predictify's NLP auto-fills missing features with confidence-weighted defaults |
+| [2] | S. Bhatia and J. Malhotra, "Software effort estimation using machine learning techniques," *7th Int. Conf. Computing for Sustainable Global Development (INDIACom)*, IEEE, 2023. | Random Forest outperforms SVR and ANN on ISBSG dataset with R² = 0.87 | Validates our model choice; Predictify achieves R² = 0.8953 on heterogeneous 740-project dataset |
+| [3] | M. Azzeh, A. B. Nassif, and L. Minku, "An empirical evaluation of ensemble adjustment factors for software effort estimation," *Inf. Softw. Technol.*, vol. 138, 2022. | Adjustment factors improve ensemble model accuracy by 12–18% | Predictify uses 15 T-factors as adjustment features (T01–T15) |
+| [4] | P. Kumari and R. Sharma, "A systematic review of software cost estimation with deep learning," *ACM Computing Surveys*, vol. 55, no. 3, 2023. | Deep learning models require 2000+ samples; underperform RF/XGBoost on small-medium datasets (<1000) | Justifies Predictify's choice of RandomForest over neural networks for 740-sample dataset |
+| [5] | F. Sarro, A. Petrozziello, and M. Harman, "Multi-objective software effort estimation," *IEEE Trans. Softw. Eng.*, vol. 48, no. 12, pp. 4801–4820, 2022. | Multi-objective optimization balances accuracy and stability in effort estimation | Predictify uses composite R² + PRED25 scoring for model selection |
+| [6] | A. Alhamed and R. Storer, "Function point analysis with NLP: automating software sizing," *Int. Conf. Software Engineering (ICSE-SEIP)*, IEEE, 2024. | NLP-based FP extraction achieves 85% agreement with manual IFPUG counting | Directly validates Predictify's document→FP→effort pipeline architecture |
+| [7] | J. Wen, S. Li, and Z. Lin, "Systematic literature review of ML-based software cost estimation models," *Expert Systems with Applications*, vol. 202, 2024. | Ensemble methods (RF, GB, XGB) consistently outperform single learners across 18 benchmark datasets | Supports Predictify's 8-model tournament approach with ensemble winners |
 
-### 5A.3 PredictIQ's Novel Contributions
+### 5A.3 Predictify's Novel Contributions
 
-1. **End-to-end automation**: Unlike COCOMO (manual inputs) or standalone ML models (manual feature engineering), PredictIQ closes the gap from document upload to cost estimate without human intervention.
+1. **End-to-end automation**: Unlike COCOMO (manual inputs) or standalone ML models (manual feature engineering), Predictify closes the gap from document upload to cost estimate without human intervention.
 2. **Hybrid 3-layer architecture**: Combining IFPUG sizing (Layer 1), ML prediction (Layer 2), and parametric costing (Layer 3) provides both interpretability and accuracy.
 3. **Multi-source training data**: Merging 4 international benchmarks (Albrecht, China, Desharnais-Maxwell, NASA93) creates a more generalizable model than single-source training.
 4. **Confidence scoring**: Each extraction carries a confidence weight, propagated through to the final estimate — giving users transparency into prediction reliability.
@@ -662,11 +662,11 @@ The model is trained on **740 real-world software project records** merged from 
 | **Desharnais-Maxwell** | FP, effort, language, methodology, duration | Desharnais 1988 / Maxwell 2002 |
 | **NASA93** | LOC, effort multipliers, COCOMO T-factors | NASA Cost model dataset |
 
-**Merged output:** `backend/ml/predictiq_merged_dataset.csv` (740 rows × 30 columns)
+**Merged output:** `backend/ml/Predictify_merged_dataset.csv` (740 rows × 30 columns)
 
 ### 6.2 Feature Vector (27 Features)
 
-The ML model expects exactly **27 numeric features** as defined in `predictiq_features.json`:
+The ML model expects exactly **27 numeric features** as defined in `Predictify_features.json`:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -695,7 +695,7 @@ The ML model expects exactly **27 numeric features** as defined in `predictiq_fe
 
 #### Why 8 Models Were Evaluated
 
-PredictIQ trains **8 regression algorithms** in a tournament-style evaluation to ensure the best model is selected empirically, not assumed:
+Predictify trains **8 regression algorithms** in a tournament-style evaluation to ensure the best model is selected empirically, not assumed:
 
 | Model | Category | Why Included | Result |
 |-------|----------|-------------|--------|
@@ -915,7 +915,7 @@ Environment variables loaded via Pydantic `BaseSettings` from `backend/.env`:
 | `FIREBASE_CREDENTIALS_PATH` | ❌ | `./firebase-service-account.json` | Path to Firebase service account JSON (local dev) |
 | `FIREBASE_CREDENTIALS_JSON` | ❌ | `""` | Raw JSON string for Firebase credentials (production) |
 | `ALLOWED_ORIGINS` | ❌ | `http://localhost:5173,...` | CORS allowed origins |
-| `ML_MODEL_PATH` | ❌ | `./ml/predictiq_best_model.pkl` | Trained ML model path |
+| `ML_MODEL_PATH` | ❌ | `./ml/Predictify_best_model.pkl` | Trained ML model path |
 | `DEFAULT_HOURLY_RATE_USD` | ❌ | `75.0` | Default billing rate |
 | `APP_ENV` | ❌ | `development` | Environment (skips validators in `test`/`ci`) |
 | `APP_VERSION` | ❌ | `3.0.0` | Current application version |
@@ -1238,7 +1238,7 @@ make graph            Rebuild the code-review knowledge graph
 
 ### 13.1 Pipeline Overview
 
-PredictIQ uses **7 GitHub Actions workflows** organized into three categories:
+Predictify uses **7 GitHub Actions workflows** organized into three categories:
 
 | Category | Workflows | Trigger |
 |----------|:---------:|---------|
@@ -1391,7 +1391,7 @@ If any required checks fail on their respective branches, GitHub **blocks the me
 
 ```mermaid
 graph TD
-    subgraph TEAM["PredictIQ Team"]
+    subgraph TEAM["Predictify Team"]
         A["@AtharvS7\n(Owner)\nFull access · Direct push\nBackend · ML · CI/CD · DB"]
         B["@Shravani0605\nFrontend"]
         C["@Shruti10101-1\nFrontend"]
@@ -1492,10 +1492,10 @@ flowchart TD
 
 ```bash
 # Clone the repository to your computer
-git clone https://github.com/AtharvS7/PredictIQ.git
+git clone https://github.com/AtharvS7/Predictify.git
 
 # Go into the project folder
-cd PredictIQ
+cd Predictify
 
 # Switch to the dev branch (this is where all work goes first)
 git checkout dev
@@ -1557,7 +1557,7 @@ git push origin feature/add-login-button
 #### 🟣 Opening a Pull Request (On GitHub Website)
 
 ```
-1. Go to: https://github.com/AtharvS7/PredictIQ
+1. Go to: https://github.com/AtharvS7/Predictify
 2. You'll see a yellow banner: "feature/add-login-button had recent pushes"
 3. Click "Compare & pull request"
 4. Set the BASE branch to: dev  (NOT main!)
@@ -1743,11 +1743,11 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 **Walkthrough Academic Enhancements (Professor Review Feedback)**
 - Added **Section 5.6: NLP Techniques & Evaluation Metrics** — documents regex-based NER, TF-IDF keyword scoring, section-aware parsing, with precision/recall metrics
-- Added **Section 5A: Literature Review** — comparative analysis table (COCOMO II vs ML-Based vs PredictIQ) with 7 IEEE/ACM citations (2022–2025)
+- Added **Section 5A: Literature Review** — comparative analysis table (COCOMO II vs ML-Based vs Predictify) with 7 IEEE/ACM citations (2022–2025)
 - Enhanced **Section 6.3: Model Selection & Justification** — added 8-model rationale table, full performance comparison (R², MAE, RMSE, PRED25, PRED50, MMRE), and explicit reasoning for choosing RandomForest over GradientBoosting, XGBoost, and Neural Networks
 - Added **Section 6.5: Mathematical Formulation** — complete 8-step derivation from IFPUG FP calculation through ML prediction to PERT cost bounds, with tier distribution tables, VAF factors, and a fully worked example
 - Added NLP pipeline flow diagram (Mermaid) showing document → extraction → cross-validation path
-- Added PredictIQ novel contributions subsection summarizing 4 key differentiators
+- Added Predictify novel contributions subsection summarizing 4 key differentiators
 
 ### v3.0.0 — April 23, 2026
 
@@ -1769,7 +1769,7 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 **Bug Fixes**
 - Fixed white screen crash caused by `export default api` Vite ESM collision
-- ML model files (`predictiq_best_model.pkl`, `predictiq_scaler.pkl`) now committed to repo
+- ML model files (`Predictify_best_model.pkl`, `Predictify_scaler.pkl`) now committed to repo
 - Resolved merge conflicts between integration and dev branches
 
 **Frontend**
@@ -1863,5 +1863,5 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 ---
 
-> *Built by Atharv Sawane & Team — PredictIQ v3.0.0*
+> *Built by Atharv Sawane & Team — Predictify v3.0.0*
 

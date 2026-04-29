@@ -1,5 +1,5 @@
 """
-PredictIQ — Pytest Configuration and Shared Fixtures
+Predictify — Pytest Configuration and Shared Fixtures
 Provides reusable test data for all test modules.
 """
 import sys
@@ -32,7 +32,7 @@ def sample_project_params() -> dict:
 
 @pytest.fixture
 def sample_feature_vector() -> dict:
-    """A complete 27-feature vector matching predictiq_features.json."""
+    """A complete 27-feature vector matching Predictify_features.json."""
     return {
         "TeamExp": 3.0,
         "ManagerExp": 3.5,
