@@ -1,418 +1,434 @@
-# Predictify — v3.1.0 Audit Report
+# Predictify — v3.1.0 Industry-Grade Audit Report
 
-> **Date:** April 29, 2026 &nbsp;|&nbsp; **Auditor:** Antigravity AI &nbsp;|&nbsp; **Scope:** Full Project Audit (v2.4.0 → v3.1.0)
+> **Date:** April 29, 2026 | **Auditor:** Antigravity AI | **Scope:** Full Codebase Audit — Industry Deployment Readiness
 
 ---
 
 ## Table of Contents
 
 - [1. Executive Summary](#1-executive-summary)
-- [2. Changes Made — v3.1.0 (April 24–29, 2026)](#2-changes-made--v310-april-2429-2026)
-- [3. Version Comparison (v2.4 → v3.0 → v3.1)](#3-version-comparison-v24--v30--v31)
-- [4. Code Quality Audit](#4-code-quality-audit)
-- [5. Security Audit](#5-security-audit)
+- [2. Project Metrics](#2-project-metrics)
+- [3. Architecture Review](#3-architecture-review)
+- [4. Security Audit](#4-security-audit)
+- [5. Code Quality Audit](#5-code-quality-audit)
 - [6. Test Coverage Audit](#6-test-coverage-audit)
-- [7. Industry Comparison](#7-industry-comparison)
-- [8. Gap Analysis & Future Improvements](#8-gap-analysis--future-improvements)
-- [9. Pre-Push Readiness Checklist](#9-pre-push-readiness-checklist)
+- [7. DevOps & Infrastructure](#7-devops--infrastructure)
+- [8. Frontend Audit](#8-frontend-audit)
+- [9. ML Pipeline Audit](#9-ml-pipeline-audit)
+- [10. Industry Comparison & Gap Analysis](#10-industry-comparison--gap-analysis)
+- [11. Deployment Readiness Score](#11-deployment-readiness-score)
+- [12. Next-Semester Roadmap](#12-next-semester-roadmap)
 
 ---
 
 ## 1. Executive Summary
 
-Predictify v3.1.0 consolidates a major infrastructure migration (Supabase → Firebase + Neon), full codebase rebrand from PredictIQ to Predictify, and academic-grade walkthrough enhancements addressing professor review feedback. The walkthrough now includes IEEE-formatted literature review, NLP pipeline evaluation metrics, ML model justification with comparative analysis, and complete mathematical formulation with worked examples.
+Predictify is an AI-powered SaaS tool that estimates software project cost and timeline from uploaded documents. It combines NLP extraction, IFPUG function points, and ML prediction (RandomForest) into a single pipeline.
 
-| Metric | v2.4.0 (Apr 15) | v3.0.0 (Apr 23) | v3.1.0 (Apr 29) |
-|--------|:------------:|:------------:|:------------:|
-| Project Name | PredictIQ | PredictIQ | **Predictify** ✅ |
-| Auth Provider | Supabase | Firebase Auth | Firebase Auth |
-| Database | Supabase PostgreSQL | Neon serverless PostgreSQL | Neon serverless PostgreSQL |
-| Walkthrough Sections | 14 | 16 | **18 (+5A, 5.6, 6.5)** |
-| Literature Review | ❌ None | ❌ None | ✅ 7 IEEE/ACM citations |
-| NLP Evaluation Metrics | ❌ None | ❌ None | ✅ 7 metrics (P/R/F1) |
-| ML Model Justification | Basic table | Basic table | ✅ 8-model rationale matrix |
-| Math Formulation | ❌ None | ❌ None | ✅ 8-step derivation + worked example |
-| Files Renamed | — | — | **78 files** (PredictIQ→Predictify) |
-| Frontend Chart Library | Recharts | Chart.js | Chart.js |
-| Theme-Aware Charts | ❌ | ✅ | ✅ |
-| Walkthrough Lines | ~1200 | ~1648 | **~1864** |
+**Overall Deployment Readiness: 62% — NOT ready for production client deployment.**
 
----
+The core estimation pipeline works well and the architecture is sound, but critical gaps in security hardening, test coverage, observability, and containerization must be addressed before pitching to enterprise clients.
 
-## 2. Changes Made — v3.1.0 (April 24–29, 2026)
-
-### Phase 1: Walkthrough Academic Enhancements (April 24) ✅
-
-| Section Added | Lines | Description |
-|--------------|:-----:|-------------|
-| **§5.6 NLP Techniques & Evaluation Metrics** | 50 | Documents 6 NLP techniques (Regex NER, TF-IDF scoring, Section-Aware Parsing, Table Parsing, Complexity Scoring, Cross-Validation), Mermaid pipeline diagram, 7 evaluation metrics |
-| **§5A Literature Review** | 55 | COCOMO II vs ML-Based vs Predictify comparison table (10 dimensions), 7 IEEE/ACM citations (2022–2025), 4 novel contributions |
-| **§6.3 Model Selection & Justification (Enhanced)** | 60 | 8-model rationale table, full performance matrix (R², MAE, RMSE, PRED25, PRED50, MMRE), RandomForest vs GradientBoosting vs XGBoost vs Neural Network decision table with literature references |
-| **§6.5 Mathematical Formulation** | 67 | Complete 8-step derivation: IFPUG FP calculation → Feature vector construction → RandomForest log-space prediction → PERT bounds → Cost conversion → Timeline (Brooks's Law). Includes tier distribution tables, VAF factors, and fully worked example |
-
-### Phase 2: Codebase Rebrand — PredictIQ → Predictify (April 29) ✅
-
-| Scope | Files Changed | Occurrences |
-|-------|:------------:|:-----------:|
-| **Frontend** (src + index.html) | 12 | 14 |
-| **Backend** (services, API, models, core, tests) | 41 | 80+ |
-| **ML Pipeline** (train, inference, evaluate) | 3 | 30+ |
-| **Documentation** (walkthrough, audit, runbooks, README) | 10 | 60+ |
-| **Config** (docker-compose, Makefile, .env, CI/CD) | 12 | 20+ |
-| **Total** | **78** | **200+** |
-
-**Key areas renamed:**
-- FastAPI app title: `Predictify API`
-- All docstrings and module headers
-- PDF export watermarks and filenames
-- Docker service names and compose labels
-- CI/CD workflow names
-- All test file headers
-- README, QUICK_START, MANUAL_SETUP_TASKS
-- Walkthrough (66 line changes)
-
-### Phase 3: v3.0.0 Changes (April 23) — Infrastructure Migration
-
-| File | Action | Description |
-|------|--------|-------------|
-| `backend/app/core/database.py` | **NEW** | Async connection pool via asyncpg (Neon PostgreSQL) |
-| `backend/app/core/security.py` | **REWRITE** | Firebase Admin SDK token verification |
-| `backend/migrations/001_initial_schema.sql` | **NEW** | Neon-compatible schema with BYTEA storage |
-| `frontend/src/store/authStore.ts` | **REWRITE** | Firebase Auth with backend sync + error mapping |
-| `frontend/src/pages/ResultsPage.tsx` | **REWRITE** | Chart.js (4 chart types), theme-aware tooltips/axes/tables |
-| `frontend/src/pages/AuthPage.tsx` | **FIX** | Forgot password flow, error handling |
-
-
-### Phase 2: Pipeline Integration ✅
-
-| File | Action | Lines Changed | Description |
-|------|--------|:-----:|-------------|
-| `backend/app/api/v1/estimates.py` | MODIFY | +20 | Wires 3 new NLP fields through pipeline |
-| `backend/app/services/ml_service.py` | MODIFY | +15 | Uses `volatility_score` for T08, `team_experience` for TeamExp |
-
-**How new fields flow through the pipeline:**
-- `integration_count` → `estimate_function_points(external_interface_files=...)` → affects `size_fp` → affects all FP-derived model features
-- `volatility_score` → `ml_service._build_feature_vector(T08=...)` → directly maps to T08 (requirements volatility T-factor)
-- `team_experience` → `ml_service._build_feature_vector(TeamExp=..., ManagerExp=...)` → replaces heuristic team-size proxy with actual document-derived experience level
-- All changes include fallback defaults — **fully backward-compatible** with existing estimates
-
-### Phase 3: Security Hardening ✅
-
-| File | Action | Lines | Description |
-|------|--------|:-----:|-------------|
-| `scripts/pre_push_check.py` | **NEW** | 150 | Pre-push secret scanner |
-| `.gitignore` | MODIFY | +15 | Added .ruff_cache, .coverage, *.tsbuildinfo, .code-review-graph/, etc. |
-| `docs/GITHUB_SECRETS_SETUP.md` | **NEW** | 50 | CI/CD secret configuration guide |
-| `.github/workflows/ci.yml` | MODIFY | +30 | Added security-scan job, Python 3.11→3.13 |
-| `frontend/src/lib/supabase.ts` | **FIX** | 8→15 | **CRITICAL: Removed hardcoded Supabase URL + anon key** |
-
-**Critical security fix:** `supabase.ts` had the Supabase project URL and anon key hardcoded as fallback values. These have been completely removed. The app now requires proper `.env` configuration and shows a console error if environment variables are missing.
-
-### Phase 4: Architecture Additions ✅
-
-| File | Action | Lines | Description |
-|------|--------|:-----:|-------------|
-| `Makefile` | **NEW** | 35 | Cross-platform developer targets |
-| `backend/ml/README.md` | UPDATE | 35 | Documents ML artifacts + regeneration |
-| `frontend/src/pages/NewEstimatePage.tsx` | MODIFY | +45 | 3 new Step 2 form fields |
-
-### Phase 5: Documentation ✅
-
-| File | Action | Lines | Description |
-|------|--------|:-----:|-------------|
-| `docs/walkthrough.md` | **REWRITE** | 740 | Complete v2.4.0 rewrite with 7 Mermaid diagrams |
-
-**Total files modified:** 15
-**Total lines changed:** ~2,500+
+| Category | Score | Industry Target | Status |
+|----------|:-----:|:---------------:|:------:|
+| Security | 55% | 90%+ | 🔴 |
+| Test Coverage | 48% | 80%+ | 🔴 |
+| Code Quality | 78% | 85%+ | 🟡 |
+| DevOps/CI/CD | 45% | 85%+ | 🔴 |
+| Frontend | 70% | 80%+ | 🟡 |
+| ML Pipeline | 65% | 80%+ | 🟡 |
+| Documentation | 85% | 75%+ | 🟢 |
+| **Overall** | **62%** | **80%+** | 🔴 |
 
 ---
 
-## 3. Version Comparison (v2.0 → v2.3 → v2.4)
+## 2. Project Metrics
 
-### Feature Matrix
-
-| Feature | v2.0.0 | v2.3.0 | v2.4.0 |
-|---------|:------:|:------:|:------:|
-| Document upload (PDF/DOCX/TXT) | ✅ | ✅ | ✅ |
-| NLP parameter extraction | Basic (8 fields) | Basic (8 fields) | **Advanced (11 fields, 4-strategy cascade)** |
-| Tech keyword library | ~50 | ~80 | **300+** |
-| XGBoost ML prediction | ✅ | ✅ | ✅ (enhanced features) |
-| IFPUG function points | ✅ | ✅ | ✅ (integration-aware) |
-| PERT estimation (min/likely/max) | ✅ | ✅ | ✅ |
-| Risk analysis (10 factors) | ✅ | ✅ | ✅ |
-| Multi-currency | ❌ | ✅ (10 currencies) | ✅ (10 currencies) |
-| PDF/Excel/CSV export | ❌ | ✅ | ✅ |
-| Share links | ✅ | ✅ | ✅ |
-| Dark mode / glassmorphism | ❌ | ✅ | ✅ |
-| One-command launcher | ❌ | ✅ | ✅ |
-| Makefile | ❌ | ❌ | **✅** |
-| Pre-push security scanner | ❌ | ❌ | **✅** |
-| CI security job | ❌ | ❌ | **✅** |
-| No hardcoded secrets | ❌ | ❌ | **✅** |
-| Knowledge graph tooling | ❌ | ❌ | **✅** |
-| Walkthrough with Mermaid diagrams | ❌ | ❌ | **✅ (7 diagrams)** |
-| Docker support | ✅ | ✅ | ✅ |
-
-### Architecture Evolution
-
-| Aspect | v2.0 | v2.3 | v2.4 |
-|--------|------|------|------|
-| **NLP Architecture** | Flat regex scan | Flat regex scan | 4-strategy cascade with preprocessor |
-| **NLP Confidence** | None | None | Per-field confidence + evidence |
-| **Feature Vector** | 27 features (heuristic fills) | 27 features (heuristic fills) | 27 features (3 from NLP, rest heuristic) |
-| **T-Factor Source** | All derived from complexity/size proxy | All derived from complexity/size proxy | T08 from NLP volatility, TeamExp from NLP experience |
-| **Security** | .env-based (with hardcoded fallbacks) | .env-based (with hardcoded fallbacks) | Strict .env-only + pre-push scanner |
-| **CI Pipeline** | Backend tests + frontend build | Backend tests + frontend build | Security scan → tests → build → Docker |
-| **Documentation** | Basic README + walkthrough | Basic README + walkthrough | 14-section walkthrough with ER + flow diagrams |
-
-### Codebase Growth
-
-| Metric | v2.0 | v2.3 | v2.4 |
-|--------|:----:|:----:|:----:|
-| Backend Python lines | ~3,200 | ~4,800 | ~5,600 |
-| Frontend TypeScript lines | ~2,800 | ~4,200 | ~4,400 |
-| Test count | 42 | 76 | 111 |
-| NLP extractor lines | 280 | 539 | 900 |
-| Documentation lines | ~400 | ~500 | ~740 |
+| Metric | Value |
+|--------|:-----:|
+| Total LOC (code + docs) | 15,879 |
+| Backend Python LOC | 3,801 |
+| ML Pipeline LOC | 1,039 |
+| Test LOC | 1,016 |
+| Frontend TSX/TS/CSS LOC | 5,350 |
+| Documentation LOC | 2,071 |
+| Backend test count | 111 (106 pass, 5 fail) |
+| Frontend test count | 0 |
+| API endpoints | 14 |
+| Database tables | 4 |
+| CI/CD workflows | 5 |
 
 ---
 
-## 4. Code Quality Audit
+## 3. Architecture Review
 
-### 4.1 Backend Code Quality
+### 3.1 Current Stack
+
+| Layer | Technology | Industry Standard |
+|-------|-----------|:-----------------:|
+| Frontend | React 19 + Vite 8 + Zustand | ✅ |
+| Backend | FastAPI 0.135 + Python 3.13 | ✅ |
+| Database | Neon PostgreSQL (asyncpg) | ✅ |
+| Auth | Firebase Auth + Admin SDK | ✅ |
+| ML | scikit-learn (RandomForest) | 🟡 |
+| File Storage | BYTEA in PostgreSQL | 🔴 |
+
+### 3.2 Architecture Issues Found
+
+| # | Severity | Issue | Impact |
+|---|:--------:|-------|--------|
+| A1 | **CRITICAL** | Files stored as BYTEA in PostgreSQL | DB bloat, slow queries, no CDN caching. Industry uses S3/GCS/R2 object storage |
+| A2 | **HIGH** | No database migration tool (Alembic/Flyway) | Only 1 raw SQL file; no versioned migrations, no rollback capability |
+| A3 | **HIGH** | No ORM layer | Raw SQL strings throughout API routes; error-prone, hard to maintain |
+| A4 | **MEDIUM** | Monolithic backend | All services in single process; no background task queue (Celery/RQ) for NLP/ML |
+| A5 | **MEDIUM** | Connection pool (2-10) hardcoded | Should be configurable via env vars for different deployment tiers |
+| A6 | **LOW** | No API versioning strategy | Routes under `/api/v1` but no deprecation or v2 plan |
+
+---
+
+## 4. Security Audit
+
+### 4.1 Findings Summary
 
 | Check | Status | Notes |
 |-------|:------:|-------|
-| Type hints on all public functions | ✅ | Consistent throughout services |
-| Docstrings on all public functions | ✅ | All services documented |
-| Structured logging (structlog) | ✅ | Used in NLP, ML, cost services |
-| Error handling in API routes | ✅ | HTTPException with proper status codes |
-| Pydantic models for request/response | ✅ | All schemas in models/ |
+| Hardcoded secrets in source | ✅ CLEAN | 1 test file has mock token (acceptable) |
+| `.env` files tracked by Git | ✅ CLEAN | Properly gitignored |
+| Firebase token verification | ✅ GOOD | Proper Admin SDK verification with expiry/revocation checks |
+| CORS configuration | ✅ GOOD | Configurable via env var |
+| File upload validation | ✅ GOOD | 10MB limit + MIME whitelist |
+| Rate limiting | ✅ PRESENT | slowapi at 200/min global |
+| Request ID tracing | ✅ GOOD | X-Request-ID on every response |
+
+### 4.2 Critical Security Gaps
+
+| # | Severity | Gap | Industry Standard | Fix |
+|---|:--------:|-----|-------------------|-----|
+| S1 | **CRITICAL** | SQL injection risk in `profile.py` | Parameterized queries only | Dynamic column names from `model_dump()` keys are interpolated into f-strings. Although keys come from Pydantic (not user input), this pattern is dangerous and would fail any security audit. Use an allowlist of column names |
+| S2 | **CRITICAL** | SQL injection risk in `estimates.py` sort | Parameterized queries only | `order_clause` uses f-string interpolation in SQL. The `sort_map` whitelist mitigates this, but the pattern is flagged by SAST tools |
+| S3 | **HIGH** | No RBAC (Role-Based Access Control) | Admin/User/Viewer roles | Only "authenticated" role exists; no admin panel, no org-level permissions |
+| S4 | **HIGH** | No input sanitization on `project_name` | XSS prevention on stored data | User-supplied `project_name` stored and rendered without sanitization |
+| S5 | **HIGH** | Share links have no rate limiting | Brute-force protection | Token is 32-byte urlsafe but no lockout after failed attempts |
+| S6 | **HIGH** | No audit logging | SOC 2 compliance | No record of who accessed what data and when |
+| S7 | **MEDIUM** | CORS allows all methods/headers | Restrict to needed methods | `allow_methods=["*"], allow_headers=["*"]` is too permissive |
+| S8 | **MEDIUM** | No CSP/security headers | OWASP Top 10 | Missing Content-Security-Policy, X-Frame-Options, HSTS |
+| S9 | **MEDIUM** | No request body size limit (global) | Prevent DoS | Only file upload has size limit; JSON payloads unlimited |
+| S10 | **MEDIUM** | CI uses stale Supabase secrets | Clean CI config | `ci.yml` still references `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `JWT_SECRET` |
+| S11 | **LOW** | Database URL logged (first 40 chars) | Never log credentials | `database.py:24` logs DSN prefix which may contain username |
+
+### 4.3 OWASP Top 10 Compliance
+
+| OWASP Category | Status | Notes |
+|---------------|:------:|-------|
+| A01 Broken Access Control | 🟡 | User isolation works but no RBAC |
+| A02 Cryptographic Failures | ✅ | bcrypt for share passwords, Firebase for auth |
+| A03 Injection | 🔴 | SQL f-string patterns in profile.py and estimates.py |
+| A04 Insecure Design | 🟡 | No threat model documented |
+| A05 Security Misconfiguration | 🟡 | Permissive CORS, no security headers |
+| A06 Vulnerable Components | 🟡 | Pydantic v2 deprecation warning; stale deps in lock file (gotrue, supabase remnants) |
+| A07 Auth Failures | ✅ | Firebase Admin SDK is industry-grade |
+| A08 Data Integrity | ✅ | Token verification on all protected routes |
+| A09 Logging Failures | 🔴 | No audit trail, no structured error alerting |
+| A10 SSRF | ✅ | No outbound URL fetching from user input |
+
+---
+
+## 5. Code Quality Audit
+
+### 5.1 Backend Quality
+
+| Check | Status | Notes |
+|-------|:------:|-------|
+| Type hints on public functions | ✅ | Consistent |
+| Docstrings on public functions | ✅ | All services documented |
+| Structured logging (structlog) | ✅ | 43 logging calls |
+| Error handling in API routes | ✅ | 65 error handlers |
+| Pydantic models for I/O | ✅ | All schemas in models/ |
 | No circular imports | ✅ | Clean dependency graph |
 | Environment-based config | ✅ | Pydantic BaseSettings |
-| Async where appropriate | ✅ | FastAPI async endpoints |
+| Async endpoints | ✅ | All routes async |
 
-### 4.2 Frontend Code Quality
+### 5.2 Code Smells Found
 
-| Check | Status | Notes |
-|-------|:------:|-------|
-| TypeScript strict mode | ✅ | No `any` types in core logic |
-| Component decomposition | ✅ | Shared components in components/shared/ |
-| State management (Zustand) | ✅ | 2 stores, clean separation |
-| Error boundary handling | ✅ | Try-catch in API calls |
-| Responsive design | ✅ | CSS grid + flexbox |
-| Environment variable usage | ✅ | `import.meta.env.VITE_*` only |
-
-### 4.3 Issues Found
-
-| # | Severity | Issue | Location | Recommendation |
-|---|:--------:|-------|----------|----------------|
-| 1 | LOW | Pydantic v2 deprecation warning | `backend/app/core/config.py:9` | Migrate `class Config:` to `model_config = ConfigDict(...)` |
-| 2 | LOW | `asyncio.get_event_loop()` deprecated in Python 3.14 | `backend/tests/test_currencies.py` | Replace with `asyncio.run()` or `pytest-asyncio` fixtures |
-| 3 | INFO | `.pkl` files not in Git LFS | `backend/ml/` | Consider Git LFS for binary model artifacts |
-| 4 | INFO | No rate limiting on API endpoints | `backend/app/api/` | Add `slowapi` or similar rate limiter for production |
-| 5 | INFO | No health check for Supabase connectivity | `backend/app/api/v1/health.py` | Add Supabase ping in health endpoint |
-
----
-
-## 5. Security Audit
-
-### 5.1 Secret Scan Results
-
-| Check | Result |
-|-------|:------:|
-| Hardcoded Supabase URLs in source | ✅ **CLEAN** (fixed today) |
-| Hardcoded JWT tokens in source | ✅ **CLEAN** (fixed today) |
-| AWS access keys | ✅ CLEAN |
-| Private key blocks | ✅ CLEAN |
-| Hardcoded passwords | ✅ CLEAN |
-| Database URLs with credentials | ✅ CLEAN |
-| `.env` files tracked by Git | ✅ CLEAN |
-
-### 5.2 .gitignore Audit
-
-| Required Pattern | Present? |
-|-----------------|:--------:|
-| `.env` | ✅ |
-| `*.pyc` | ✅ |
-| `__pycache__/` | ✅ |
-| `venv/` | ✅ |
-| `node_modules/` | ✅ |
-| `backend/ml/*.pkl` | ✅ |
-| `.ruff_cache/` | ✅ (NEW) |
-| `.coverage` | ✅ (NEW) |
-| `*.tsbuildinfo` | ✅ (NEW) |
-| `.code-review-graph/` | ✅ (NEW) |
-| `backend/ml/*.png` | ✅ (NEW) |
-
-### 5.3 Environment Template Audit
-
-| Location | `.env.example` exists? | All required vars documented? |
-|----------|:---------------------:|:------|
-| `backend/` | ✅ | ✅ SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY |
-| `frontend/` | ✅ | ✅ VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY |
-
-### 5.4 Authentication & Authorization
-
-| Check | Status |
-|-------|:------:|
-| JWT validation on all protected endpoints | ✅ |
-| RLS enabled on all tables | ✅ |
-| Storage path isolation per user | ✅ |
-| File type whitelist on upload | ✅ |
-| File size limit (10MB) | ✅ |
-| CORS configured | ✅ |
-| Service role key NOT exposed to frontend | ✅ |
+| # | Severity | Issue | Location | Fix |
+|---|:--------:|-------|----------|-----|
+| Q1 | **HIGH** | Pydantic v2 `class Config` deprecated | `config.py:49` | Use `model_config = ConfigDict(...)` — will break in Pydantic v3 |
+| Q2 | **HIGH** | 5 broken tests (currency async) | `test_currencies.py` | `asyncio.get_event_loop()` removed in Python 3.14; use `asyncio.run()` |
+| Q3 | **MEDIUM** | `estimates.py` is 619 lines | `api/v1/estimates.py` | Extract `_run_estimation` to a service class; too much business logic in route handler |
+| Q4 | **MEDIUM** | Stale Supabase dependencies in requirements | `requirements.lock.txt` | `gotrue`, `supabase`, `storage3` still present — remove dead deps |
+| Q5 | **MEDIUM** | No connection retry/backoff on DB | `database.py` | `asyncpg.create_pool()` with no retry; production needs exponential backoff |
+| Q6 | **LOW** | `export.py:108` deletes dict keys during iteration | `export.py` | `del result_dict[key]` while iterating — use comprehension instead |
+| Q7 | **LOW** | Magic numbers in ML service | `ml_service.py` | `0.85`, `0.30`, `0.04` — extract to named constants |
 
 ---
 
 ## 6. Test Coverage Audit
 
-### 6.1 Coverage by Service
+### 6.1 Current Coverage
 
-| Service | Test File | Tests | Key Scenarios Covered |
-|---------|----------|:-----:|----------------------|
-| NLP Extractor | `test_nlp_extractor.py` | 35 | Empty text, short text, all 7 project types, tech detection (tables, variants, dedup), team size (table summation), duration (weeks, quarters), complexity (very high, low), section features, project name, integrations, volatility (high/low), experience (senior/junior), methodology (scrum, waterfall), full SRS |
-| Cost Calculator | `test_cost_calculator.py` | 18 | FP estimation, phase breakdown, cost conversion, complexity tiers |
-| ML Service | `test_ml_service.py` | 11 | Feature vector shape, T-factor ranges, prediction output |
-| Inference | `test_inference.py` | 12 | Model loading, single prediction, batch, error handling |
-| Risk Analyzer | `test_risk_analyzer.py` | 10 | Risk score range, levels, factor triggers, high/low complexity |
-| Document Parser | `test_document_parser.py` | 8 | PDF, DOCX, TXT parsing, error recovery |
-| Currencies | `test_currencies.py` | 7 | USD conversion, unknown currency, fallback rates |
-| Health | `test_health.py` | 5 | Endpoint response, model status fields |
-| Benchmark | `test_benchmark.py` | 5 | Industry comparison data |
+| Service | Test File | Tests | Pass | Fail |
+|---------|----------|:-----:|:----:|:----:|
+| NLP Extractor | `test_nlp_extractor.py` | 35 | 35 | 0 |
+| Cost Calculator | `test_cost_calculator.py` | 18 | 18 | 0 |
+| ML Service | `test_ml_service.py` | 11 | 11 | 0 |
+| Inference | `test_inference.py` | 12 | 12 | 0 |
+| Risk Analyzer | `test_risk_analyzer.py` | 10 | 10 | 0 |
+| Document Parser | `test_document_parser.py` | 8 | 8 | 0 |
+| Currencies | `test_currencies.py` | 7 | 2 | **5** |
+| Health | `test_health.py` | 5 | 5 | 0 |
+| Benchmark | `test_benchmark.py` | 5 | 5 | 0 |
+| **Total** | | **111** | **106** | **5** |
 
-### 6.2 Missing Coverage (Opportunities)
+### 6.2 Industry Coverage Gaps
 
-| Area | Current Coverage | Suggested Tests |
-|------|:---------------:|----------------|
-| API route integration tests | None (unit only) | Test full endpoint with mocked Supabase |
-| Export service | None | PDF/Excel/CSV generation smoke tests |
-| Currency service async | Broken (5 tests) | Fix `asyncio.get_event_loop()` deprecation |
-| Frontend components | None | Jest + React Testing Library for wizard steps |
-| E2E flows | None | Playwright/Cypress for upload-to-results flow |
+| Area | Current | Industry Standard | Gap |
+|------|:-------:|:-----------------:|:---:|
+| Backend unit tests | 111 | 200+ for this codebase | 🔴 |
+| API integration tests | **0** | Full route coverage | 🔴 CRITICAL |
+| Frontend component tests | **0** | 70%+ component coverage | 🔴 CRITICAL |
+| E2E tests | **0** | Core flows covered | 🔴 CRITICAL |
+| Export service tests | **0** | PDF/CSV generation | 🔴 |
+| Auth flow tests | **0** | Login/logout/token refresh | 🔴 |
+| Load/performance tests | **0** | Response time SLAs | 🟡 |
+| Test-to-code ratio | 0.21:1 | 0.8:1+ | 🔴 |
 
----
-
-## 7. Industry Comparison
-
-### 7.1 Competitive Landscape
-
-Predictify is compared against existing software cost estimation tools:
-
-| Feature | Predictify v2.4 | **COCOMO II** (USC) | **Function Point Workbench** | **Jira/Azure DevOps** (estimator plugins) | **ProjectCodeMeter** |
-|---------|:--------------:|:-------------------:|:---------------------------:|:-----------------------------------------:|:--------------------:|
-| **ML-powered prediction** | ✅ XGBoost | ❌ Parametric only | ❌ FP tables only | ❌ Historical velocity | ❌ LOC-based only |
-| **Document NLP extraction** | ✅ 4-strategy cascade | ❌ Manual input | ❌ Manual input | ❌ Manual input | ❌ Code scanning |
-| **SRS/PRD upload** | ✅ PDF/DOCX/TXT | ❌ | ❌ | ❌ | ❌ |
-| **IFPUG function points** | ✅ Automated | ❌ | ✅ Manual | ❌ | ❌ |
-| **PERT estimation** | ✅ Min/Likely/Max | ✅ | ❌ | ❌ | ❌ |
-| **Risk analysis** | ✅ 10 factors | ❌ | ❌ | ❌ | ❌ |
-| **Multi-currency** | ✅ 10 currencies | ❌ | ❌ | Partial | ❌ |
-| **Export (PDF/Excel/CSV)** | ✅ | ❌ | ✅ | ✅ | ✅ |
-| **Self-hosted / SaaS** | Both | Desktop | Desktop | Cloud | Desktop |
-| **Open source** | ✅ | Partial | ❌ | ❌ | ❌ |
-| **Training data** | 740 records | COCOMO dataset | ISBSG (license) | Per-org data | N/A |
-| **Price** | Free (open source) | Free (academic) | $3,000+ / license | $7-20 / user / month | $500+ / license |
-
-### 7.2 Strengths vs. Industry
-
-| Strength | Details |
-|----------|---------|
-| **Unique NLP pipeline** | No competitor auto-extracts parameters from uploaded documents |
-| **Combined approach** | Only tool merging IFPUG FP + ML prediction + risk analysis |
-| **Open source** | Full transparency, no vendor lock-in |
-| **Modern stack** | React + FastAPI + Supabase (vs. legacy Java/C# desktop tools) |
-| **Self-service** | Upload document → get estimate in <30 seconds |
-
-### 7.3 Weaknesses vs. Industry
-
-| Weakness | Details | Severity |
-|----------|---------|:--------:|
-| **Small training dataset** | 740 records vs. ISBSG's 8,000+ | HIGH |
-| **No LOC-based estimation** | Cannot analyze code repos (only documents) | MEDIUM |
-| **No historical calibration** | Cannot learn from user's own past projects | HIGH |
-| **No team velocity data** | No Jira/Linear integration for velocity-based estimation | MEDIUM |
-| **Single ML model** | XGBoost only; no ensemble or deep learning | LOW |
-| **No real-time collaboration** | Single-user estimates, no team comments | LOW |
-| **No mobile app** | Web-only (responsive, but no native app) | LOW |
+**Industry benchmark:** Enterprise SaaS requires 80%+ code coverage. Current estimated coverage is ~35-40%.
 
 ---
 
-## 8. Gap Analysis & Future Improvements
+## 7. DevOps & Infrastructure
 
-### 8.1 High Priority (Next Release)
+### 7.1 CI/CD Pipeline
 
-| # | Improvement | Impact | Effort | Description |
-|---|-----------|:------:|:------:|-------------|
-| 1 | **Expand training dataset** | HIGH | MEDIUM | Add PROMISE, China, Maxwell, Kemerer datasets (1,500+ additional records) |
-| 2 | **Historical calibration** | HIGH | HIGH | Let users tag past estimates as actual → model fine-tuning per org |
-| 3 | **Fix currency test deprecation** | LOW | LOW | Replace `asyncio.get_event_loop()` with `asyncio.run()` |
-| 4 | **Pydantic v2 migration** | LOW | LOW | Replace `class Config:` with `model_config = ConfigDict(...)` |
-| 5 | **API rate limiting** | MEDIUM | LOW | Add `slowapi` for production hardening |
+| Workflow | Purpose | Status |
+|----------|---------|:------:|
+| `ci.yml` | Lint + Test + Security | 🟡 Has stale Supabase env vars |
+| `cd-staging.yml` | Deploy to staging | ❓ Not verified |
+| `cd-production.yml` | Deploy to prod | ❓ Not verified |
+| `codeql.yml` | GitHub CodeQL scan | ✅ |
+| `security-weekly.yml` | Weekly security scan | ✅ |
 
-### 8.2 Medium Priority (Future Releases)
+### 7.2 Infrastructure Gaps
 
-| # | Improvement | Impact | Effort | Description |
-|---|-----------|:------:|:------:|-------------|
-| 6 | **Jira/Linear integration** | HIGH | HIGH | Import sprint velocity data for estimate calibration |
-| 7 | **Code repository analysis** | HIGH | HIGH | Scan GitHub repos for LOC, complexity metrics, tech stack |
-| 8 | **Ensemble model** | MEDIUM | MEDIUM | Add LightGBM + Ridge fallback for better generalization |
-| 9 | **Frontend unit tests** | MEDIUM | MEDIUM | Jest + React Testing Library for all pages |
-| 10 | **E2E test suite** | MEDIUM | MEDIUM | Playwright for full upload-to-results flow |
-| 11 | **Estimate comparison** | MEDIUM | LOW | Side-by-side comparison of multiple estimates |
-| 12 | **Team collaboration** | MEDIUM | HIGH | Multi-user estimates with comments and approvals |
-
-### 8.3 Low Priority (Roadmap)
-
-| # | Improvement | Impact | Effort | Description |
-|---|-----------|:------:|:------:|-------------|
-| 13 | **Mobile app (React Native)** | LOW | HIGH | Native iOS/Android app |
-| 14 | **LLM-enhanced NLP** | HIGH | HIGH | Use GPT/Gemini for context-aware extraction |
-| 15 | **Git LFS for model files** | LOW | LOW | Track .pkl files via LFS instead of gitignoring |
-| 16 | **Staging environment** | MEDIUM | MEDIUM | Separate Supabase project for staging |
-| 17 | **Model A/B testing** | MEDIUM | HIGH | Run two models in parallel, compare accuracy |
-| 18 | **Webhook notifications** | LOW | LOW | Email/Slack when estimate completes |
+| # | Severity | Gap | Industry Standard |
+|---|:--------:|-----|-------------------|
+| D1 | **CRITICAL** | No Dockerfile for backend | Every SaaS needs containerized deployment |
+| D2 | **CRITICAL** | No health check endpoint for DB/Firebase | Load balancers need `/health` with dependency checks |
+| D3 | **CRITICAL** | No monitoring/alerting (APM) | Datadog/Sentry/New Relic for production |
+| D4 | **HIGH** | No structured error reporting | Sentry/Bugsnag for exception tracking |
+| D5 | **HIGH** | No log aggregation | ELK/CloudWatch/Loki for centralized logs |
+| D6 | **HIGH** | No backup strategy for Neon DB | Point-in-time recovery, daily snapshots |
+| D7 | **HIGH** | `docker-compose.yml` exists but no individual Dockerfiles | `Dockerfile.backend` and `Dockerfile.frontend` referenced in CI but missing |
+| D8 | **MEDIUM** | No environment promotion pipeline | dev → staging → prod with gates |
+| D9 | **MEDIUM** | No secrets rotation policy | Firebase/DB credentials should rotate quarterly |
+| D10 | **LOW** | No auto-scaling configuration | Kubernetes HPA or Railway auto-scale |
 
 ---
 
-## 9. Pre-Push Readiness Checklist
+## 8. Frontend Audit
 
-### 9.1 Code Readiness
+### 8.1 Strengths
 
-| Check | Status | Verified By |
-|-------|:------:|------------|
-| All 106+ tests pass | ✅ | `pytest backend/tests/ -v` |
-| TypeScript compiles (0 errors) | ✅ | `npx tsc --noEmit` |
-| Security scanner passes | ✅ | `python scripts/pre_push_check.py` |
-| No hardcoded secrets | ✅ | Security scanner + manual review |
-| .gitignore comprehensive | ✅ | 46 patterns covering all artifacts |
-| .env.example files present | ✅ | backend/ + frontend/ |
-| Documentation up to date | ✅ | walkthrough.md v3.1.0 (1864 lines, 18 sections) |
-| Codebase rebrand complete | ✅ | 0 references to "PredictIQ" remain |
-| Literature review added | ✅ | 7 IEEE/ACM citations (2022–2025) |
-| ML model justification added | ✅ | 8-model comparison matrix |
+| Feature | Status |
+|---------|:------:|
+| Code splitting (lazy routes) | ✅ |
+| Error boundary | ✅ |
+| Auth guard (RequireAuth) | ✅ |
+| Theme support (dark/light/system) | ✅ |
+| Toast notifications | ✅ |
+| Loading states | ✅ (29 patterns) |
+| Zustand state management | ✅ |
+| TypeScript strict (0 errors) | ✅ |
+| No XSS (`dangerouslySetInnerHTML`) | ✅ |
+| Form validation (react-hook-form + zod) | ✅ |
 
-### 9.2 Files Changed in v3.1.0
+### 8.2 Frontend Gaps
 
-| Category | Count | Key Files |
-|----------|:-----:|-------|
-| **Frontend renamed** | 12 | Navbar, Sidebar, AuthPage, LandingPage, ResultsPage, SettingsPage, App.tsx, index.html |
-| **Backend renamed** | 41 | All API routes, services, models, core modules, tests |
-| **Walkthrough enhanced** | 1 | +232 lines: §5.6, §5A, §6.3 enhanced, §6.5 |
-| **Audit report updated** | 1 | This file — v2.4.0 → v3.1.0 |
-| **Config renamed** | 12 | docker-compose, Makefile, .env, CI/CD workflows |
-| **Total** | **78** | 194 insertions, 194 deletions |
+| # | Severity | Gap | Industry Standard |
+|---|:--------:|-----|-------------------|
+| F1 | **HIGH** | Zero frontend tests | Jest + React Testing Library minimum |
+| F2 | **HIGH** | Only 6 ARIA attributes total | WCAG 2.1 AA compliance for enterprise |
+| F3 | **HIGH** | No i18n/localization | Multi-language support for international clients |
+| F4 | **MEDIUM** | No Storybook component library | Design system documentation |
+| F5 | **MEDIUM** | No PWA support | Offline capability, installability |
+| F6 | **MEDIUM** | No SEO meta tags on pages | Only index.html has meta; SPA needs react-helmet |
+| F7 | **LOW** | Duplicate chart libraries | Both `recharts` and `chart.js`/`react-chartjs-2` in deps |
+| F8 | **LOW** | No bundle size analysis | `vite-plugin-visualizer` for tree-shaking audit |
 
-### 9.3 Commit History (v3.0.0 → v3.1.0)
+---
+
+## 9. ML Pipeline Audit
+
+### 9.1 Current State
+
+| Aspect | Status | Notes |
+|--------|:------:|-------|
+| Model type | RandomForest | Trained on 740 records |
+| Feature vector | 27 features | Well-documented T-factor mapping |
+| PERT estimation | ✅ | Min/Likely/Max bounds |
+| Fallback mode | ✅ | Heuristic when model unavailable |
+| Model explainability | ✅ | Feature importance available |
+
+### 9.2 ML Gaps vs. Industry
+
+| # | Severity | Gap | Industry Standard |
+|---|:--------:|-----|-------------------|
+| M1 | **CRITICAL** | Training dataset only 740 records | ISBSG has 8,000+; need 2,000+ minimum for production |
+| M2 | **CRITICAL** | No model versioning/registry | MLflow/Weights&Biases for model lifecycle |
+| M3 | **HIGH** | No model monitoring/drift detection | Track prediction accuracy over time |
+| M4 | **HIGH** | No A/B testing framework | Compare model versions in production |
+| M5 | **HIGH** | `.pkl` files not in Git LFS | Binary artifacts should use LFS or artifact registry |
+| M6 | **HIGH** | No automated retraining pipeline | CI/CD for model retraining on new data |
+| M7 | **MEDIUM** | Single model (no ensemble) | Ensemble of RF + XGBoost + Ridge improves generalization |
+| M8 | **MEDIUM** | No user feedback loop | "Was this estimate accurate?" → retraining data |
+| M9 | **LOW** | No confidence calibration | Platt scaling for calibrated probability outputs |
+
+---
+
+## 10. Industry Comparison & Gap Analysis
+
+### 10.1 Competitive Landscape
+
+| Feature | Predictify v3.1 | COCOMO II | FP Workbench | Jira Plugins | ProjectCodeMeter |
+|---------|:---------------:|:---------:|:------------:|:------------:|:----------------:|
+| ML prediction | ✅ | ❌ | ❌ | ❌ | ❌ |
+| NLP doc extraction | ✅ | ❌ | ❌ | ❌ | ❌ |
+| IFPUG FP | ✅ Auto | ❌ | ✅ Manual | ❌ | ❌ |
+| Risk analysis | ✅ 10 factors | ❌ | ❌ | ❌ | ❌ |
+| Multi-currency | ✅ | ❌ | ❌ | Partial | ❌ |
+| PDF export | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Open source | ✅ | Partial | ❌ | ❌ | ❌ |
+| RBAC | ❌ | N/A | ✅ | ✅ | ✅ |
+| SOC 2 ready | ❌ | N/A | ❌ | ✅ | ❌ |
+| SSO/SAML | ❌ | N/A | ❌ | ✅ | ❌ |
+
+### 10.2 What Enterprise Clients Expect (vs. Current State)
+
+| Requirement | Current | Required | Priority |
+|------------|:-------:|:--------:|:--------:|
+| SOC 2 Type II compliance | ❌ | ✅ | P0 |
+| SSO (SAML/OIDC) | ❌ | ✅ | P0 |
+| RBAC with org management | ❌ | ✅ | P0 |
+| 99.9% uptime SLA | ❌ | ✅ | P0 |
+| Data residency controls | ❌ | ✅ | P1 |
+| Audit logging | ❌ | ✅ | P1 |
+| API rate limiting (per-user) | Partial (global only) | Per-org quotas | P1 |
+| Webhook integrations | ❌ | ✅ | P2 |
+| White-label/custom branding | ❌ | ✅ | P2 |
+| SLA-backed support | ❌ | ✅ | P2 |
+
+### 10.3 Deployment Readiness by Category
 
 ```
-900dc3d refactor: rename PredictIQ to Predictify across all frontend (12 files)
-664bfc1 docs: walkthrough v3.1.0 — literature review, NLP metrics, ML justification, math formulation
-bb4203e feat: Chart.js migration, theme-aware charts, auth fixes, risk color swap
+Security         ████████░░░░░░░░░░░░  55%  (need 90%+)
+Testing          ██████░░░░░░░░░░░░░░  48%  (need 80%+)
+Code Quality     ████████████████░░░░  78%  (need 85%+)
+DevOps           █████████░░░░░░░░░░░  45%  (need 85%+)
+Frontend         ██████████████░░░░░░  70%  (need 80%+)
+ML Pipeline      █████████████░░░░░░░  65%  (need 80%+)
+Documentation    █████████████████░░░  85%  (target met ✅)
+─────────────────────────────────────────────
+OVERALL          ████████████░░░░░░░░  62%  (need 80%+)
 ```
 
 ---
 
-> *Audit performed on April 29, 2026 — Predictify v3.1.0*
-> *Codebase: 78 files modified, 0 references to old name remaining*
+## 11. Deployment Readiness Score
+
+### 11.1 Blocker Issues (Must Fix Before Any Client Demo)
+
+| # | Issue | Category | Effort |
+|---|-------|----------|:------:|
+| B1 | Fix 5 broken currency tests | Testing | 1 hour |
+| B2 | Fix SQL f-string patterns in profile.py | Security | 2 hours |
+| B3 | Remove stale Supabase env vars from CI | DevOps | 1 hour |
+| B4 | Remove dead Supabase deps from requirements.lock | Code Quality | 1 hour |
+| B5 | Fix Pydantic v2 deprecation warning | Code Quality | 30 min |
+| B6 | Add Dockerfile.backend + Dockerfile.frontend | DevOps | 3 hours |
+| B7 | Stop logging database DSN | Security | 10 min |
+
+**Estimated effort to clear blockers: ~8 hours (1 sprint day)**
+
+### 11.2 Pre-Client-Pitch Checklist
+
+| Check | Status |
+|-------|:------:|
+| All tests pass | ❌ (5 failing) |
+| Zero known security vulnerabilities | ❌ (SQL patterns) |
+| Containerized deployment | ❌ (no Dockerfiles) |
+| CI/CD pipeline green | ❌ (stale env vars) |
+| Monitoring in place | ❌ |
+| Documentation complete | ✅ |
+| Core features working | ✅ |
+| Error handling comprehensive | ✅ |
+
+---
+
+## 12. Next-Semester Roadmap
+
+### Phase 1: Foundation (Weeks 1-3) — Security & Testing
+
+| Task | Priority | Effort | Impact |
+|------|:--------:|:------:|:------:|
+| Fix all blocker issues (§11.1) | P0 | 8h | Unblocks everything |
+| Add API integration tests (pytest + httpx) | P0 | 16h | 30% coverage boost |
+| Add frontend tests (Vitest + Testing Library) | P0 | 20h | 25% coverage boost |
+| Implement RBAC (admin/user/viewer roles) | P0 | 24h | Enterprise requirement |
+| Add audit logging middleware | P0 | 8h | SOC 2 requirement |
+| Fix SQL injection patterns (use allowlist) | P0 | 4h | Security compliance |
+| Add security headers middleware (CSP, HSTS) | P1 | 4h | OWASP compliance |
+
+### Phase 2: Infrastructure (Weeks 4-6) — DevOps & Scaling
+
+| Task | Priority | Effort | Impact |
+|------|:--------:|:------:|:------:|
+| Create proper Dockerfiles | P0 | 8h | Containerized deployment |
+| Add Alembic for DB migrations | P0 | 12h | Safe schema changes |
+| Integrate Sentry for error tracking | P1 | 4h | Production observability |
+| Move file storage to S3/R2 | P1 | 16h | DB performance |
+| Add health checks (DB + Firebase ping) | P1 | 4h | Load balancer support |
+| Set up staging environment | P1 | 8h | Safe testing |
+| Add E2E tests (Playwright) | P1 | 16h | Confidence in releases |
+
+### Phase 3: Enterprise Features (Weeks 7-10) — Client Readiness
+
+| Task | Priority | Effort | Impact |
+|------|:--------:|:------:|:------:|
+| Multi-tenant org management | P0 | 40h | Enterprise requirement |
+| SSO/SAML integration | P1 | 24h | Enterprise requirement |
+| Expand ML dataset to 2,000+ records | P1 | 20h | Prediction accuracy |
+| Add model versioning (MLflow) | P1 | 16h | ML lifecycle |
+| Jira/Linear integration | P2 | 24h | Velocity-based calibration |
+| User feedback loop ("Was estimate accurate?") | P2 | 12h | Model improvement |
+| Ensemble model (RF + XGBoost + Ridge) | P2 | 16h | Better generalization |
+
+### Phase 4: Polish (Weeks 11-13) — Market Readiness
+
+| Task | Priority | Effort | Impact |
+|------|:--------:|:------:|:------:|
+| WCAG 2.1 AA accessibility audit | P1 | 16h | Legal compliance |
+| i18n/localization | P2 | 20h | International market |
+| Performance optimization + CDN | P2 | 8h | User experience |
+| White-label theming | P2 | 12h | B2B customization |
+| Landing page + marketing site | P2 | 16h | Client acquisition |
+| SOC 2 documentation prep | P1 | 20h | Enterprise sales |
+
+### Projected Readiness After Next Semester
+
+```
+Security         ██████████████████░░  90%  (+35%)
+Testing          ████████████████░░░░  80%  (+32%)
+Code Quality     ██████████████████░░  90%  (+12%)
+DevOps           █████████████████░░░  85%  (+40%)
+Frontend         ████████████████░░░░  82%  (+12%)
+ML Pipeline      ████████████████░░░░  80%  (+15%)
+Documentation    ██████████████████░░  90%  (+5%)
+─────────────────────────────────────────────
+OVERALL          █████████████████░░░  85%  (+23%)
+```
+
+---
+
+> *Full codebase audit performed April 29, 2026 — Predictify v3.1.0*
+> *Benchmarked against: OWASP Top 10, SOC 2, ISBSG standards, SaaS industry best practices*
+> *Next audit recommended: End of next semester or after Phase 2 completion*
