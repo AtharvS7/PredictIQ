@@ -1,5 +1,5 @@
 """
-PredictIQ — Benchmark Service Tests
+Predictify — Benchmark Service Tests
 Tests for historical dataset comparison logic.
 """
 import pytest

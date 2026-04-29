@@ -1,5 +1,5 @@
 """
-PredictIQ Backend — FastAPI Application Entry Point
+Predictify Backend — FastAPI Application Entry Point
 """
 import structlog
 from uuid import uuid4
@@ -44,7 +44,7 @@ logger = structlog.get_logger()
 async def lifespan(app: FastAPI):
     """Application startup and shutdown events."""
     # Startup
-    logger.info("starting_predictiq", env=settings.APP_ENV, version=settings.APP_VERSION)
+    logger.info("starting_Predictify", env=settings.APP_ENV, version=settings.APP_VERSION)
 
     # Initialize Firebase Admin SDK
     init_firebase()
@@ -75,12 +75,12 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     await close_db_pool()
-    logger.info("shutting_down_predictiq")
+    logger.info("shutting_down_Predictify")
 
 
 # Create FastAPI application
 app = FastAPI(
-    title="PredictIQ API",
+    title="Predictify API",
     description="AI-Powered Software Project Cost & Timeline Predictor",
     version=settings.APP_VERSION,
     lifespan=lifespan,
@@ -126,7 +126,7 @@ app.include_router(auth_router, prefix="/api/v1", tags=["Auth"])
 async def root():
     """Root endpoint — API info."""
     return {
-        "name": "PredictIQ API",
+        "name": "Predictify API",
         "version": settings.APP_VERSION,
         "docs": "/docs",
         "health": "/api/v1/health",

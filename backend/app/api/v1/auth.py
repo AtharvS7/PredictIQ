@@ -1,5 +1,5 @@
 """
-PredictIQ API — Auth Endpoints
+Predictify API — Auth Endpoints
 Firebase token verification and user sync (backed by Neon PostgreSQL).
 """
 from fastapi import APIRouter, Depends

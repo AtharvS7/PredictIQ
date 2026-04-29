@@ -1,5 +1,5 @@
 """
-PredictIQ ML Service
+Predictify ML Service
 =====================
 Bridges FastAPI estimation endpoints with the ML inference module.
 Builds 27-feature vectors from extracted project parameters and
@@ -82,7 +82,7 @@ class MLService:
 
     def _build_feature_vector(self, params: dict) -> dict[str, float]:
         """
-        Construct a 27-feature dictionary matching predictiq_features.json.
+        Construct a 27-feature dictionary matching Predictify_features.json.
 
         Maps extracted project parameters to the exact model features:
         TeamExp, ManagerExp, duration_months, Transactions, Entities,

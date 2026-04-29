@@ -1,4 +1,4 @@
-# PredictIQ — GitHub Secrets Setup Guide
+# Predictify — GitHub Secrets Setup Guide
 
 This guide explains how to configure GitHub repository secrets for CI/CD and deployment.
 

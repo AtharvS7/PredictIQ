@@ -1,5 +1,5 @@
 """
-PredictIQ API — Currency Endpoints
+Predictify API — Currency Endpoints
 Fetches live exchange rates for frontend use.
 Public endpoints — no auth required.
 """

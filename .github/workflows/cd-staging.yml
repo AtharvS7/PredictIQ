@@ -28,7 +28,7 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
         run: |
           railway up \
-            --service predictiq-backend-staging \
+            --service Predictify-backend-staging \
             --detach
 
       # ── Frontend: Deploy to Vercel ────────────────────────────

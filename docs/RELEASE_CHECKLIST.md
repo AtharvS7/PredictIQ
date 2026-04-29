@@ -1,4 +1,4 @@
-# Release Checklist — PredictIQ
+# Release Checklist — Predictify
 
 Use this checklist for every release. Do not skip steps.
 
@@ -25,7 +25,7 @@ Use this checklist for every release. Do not skip steps.
 ## Release (Owner)
 
 - [ ] PR merged to `main`
-- [ ] Tag created: `git tag -a vX.Y.Z -m "PredictIQ vX.Y.Z — brief"`
+- [ ] Tag created: `git tag -a vX.Y.Z -m "Predictify vX.Y.Z — brief"`
 - [ ] Tag pushed: `git push origin vX.Y.Z`
 - [ ] CD pipeline completes successfully
 - [ ] Production health check passes

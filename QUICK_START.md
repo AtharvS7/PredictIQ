@@ -1,6 +1,6 @@
-# PredictIQ — Quick Start Guide
+# Predictify — Quick Start Guide
 
-> Get PredictIQ running locally in under 5 minutes.
+> Get Predictify running locally in under 5 minutes.
 
 ## Prerequisites
 
@@ -11,8 +11,8 @@
 ## Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/AtharvS7/PredictIQ.git
-cd PredictIQ
+git clone https://github.com/AtharvS7/Predictify.git
+cd Predictify
 ```
 
 ## Step 2: Configure Environment Variables

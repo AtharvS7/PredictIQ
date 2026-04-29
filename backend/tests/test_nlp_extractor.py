@@ -1,5 +1,5 @@
 """
-PredictIQ — NLP Extractor Tests v2.4
+Predictify — NLP Extractor Tests v2.4
 =====================================
 30+ tests covering the 4-strategy cascade extraction engine.
 """
@@ -295,11 +295,11 @@ class TestNLPExtraction:
         assert pname.get("confidence") == 0.0
 
     def test_project_name_extracted(self):
-        """'Project Name: PredictIQ' pattern should extract 'PredictIQ'."""
-        text = "Project Name: PredictIQ\nThis is a cost estimation platform."
+        """'Project Name: Predictify' pattern should extract 'Predictify'."""
+        text = "Project Name: Predictify\nThis is a cost estimation platform."
         result = nlp_extractor.extract(text)
         pname = result.get("project_name", {})
-        assert "PredictIQ" in pname.get("value", "")
+        assert "Predictify" in pname.get("value", "")
 
     # ── New v2.4 Fields ────────────────────────────────────────────
 

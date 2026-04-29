@@ -1,4 +1,4 @@
-# Manual Setup Tasks — PredictIQ v2.5.0
+# Manual Setup Tasks — Predictify v2.5.0
 
 > These tasks **cannot be automated** and require a human to complete them in the GitHub web UI or third-party platforms. Complete them in order.
 
@@ -6,7 +6,7 @@
 
 ## 1. GitHub Branch Protection Rules
 
-**Location:** https://github.com/AtharvS7/PredictIQ/settings/branches
+**Location:** https://github.com/AtharvS7/Predictify/settings/branches
 
 > **Goal:** AtharvS7 (`@AtharvS7`) can push directly to `main` and `dev` without
 > needing any approvals. Everyone else must create a PR and get approval before merging.
@@ -44,7 +44,7 @@
 
 ## 2. GitHub Secrets Configuration
 
-**Location:** https://github.com/AtharvS7/PredictIQ/settings/secrets/actions
+**Location:** https://github.com/AtharvS7/Predictify/settings/secrets/actions
 
 Add these **Repository Secrets** (Actions → Secrets → New repository secret):
 
@@ -59,7 +59,7 @@ Add these **Repository Secrets** (Actions → Secrets → New repository secret)
 
 ## 3. GitHub Environments (for CD pipelines)
 
-**Location:** https://github.com/AtharvS7/PredictIQ/settings/environments
+**Location:** https://github.com/AtharvS7/Predictify/settings/environments
 
 > ⚠️ **The CD pipelines (staging + production) will NOT run until you push to `dev`
 > or create a version tag.** You can safely create empty environments now and add
@@ -87,7 +87,7 @@ Add these **Repository Secrets** (Actions → Secrets → New repository secret)
 | `VERCEL_PROJECT_ID`          | Vercel   | Project → Settings → General → Project ID |
 | `RAILWAY_TOKEN_STAGING`      | Railway  | Account → Tokens → Create Token |
 | `RAILWAY_TOKEN_PRODUCTION`   | Railway  | Account → Tokens → Create Token |
-| `PRODUCTION_API_URL`         | Railway  | Your deployed service URL (e.g. `https://predictiq-api.up.railway.app`) |
+| `PRODUCTION_API_URL`         | Railway  | Your deployed service URL (e.g. `https://Predictify-api.up.railway.app`) |
 | `STAGING_API_URL`            | Railway  | Your staging service URL |
 
 ---
@@ -135,13 +135,13 @@ The `cd-staging.yml` workflow triggers on pushes to `dev`.
 ### Railway (Backend hosting):
 1. Sign up at https://railway.app
 2. Connect your GitHub repository
-3. Create a service named `predictiq-backend-staging`
+3. Create a service named `Predictify-backend-staging`
 4. Set environment variables (same as `.env`)
 5. Copy the Railway token to GitHub Secret: `RAILWAY_TOKEN_STAGING`
 
 ### Vercel (Frontend hosting):
 1. Sign up at https://vercel.com
-2. Import the `PredictIQ` repo → set root to `frontend/`
+2. Import the `Predictify` repo → set root to `frontend/`
 3. Copy `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` to GitHub Secrets
 
 ---
@@ -149,7 +149,7 @@ The `cd-staging.yml` workflow triggers on pushes to `dev`.
 ## 8. Bitwarden Setup (Credential Sharing)
 
 1. Create a free Bitwarden organization at https://vault.bitwarden.com
-2. Create a collection named "PredictIQ"
+2. Create a collection named "Predictify"
 3. Add entries for:
    - Supabase URL
    - Supabase Anon Key
@@ -185,7 +185,7 @@ git push origin test/verify-ci
 
 If you already created branch protection and now you're blocked from pushing:
 
-1. Go to: https://github.com/AtharvS7/PredictIQ/settings/branches
+1. Go to: https://github.com/AtharvS7/Predictify/settings/branches
 2. Click **"Edit"** next to the `main` rule
 3. Find **"Do not allow bypassing the above settings"** → **UNCHECK it**
 4. Find **"Allow specified actors to bypass required pull requests"**:

@@ -1,5 +1,5 @@
 """
-PredictIQ ML Training Pipeline v2.0
+Predictify ML Training Pipeline v2.0
 =====================================
 GPU-accelerated training on RTX 3050 (CUDA).
 Trains 8 models with expanded hyperparameter grids.
@@ -53,7 +53,7 @@ import xgboost as xgb
 
 # -- Paths -------------------------------------------------------------
 ML_DIR = Path(__file__).parent
-DATA_CSV = ML_DIR / "predictiq_merged_dataset.csv"
+DATA_CSV = ML_DIR / "Predictify_merged_dataset.csv"
 OUT_DIR = ML_DIR / "artifacts"
 OUT_DIR.mkdir(exist_ok=True)
 
@@ -79,7 +79,7 @@ def log(msg: str) -> None:
 def load_data() -> pd.DataFrame:
     """Load and validate the 740-row multi-source training dataset."""
     log("=" * 60)
-    log("PredictIQ ML Training Pipeline v2.0 -- Starting")
+    log("Predictify ML Training Pipeline v2.0 -- Starting")
     log(f"Dataset: 740 projects (4 international sources)")
     log(f"XGBoost version: {xgb.__version__}")
     log(f"NumPy version:   {np.__version__}")
@@ -88,7 +88,7 @@ def load_data() -> pd.DataFrame:
 
     if not DATA_CSV.exists():
         log(f"ERROR: Dataset not found at {DATA_CSV}")
-        log("Copy predictiq_merged_dataset.csv to backend/ml/ and retry.")
+        log("Copy Predictify_merged_dataset.csv to backend/ml/ and retry.")
         sys.exit(1)
 
     df = pd.read_csv(DATA_CSV)
@@ -137,7 +137,7 @@ def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, list[st
     log(f"Samples per feature: {len(df) / len(feature_names):.1f}")
 
     # Save feature list (critical for inference)
-    feat_path = ML_DIR / "predictiq_features.json"
+    feat_path = ML_DIR / "Predictify_features.json"
     with open(feat_path, "w") as f:
         json.dump(feature_names, f, indent=2)
     log(f"Feature list saved -> {feat_path}")
@@ -163,7 +163,7 @@ def split_and_scale(
     X_test_s = scaler.transform(X_test)
 
     # Save scaler
-    scaler_path = ML_DIR / "predictiq_scaler.pkl"
+    scaler_path = ML_DIR / "Predictify_scaler.pkl"
     with open(scaler_path, "wb") as f:
         pickle.dump(scaler, f)
     log(f"Scaler saved -> {scaler_path}")
@@ -386,7 +386,7 @@ def plot_feature_importance(
 
     ax.set_xlabel("Feature Importance Score", fontsize=12)
     ax.set_title(
-        f"PredictIQ -- Top 20 Features ({model_name})\n"
+        f"Predictify -- Top 20 Features ({model_name})\n"
         f"Trained on {n_samples} software projects (4 international sources)",
         fontsize=13,
         fontweight="bold",
@@ -394,7 +394,7 @@ def plot_feature_importance(
     ax.grid(axis="x", alpha=0.3)
     plt.tight_layout()
 
-    plot_path = OUT_DIR / "predictiq_feature_importance.png"
+    plot_path = OUT_DIR / "Predictify_feature_importance.png"
     plt.savefig(plot_path, dpi=150, bbox_inches="tight")
     plt.close()
     log(f"  Feature importance plot saved -> {plot_path}")
@@ -473,12 +473,12 @@ def plot_predictions(
     axes[1].grid(alpha=0.3)
 
     plt.suptitle(
-        f"PredictIQ Model Evaluation ({n_samples} projects)",
+        f"Predictify Model Evaluation ({n_samples} projects)",
         fontsize=14, fontweight="bold", y=1.02
     )
     plt.tight_layout()
 
-    plot_path = OUT_DIR / "predictiq_model_evaluation.png"
+    plot_path = OUT_DIR / "Predictify_model_evaluation.png"
     plt.savefig(plot_path, dpi=150, bbox_inches="tight")
     plt.close()
     log(f"  Evaluation plots saved -> {plot_path}")
@@ -502,7 +502,7 @@ def save_artifacts(
     log("\n-- Step 10: Saving artifacts --")
 
     # Best model
-    model_path = ML_DIR / "predictiq_best_model.pkl"
+    model_path = ML_DIR / "Predictify_best_model.pkl"
     with open(model_path, "wb") as f:
         pickle.dump(best_model, f)
     size_kb = model_path.stat().st_size / 1024
@@ -538,9 +538,9 @@ def save_artifacts(
         "top_features": top_features,
         "feature_list": feature_names,
         "production": {
-            "model_file": "predictiq_best_model.pkl",
-            "scaler_file": "predictiq_scaler.pkl",
-            "features_file": "predictiq_features.json",
+            "model_file": "Predictify_best_model.pkl",
+            "scaler_file": "Predictify_scaler.pkl",
+            "features_file": "Predictify_features.json",
             "effort_range": {
                 "min": int(y_true.min()),
                 "max": int(y_true.max()),
@@ -557,7 +557,7 @@ def save_artifacts(
         },
     }
 
-    report_path = ML_DIR / "predictiq_model_report.json"
+    report_path = ML_DIR / "Predictify_model_report.json"
     with open(report_path, "w") as f:
         json.dump(report, f, indent=2)
     log(f"  Model report saved -> {report_path}")

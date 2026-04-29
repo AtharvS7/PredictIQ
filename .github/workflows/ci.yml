@@ -63,9 +63,9 @@ jobs:
       SUPABASE_ANON_KEY:         ${{ secrets.SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       DEFAULT_HOURLY_RATE_USD:   "75"
-      ML_MODEL_PATH:             ./ml/predictiq_best_model.pkl
-      ML_SCALER_PATH:            ./ml/predictiq_scaler.pkl
-      ML_FEATURES_PATH:          ./ml/predictiq_features.json
+      ML_MODEL_PATH:             ./ml/Predictify_best_model.pkl
+      ML_SCALER_PATH:            ./ml/Predictify_scaler.pkl
+      ML_FEATURES_PATH:          ./ml/Predictify_features.json
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -166,9 +166,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: "Build backend image"
-        run: docker build -f Dockerfile.backend -t predictiq-backend:ci .
+        run: docker build -f Dockerfile.backend -t Predictify-backend:ci .
       - name: "Build frontend image"
-        run: docker build -f Dockerfile.frontend -t predictiq-frontend:ci .
+        run: docker build -f Dockerfile.frontend -t Predictify-frontend:ci .
       - name: "Smoke test — backend starts cleanly"
         run: |
           docker run -d --name backend-ci \
@@ -177,7 +177,7 @@ jobs:
             -e SUPABASE_URL=http://localhost \
             -e SUPABASE_ANON_KEY=test \
             -e SUPABASE_SERVICE_ROLE_KEY=test \
-            predictiq-backend:ci
+            Predictify-backend:ci
           sleep 5
           docker logs backend-ci 2>&1 | head -30
           docker stop backend-ci || true

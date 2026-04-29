@@ -1,5 +1,5 @@
 """
-PredictIQ NLP Feature Extractor Service v2.4
+Predictify NLP Feature Extractor Service v2.4
 =============================================
 Industrial-grade, multi-strategy extraction engine for SRS, PRD,
 RFP, and proposal documents.

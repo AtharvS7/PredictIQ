@@ -1,5 +1,5 @@
 """
-PredictIQ — Cost Calculator Tests
+Predictify — Cost Calculator Tests
 Tests for IFPUG function point estimation and cost conversion.
 """
 import pytest

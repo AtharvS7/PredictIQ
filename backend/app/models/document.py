@@ -1,5 +1,5 @@
 """
-PredictIQ Pydantic Models — Document
+Predictify Pydantic Models — Document
 Schemas for document upload and metadata.
 """
 from pydantic import BaseModel, Field

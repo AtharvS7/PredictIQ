@@ -1,5 +1,5 @@
 """
-PredictIQ Pydantic Models — Estimate
+Predictify Pydantic Models — Estimate
 Request/response schemas for estimation endpoints.
 """
 from pydantic import BaseModel, Field

@@ -1,1 +1,1 @@
-# PredictIQ Backend Application
+# Predictify Backend Application

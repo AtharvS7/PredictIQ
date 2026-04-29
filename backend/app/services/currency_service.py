@@ -1,5 +1,5 @@
 """
-PredictIQ Currency Service
+Predictify Currency Service
 ===========================
 Fetches live exchange rates from fawazahmed0/exchange-api.
 No API key required. 200+ currencies. Daily updates via CDN.

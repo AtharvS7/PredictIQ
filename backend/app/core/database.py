@@ -1,5 +1,5 @@
 """
-PredictIQ Database Layer
+Predictify Database Layer
 Async connection pool for Neon PostgreSQL via asyncpg.
 """
 import asyncpg

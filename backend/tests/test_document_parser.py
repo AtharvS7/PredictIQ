@@ -1,5 +1,5 @@
 """
-PredictIQ — Document Parser Tests
+Predictify — Document Parser Tests
 Tests for PDF, DOCX, and TXT text extraction.
 """
 import io
@@ -76,7 +76,7 @@ class TestPdfParsing:
     def test_parse_pdf_returns_dict(self):
         """Parsing a valid PDF with sufficient text should return a dictionary."""
         pdf_bytes = self._make_minimal_pdf(
-            "This is a comprehensive test project document for PredictIQ software cost estimation."
+            "This is a comprehensive test project document for Predictify software cost estimation."
         )
         result = DocumentParser.parse(pdf_bytes, "application/pdf")
         assert isinstance(result, dict)

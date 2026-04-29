@@ -1,12 +1,12 @@
 # ═══════════════════════════════════════════════════════════════
-# PredictIQ — Developer Makefile
+# Predictify — Developer Makefile
 # Cross-platform targets (Windows + Unix via python -c)
 # ═══════════════════════════════════════════════════════════════
 
 .PHONY: install run test security-check clean graph help
 
 help: ## Show this help
-	@echo "PredictIQ Developer Commands:"
+	@echo "Predictify Developer Commands:"
 	@echo "  make install         Install all dependencies"
 	@echo "  make run             Start backend + frontend"
 	@echo "  make test            Run full test suite"

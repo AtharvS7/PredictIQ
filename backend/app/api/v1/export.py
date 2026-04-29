@@ -1,5 +1,5 @@
 """
-PredictIQ API — Export Endpoints
+Predictify API — Export Endpoints
 PDF and JSON export for estimates with multi-currency support.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -69,7 +69,7 @@ async def export_pdf(
         )
 
         safe_id = estimate_id[:8] if len(estimate_id) >= 8 else estimate_id
-        filename = f"PredictIQ_Estimate_{safe_id}_{currency_code}.pdf"
+        filename = f"Predictify_Estimate_{safe_id}_{currency_code}.pdf"
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
             media_type="application/pdf",

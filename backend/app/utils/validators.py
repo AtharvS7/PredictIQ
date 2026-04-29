@@ -1,5 +1,5 @@
 """
-PredictIQ — Shared Validation Utilities
+Predictify — Shared Validation Utilities
 Reusable validation functions used across backend services.
 """
 

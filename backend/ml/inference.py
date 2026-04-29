@@ -1,5 +1,5 @@
 """
-PredictIQ Production Inference Module v2.0
+Predictify Production Inference Module v2.0
 ============================================
 Loads trained model at server startup (via FastAPI lifespan).
 Provides predict() method used by ml_service.py.
@@ -31,7 +31,7 @@ _DEMO_EFFORT_LOOKUP: dict[str, dict[str, float]] = {
 }
 
 
-class PredictIQInference:
+class PredictifyInference:
     """
     Production ML inference engine.
 
@@ -54,10 +54,10 @@ class PredictIQInference:
         Load model artifacts from backend/ml/.
         Returns True if loaded successfully, False → demo mode.
         """
-        model_path = ML_DIR / "predictiq_best_model.pkl"
-        scaler_path = ML_DIR / "predictiq_scaler.pkl"
-        feature_path = ML_DIR / "predictiq_features.json"
-        report_path = ML_DIR / "predictiq_model_report.json"
+        model_path = ML_DIR / "Predictify_best_model.pkl"
+        scaler_path = ML_DIR / "Predictify_scaler.pkl"
+        feature_path = ML_DIR / "Predictify_features.json"
+        report_path = ML_DIR / "Predictify_model_report.json"
         training_report_path = ML_DIR / "training_report.json"
 
         missing = [
@@ -129,7 +129,7 @@ class PredictIQInference:
         Run inference on a feature dictionary.
 
         Args:
-            feature_dict: Keys matching predictiq_features.json.
+            feature_dict: Keys matching Predictify_features.json.
                           Missing keys are zero-filled.
 
         Returns:
@@ -288,4 +288,4 @@ class PredictIQInference:
 
 
 # Module-level singleton -- import this from anywhere
-predictor = PredictIQInference()
+predictor = PredictifyInference()

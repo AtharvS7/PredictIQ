@@ -1,5 +1,5 @@
 """
-PredictIQ Document Parser Service
+Predictify Document Parser Service
 ===================================
 Extracts raw text from PDF, DOCX, and TXT files stored in the
 Neon PostgreSQL database. Returns clean text for NLP extraction.
