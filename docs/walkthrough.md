@@ -1,6 +1,6 @@
 # Predictify — Technical Walkthrough
 
-> **Version:** 3.0.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** April 23, 2026
+> **Version:** 3.1.1 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** April 29, 2026
 
 ---
 
@@ -51,7 +51,7 @@
 | **Frontend** | React + TypeScript | 18.x / 5.x | SPA with component architecture |
 | **Build Tool** | Vite | 5.x | HMR dev server + production bundler |
 | **State** | Zustand | 5.x | Lightweight global state management |
-| **Charts** | Recharts | 2.x | Data visualization for results |
+| **Charts** | Chart.js + react-chartjs-2 | 4.x / 5.x | Theme-aware data visualization (bar, doughnut, radar, line) |
 | **Backend** | FastAPI + Uvicorn | 0.115+ | Async Python REST API |
 | **ML Engine** | RandomForest (scikit-learn) | 1.8 | Best-of-8 regression model for effort prediction (R² = 0.8953) |
 | **NLP** | Custom Cascade Engine | v2.4 | 4-strategy document parameter extraction |
@@ -918,7 +918,7 @@ Environment variables loaded via Pydantic `BaseSettings` from `backend/.env`:
 | `ML_MODEL_PATH` | ❌ | `./ml/Predictify_best_model.pkl` | Trained ML model path |
 | `DEFAULT_HOURLY_RATE_USD` | ❌ | `75.0` | Default billing rate |
 | `APP_ENV` | ❌ | `development` | Environment (skips validators in `test`/`ci`) |
-| `APP_VERSION` | ❌ | `3.0.0` | Current application version |
+| `APP_VERSION` | ❌ | `3.1.1` | Current application version |
 
 **Startup Validators:** The `Settings` class uses a Pydantic `model_validator` that warns at startup if `DATABASE_URL` is a placeholder value. This prevents accidentally running production with test credentials.
 
@@ -943,7 +943,7 @@ Environment variables loaded via Pydantic `BaseSettings` from `backend/.env`:
 | `GET` | `/api/v1/export/{id}/pdf` | ✅ | Export estimate as PDF |
 | `GET` | `/api/v1/export/{id}/excel` | ✅ | Export estimate as Excel |
 | `GET` | `/api/v1/export/{id}/csv` | ✅ | Export estimate as CSV |
-| `GET` | `/api/health` | ❌ | Health check (model status, uptime) |
+| `GET` | `/api/v1/health` | ❌ | Health check (model status, uptime) |
 
 ### 8.2 Core Request/Response Example
 
@@ -1739,7 +1739,7 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 ## 16. Changelog
 
-### v3.1.0 — April 24, 2026
+### v3.1.1 — April 24, 2026
 
 **Walkthrough Academic Enhancements (Professor Review Feedback)**
 - Added **Section 5.6: NLP Techniques & Evaluation Metrics** — documents regex-based NER, TF-IDF keyword scoring, section-aware parsing, with precision/recall metrics
@@ -1863,5 +1863,4 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 ---
 
-> *Built by Atharv Sawane & Team — Predictify v3.0.0*
-
+> *Built by Atharv Sawane & Team - Predictify v3.1.1*
