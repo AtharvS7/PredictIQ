@@ -1,47 +1,60 @@
-# ═══════════════════════════════════════════════════════════════
-# PredictIQ — Backend Dockerfile
-# Multi-stage build for FastAPI + ML model serving
-# ═══════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════
+# Predictify — Backend Dockerfile (Multi-stage)
+# ═══════════════════════════════════════════════════════════
+#
+# Build:  docker build -f Dockerfile.backend -t predictify-backend .
+# Run:    docker run -p 8000:8000 --env-file backend/.env predictify-backend
+# ═══════════════════════════════════════════════════════════
 
-# Stage 1: Builder — install Python dependencies
-FROM python:3.11-slim AS builder
+# ── Stage 1: Build dependencies ──────────────────────────
+FROM python:3.13-slim AS builder
 
 WORKDIR /build
 
-# Install system dependencies for ML packages
+# Install build tools for compiled packages (bcrypt, asyncpg, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc g++ && \
+    build-essential libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+COPY backend/requirements.lock.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.lock.txt
 
-# Stage 2: Runtime — lean production image
-FROM python:3.11-slim AS runtime
+# ── Stage 2: Production image ────────────────────────────
+FROM python:3.13-slim
+
+LABEL org.opencontainers.image.title="Predictify Backend"
+LABEL org.opencontainers.image.description="AI-Powered Software Cost Estimator API"
+LABEL org.opencontainers.image.version="3.1.0"
+
+# Runtime deps only (libpq for asyncpg)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -r predictify && useradd -r -g predictify -d /app predictify
 
 WORKDIR /app
 
-# Copy installed packages from builder
+# Copy installed Python packages from builder
 COPY --from=builder /install /usr/local
 
 # Copy application code
 COPY backend/ .
 
-# Copy ML model artifacts
-COPY backend/ml/predictiq_best_model.pkl ./ml/predictiq_best_model.pkl
-COPY backend/ml/predictiq_scaler.pkl ./ml/predictiq_scaler.pkl
-COPY backend/ml/predictiq_features.json ./ml/predictiq_features.json
-COPY backend/ml/training_report.json ./ml/training_report.json
-COPY backend/ml/predictiq_merged_dataset.csv ./ml/predictiq_merged_dataset.csv
+# ML model artifacts are mounted as a volume at runtime (see docker-compose.yml)
+# but include defaults for standalone builds
+COPY backend/ml/ ./ml/
 
-# Create non-root user for security
-RUN adduser --disabled-password --gecos "" appuser && \
-    chown -R appuser:appuser /app
-USER appuser
+# Own the app directory
+RUN chown -R predictify:predictify /app
+
+USER predictify
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
 EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')" || exit 1
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

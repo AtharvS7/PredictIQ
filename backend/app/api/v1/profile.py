@@ -13,6 +13,14 @@ from app.core.database import get_db
 router = APIRouter()
 logger = structlog.get_logger()
 
+# ── Allowlisted columns that may be updated via PATCH/POST ──────
+# This prevents SQL injection by ensuring only known column names
+# are interpolated into queries (never user-supplied strings).
+ALLOWED_PROFILE_COLUMNS = frozenset({
+    "full_name", "avatar_url", "hourly_rate_usd",
+    "currency", "theme", "timezone",
+})
+
 
 class ProfileUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -21,6 +29,31 @@ class ProfileUpdate(BaseModel):
     currency: Optional[str] = None
     theme: Optional[str] = None
     timezone: Optional[str] = None
+
+
+def _build_update_query(updates: dict) -> tuple[str, list]:
+    """Build a safe UPDATE query using only allowlisted column names.
+
+    Returns:
+        Tuple of (query_string, list_of_parameter_values).
+        Parameter $1 is always the user id.
+    """
+    safe_updates = {
+        k: v for k, v in updates.items()
+        if k in ALLOWED_PROFILE_COLUMNS
+    }
+    if not safe_updates:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    set_parts = []
+    values = []
+    for idx, (col, val) in enumerate(safe_updates.items(), start=2):
+        set_parts.append(f"{col} = ${idx}")
+        values.append(val)
+
+    set_clause = ", ".join(set_parts)
+    query = f"UPDATE profiles SET {set_clause}, updated_at = NOW() WHERE id = $1 RETURNING *"
+    return query, values
 
 
 @router.get("/profile")
@@ -52,9 +85,8 @@ async def create_or_update_profile(
         # Update existing profile
         updates = {k: v for k, v in data.model_dump().items() if v is not None}
         if updates:
-            set_clause = ", ".join(f"{k} = ${i+2}" for i, k in enumerate(updates.keys()))
-            query = f"UPDATE profiles SET {set_clause}, updated_at = NOW() WHERE id = $1 RETURNING *"
-            row = await pool.fetchrow(query, user.id, *updates.values())
+            query, values = _build_update_query(updates)
+            row = await pool.fetchrow(query, user.id, *values)
         else:
             row = existing
     else:
@@ -88,9 +120,8 @@ async def patch_profile(
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
 
-    set_clause = ", ".join(f"{k} = ${i+2}" for i, k in enumerate(updates.keys()))
-    query = f"UPDATE profiles SET {set_clause}, updated_at = NOW() WHERE id = $1 RETURNING *"
-    row = await pool.fetchrow(query, user.id, *updates.values())
+    query, values = _build_update_query(updates)
+    row = await pool.fetchrow(query, user.id, *values)
 
     if not row:
         raise HTTPException(status_code=404, detail="Profile not found")

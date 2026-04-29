@@ -21,7 +21,7 @@ async def init_db_pool():
             max_size=10,
             command_timeout=30,
         )
-        logger.info("database_pool_created", dsn=settings.DATABASE_URL[:40] + "...")
+        logger.info("database_pool_created", min_size=2, max_size=10)
 
 
 async def close_db_pool():
