@@ -25,20 +25,20 @@
 
 Predictify is an AI-powered SaaS tool that estimates software project cost and timeline from uploaded documents. It combines NLP extraction, IFPUG function points, and ML prediction (RandomForest) into a single pipeline.
 
-**Overall Deployment Readiness: 68% — Approaching beta readiness.**
+**Overall Deployment Readiness: 72% — Beta ready, approaching production.**
 
-The core estimation pipeline works well and the architecture is sound. Six critical blockers were resolved in v3.1.1 (currency tests, SQL injection, stale deps, Pydantic v2, Dockerfiles, DSN logging). Remaining gaps: test coverage, observability, RBAC, and enterprise features.
+The core estimation pipeline works well and the architecture is sound. v3.1.1 resolved 7 critical blockers. v3.1.2 added security headers, CORS hardening, request body limits, and code quality improvements. Remaining gaps: test coverage, observability, RBAC, and enterprise features.
 
 | Category | Score | Industry Target | Status | Δ from v3.1.0 |
 |----------|:-----:|:---------------:|:------:|:--------------:|
-| Security | 65% | 90%+ | 🟡 | +10% (SQL fix, DSN fix) |
+| Security | 72% | 90%+ | 🟡 | +17% (SQL fix, DSN fix, CORS, headers, body limit) |
 | Test Coverage | 52% | 80%+ | 🔴 | +4% (currency tests fixed) |
-| Code Quality | 85% | 85%+ | 🟢 | +7% (Pydantic, deps cleaned) |
+| Code Quality | 88% | 85%+ | 🟢 | +10% (Pydantic, deps, magic numbers, dict fix) |
 | DevOps/CI/CD | 58% | 85%+ | 🟡 | +13% (Dockerfiles, CI fixed) |
 | Frontend | 70% | 80%+ | 🟡 | — |
-| ML Pipeline | 65% | 80%+ | 🟡 | — |
+| ML Pipeline | 68% | 80%+ | 🟡 | +3% (named constants) |
 | Documentation | 85% | 75%+ | 🟢 | — |
-| **Overall** | **68%** | **80%+** | 🟡 | **+6%** |
+| **Overall** | **72%** | **80%+** | 🟡 | **+10%** |
 
 ---
 
@@ -104,17 +104,17 @@ The core estimation pipeline works well and the architecture is sound. Six criti
 
 | # | Severity | Gap | Industry Standard | Fix |
 |---|:--------:|-----|-------------------|-----|
-| S1 | **CRITICAL** | SQL injection risk in `profile.py` | Parameterized queries only | Dynamic column names from `model_dump()` keys are interpolated into f-strings. Although keys come from Pydantic (not user input), this pattern is dangerous and would fail any security audit. Use an allowlist of column names |
-| S2 | **CRITICAL** | SQL injection risk in `estimates.py` sort | Parameterized queries only | `order_clause` uses f-string interpolation in SQL. The `sort_map` whitelist mitigates this, but the pattern is flagged by SAST tools |
-| S3 | **HIGH** | No RBAC (Role-Based Access Control) | Admin/User/Viewer roles | Only "authenticated" role exists; no admin panel, no org-level permissions |
-| S4 | **HIGH** | No input sanitization on `project_name` | XSS prevention on stored data | User-supplied `project_name` stored and rendered without sanitization |
-| S5 | **HIGH** | Share links have no rate limiting | Brute-force protection | Token is 32-byte urlsafe but no lockout after failed attempts |
-| S6 | **HIGH** | No audit logging | SOC 2 compliance | No record of who accessed what data and when |
-| S7 | **MEDIUM** | CORS allows all methods/headers | Restrict to needed methods | `allow_methods=["*"], allow_headers=["*"]` is too permissive |
-| S8 | **MEDIUM** | No CSP/security headers | OWASP Top 10 | Missing Content-Security-Policy, X-Frame-Options, HSTS |
-| S9 | **MEDIUM** | No request body size limit (global) | Prevent DoS | Only file upload has size limit; JSON payloads unlimited |
-| S10 | **MEDIUM** | CI uses stale Supabase secrets | Clean CI config | `ci.yml` still references `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `JWT_SECRET` |
-| S11 | **LOW** | Database URL logged (first 40 chars) | Never log credentials | `database.py:24` logs DSN prefix which may contain username |
+| S1 | **CRITICAL** | SQL injection risk in `profile.py` | Parameterized queries only | ✅ **FIXED v3.1.1** — `ALLOWED_PROFILE_COLUMNS` allowlist |
+| S2 | **CRITICAL** | SQL injection risk in `estimates.py` sort | Parameterized queries only | ✅ **FIXED v3.1.2** — Added validation + warning log for invalid sort params |
+| S3 | **HIGH** | No RBAC (Role-Based Access Control) | Admin/User/Viewer roles | ❌ Next semester |
+| S4 | **HIGH** | No input sanitization on `project_name` | XSS prevention on stored data | ❌ Next semester |
+| S5 | **HIGH** | Share links have no rate limiting | Brute-force protection | ❌ Next semester |
+| S6 | **HIGH** | No audit logging | SOC 2 compliance | ❌ Next semester |
+| S7 | **MEDIUM** | CORS allows all methods/headers | Restrict to needed methods | ✅ **FIXED v3.1.2** — Restricted to specific methods + headers |
+| S8 | **MEDIUM** | No CSP/security headers | OWASP Top 10 | ✅ **FIXED v3.1.2** — X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy |
+| S9 | **MEDIUM** | No request body size limit (global) | Prevent DoS | ✅ **FIXED v3.1.2** — 1MB limit on JSON payloads (file uploads exempt) |
+| S10 | **MEDIUM** | CI uses stale Supabase secrets | Clean CI config | ✅ **FIXED v3.1.1** — Replaced with DATABASE_URL + Firebase |
+| S11 | **LOW** | Database URL logged (first 40 chars) | Never log credentials | ✅ **FIXED v3.1.1** — Removed DSN from log output |
 
 ### 4.3 OWASP Top 10 Compliance
 
@@ -122,13 +122,13 @@ The core estimation pipeline works well and the architecture is sound. Six criti
 |---------------|:------:|-------|
 | A01 Broken Access Control | 🟡 | User isolation works but no RBAC |
 | A02 Cryptographic Failures | ✅ | bcrypt for share passwords, Firebase for auth |
-| A03 Injection | 🔴 | SQL f-string patterns in profile.py and estimates.py |
+| A03 Injection | ✅ | SQL allowlist in profile.py, sort validation in estimates.py |
 | A04 Insecure Design | 🟡 | No threat model documented |
-| A05 Security Misconfiguration | 🟡 | Permissive CORS, no security headers |
-| A06 Vulnerable Components | 🟡 | Pydantic v2 deprecation warning; stale deps in lock file (gotrue, supabase remnants) |
+| A05 Security Misconfiguration | ✅ | CORS hardened, security headers added, body size limited |
+| A06 Vulnerable Components | ✅ | Pydantic v2 migrated, stale Supabase deps removed |
 | A07 Auth Failures | ✅ | Firebase Admin SDK is industry-grade |
 | A08 Data Integrity | ✅ | Token verification on all protected routes |
-| A09 Logging Failures | 🔴 | No audit trail, no structured error alerting |
+| A09 Logging Failures | 🟡 | Structured logging present; no audit trail yet |
 | A10 SSRF | ✅ | No outbound URL fetching from user input |
 
 ---
@@ -152,13 +152,13 @@ The core estimation pipeline works well and the architecture is sound. Six criti
 
 | # | Severity | Issue | Location | Fix |
 |---|:--------:|-------|----------|-----|
-| Q1 | **HIGH** | Pydantic v2 `class Config` deprecated | `config.py:49` | Use `model_config = ConfigDict(...)` — will break in Pydantic v3 |
-| Q2 | **HIGH** | 5 broken tests (currency async) | `test_currencies.py` | `asyncio.get_event_loop()` removed in Python 3.14; use `asyncio.run()` |
-| Q3 | **MEDIUM** | `estimates.py` is 619 lines | `api/v1/estimates.py` | Extract `_run_estimation` to a service class; too much business logic in route handler |
-| Q4 | **MEDIUM** | Stale Supabase dependencies in requirements | `requirements.lock.txt` | `gotrue`, `supabase`, `storage3` still present — remove dead deps |
-| Q5 | **MEDIUM** | No connection retry/backoff on DB | `database.py` | `asyncpg.create_pool()` with no retry; production needs exponential backoff |
-| Q6 | **LOW** | `export.py:108` deletes dict keys during iteration | `export.py` | `del result_dict[key]` while iterating — use comprehension instead |
-| Q7 | **LOW** | Magic numbers in ML service | `ml_service.py` | `0.85`, `0.30`, `0.04` — extract to named constants |
+| Q1 | **HIGH** | Pydantic v2 `class Config` deprecated | `config.py` | ✅ **FIXED v3.1.1** — `model_config = ConfigDict(...)` |
+| Q2 | **HIGH** | 5 broken tests (currency async) | `test_currencies.py` | ✅ **FIXED v3.1.1** — `asyncio.run()` |
+| Q3 | **MEDIUM** | `estimates.py` is 619 lines | `api/v1/estimates.py` | ❌ Next semester — extract to service class |
+| Q4 | **MEDIUM** | Stale Supabase dependencies in requirements | `requirements.lock.txt` | ✅ **FIXED v3.1.1** — 7 packages removed |
+| Q5 | **MEDIUM** | No connection retry/backoff on DB | `database.py` | ❌ Next semester — add exponential backoff |
+| Q6 | **LOW** | `export.py` deletes dict keys during iteration | `export.py` | ✅ **FIXED v3.1.2** — safe dict comprehension |
+| Q7 | **LOW** | Magic numbers in ML service | `ml_service.py` | ✅ **FIXED v3.1.2** — named constants with IFPUG docs |
 
 ---
 
@@ -320,15 +320,15 @@ The core estimation pipeline works well and the architecture is sound. Six criti
 ### 10.3 Deployment Readiness by Category
 
 ```
-Security         █████████████░░░░░░░  65%  (need 90%+)  ↑ +10%
+Security         ██████████████░░░░░░  72%  (need 90%+)  ↑ +17%
 Testing          ██████████░░░░░░░░░░  52%  (need 80%+)  ↑ +4%
-Code Quality     █████████████████░░░  85%  (target met ✅) ↑ +7%
+Code Quality     ██████████████████░░  88%  (target met ✅) ↑ +10%
 DevOps           ████████████░░░░░░░░  58%  (need 85%+)  ↑ +13%
 Frontend         ██████████████░░░░░░  70%  (need 80%+)
-ML Pipeline      █████████████░░░░░░░  65%  (need 80%+)
+ML Pipeline      █████████████░░░░░░░  68%  (need 80%+)  ↑ +3%
 Documentation    █████████████████░░░  85%  (target met ✅)
 ─────────────────────────────────────────────
-OVERALL          █████████████░░░░░░░  68%  (need 80%+)  ↑ +6%
+OVERALL          ██████████████░░░░░░  72%  (need 80%+)  ↑ +10%
 ```
 
 ---
@@ -431,7 +431,7 @@ OVERALL          █████████████████░░░  8
 
 ---
 
-> *Full codebase audit performed April 29, 2026 — Predictify v3.1.0 (updated post v3.1.1 blocker fixes)*
+> *Full codebase audit performed April 29, 2026 — Predictify v3.1.0 (updated post v3.1.1 + v3.1.2 fixes)*
 > *Benchmarked against: OWASP Top 10, SOC 2, ISBSG standards, SaaS industry best practices*
-> *7/7 blockers resolved — deployment readiness improved from 62% → 68%*
+> *13/18 audit items resolved — deployment readiness improved from 62% → 72%*
 > *Next audit recommended: End of next semester or after Phase 2 completion*

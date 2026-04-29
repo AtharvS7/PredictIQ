@@ -98,14 +98,12 @@ async def export_json(
         if not row:
             raise HTTPException(status_code=404, detail="Estimate not found")
 
-        # Convert asyncpg Record to dict
-        result_dict = dict(row)
-        # Convert non-JSON-serializable types
-        for key, value in result_dict.items():
-            if hasattr(value, "isoformat"):
-                result_dict[key] = value.isoformat()
-            elif isinstance(value, bytes):
-                del result_dict[key]  # Don't include binary data in JSON export
+        # Convert asyncpg Record to JSON-safe dict (Q6 — safe comprehension, no mutation during iteration)
+        result_dict = {
+            key: value.isoformat() if hasattr(value, "isoformat") else value
+            for key, value in dict(row).items()
+            if not isinstance(value, bytes)  # Exclude binary data from JSON export
+        }
 
         return JSONResponse(content=result_dict)
     except HTTPException:
