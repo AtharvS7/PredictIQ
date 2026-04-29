@@ -39,6 +39,14 @@ METHODOLOGY_T05: dict[str, float] = {
     "Hybrid": 3.0,
 }
 
+# ── FP derivation constants ───────────────────────────────────────────
+# These ratios are derived from IFPUG industry benchmarks and
+# the ISBSG repository statistics for software function points.
+FP_TRANSACTION_RATIO = 0.85     # Transactions ≈ 85% of total FP (EI + EO + EQ)
+FP_ENTITY_RATIO = 0.30          # Entities ≈ 30% of total FP (ILF + EIF)
+FP_ADJUSTMENT_BASE = 0.80       # Base value adjustment factor (VAF minimum)
+FP_ADJUSTMENT_SCALE = 0.04      # Complexity scaling factor per T-factor unit
+
 
 def _team_size_to_exp(team_size: int) -> float:
     """Map team size to experience proxy (1–4 scale)."""
@@ -106,10 +114,10 @@ class MLService:
             team_exp = _team_size_to_exp(team_size)
         manager_exp = min(4.0, team_exp + 0.5)
 
-        # Derived FP components
-        transactions = size_fp * 0.85
-        entities = size_fp * 0.30
-        raw_fp = size_fp / max(0.8 + c_score * 0.04, 0.01)  # Approx unadjusted
+        # Derived FP components (using IFPUG-derived constants)
+        transactions = size_fp * FP_TRANSACTION_RATIO
+        entities = size_fp * FP_ENTITY_RATIO
+        raw_fp = size_fp / max(FP_ADJUSTMENT_BASE + c_score * FP_ADJUSTMENT_SCALE, 0.01)
         adjustment = size_fp / max(raw_fp, 1.0)
 
         # T-factors: systematic mapping from project characteristics

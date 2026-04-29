@@ -347,7 +347,7 @@ async def list_estimates(
     try:
         pool = await get_db()
 
-        # Build sort clause
+        # Build sort clause — allowlist validated to prevent SQL injection (S2)
         sort_map = {
             "created_at_desc": "created_at DESC",
             "created_at_asc": "created_at ASC",
@@ -355,6 +355,8 @@ async def list_estimates(
             "cost_desc": "cost_likely_usd DESC",
             "risk_desc": "risk_score DESC",
         }
+        if sort and sort not in sort_map:
+            logger.warning("invalid_sort_param", sort=sort, allowed=list(sort_map.keys()))
         order_clause = sort_map.get(sort, "created_at DESC")
         offset = (page - 1) * per_page
 

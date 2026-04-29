@@ -91,14 +91,50 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS middleware
+# CORS middleware — restrict to needed methods and headers only (S7)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Authorization", "Content-Type", "Accept",
+        "X-Request-ID", "X-Requested-With",
+    ],
+    expose_headers=["X-Request-ID"],
 )
+
+# Maximum request body size (1 MB for JSON payloads) — prevents DoS (S9)
+MAX_BODY_SIZE = 1 * 1024 * 1024  # 1 MB
+
+
+@app.middleware("http")
+async def limit_request_body(request: Request, call_next) -> Response:
+    """Reject requests with body larger than MAX_BODY_SIZE (except file uploads)."""
+    content_length = request.headers.get("content-length")
+    # Skip limit for multipart/form-data (file uploads have their own 10MB limit)
+    content_type = request.headers.get("content-type", "")
+    if content_length and "multipart" not in content_type:
+        if int(content_length) > MAX_BODY_SIZE:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=413,
+                content={"detail": "Request body too large (max 1MB)"},
+            )
+    return await call_next(request)
+
+
+# Security headers middleware — OWASP best practices (S8)
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next) -> Response:
+    """Add security headers to every response."""
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    return response
 
 
 # Request ID middleware — adds X-Request-ID to every response
