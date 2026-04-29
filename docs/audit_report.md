@@ -25,20 +25,20 @@
 
 Predictify is an AI-powered SaaS tool that estimates software project cost and timeline from uploaded documents. It combines NLP extraction, IFPUG function points, and ML prediction (RandomForest) into a single pipeline.
 
-**Overall Deployment Readiness: 62% — NOT ready for production client deployment.**
+**Overall Deployment Readiness: 68% — Approaching beta readiness.**
 
-The core estimation pipeline works well and the architecture is sound, but critical gaps in security hardening, test coverage, observability, and containerization must be addressed before pitching to enterprise clients.
+The core estimation pipeline works well and the architecture is sound. Six critical blockers were resolved in v3.1.1 (currency tests, SQL injection, stale deps, Pydantic v2, Dockerfiles, DSN logging). Remaining gaps: test coverage, observability, RBAC, and enterprise features.
 
-| Category | Score | Industry Target | Status |
-|----------|:-----:|:---------------:|:------:|
-| Security | 55% | 90%+ | 🔴 |
-| Test Coverage | 48% | 80%+ | 🔴 |
-| Code Quality | 78% | 85%+ | 🟡 |
-| DevOps/CI/CD | 45% | 85%+ | 🔴 |
-| Frontend | 70% | 80%+ | 🟡 |
-| ML Pipeline | 65% | 80%+ | 🟡 |
-| Documentation | 85% | 75%+ | 🟢 |
-| **Overall** | **62%** | **80%+** | 🔴 |
+| Category | Score | Industry Target | Status | Δ from v3.1.0 |
+|----------|:-----:|:---------------:|:------:|:--------------:|
+| Security | 65% | 90%+ | 🟡 | +10% (SQL fix, DSN fix) |
+| Test Coverage | 52% | 80%+ | 🔴 | +4% (currency tests fixed) |
+| Code Quality | 85% | 85%+ | 🟢 | +7% (Pydantic, deps cleaned) |
+| DevOps/CI/CD | 58% | 85%+ | 🟡 | +13% (Dockerfiles, CI fixed) |
+| Frontend | 70% | 80%+ | 🟡 | — |
+| ML Pipeline | 65% | 80%+ | 🟡 | — |
+| Documentation | 85% | 75%+ | 🟢 | — |
+| **Overall** | **68%** | **80%+** | 🟡 | **+6%** |
 
 ---
 
@@ -320,44 +320,46 @@ The core estimation pipeline works well and the architecture is sound, but criti
 ### 10.3 Deployment Readiness by Category
 
 ```
-Security         ████████░░░░░░░░░░░░  55%  (need 90%+)
-Testing          ██████░░░░░░░░░░░░░░  48%  (need 80%+)
-Code Quality     ████████████████░░░░  78%  (need 85%+)
-DevOps           █████████░░░░░░░░░░░  45%  (need 85%+)
+Security         █████████████░░░░░░░  65%  (need 90%+)  ↑ +10%
+Testing          ██████████░░░░░░░░░░  52%  (need 80%+)  ↑ +4%
+Code Quality     █████████████████░░░  85%  (target met ✅) ↑ +7%
+DevOps           ████████████░░░░░░░░  58%  (need 85%+)  ↑ +13%
 Frontend         ██████████████░░░░░░  70%  (need 80%+)
 ML Pipeline      █████████████░░░░░░░  65%  (need 80%+)
 Documentation    █████████████████░░░  85%  (target met ✅)
 ─────────────────────────────────────────────
-OVERALL          ████████████░░░░░░░░  62%  (need 80%+)
+OVERALL          █████████████░░░░░░░  68%  (need 80%+)  ↑ +6%
 ```
 
 ---
 
 ## 11. Deployment Readiness Score
 
-### 11.1 Blocker Issues (Must Fix Before Any Client Demo)
+### 11.1 Blocker Issues — All Resolved ✅ (v3.1.1)
 
-| # | Issue | Category | Effort |
-|---|-------|----------|:------:|
-| B1 | Fix 5 broken currency tests | Testing | 1 hour |
-| B2 | Fix SQL f-string patterns in profile.py | Security | 2 hours |
-| B3 | Remove stale Supabase env vars from CI | DevOps | 1 hour |
-| B4 | Remove dead Supabase deps from requirements.lock | Code Quality | 1 hour |
-| B5 | Fix Pydantic v2 deprecation warning | Code Quality | 30 min |
-| B6 | Add Dockerfile.backend + Dockerfile.frontend | DevOps | 3 hours |
-| B7 | Stop logging database DSN | Security | 10 min |
+| # | Issue | Category | Status | Commit |
+|---|-------|----------|:------:|--------|
+| B1 | Fix 5 broken currency tests | Testing | ✅ FIXED | `asyncio.run()` replaces deprecated `get_event_loop()` |
+| B2 | Fix SQL f-string patterns in profile.py | Security | ✅ FIXED | `ALLOWED_PROFILE_COLUMNS` allowlist + `_build_update_query()` |
+| B3 | Remove stale Supabase env vars from CI | DevOps | ✅ FIXED | Replaced with `DATABASE_URL` + `FIREBASE_CREDENTIALS_JSON` |
+| B4 | Remove dead Supabase deps from requirements.lock | Code Quality | ✅ FIXED | Removed 7 packages: gotrue, supabase, storage3, realtime, postgrest, supafunc, deprecation |
+| B5 | Fix Pydantic v2 deprecation warning | Code Quality | ✅ FIXED | `class Config` → `model_config = ConfigDict(...)` |
+| B6 | Add Dockerfile.backend + Dockerfile.frontend | DevOps | ✅ FIXED | Multi-stage builds, non-root user, healthchecks, Nginx SPA routing |
+| B7 | Stop logging database DSN | Security | ✅ FIXED | Removed DSN from `database.py` log output |
 
-**Estimated effort to clear blockers: ~8 hours (1 sprint day)**
+**All 7 blockers resolved in a single commit — 111/111 tests passing.**
 
 ### 11.2 Pre-Client-Pitch Checklist
 
 | Check | Status |
 |-------|:------:|
-| All tests pass | ❌ (5 failing) |
-| Zero known security vulnerabilities | ❌ (SQL patterns) |
-| Containerized deployment | ❌ (no Dockerfiles) |
-| CI/CD pipeline green | ❌ (stale env vars) |
-| Monitoring in place | ❌ |
+| All tests pass (111/111) | ✅ |
+| SQL injection patterns fixed | ✅ |
+| Containerized deployment (Dockerfiles) | ✅ |
+| CI/CD env vars updated | ✅ |
+| Pydantic deprecation resolved | ✅ |
+| Monitoring in place | ❌ (next semester) |
+| RBAC / org management | ❌ (next semester) |
 | Documentation complete | ✅ |
 | Core features working | ✅ |
 | Error handling comprehensive | ✅ |
@@ -370,19 +372,19 @@ OVERALL          ████████████░░░░░░░░  6
 
 | Task | Priority | Effort | Impact |
 |------|:--------:|:------:|:------:|
-| Fix all blocker issues (§11.1) | P0 | 8h | Unblocks everything |
+| ~~Fix all blocker issues (§11.1)~~ | ~~P0~~ | ~~8h~~ | ✅ **DONE in v3.1.1** |
 | Add API integration tests (pytest + httpx) | P0 | 16h | 30% coverage boost |
 | Add frontend tests (Vitest + Testing Library) | P0 | 20h | 25% coverage boost |
 | Implement RBAC (admin/user/viewer roles) | P0 | 24h | Enterprise requirement |
 | Add audit logging middleware | P0 | 8h | SOC 2 requirement |
-| Fix SQL injection patterns (use allowlist) | P0 | 4h | Security compliance |
+| ~~Fix SQL injection patterns (use allowlist)~~ | ~~P0~~ | ~~4h~~ | ✅ **DONE in v3.1.1** |
 | Add security headers middleware (CSP, HSTS) | P1 | 4h | OWASP compliance |
 
 ### Phase 2: Infrastructure (Weeks 4-6) — DevOps & Scaling
 
 | Task | Priority | Effort | Impact |
 |------|:--------:|:------:|:------:|
-| Create proper Dockerfiles | P0 | 8h | Containerized deployment |
+| ~~Create proper Dockerfiles~~ | ~~P0~~ | ~~8h~~ | ✅ **DONE in v3.1.1** |
 | Add Alembic for DB migrations | P0 | 12h | Safe schema changes |
 | Integrate Sentry for error tracking | P1 | 4h | Production observability |
 | Move file storage to S3/R2 | P1 | 16h | DB performance |
@@ -429,6 +431,7 @@ OVERALL          █████████████████░░░  8
 
 ---
 
-> *Full codebase audit performed April 29, 2026 — Predictify v3.1.0*
+> *Full codebase audit performed April 29, 2026 — Predictify v3.1.0 (updated post v3.1.1 blocker fixes)*
 > *Benchmarked against: OWASP Top 10, SOC 2, ISBSG standards, SaaS industry best practices*
+> *7/7 blockers resolved — deployment readiness improved from 62% → 68%*
 > *Next audit recommended: End of next semester or after Phase 2 completion*
