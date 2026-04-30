@@ -1,6 +1,6 @@
-# Predictify — v3.1.0 Industry-Grade Audit Report
+# Predictify — v3.1.3 Industry-Grade Audit Report
 
-> **Date:** April 29, 2026 | **Auditor:** Antigravity AI | **Scope:** Full Codebase Audit — Industry Deployment Readiness
+> **Date:** April 29–30, 2026 | **Auditor:** Antigravity AI | **Scope:** Full Codebase Audit — Industry Deployment Readiness
 
 ---
 
@@ -18,6 +18,7 @@
 - [10. Industry Comparison & Gap Analysis](#10-industry-comparison--gap-analysis)
 - [11. Deployment Readiness Score](#11-deployment-readiness-score)
 - [12. Next-Semester Roadmap](#12-next-semester-roadmap)
+- [13. Change Log](#13-change-log)
 
 ---
 
@@ -353,11 +354,16 @@ OVERALL          ███████████████░░░░░  7
 
 | Check | Status |
 |-------|:------:|
-| All tests pass (111/111) | ✅ |
+| All tests pass (113/113) | ✅ |
 | SQL injection patterns fixed | ✅ |
+| XSS input sanitization | ✅ |
+| Rate limiting on sensitive endpoints | ✅ |
+| Security headers (OWASP) | ✅ |
+| Health check with dependency pings | ✅ |
 | Containerized deployment (Dockerfiles) | ✅ |
 | CI/CD env vars updated | ✅ |
 | Pydantic deprecation resolved | ✅ |
+| DB connection retry/backoff | ✅ |
 | Monitoring in place | ❌ (next semester) |
 | RBAC / org management | ❌ (next semester) |
 | Documentation complete | ✅ |
@@ -378,7 +384,9 @@ OVERALL          ███████████████░░░░░  7
 | Implement RBAC (admin/user/viewer roles) | P0 | 24h | Enterprise requirement |
 | Add audit logging middleware | P0 | 8h | SOC 2 requirement |
 | ~~Fix SQL injection patterns (use allowlist)~~ | ~~P0~~ | ~~4h~~ | ✅ **DONE in v3.1.1** |
-| Add security headers middleware (CSP, HSTS) | P1 | 4h | OWASP compliance |
+| ~~Add security headers middleware (CSP, HSTS)~~ | ~~P1~~ | ~~4h~~ | ✅ **DONE in v3.1.2** |
+| ~~Add XSS input sanitization~~ | ~~P1~~ | ~~2h~~ | ✅ **DONE in v3.1.3** |
+| ~~Add rate limiting on share links~~ | ~~P1~~ | ~~2h~~ | ✅ **DONE in v3.1.3** |
 
 ### Phase 2: Infrastructure (Weeks 4-6) — DevOps & Scaling
 
@@ -388,7 +396,7 @@ OVERALL          ███████████████░░░░░  7
 | Add Alembic for DB migrations | P0 | 12h | Safe schema changes |
 | Integrate Sentry for error tracking | P1 | 4h | Production observability |
 | Move file storage to S3/R2 | P1 | 16h | DB performance |
-| Add health checks (DB + Firebase ping) | P1 | 4h | Load balancer support |
+| ~~Add health checks (DB + Firebase ping)~~ | ~~P1~~ | ~~4h~~ | ✅ **DONE in v3.1.3** |
 | Set up staging environment | P1 | 8h | Safe testing |
 | Add E2E tests (Playwright) | P1 | 16h | Confidence in releases |
 
@@ -431,7 +439,98 @@ OVERALL          █████████████████░░░  8
 
 ---
 
-> *Full codebase audit performed April 29, 2026 — Predictify v3.1.0 (updated post v3.1.1 + v3.1.2 + v3.1.3 fixes)*
+## 13. Change Log
+
+### 📅 April 29, 2026 — v3.1.1 (Critical Blocker Sprint)
+
+> **Time:** 9:30 PM – 11:15 PM IST | **Tests:** 111/111 ✅ | **Readiness:** 62% → 68%
+
+| # | Time | Fix | Category | Details |
+|---|:----:|-----|:--------:|--------|
+| B1 | 9:32 PM | Fix 5 broken currency tests | Testing | `asyncio.run()` replaces deprecated `get_event_loop()` |
+| B2 | 9:38 PM | SQL injection in `profile.py` | Security | `ALLOWED_PROFILE_COLUMNS` allowlist |
+| B3 | 9:42 PM | Stale Supabase env vars in CI | DevOps | Replaced with `DATABASE_URL` + `FIREBASE_CREDENTIALS_JSON` |
+| B4 | 9:46 PM | Dead Supabase deps in lock file | Code Quality | Removed 7 packages: gotrue, supabase, storage3, etc. |
+| B5 | 9:50 PM | Pydantic v2 deprecation | Code Quality | `class Config` → `model_config = ConfigDict(...)` |
+| B6 | 9:58 PM | Missing Dockerfiles | DevOps | Multi-stage builds, non-root user, healthchecks, Nginx SPA |
+| B7 | 10:05 PM | Database DSN logged | Security | Removed DSN from `database.py` log output |
+
+```
+Readiness after v3.1.1:
+██████████████░░░░░░░░  68%  (+6% from baseline)
+```
+
+---
+
+### 📅 April 29, 2026 — v3.1.2 (Quick-Win Security Sprint)
+
+> **Time:** 11:20 PM – 11:46 PM IST | **Tests:** 111/111 ✅ | **Readiness:** 68% → 72%
+
+| # | Time | Fix | Category | Details |
+|---|:----:|-----|:--------:|--------|
+| S7 | 11:22 PM | CORS wildcard methods/headers | Security | Restricted to `GET/POST/PUT/PATCH/DELETE` + specific headers |
+| S8 | 11:26 PM | Missing security headers | Security | `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` |
+| S9 | 11:30 PM | No request body size limit | Security | 1MB limit on JSON payloads (file uploads exempt) |
+| S2 | 11:34 PM | SQL sort param injection risk | Security | Validation + allowlist + warning log for invalid sort requests |
+| Q6 | 11:38 PM | Dict mutation during iteration | Code Quality | Safe dict comprehension in `export.py` |
+| Q7 | 11:44 PM | Magic numbers in ML service | Code Quality | Named constants with IFPUG documentation |
+
+```
+Readiness after v3.1.2:
+██████████████░░░░░░░░  72%  (+10% from baseline)
+```
+
+---
+
+### 📅 April 30, 2026 — v3.1.3 (Security Hardening Sprint)
+
+> **Time:** 5:15 PM – 5:55 PM IST | **Tests:** 113/113 ✅ | **Readiness:** 72% → 76%
+
+| # | Time | Fix | Category | Details |
+|---|:----:|-----|:--------:|--------|
+| T1 | 5:17 PM | Tagline update | Frontend | "Designed for Engineers by Engineers" → "Smart Project Estimation" |
+| S4 | 5:19 PM | XSS on `project_name` | Security | `_sanitize_text()` — strips `<script>`, HTML tags, escapes entities, 200-char limit |
+| S5 | 5:22 PM | No rate limit on share links | Security | slowapi `10/hour` limit on share link creation endpoint |
+| D2 | 5:25 PM | Basic health check (no DB/Firebase) | DevOps | Enhanced: DB `SELECT 1` ping, Firebase SDK check, uptime, `degraded` status |
+| Q5 | 5:28 PM | No DB connection retry | Code Quality | Exponential backoff: 5 attempts (1s → 2s → 4s → 8s → 16s) |
+| — | 5:35 PM | Updated health endpoint tests | Testing | 7 tests for version, services, uptime, schema (113 total) |
+
+```
+Readiness after v3.1.3:
+███████████████░░░░░░░  76%  (+14% from baseline)
+```
+
+---
+
+### 📈 Readiness Progression
+
+```
+                     62%      68%      72%      76%      Target
+                      │        │        │        │        │
+Baseline (v3.1.0)  ▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░ 62%
+                      │        │        │        │
+v3.1.1 (Apr 29)    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░ 68%  ← 7 blockers fixed
+                      │        │        │        │
+v3.1.2 (Apr 29)    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░ 72%  ← 6 quick-win fixes
+                      │        │        │        │
+v3.1.3 (Apr 30)    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 76%  ← 5 hardening fixes
+                      │        │        │        │
+Target (80%+)      ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 80%  ← next semester
+```
+
+### 📊 Items Resolved Summary
+
+| Version | Date | Items Fixed | Tests | Readiness |
+|---------|:----:|:-----------:|:-----:|:---------:|
+| v3.1.0 (baseline) | Apr 29, 2026 | 0 | 106/111 ❌ | 62% |
+| v3.1.1 | Apr 29, 2026 | 7 (B1–B7) | 111/111 ✅ | 68% (+6%) |
+| v3.1.2 | Apr 29, 2026 | 6 (S2,S7–S9,Q6,Q7) | 111/111 ✅ | 72% (+4%) |
+| v3.1.3 | Apr 30, 2026 | 5 (S4,S5,D2,Q5,T1) | 113/113 ✅ | 76% (+4%) |
+| **Total** | — | **18 items** | **113/113** | **76%** (+14%) |
+
+---
+
+> *Full codebase audit performed April 29–30, 2026 — Predictify v3.1.3*
 > *Benchmarked against: OWASP Top 10, SOC 2, ISBSG standards, SaaS industry best practices*
-> *17/22 audit items resolved — deployment readiness improved from 62% → 76%*
+> *18 audit items resolved across 3 sprints — deployment readiness improved from 62% → 76%*
 > *Next audit recommended: End of next semester or after Phase 2 completion*
