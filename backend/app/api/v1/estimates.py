@@ -3,7 +3,10 @@ Predictify API — Estimate Endpoints
 Core estimation pipeline: analyze, list, get, duplicate, delete, share.
 All database access via asyncpg (Neon PostgreSQL).
 """
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from starlette.requests import Request as StarletteRequest
 from typing import Optional
 from uuid import uuid4
 from datetime import datetime, timedelta, timezone
@@ -11,6 +14,20 @@ import structlog
 import json
 import secrets
 import bcrypt
+import re
+import html
+
+
+def _sanitize_text(value: str, max_length: int = 200) -> str:
+    """Sanitize user-supplied text: strip HTML/script tags, escape entities, limit length (S4)."""
+    # Remove script tags and their content
+    cleaned = re.sub(r"<script[^>]*>.*?</script>", "", value, flags=re.IGNORECASE | re.DOTALL)
+    # Remove all remaining HTML tags
+    cleaned = re.sub(r"<[^>]+>", "", cleaned)
+    # Escape remaining HTML entities
+    cleaned = html.escape(cleaned.strip())
+    # Truncate to max length
+    return cleaned[:max_length]
 
 from app.core.security import get_current_user, CurrentUser
 from app.core.database import get_db
@@ -34,6 +51,7 @@ from ml.inference import predictor
 
 router = APIRouter()
 logger = structlog.get_logger()
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
 
 
 @router.post("/estimates/analyze", response_model=EstimateResult)
@@ -95,7 +113,7 @@ async def analyze_estimate(
         overrides = request.overrides or ManualEstimateRequest(
             project_name="Untitled Project"
         )
-        project_name = (
+        project_name = _sanitize_text(
             getattr(overrides, "project_name", None)
             or extracted.get("project_name", {}).get("value", "")
             or doc["original_filename"].rsplit(".", 1)[0]
@@ -168,7 +186,7 @@ async def manual_estimate(
         return await _run_estimation(
             user_id=user.id,
             document_id=None,
-            project_name=request.project_name,
+            project_name=_sanitize_text(request.project_name),
             project_type=request.project_type,
             team_size=request.team_size,
             duration_months=request.duration_months,
@@ -576,7 +594,9 @@ async def delete_estimate(
 
 
 @router.post("/estimates/{estimate_id}/share", response_model=ShareLinkResponse)
+@limiter.limit("10/hour")  # S5: rate-limit share link creation to prevent abuse
 async def create_share_link(
+    request_obj: Request,  # required by slowapi limiter
     estimate_id: str,
     request: ShareLinkRequest,
     user: CurrentUser = Depends(get_current_user),
