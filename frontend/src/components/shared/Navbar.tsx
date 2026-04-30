@@ -135,7 +135,7 @@ export default function Navbar() {
               fontWeight: 400,
             }}
           >
-            Designed for Engineers by Engineers
+            Smart Project Estimation
           </span>
         </span>
       </Link>
