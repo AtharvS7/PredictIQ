@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import Navbar from '@/components/shared/Navbar';
+import SEOHead from '@/components/shared/SEOHead';
 import {
   Upload,
   Brain,
@@ -33,6 +34,10 @@ export default function LandingPage() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
+      <SEOHead
+        title="AI-Powered Project Cost Estimation"
+        description="Predict your software project cost, timeline, and risks with AI. Upload a document and get instant estimates powered by NLP and machine learning."
+      />
       <Navbar />
 
       {/* HERO SECTION */}

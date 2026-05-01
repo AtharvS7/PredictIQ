@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
+import SEOHead from '@/components/shared/SEOHead';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme, useToast } from '@/App';
 import { User, DollarSign, Save, LogOut } from 'lucide-react';
@@ -58,6 +59,7 @@ export default function SettingsPage() {
         background: 'var(--bg-primary)',
       }}
     >
+      <SEOHead title="Settings" description="Manage your Predictify account, profile, and application preferences." />
       <Navbar />
 
       <div style={{ display: 'flex' }}>

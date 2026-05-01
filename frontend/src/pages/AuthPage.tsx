@@ -3,6 +3,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/App';
 import Navbar from '@/components/shared/Navbar';
+import SEOHead from '@/components/shared/SEOHead';
 import logoImg from '@/assets/logo.png';
 import { Mail, Lock, User, Eye, EyeOff, GitBranch } from 'lucide-react';
 
@@ -23,6 +24,8 @@ export default function AuthPage() {
   if (session) {
     return <Navigate to="/dashboard" replace />;
   }
+
+  // SEO head is rendered below in the return
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +83,9 @@ export default function AuthPage() {
       flexDirection: 'column',
       background: 'var(--bg-primary)'
     }}>
+
+      {/* SEO */}
+      <SEOHead title="Sign In" description="Sign in or create an account to start estimating your software project costs with Predictify." />
 
       {/* Navigation Bar */}
       <Navbar />

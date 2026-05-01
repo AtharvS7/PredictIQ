@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
+import SEOHead from '@/components/shared/SEOHead';
 import { useAuthStore } from '@/store/authStore';
 import { useEstimateStore } from '@/store/estimateStore';
 import {
@@ -67,6 +68,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+      <SEOHead title="Dashboard" description="View your project estimates, track confidence scores, and manage your Predictify workspace." />
       <Navbar />
 
       <div style={{ display: 'flex' }}>
@@ -78,6 +80,8 @@ export default function DashboardPage() {
 
         {/* Main Content */}
         <main
+          role="main"
+          aria-label="Dashboard content"
           style={{
             flex: 1,
             padding: '2rem',

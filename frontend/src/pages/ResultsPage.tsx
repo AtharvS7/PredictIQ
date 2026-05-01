@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
+import SEOHead from '@/components/shared/SEOHead';
 import CurrencySelector from '@/components/shared/CurrencySelector';
 import { useEstimateStore } from '@/store/estimateStore';
 import { useCurrencyStore } from '@/store/currencyStore';
@@ -299,6 +300,7 @@ export default function ResultsPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+      <SEOHead title="Estimate Results" description="View detailed cost breakdown, timeline, risk analysis, and phase-by-phase estimates for your project." />
       <Navbar />
       <div style={{ display: 'flex' }}>
         <Sidebar />
