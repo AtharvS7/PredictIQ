@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
+import SEOHead from '@/components/shared/SEOHead';
 import CurrencySelector from '@/components/shared/CurrencySelector';
 import { useEstimateStore } from '@/store/estimateStore';
 import { useCurrencyStore } from '@/store/currencyStore';
@@ -99,12 +100,15 @@ export default function EstimatesPage() {
         background: 'var(--bg-primary)',
       }}
     >
+      <SEOHead title="My Estimates" description="Browse, search, and manage all your software project cost estimates." />
       <Navbar />
 
       <div style={{ display: 'flex' }}>
         <Sidebar />
 
         <main
+          role="main"
+          aria-label="Estimates list"
           style={{
             flex: 1,
             padding: '2rem',
@@ -235,6 +239,7 @@ export default function EstimatesPage() {
                 className="input-field"
                 style={{ paddingLeft: 36 }}
                 placeholder="Search estimates..."
+                aria-label="Search estimates"
                 value={search}
                 onChange={(e) =>
                   setSearch(e.target.value)
@@ -245,6 +250,7 @@ export default function EstimatesPage() {
             <select
               className="input-field"
               style={{ width: 180 }}
+              aria-label="Filter by project type"
               value={filterType || ''}
               onChange={(e) =>
                 setFilterType(
@@ -264,6 +270,7 @@ export default function EstimatesPage() {
             <select
               className="input-field"
               style={{ width: 180 }}
+              aria-label="Sort estimates"
               value={sort}
               onChange={(e) =>
                 setSort(e.target.value)

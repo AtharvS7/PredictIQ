@@ -24,6 +24,7 @@ from app.api.v1.export import router as export_router
 from app.api.v1.currencies import router as currencies_router
 from app.api.v1.profile import router as profile_router
 from app.api.v1.auth import router as auth_router
+from app.middleware.audit_log import AuditLogMiddleware
 
 # Configure structured logging
 structlog.configure(
@@ -146,6 +147,10 @@ async def add_request_id(request: Request, call_next) -> Response:
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
     return response
+
+
+# Audit logging middleware — logs every API call for SOC 2 compliance (S6)
+app.add_middleware(AuditLogMiddleware)
 
 
 # Register API routers

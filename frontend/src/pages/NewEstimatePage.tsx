@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
+import SEOHead from '@/components/shared/SEOHead';
 import CurrencySelector from '@/components/shared/CurrencySelector';
 import { useToast } from '@/App';
 import { useAuthStore } from '@/store/authStore';
@@ -284,6 +285,7 @@ export default function NewEstimatePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+      <SEOHead title="New Estimate" description="Create a new project cost estimate by uploading a document or entering parameters manually." />
       <Navbar />
 
       <div style={{ display: 'flex' }}>

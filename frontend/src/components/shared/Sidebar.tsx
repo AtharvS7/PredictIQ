@@ -32,6 +32,8 @@ export default function Sidebar({ collapsed: controlledCollapsed, setCollapsed: 
 
   return (
     <aside
+      role="navigation"
+      aria-label="Sidebar navigation"
       style={{
         width: collapsed ? 68 : 240,
         minHeight: "100vh",
@@ -129,6 +131,8 @@ export default function Sidebar({ collapsed: controlledCollapsed, setCollapsed: 
       <button
         onClick={() => setCollapsed(!collapsed)}
         title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        aria-expanded={!collapsed}
         style={{
           position: "absolute",
           top: 16,
