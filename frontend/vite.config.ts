@@ -1,9 +1,19 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { visualizer } from 'rollup-plugin-visualizer'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Bundle size analysis — run with: ANALYZE=true npm run build
+    process.env.ANALYZE && visualizer({
+      open: true,
+      filename: 'dist/bundle-stats.html',
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ].filter(Boolean),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -37,7 +47,7 @@ export default defineConfig({
               return 'react-vendor';
             }
             // Charting library — only needed on ResultsPage
-            if (id.includes('recharts') || id.includes('d3-')) {
+            if (id.includes('chart.js') || id.includes('react-chartjs-2')) {
               return 'charts';
             }
             // Firebase client — auth
