@@ -1,6 +1,6 @@
 # Predictify — Technical Walkthrough
 
-> **Version:** 3.1.1 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** April 29, 2026
+> **Version:** 3.1.6 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** May 2, 2026
 
 ---
 
@@ -52,6 +52,7 @@
 | **Build Tool** | Vite | 5.x | HMR dev server + production bundler |
 | **State** | Zustand | 5.x | Lightweight global state management |
 | **Charts** | Chart.js + react-chartjs-2 | 4.x / 5.x | Theme-aware data visualization (bar, doughnut, radar, line) |
+| **SEO** | Custom SEOHead component | — | Document title, meta descriptions, Open Graph tags |
 | **Backend** | FastAPI + Uvicorn | 0.115+ | Async Python REST API |
 | **ML Engine** | RandomForest (scikit-learn) | 1.8 | Best-of-8 regression model for effort prediction (R² = 0.8953) |
 | **NLP** | Custom Cascade Engine | v2.4 | 4-strategy document parameter extraction |
@@ -78,6 +79,8 @@ Predictify/
 │   │   │   ├── config.py            # Pydantic BaseSettings
 │   │   │   ├── security.py          # Firebase Admin SDK token verification
 │   │   │   └── database.py          # Neon PostgreSQL async connection pool
+│   │   ├── middleware/              # Request middleware
+│   │   │   └── audit_log.py         # SOC 2 audit logging (method, path, status, duration, user, IP)
 │   │   ├── models/                  # Pydantic request/response schemas
 │   │   └── services/                # Business logic layer
 │   │       ├── nlp_extractor.py     # 4-strategy NLP cascade (v2.4)
@@ -96,17 +99,24 @@ Predictify/
 │   │   ├── Predictify_merged_dataset.csv  # 740-row training data
 │   │   ├── Predictify_best_model.pkl # Trained model (committed to repo)
 │   │   └── Predictify_scaler.pkl     # Fitted scaler (committed to repo)
-│   └── tests/                       # 111 pytest tests
+│   └── tests/                       # 214 pytest tests
 │       ├── conftest.py              # Shared fixtures
 │       ├── test_nlp_extractor.py    # 35 NLP tests
-│       ├── test_ml_service.py       # 11 ML pipeline tests
 │       ├── test_cost_calculator.py  # 18 cost/FP tests
-│       ├── test_risk_analyzer.py    # 10 risk scoring tests
-│       ├── test_document_parser.py  # 8 parser tests
+│       ├── test_export_service.py   # 17 export tests
+│       ├── test_sanitize.py         # 16 XSS sanitization tests
+│       ├── test_profile.py          # 15 profile/SQL safety tests
+│       ├── test_audit_log.py        # 15 audit middleware tests
+│       ├── test_config.py           # 14 configuration tests
 │       ├── test_inference.py        # 12 inference tests
-│       ├── test_benchmark.py        # 5 benchmark tests
+│       ├── test_ml_service.py       # 11 ML pipeline tests
+│       ├── test_risk_analyzer.py    # 10 risk scoring tests
+│       ├── test_database.py         # 10 database retry tests
+│       ├── test_security.py         # 9 auth security tests
+│       ├── test_document_parser.py  # 8 parser tests
 │       ├── test_currencies.py       # 7 currency tests
-│       └── test_health.py           # 5 health endpoint tests
+│       ├── test_health.py           # 7 health endpoint tests
+│       └── test_benchmark.py        # 5 benchmark tests
 │
 ├── frontend/                         # TypeScript — React SPA
 │   └── src/
@@ -120,8 +130,9 @@ Predictify/
 │       │   ├── EstimatesPage.tsx     # Estimates history list
 │       │   └── SettingsPage.tsx      # User settings
 │       ├── components/shared/
-│       │   ├── Navbar.tsx            # Top navigation bar
-│       │   ├── Sidebar.tsx           # Side navigation
+│       │   ├── Navbar.tsx            # Top navigation bar (ARIA landmark)
+│       │   ├── Sidebar.tsx           # Side navigation (ARIA landmark)
+│       │   ├── SEOHead.tsx           # SEO meta tags component
 │       │   ├── CurrencySelector.tsx  # Currency dropdown
 │       │   └── LoadingSkeleton.tsx   # Loading states
 │       ├── store/
@@ -140,6 +151,9 @@ Predictify/
 │
 ├── docs/
 │   ├── walkthrough.md                # This document
+│   ├── audit_report.md               # Industry-grade codebase audit (v3.1.6)
+│   ├── AWS_DEPLOYMENT.md             # Full AWS deployment guide (NEW v3.1.6)
+│   ├── SECRETS_ROTATION.md           # Secrets rotation policy (NEW v3.1.6)
 │   ├── GITHUB_SECRETS_SETUP.md       # CI/CD secrets guide
 │   ├── RELEASE_CHECKLIST.md          # Release verification checklist (NEW v2.5)
 │   └── runbooks/                     # Operational runbooks (NEW v2.5)
@@ -878,7 +892,7 @@ graph LR
     end
 
     subgraph INFRA["Infrastructure"]
-        I1["XGBoost Model"]
+        I1["RandomForest Model"]
         I2["Neon PostgreSQL"]
         I3["ExchangeRate API"]
     end
@@ -897,7 +911,7 @@ graph LR
 | Service | File | Lines | Purpose |
 |---------|------|:-----:|---------|
 | **NLP Extractor** | `nlp_extractor.py` | 900 | 4-strategy cascade document analyzer |
-| **ML Service** | `ml_service.py` | 180 | Feature vector builder + XGBoost prediction bridge |
+| **ML Service** | `ml_service.py` | 180 | Feature vector builder + RandomForest prediction bridge |
 | **Cost Calculator** | `cost_calculator.py` | 205 | IFPUG function points + cost/timeline conversion |
 | **Risk Analyzer** | `risk_analyzer.py` | 163 | 10-factor weighted risk scoring engine |
 | **Document Parser** | `document_parser.py` | 155 | PDF/DOCX/TXT text extraction (PyPDF2, python-docx) |
@@ -918,7 +932,7 @@ Environment variables loaded via Pydantic `BaseSettings` from `backend/.env`:
 | `ML_MODEL_PATH` | ❌ | `./ml/Predictify_best_model.pkl` | Trained ML model path |
 | `DEFAULT_HOURLY_RATE_USD` | ❌ | `75.0` | Default billing rate |
 | `APP_ENV` | ❌ | `development` | Environment (skips validators in `test`/`ci`) |
-| `APP_VERSION` | ❌ | `3.1.1` | Current application version |
+| `APP_VERSION` | ❌ | `3.1.6` | Current application version |
 
 **Startup Validators:** The `Settings` class uses a Pydantic `model_validator` that warns at startup if `DATABASE_URL` is a placeholder value. This prevents accidentally running production with test credentials.
 
@@ -1161,6 +1175,7 @@ sequenceDiagram
 | Token Verification | Firebase Admin SDK (`verify_id_token`) on backend | ✅ |
 | API Protection | Bearer token validation on all endpoints | ✅ |
 | **Rate Limiting** | slowapi — 200 req/min default | ✅ |
+| **Audit Logging** | AuditLogMiddleware — method, path, status, duration, user, IP (SOC 2) | ✅ |
 | **Startup Validation** | Pydantic model_validator warns on placeholder DATABASE_URL | ✅ |
 | File Upload | 10MB limit, type whitelist (PDF/DOCX/TXT), stored as BYTEA | ✅ |
 | Secret Management | Environment variables only (no hardcoded keys) | ✅ |
@@ -1274,7 +1289,7 @@ flowchart TD
 |-----|---------------|----------------|
 | **Backend Lint** | Ruff (style + imports) + mypy (type safety) | Catches style violations and type errors before tests run |
 | **Frontend Lint** | `tsc --noEmit` (strict TypeScript check) | Ensures no type errors in React components |
-| **Backend Tests** | `pytest` with `--cov` (104 tests, 59% coverage) | Verifies all business logic, NLP, ML pipeline work correctly |
+| **Backend Tests** | `pytest` with `--cov` (214 tests) | Verifies all business logic, NLP, ML pipeline work correctly |
 | **Frontend Build** | `npm run build` (Vite production bundle) | Ensures the app compiles and bundles without errors |
 | **Security Scan** | Custom secret scanner + Bandit SAST + .env tracking check | Blocks pushes with leaked API keys or security vulnerabilities |
 | **Docker Build** | Builds both Dockerfiles + smoke test (PRs only) | Verifies the app can be containerized and starts cleanly |
@@ -1286,13 +1301,13 @@ When code is merged to the `dev` branch, staging deploys automatically:
 ```mermaid
 flowchart LR
     A["Merge to dev"] --> B["Build Frontend\n(Vite + staging env)"]
-    B --> C["Deploy Backend\n(Railway staging)"]
-    B --> D["Deploy Frontend\n(Vercel preview)"]
-    C --> E["Health Check\n/api/v1/health"]
-    D --> E
-    E --> F{"Pass?"}
-    F -->|Yes| G["✅ Staging Live"]
-    F -->|No| H["❌ Alert Team"]
+    B --> C["Deploy Backend\n(AWS ECS staging)"]
+    B --> D["Deploy Frontend\n(S3 + CloudFront)"]
+    D --> F["Health Check\n/api/v1/health"]
+    E --> F
+    F --> G{"Pass?"}
+    G -->|Yes| H["✅ Staging Live"]
+    G -->|No| I["❌ Alert Team"]
 
     style A fill:#4CAF50,color:#fff
     style G fill:#4CAF50,color:#fff
@@ -1307,8 +1322,8 @@ Production deployments are triggered by creating a version tag:
 flowchart LR
     A["git tag v2.5.0"] --> B["Checkout tag"]
     B --> C["Build Frontend\n(production env)"]
-    C --> D["Deploy Backend\n(Railway production)"]
-    C --> E["Deploy Frontend\n(Vercel --prod)"]
+    C --> D["Deploy Backend\n(AWS ECS production)"]
+    C --> E["Deploy Frontend\n(S3 + CloudFront)"]
     D --> F["Smoke Test\n/api/v1/health"]
     E --> F
     F --> G{"Pass?"}
@@ -1357,7 +1372,7 @@ flowchart TD
 | # | Workflow File | Trigger | Purpose |
 |---|-------------|---------|---------|
 | 1 | `ci.yml` | Every push + PRs | Lint, test, build, security scan, Docker verify |
-| 2 | `cd-staging.yml` | Push to `dev` | Auto-deploy to staging (Railway + Vercel) |
+| 2 | `cd-staging.yml` | Push to `dev` | Auto-deploy to staging (AWS ECS + S3/CloudFront) |
 | 3 | `cd-production.yml` | Tag `vX.Y.Z` or manual | Deploy to production with environment protection |
 | 4 | `security-weekly.yml` | Monday 9 AM + push to main | pip-audit + npm audit + auto-issue creation |
 | 5 | `codeql.yml` | PRs + weekly Sunday 2 AM | GitHub CodeQL SAST for Python + JavaScript |
@@ -1370,7 +1385,7 @@ GitHub branch protection enforces that these checks pass before merging PRs:
 
 #### For `main` Branch (Production Ready)
 Before any PR can be merged to `main`, these **3 checks must pass**:
-1. ✅ **Backend — Tests** (all 104 pytest tests green, 59%+ coverage)
+1. ✅ **Backend — Tests** (all 214 pytest tests green)
 2. ✅ **Frontend — Build** (TypeScript compiles + Vite builds for production)
 3. ✅ **Security — Secret + code scan** (no leaked keys, no HIGH Bandit findings)
 
@@ -1682,24 +1697,39 @@ Dependabot checks for outdated dependencies every Monday and auto-creates PRs:
 |------------|:-----:|--------------|
 | `test_nlp_extractor.py` | 35 | 4-strategy cascade, all 11 fields, edge cases |
 | `test_cost_calculator.py` | 18 | IFPUG FP, phase breakdown, cost conversion |
+| `test_export_service.py` | 17 | PDF/Excel/CSV export generation |
+| `test_sanitize.py` | 16 | XSS prevention, HTML/script stripping |
+| `test_profile.py` | 15 | SQL injection prevention, allowlist safety |
+| `test_audit_log.py` | 15 | Skip paths, middleware structure, token fingerprinting |
+| `test_config.py` | 14 | Configuration loading, environment validation |
 | `test_inference.py` | 12 | Model loading, prediction, error handling |
 | `test_ml_service.py` | 11 | Feature vector, T-factors, complexity mapping |
 | `test_risk_analyzer.py` | 10 | Risk scoring, levels, factor triggers |
+| `test_database.py` | 10 | Retry logic, backoff sequence, pool state |
+| `test_security.py` | 9 | CurrentUser model, auth, serialization |
 | `test_document_parser.py` | 8 | PDF/DOCX/TXT parsing, error recovery |
 | `test_currencies.py` | 7 | Currency conversion, fallback rates |
-| `test_health.py` | 5 | Health endpoint, model status |
+| `test_health.py` | 7 | Health endpoint, model status, DB/Firebase |
 | `test_benchmark.py` | 5 | Industry comparison data |
-| **Total** | **111** | |
+| **Total** | **214** | **16 test files** |
 
-### 15.2 Current Test Results (v2.5.0)
+### 15.2 Current Test Results (v3.1.6)
 
 ```
-104 passed, 0 failures (excluding test_currencies.py — pre-existing async issue)
-Code coverage: 59% (first baseline measurement)
+214 passed, 0 failures
 All NLP tests (35/35) ✅
-All ML tests (11/11) ✅
 All cost tests (18/18) ✅
+All export tests (17/17) ✅
+All sanitize tests (16/16) ✅
+All profile tests (15/15) ✅
+All audit tests (15/15) ✅
+All config tests (14/14) ✅
+All ML tests (11/11) ✅
 All risk tests (10/10) ✅
+All DB tests (10/10) ✅
+All security tests (9/9) ✅
+All currency tests (7/7) ✅
+All health tests (7/7) ✅
 TypeScript compilation: 0 errors ✅
 Security scanner: ALL CHECKS PASSED ✅
 ```
@@ -1784,7 +1814,7 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 **CI/CD Pipeline (4 new workflows)**
 - Rewrote `ci.yml`: 6-job pipeline with Ruff lint, mypy, pytest-cov (59% baseline), Bandit SAST, Docker smoke test
-- Added `cd-staging.yml`: auto-deploys to Railway + Vercel on push to `dev`
+- Added `cd-staging.yml`: auto-deploys to AWS ECS + S3/CloudFront on push to `dev`
 - Added `cd-production.yml`: tag-triggered production deploy with GitHub environment protection and auto-release
 - Added `security-weekly.yml`: pip-audit + npm audit every Monday, auto-creates GitHub issue on CVE findings
 - Added `codeql.yml`: GitHub CodeQL SAST analysis for Python + JavaScript
@@ -1863,4 +1893,4 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 ---
 
-> *Built by Atharv Sawane & Team - Predictify v3.1.1*
+> *Built by Atharv Sawane & Team - Predictify v3.1.6*
