@@ -210,10 +210,13 @@ The core estimation pipeline works well and the architecture is sound. v3.1.1 re
 | Workflow | Purpose | Status |
 |----------|---------|:------:|
 | `ci.yml` | Lint + Test + Security | 🟡 Has stale Supabase env vars |
-| `cd-staging.yml` | Deploy to staging | ❓ Not verified |
-| `cd-production.yml` | Deploy to prod | ❓ Not verified |
+| `cd-staging.yml` | Deploy to staging | ❓ Needs AWS reconfiguration |
+| `cd-production.yml` | Deploy to prod | ❓ Needs AWS reconfiguration |
 | `codeql.yml` | GitHub CodeQL scan | ✅ |
 | `security-weekly.yml` | Weekly security scan | ✅ |
+
+> **Deployment Target:** AWS (ECS Fargate + S3/CloudFront + RDS PostgreSQL)
+> See `docs/AWS_DEPLOYMENT.md` for full deployment guide.
 
 ### 7.2 Infrastructure Gaps
 
@@ -221,14 +224,14 @@ The core estimation pipeline works well and the architecture is sound. v3.1.1 re
 |---|:--------:|-----|-------------------|
 | D1 | **CRITICAL** | No Dockerfile for backend | Every SaaS needs containerized deployment | ✅ **FIXED v3.1.1** |
 | D2 | **CRITICAL** | No health check endpoint for DB/Firebase | Load balancers need `/health` with dependency checks | ✅ **FIXED v3.1.3** — DB ping, Firebase check, uptime, degraded status |
-| D3 | **CRITICAL** | No monitoring/alerting (APM) | Datadog/Sentry/New Relic for production |
-| D4 | **HIGH** | No structured error reporting | Sentry/Bugsnag for exception tracking |
-| D5 | **HIGH** | No log aggregation | ELK/CloudWatch/Loki for centralized logs |
-| D6 | **HIGH** | No backup strategy for Neon DB | Point-in-time recovery, daily snapshots |
+| D3 | **CRITICAL** | No monitoring/alerting (APM) | AWS CloudWatch + X-Ray / Sentry for production |
+| D4 | **HIGH** | No structured error reporting | Sentry/CloudWatch Logs Insights for exception tracking |
+| D5 | **HIGH** | No log aggregation | AWS CloudWatch Logs (centralized via ECS awslogs driver) |
+| D6 | **HIGH** | No backup strategy for DB | AWS RDS automated backups + point-in-time recovery |
 | D7 | **HIGH** | `docker-compose.yml` exists but no individual Dockerfiles | `Dockerfile.backend` and `Dockerfile.frontend` referenced in CI but missing |
-| D8 | **MEDIUM** | No environment promotion pipeline | dev → staging → prod with gates |
+| D8 | **MEDIUM** | No environment promotion pipeline | dev → staging → prod with GitHub Environments + AWS |
 | D9 | **MEDIUM** | No secrets rotation policy | Firebase/DB credentials should rotate quarterly | ✅ **FIXED v3.1.6** — `docs/SECRETS_ROTATION.md` with schedule + procedures |
-| D10 | **LOW** | No auto-scaling configuration | Kubernetes HPA or Railway auto-scale |
+| D10 | **LOW** | No auto-scaling configuration | AWS ECS Fargate auto-scaling or EC2 ASG |
 
 ---
 
@@ -318,7 +321,7 @@ The core estimation pipeline works well and the architecture is sound. v3.1.1 re
 | RBAC with org management | ❌ | ✅ | P0 |
 | 99.9% uptime SLA | ❌ | ✅ | P0 |
 | Data residency controls | ❌ | ✅ | P1 |
-| Audit logging | ❌ | ✅ | P1 |
+| Audit logging | ✅ (v3.1.5) | ✅ | P1 |
 | API rate limiting (per-user) | Partial (global only) | Per-org quotas | P1 |
 | Webhook integrations | ❌ | ✅ | P2 |
 | White-label/custom branding | ❌ | ✅ | P2 |
