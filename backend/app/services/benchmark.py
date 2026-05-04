@@ -15,7 +15,7 @@ _benchmark_df: pd.DataFrame | None = None
 def load_benchmark_data():
     """Load the training dataset for benchmark comparisons."""
     global _benchmark_df
-    csv_path = Path(__file__).parent.parent.parent / "ml" / "Predictify_merged_dataset.csv"
+    csv_path = Path(__file__).parent.parent.parent / "ml" / "predictiq_merged_dataset.csv"
 
     if csv_path.exists():
         _benchmark_df = pd.read_csv(csv_path)

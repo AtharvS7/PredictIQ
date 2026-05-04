@@ -54,10 +54,10 @@ class PredictifyInference:
         Load model artifacts from backend/ml/.
         Returns True if loaded successfully, False → demo mode.
         """
-        model_path = ML_DIR / "Predictify_best_model.pkl"
-        scaler_path = ML_DIR / "Predictify_scaler.pkl"
-        feature_path = ML_DIR / "Predictify_features.json"
-        report_path = ML_DIR / "Predictify_model_report.json"
+        model_path = ML_DIR / "predictiq_best_model.pkl"
+        scaler_path = ML_DIR / "predictiq_scaler.pkl"
+        feature_path = ML_DIR / "predictiq_features.json"
+        report_path = ML_DIR / "predictiq_model_report.json"
         training_report_path = ML_DIR / "training_report.json"
 
         missing = [

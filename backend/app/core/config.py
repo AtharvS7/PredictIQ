@@ -27,9 +27,9 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
     # ML Model Paths
-    ML_MODEL_PATH: str = "./ml/Predictify_best_model.pkl"
-    ML_SCALER_PATH: str = "./ml/Predictify_scaler.pkl"
-    ML_FEATURES_PATH: str = "./ml/Predictify_features.json"
+    ML_MODEL_PATH: str = "./ml/predictiq_best_model.pkl"
+    ML_SCALER_PATH: str = "./ml/predictiq_scaler.pkl"
+    ML_FEATURES_PATH: str = "./ml/predictiq_features.json"
 
     # Application
     DEFAULT_HOURLY_RATE_USD: float = 75.0

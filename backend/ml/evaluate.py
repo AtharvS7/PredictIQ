@@ -26,10 +26,10 @@ def load_artifacts() -> tuple[Any, Any, list[str], dict]:
     print("Loading artifacts...")
 
     required = [
-        ML_DIR / "Predictify_best_model.pkl",
-        ML_DIR / "Predictify_scaler.pkl",
-        ML_DIR / "Predictify_features.json",
-        ML_DIR / "Predictify_model_report.json",
+        ML_DIR / "predictiq_best_model.pkl",
+        ML_DIR / "predictiq_scaler.pkl",
+        ML_DIR / "predictiq_features.json",
+        ML_DIR / "predictiq_model_report.json",
     ]
 
     missing = [p.name for p in required if not p.exists()]
@@ -62,7 +62,7 @@ def load_artifacts() -> tuple[Any, Any, list[str], dict]:
 
 def evaluate_on_dataset(model: Any, scaler: Any, features: list[str]) -> None:
     """Evaluate the model against the held-out test set (same split as training)."""
-    dataset_path = ML_DIR / "Predictify_merged_dataset.csv"
+    dataset_path = ML_DIR / "predictiq_merged_dataset.csv"
     if not dataset_path.exists():
         print("\n[!]  Dataset not found -- skipping dataset evaluation")
         return

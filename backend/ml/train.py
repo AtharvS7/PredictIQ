@@ -53,7 +53,7 @@ import xgboost as xgb
 
 # -- Paths -------------------------------------------------------------
 ML_DIR = Path(__file__).parent
-DATA_CSV = ML_DIR / "Predictify_merged_dataset.csv"
+DATA_CSV = ML_DIR / "predictiq_merged_dataset.csv"
 OUT_DIR = ML_DIR / "artifacts"
 OUT_DIR.mkdir(exist_ok=True)
 
@@ -88,7 +88,7 @@ def load_data() -> pd.DataFrame:
 
     if not DATA_CSV.exists():
         log(f"ERROR: Dataset not found at {DATA_CSV}")
-        log("Copy Predictify_merged_dataset.csv to backend/ml/ and retry.")
+        log("Copy predictiq_merged_dataset.csv to backend/ml/ and retry.")
         sys.exit(1)
 
     df = pd.read_csv(DATA_CSV)
@@ -137,7 +137,7 @@ def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, list[st
     log(f"Samples per feature: {len(df) / len(feature_names):.1f}")
 
     # Save feature list (critical for inference)
-    feat_path = ML_DIR / "Predictify_features.json"
+    feat_path = ML_DIR / "predictiq_features.json"
     with open(feat_path, "w") as f:
         json.dump(feature_names, f, indent=2)
     log(f"Feature list saved -> {feat_path}")
@@ -163,7 +163,7 @@ def split_and_scale(
     X_test_s = scaler.transform(X_test)
 
     # Save scaler
-    scaler_path = ML_DIR / "Predictify_scaler.pkl"
+    scaler_path = ML_DIR / "predictiq_scaler.pkl"
     with open(scaler_path, "wb") as f:
         pickle.dump(scaler, f)
     log(f"Scaler saved -> {scaler_path}")
@@ -502,7 +502,7 @@ def save_artifacts(
     log("\n-- Step 10: Saving artifacts --")
 
     # Best model
-    model_path = ML_DIR / "Predictify_best_model.pkl"
+    model_path = ML_DIR / "predictiq_best_model.pkl"
     with open(model_path, "wb") as f:
         pickle.dump(best_model, f)
     size_kb = model_path.stat().st_size / 1024
@@ -538,9 +538,9 @@ def save_artifacts(
         "top_features": top_features,
         "feature_list": feature_names,
         "production": {
-            "model_file": "Predictify_best_model.pkl",
-            "scaler_file": "Predictify_scaler.pkl",
-            "features_file": "Predictify_features.json",
+            "model_file": "predictiq_best_model.pkl",
+            "scaler_file": "predictiq_scaler.pkl",
+            "features_file": "predictiq_features.json",
             "effort_range": {
                 "min": int(y_true.min()),
                 "max": int(y_true.max()),
@@ -557,7 +557,7 @@ def save_artifacts(
         },
     }
 
-    report_path = ML_DIR / "Predictify_model_report.json"
+    report_path = ML_DIR / "predictiq_model_report.json"
     with open(report_path, "w") as f:
         json.dump(report, f, indent=2)
     log(f"  Model report saved -> {report_path}")
