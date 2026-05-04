@@ -12,7 +12,7 @@ pydantic>=2.7.1
 pydantic-settings>=2.3.1
 
 # -- Database (Neon PostgreSQL) ------------------------------------
-asyncpg>=0.30.0
+asyncpg>=0.31.0
 
 # -- Firebase Auth -------------------------------------------------
 firebase-admin>=6.5.0
