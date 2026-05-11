@@ -24,6 +24,7 @@ from app.api.v1.export import router as export_router
 from app.api.v1.currencies import router as currencies_router
 from app.api.v1.profile import router as profile_router
 from app.api.v1.auth import router as auth_router
+from app.api.v1.admin import router as admin_router
 from app.middleware.audit_log import AuditLogMiddleware
 
 # Configure structured logging
@@ -161,6 +162,7 @@ app.include_router(export_router, prefix="/api/v1", tags=["Export"])
 app.include_router(currencies_router, prefix="/api/v1", tags=["Currencies"])
 app.include_router(profile_router, prefix="/api/v1", tags=["Profile"])
 app.include_router(auth_router, prefix="/api/v1", tags=["Auth"])
+app.include_router(admin_router, prefix="/api/v1", tags=["Admin"])
 
 
 @app.get("/")

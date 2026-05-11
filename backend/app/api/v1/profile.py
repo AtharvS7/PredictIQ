@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import Optional
 import structlog
 
-from app.core.security import get_current_user, CurrentUser
+from app.core.security import get_current_user, require_role, CurrentUser
 from app.core.database import get_db
 
 router = APIRouter()
@@ -71,7 +71,7 @@ async def get_profile(user: CurrentUser = Depends(get_current_user)):
 @router.post("/profile")
 async def create_or_update_profile(
     data: ProfileUpdate,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_role("editor")),
 ):
     """Create or update the current user's profile (upsert)."""
     pool = await get_db()
@@ -111,7 +111,7 @@ async def create_or_update_profile(
 @router.patch("/profile")
 async def patch_profile(
     data: ProfileUpdate,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_role("editor")),
 ):
     """Partially update the current user's profile."""
     pool = await get_db()
