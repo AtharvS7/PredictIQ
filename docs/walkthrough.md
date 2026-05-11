@@ -1,6 +1,6 @@
 # Predictify — Technical Walkthrough
 
-> **Version:** 3.1.6 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** May 2, 2026
+> **Version:** 3.2.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** May 11, 2026
 
 ---
 
@@ -21,6 +21,8 @@
 - [9. Frontend Application](#9-frontend-application)
 - [10. Cost & Risk Computation](#10-cost--risk-computation)
 - [11. Security Architecture](#11-security-architecture)
+  - [11.4 RBAC (Role-Based Access Control)](#114-rbac-role-based-access-control) *(NEW v3.2)*
+- [11A. Architecture & Code Quality](#11a-architecture--code-quality) *(NEW v3.2)*
 - [12. Deployment & DevOps](#12-deployment--devops)
 - [13. CI/CD Pipeline Architecture](#13-cicd-pipeline-architecture) *(NEW v2.5)*
 - [14. Team Workflow & Branch Strategy](#14-team-workflow--branch-strategy) *(NEW v2.5)*
@@ -31,7 +33,7 @@
 
 ## 1. Project Overview
 
-**Predictify** is an AI-powered SaaS platform that predicts software project **cost**, **timeline**, and **effort** from uploaded project documentation. Users upload SRS/PRD/RFP documents which are parsed by a 4-strategy NLP cascade, analyzed through a **RandomForest ML model** (R² = 0.8953) trained on **740 real-world project records** from 4 benchmark datasets, and returned as PERT-style estimates with full risk analysis.
+**Predictify** is an AI-powered SaaS platform that predicts software project **cost**, **timeline**, and **effort** from uploaded project documentation. Users upload SRS/PRD/RFP documents which are parsed by a 4-strategy NLP cascade, analyzed through a **RandomForest ML model** (R² = 0.8953) trained on **740 real-world project records** from 4 benchmark datasets, and returned as PERT-style estimates with full risk analysis. The platform features **role-based access control** (admin/editor/viewer) via Firebase Custom Claims, a **service-layer architecture** with pluggable object storage (local/S3), and **Alembic-managed database migrations**.
 
 ### 1.1 Core Value Proposition
 
@@ -57,9 +59,9 @@
 | **ML Engine** | RandomForest (scikit-learn) | 1.8 | Best-of-8 regression model for effort prediction (R² = 0.8953) |
 | **NLP** | Custom Cascade Engine | v2.4 | 4-strategy document parameter extraction |
 | **Database** | Neon PostgreSQL (asyncpg) | 17+ | Serverless Postgres with connection pooling |
-| **Auth** | Firebase Auth (Admin SDK) | 6.x | Email/password + Google/GitHub OAuth |
-| **Storage** | PostgreSQL BYTEA | — | Documents stored directly in DB (no external bucket) |
-| **CI/CD** | GitHub Actions | v4 | 7-workflow automated pipeline (CI + CD + security) |
+| **Auth** | Firebase Auth (Admin SDK) | 6.x | Email/password + Google/GitHub OAuth + RBAC Custom Claims |
+| **Storage** | Object Storage (local/S3) | — | Pluggable: local filesystem (dev) or AWS S3 (prod) via StorageService |
+| **Migrations** | Alembic | 1.x | Versioned, reversible database schema migrations |
 | **Rate Limiting** | slowapi | 0.1.9 | API abuse prevention (200 req/min) |
 
 ### 1.3 Repository Structure
@@ -76,15 +78,18 @@ Predictify/
 │   │   │   ├── currencies.py        # Exchange rate endpoints
 │   │   │   └── export.py            # PDF/Excel/CSV export
 │   │   ├── core/                    # Framework config
-│   │   │   ├── config.py            # Pydantic BaseSettings
-│   │   │   ├── security.py          # Firebase Admin SDK token verification
-│   │   │   └── database.py          # Neon PostgreSQL async connection pool
+│   │   │   ├── config.py            # Pydantic BaseSettings (DB pool, S3, RBAC)
+│   │   │   ├── security.py          # Firebase token verification + RBAC (require_role)
+│   │   │   └── database.py          # Neon PostgreSQL async pool (configurable sizing)
 │   │   ├── middleware/              # Request middleware
 │   │   │   └── audit_log.py         # SOC 2 audit logging (method, path, status, duration, user, IP)
 │   │   ├── models/                  # Pydantic request/response schemas
 │   │   └── services/                # Business logic layer
 │   │       ├── nlp_extractor.py     # 4-strategy NLP cascade (v2.4)
 │   │       ├── ml_service.py        # Feature vector + ML model bridge
+│   │       ├── estimate_service.py  # EstimateService — core estimation logic (NEW v3.2)
+│   │       ├── storage_service.py   # Object storage abstraction: local + S3 (NEW v3.2)
+│   │       ├── background_tasks.py  # Async background tasks (NEW v3.2)
 │   │       ├── cost_calculator.py   # IFPUG FP + cost conversion
 │   │       ├── risk_analyzer.py     # 10-factor risk scoring
 │   │       ├── document_parser.py   # PDF/DOCX/TXT text extraction
@@ -99,9 +104,12 @@ Predictify/
 │   │   ├── Predictify_merged_dataset.csv  # 740-row training data
 │   │   ├── Predictify_best_model.pkl # Trained model (committed to repo)
 │   │   └── Predictify_scaler.pkl     # Fitted scaler (committed to repo)
-│   └── tests/                       # 214 pytest tests
+│   └── tests/                       # 316 pytest tests
 │       ├── conftest.py              # Shared fixtures
 │       ├── test_nlp_extractor.py    # 35 NLP tests
+│       ├── test_rbac.py             # 29 RBAC tests (NEW v3.2)
+│       ├── test_phase3.py           # 25 architecture tests (NEW v3.2)
+│       ├── test_api_integration.py  # 48 API integration tests (NEW v3.2)
 │       ├── test_cost_calculator.py  # 18 cost/FP tests
 │       ├── test_export_service.py   # 17 export tests
 │       ├── test_sanitize.py         # 16 XSS sanitization tests
@@ -143,8 +151,16 @@ Predictify/
 │           ├── api.ts                # Backend API client + extractDocumentParams
 │           └── firebase.ts           # Firebase client initialization
 │
-├── backend/migrations/               # Database schema
-│   └── 001_initial_schema.sql        # Tables: profiles, documents, estimates, share_links
+├── backend/alembic/                  # Alembic migration scripts (NEW v3.2)
+│   ├── env.py                       # Migration environment config
+│   ├── script.py.mako               # Migration template
+│   └── versions/                    # Individual migrations
+│       ├── 001_initial_*.py         # Baseline schema
+│       └── 002_add_role_*.py        # RBAC role column
+│
+├── backend/migrations/               # Legacy raw SQL migrations
+│   ├── 001_initial_schema.sql       # Tables: profiles, documents, estimates, share_links
+│   └── 002_add_role_column.sql      # RBAC role + email column (NEW v3.2)
 │
 ├── scripts/
 │   └── pre_push_check.py             # Pre-push security scanner
@@ -314,6 +330,8 @@ erDiagram
     PROFILES {
         uuid id PK,FK
         text full_name
+        text email
+        text role
         text avatar_url
         numeric hourly_rate_usd
         text currency
@@ -370,6 +388,8 @@ erDiagram
 |--------|------|---------|-------------|
 | `id` | TEXT (PK) | — | Firebase UID (from Firebase Auth) |
 | `full_name` | TEXT | NULL | Display name |
+| `email` | TEXT | NULL | User email address (NEW v3.2) |
+| `role` | TEXT | 'editor' | RBAC role: admin/editor/viewer (NEW v3.2) |
 | `avatar_url` | TEXT | NULL | Profile image URL |
 | `hourly_rate_usd` | NUMERIC(10,2) | 75.00 | Default billing rate |
 | `currency` | TEXT | 'USD' | Preferred display currency |
@@ -412,7 +432,7 @@ erDiagram
 | `share_password_hash` | TEXT | NULL | Optional password for sharing |
 | `share_expires_at` | TIMESTAMPTZ | NULL | Share link expiry |
 
-Documents are stored as BYTEA directly in the `document_uploads.file_data` column. No external object storage is used.
+Documents are stored via the **StorageService** abstraction layer. In development, files are saved to the local filesystem (`./uploads/`). In production, files are stored in **AWS S3** (or any S3-compatible service). The `document_uploads` table stores metadata and a `storage_path` reference key.
 
 ### 3.4 Database Functions & Triggers
 
@@ -878,6 +898,8 @@ graph LR
         R3["health.py"]
         R4["currencies.py"]
         R5["export.py"]
+        R6["admin.py (NEW)"]
+        R7["profile.py"]
     end
 
     subgraph SERVICES["Service Layer"]
@@ -889,21 +911,30 @@ graph LR
         S6["benchmark"]
         S7["currency_service"]
         S8["export_service"]
+        S9["estimate_service (NEW)"]
+        S10["storage_service (NEW)"]
+        S11["background_tasks (NEW)"]
     end
 
     subgraph INFRA["Infrastructure"]
         I1["RandomForest Model"]
         I2["Neon PostgreSQL"]
         I3["ExchangeRate API"]
+        I4["Object Storage (S3/Local)"]
     end
 
-    R1 --> S1 & S2 & S3 & S4 & S5
+    R1 --> S9
+    S9 --> S1 & S2 & S3 & S4 & S5
     R1 --> S6
+    R2 --> S10
     R4 --> S7
     R5 --> S8
+    R6 --> I2
     S2 --> I1
-    R1 & R2 --> I2
+    R1 & R2 & R6 --> I2
     S7 --> I3
+    S10 --> I4
+    R1 --> S11
 ```
 
 ### 7.2 Service Details
@@ -911,10 +942,13 @@ graph LR
 | Service | File | Lines | Purpose |
 |---------|------|:-----:|---------|
 | **NLP Extractor** | `nlp_extractor.py` | 900 | 4-strategy cascade document analyzer |
+| **EstimateService** | `estimate_service.py` | 320 | Core estimation business logic (NEW v3.2) |
 | **ML Service** | `ml_service.py` | 180 | Feature vector builder + RandomForest prediction bridge |
 | **Cost Calculator** | `cost_calculator.py` | 205 | IFPUG function points + cost/timeline conversion |
 | **Risk Analyzer** | `risk_analyzer.py` | 163 | 10-factor weighted risk scoring engine |
 | **Document Parser** | `document_parser.py` | 155 | PDF/DOCX/TXT text extraction (PyPDF2, python-docx) |
+| **Storage Service** | `storage_service.py` | 180 | Dual-backend object storage: local + S3 (NEW v3.2) |
+| **Background Tasks** | `background_tasks.py` | 80 | Async analytics logging + doc preview (NEW v3.2) |
 | **Benchmark** | `benchmark.py` | 125 | Industry comparison + model explainability |
 | **Currency Service** | `currency_service.py` | 140 | Multi-currency conversion via ExchangeRate API |
 | **Export Service** | `export_service.py` | 290 | PDF (ReportLab) / Excel (openpyxl) / CSV generation |
@@ -932,7 +966,16 @@ Environment variables loaded via Pydantic `BaseSettings` from `backend/.env`:
 | `ML_MODEL_PATH` | ❌ | `./ml/Predictify_best_model.pkl` | Trained ML model path |
 | `DEFAULT_HOURLY_RATE_USD` | ❌ | `75.0` | Default billing rate |
 | `APP_ENV` | ❌ | `development` | Environment (skips validators in `test`/`ci`) |
-| `APP_VERSION` | ❌ | `3.1.6` | Current application version |
+| `APP_VERSION` | ❌ | `3.2.0` | Current application version |
+| `DB_POOL_MIN_SIZE` | ❌ | `2` | Minimum async connection pool size (NEW v3.2) |
+| `DB_POOL_MAX_SIZE` | ❌ | `10` | Maximum async connection pool size (NEW v3.2) |
+| `DB_COMMAND_TIMEOUT` | ❌ | `30` | Query timeout in seconds (NEW v3.2) |
+| `STORAGE_BACKEND` | ❌ | `local` | `"local"` or `"s3"` — object storage mode (NEW v3.2) |
+| `S3_BUCKET_NAME` | ❌ | `predictiq-documents` | AWS S3 bucket name (NEW v3.2) |
+| `S3_REGION` | ❌ | `us-east-1` | AWS region for S3 (NEW v3.2) |
+| `S3_ACCESS_KEY_ID` | ❌ | `""` | AWS access key (NEW v3.2) |
+| `S3_SECRET_ACCESS_KEY` | ❌ | `""` | AWS secret key (NEW v3.2) |
+| `LOCAL_STORAGE_PATH` | ❌ | `./uploads` | Local filesystem storage path (NEW v3.2) |
 
 **Startup Validators:** The `Settings` class uses a Pydantic `model_validator` that warns at startup if `DATABASE_URL` is a placeholder value. This prevents accidentally running production with test credentials.
 
@@ -944,15 +987,19 @@ Environment variables loaded via Pydantic `BaseSettings` from `backend/.env`:
 
 | Method | Path | Auth | Description |
 |--------|------|:----:|-------------|
-| `POST` | `/api/v1/estimates/analyze` | ✅ | Analyze document → full estimate |
-| `POST` | `/api/v1/estimates/manual` | ✅ | Manual parameter estimate (no doc) |
-| `GET` | `/api/v1/estimates` | ✅ | List user's estimates (paginated) |
-| `GET` | `/api/v1/estimates/{id}` | ✅ | Get full estimate details |
-| `POST` | `/api/v1/estimates/{id}/duplicate` | ✅ | Duplicate as new version |
-| `DELETE` | `/api/v1/estimates/{id}` | ✅ | Soft-delete estimate |
-| `POST` | `/api/v1/estimates/{id}/share` | ✅ | Generate share link |
-| `POST` | `/api/v1/documents/upload` | ✅ | Get pre-signed upload URL |
-| `POST` | `/api/v1/documents/confirm` | ✅ | Confirm upload + save metadata |
+| `POST` | `/api/v1/estimates/analyze` | ✅ editor+ | Analyze document → full estimate |
+| `POST` | `/api/v1/estimates/manual` | ✅ editor+ | Manual parameter estimate (no doc) |
+| `GET` | `/api/v1/estimates` | ✅ viewer+ | List user's estimates (paginated) |
+| `GET` | `/api/v1/estimates/{id}` | ✅ viewer+ | Get full estimate details |
+| `POST` | `/api/v1/estimates/{id}/duplicate` | ✅ editor+ | Duplicate as new version |
+| `DELETE` | `/api/v1/estimates/{id}` | ✅ editor+ | Soft-delete estimate |
+| `POST` | `/api/v1/estimates/{id}/share` | ✅ editor+ | Generate share link |
+| `POST` | `/api/v1/documents/upload` | ✅ editor+ | Upload document to storage |
+| `POST` | `/api/v1/documents/confirm` | ✅ editor+ | Confirm upload + save metadata |
+| `GET` | `/api/v1/profile` | ✅ viewer+ | Get user profile |
+| `PATCH` | `/api/v1/profile` | ✅ editor+ | Update profile fields |
+| `GET` | `/api/v1/admin/users` | ✅ **admin** | List all users with roles (NEW v3.2) |
+| `PATCH` | `/api/v1/admin/users/{id}` | ✅ **admin** | Update user role (NEW v3.2) |
 | `GET` | `/api/v1/currencies/rates` | ✅ | Get exchange rates (10 currencies) |
 | `GET` | `/api/v1/export/{id}/pdf` | ✅ | Export estimate as PDF |
 | `GET` | `/api/v1/export/{id}/excel` | ✅ | Export estimate as Excel |
@@ -1193,6 +1240,141 @@ Automated checks run before every push:
 | **Git Tracking** | Verifies no `.env` files are tracked |
 | **.gitignore Audit** | Validates 6 required patterns exist |
 | **Env Templates** | Confirms `.env.example` exists for backend + frontend |
+
+### 11.4 RBAC (Role-Based Access Control)
+
+> **NEW in v3.2.0** — 3-tier role system using Firebase Custom Claims.
+
+#### Role Hierarchy
+
+```
+admin > editor > viewer
+
+┌──────────┬──────────────────────────────────────────────────┐
+│ Role     │ Permissions                                      │
+├──────────┼──────────────────────────────────────────────────┤
+│ viewer   │ View own estimates, view profile (read-only)     │
+│ editor   │ + Create/edit/delete own estimates, upload docs  │
+│ admin    │ + Manage users, view ALL estimates, delete any   │
+└──────────┴──────────────────────────────────────────────────┘
+```
+
+#### Implementation
+
+| Component | Detail |
+|-----------|--------|
+| **Storage** | `profiles.role` column (DB source of truth) + Firebase Custom Claims (JWT) |
+| **Enforcement** | `require_role(minimum_role)` FastAPI dependency factory |
+| **Hierarchy** | `ROLE_HIERARCHY = {"admin": 3, "editor": 2, "viewer": 1}` |
+| **Default** | New signups get `editor` role |
+| **Admin API** | `GET/PATCH /api/v1/admin/users` — admin-only user management |
+| **Self-demotion** | Blocked — admin cannot demote themselves |
+| **Frontend** | `authStore.hasRole(min)` helper + role extraction from Firebase JWT claims |
+
+#### RBAC Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as React App
+    participant FA as Firebase Auth
+    participant B as FastAPI
+    participant DB as Neon PostgreSQL
+
+    U->>F: Login
+    F->>FA: signIn()
+    FA-->>F: ID Token (includes custom claims: {role: "editor"})
+    F->>F: authStore extracts role from claims
+    F->>B: POST /estimates/manual (Bearer token)
+    B->>B: verify_id_token() → extract role
+    B->>B: require_role("editor") → PASS ✅
+    B->>DB: INSERT estimate
+    B-->>F: 201 Created
+
+    Note over U,DB: Viewer tries write operation
+    U->>F: Try create estimate
+    F->>B: POST /estimates/manual (Bearer token, role=viewer)
+    B->>B: require_role("editor") → FAIL ❌
+    B-->>F: 403 Forbidden
+```
+
+---
+
+## 11A. Architecture & Code Quality
+
+> **NEW in v3.2.0** — Service layer refactor, Alembic migrations, object storage, and background tasks.
+
+### 11A.1 Service Layer Architecture
+
+`estimates.py` was refactored from a 641-line monolith into a thin controller (~290 lines) delegating to `EstimateService` (~320 lines):
+
+```
+estimates.py (Controller — HTTP routing, auth, response formatting)
+  └── estimate_service.py (Service — business logic, DB queries, ML pipeline)
+       ├── run_estimation()      — Full ML pipeline orchestration
+       ├── list_estimates()      — Paginated list with filtering
+       ├── get_estimate()        — Single estimate by ID + ownership check
+       ├── duplicate_estimate()  — Version duplication
+       ├── delete_estimate()     — Soft delete with ownership check
+       └── create_share_link()   — Share URL generation with optional password
+```
+
+### 11A.2 Alembic Database Migrations
+
+Versioned, reversible database migrations using raw SQL (compatible with asyncpg):
+
+| Migration | Description |
+|-----------|-------------|
+| `001_initial` | Baseline schema (profiles, documents, estimates, share_links) |
+| `002_add_role` | RBAC: adds `role` and `email` columns to profiles |
+
+```bash
+# Apply all migrations
+alembic upgrade head
+
+# Generate a new migration
+alembic revision -m "add feature"
+
+# Rollback one step
+alembic downgrade -1
+```
+
+### 11A.3 Object Storage (StorageService)
+
+```mermaid
+graph LR
+    A["documents.py"] --> B["StorageService"]
+    B --> C{"STORAGE_BACKEND"}
+    C -->|local| D["LocalStorageBackend\n./uploads/"]
+    C -->|s3| E["S3StorageBackend\nAWS S3 / MinIO"]
+```
+
+| Method | Description |
+|--------|-------------|
+| `upload(key, data, content_type)` | Store file, return storage key |
+| `download(key)` | Retrieve file bytes |
+| `delete(key)` | Remove file from storage |
+| `exists(key)` | Check if file exists |
+
+### 11A.4 Background Tasks
+
+Non-blocking post-request processing using FastAPI `BackgroundTasks`:
+
+| Task | Trigger | Purpose |
+|------|---------|---------|
+| `log_estimation_analytics` | After estimate creation | Analytics data for model retraining |
+| `update_document_preview` | After document upload | Parse text preview asynchronously |
+| `sync_profile_role` | After login | Sync Firebase claims → DB |
+
+### 11A.5 Configurable Connection Pool
+
+Database pool parameters are environment-configurable (no hardcoded values):
+
+| Variable | Default | Production Recommendation |
+|----------|:-------:|:------------------------:|
+| `DB_POOL_MIN_SIZE` | 2 | 5-10 |
+| `DB_POOL_MAX_SIZE` | 10 | 20-50 |
+| `DB_COMMAND_TIMEOUT` | 30 | 60 |
 
 ---
 
@@ -1695,7 +1877,10 @@ Dependabot checks for outdated dependencies every Monday and auto-creates PRs:
 
 | Test Module | Tests | Coverage Area |
 |------------|:-----:|--------------|
+| `test_api_integration.py` | 48 | Full API endpoint integration tests (NEW v3.2) |
 | `test_nlp_extractor.py` | 35 | 4-strategy cascade, all 11 fields, edge cases |
+| `test_rbac.py` | 29 | Role hierarchy, require_role, admin API, self-demotion (NEW v3.2) |
+| `test_phase3.py` | 25 | Service layer, storage, background tasks, pool config (NEW v3.2) |
 | `test_cost_calculator.py` | 18 | IFPUG FP, phase breakdown, cost conversion |
 | `test_export_service.py` | 17 | PDF/Excel/CSV export generation |
 | `test_sanitize.py` | 16 | XSS prevention, HTML/script stripping |
@@ -1706,30 +1891,36 @@ Dependabot checks for outdated dependencies every Monday and auto-creates PRs:
 | `test_ml_service.py` | 11 | Feature vector, T-factors, complexity mapping |
 | `test_risk_analyzer.py` | 10 | Risk scoring, levels, factor triggers |
 | `test_database.py` | 10 | Retry logic, backoff sequence, pool state |
-| `test_security.py` | 9 | CurrentUser model, auth, serialization |
+| `test_security.py` | 9 | CurrentUser model, auth, RBAC serialization |
 | `test_document_parser.py` | 8 | PDF/DOCX/TXT parsing, error recovery |
 | `test_currencies.py` | 7 | Currency conversion, fallback rates |
 | `test_health.py` | 7 | Health endpoint, model status, DB/Firebase |
 | `test_benchmark.py` | 5 | Industry comparison data |
-| **Total** | **214** | **16 test files** |
+| **Total** | **316** | **19 test files** |
 
-### 15.2 Current Test Results (v3.1.6)
+### 15.2 Current Test Results (v3.2.0)
 
 ```
-214 passed, 0 failures
+316 passed, 0 failures
+All API integration tests (48/48) ✅
 All NLP tests (35/35) ✅
+All RBAC tests (29/29) ✅
+All Phase 3 tests (25/25) ✅
 All cost tests (18/18) ✅
 All export tests (17/17) ✅
 All sanitize tests (16/16) ✅
 All profile tests (15/15) ✅
 All audit tests (15/15) ✅
 All config tests (14/14) ✅
+All inference tests (12/12) ✅
 All ML tests (11/11) ✅
 All risk tests (10/10) ✅
 All DB tests (10/10) ✅
 All security tests (9/9) ✅
+All parser tests (8/8) ✅
 All currency tests (7/7) ✅
 All health tests (7/7) ✅
+All benchmark tests (5/5) ✅
 TypeScript compilation: 0 errors ✅
 Security scanner: ALL CHECKS PASSED ✅
 ```
@@ -1768,6 +1959,44 @@ python -m pytest tests/ --cov=app --cov-report=html
 ---
 
 ## 16. Changelog
+
+### v3.2.0 — May 11, 2026
+
+**RBAC (Role-Based Access Control)**
+- 3-role hierarchy: `admin` > `editor` > `viewer` using Firebase Custom Claims
+- `require_role(minimum_role)` FastAPI dependency factory for route-level enforcement
+- `profiles.role` column (DB source of truth) + `profiles.email` column
+- Admin user management API: `GET/PATCH /api/v1/admin/users` (admin-only)
+- Self-demotion protection: admins cannot downgrade their own role
+- Frontend `authStore` extracts role from Firebase JWT claims, exposes `hasRole()` helper
+- All write routes now require `editor+`, admin routes require `admin`
+
+**Architecture & Code Quality**
+- **Alembic Migrations**: Versioned, reversible database migrations with raw SQL (asyncpg-compatible)
+  - `001_initial` baseline schema + `002_add_role` RBAC migration
+- **Service Layer Refactor**: `estimates.py` reduced from 641 → ~290 lines; business logic extracted to `EstimateService` (~320 lines)
+- **Object Storage**: `StorageService` with dual backend — local filesystem (dev) and AWS S3 (prod)
+  - Documents no longer stored as PostgreSQL BYTEA; storage path references used instead
+- **Background Tasks**: FastAPI `BackgroundTasks` for analytics logging and document preview parsing
+- **Configurable DB Pool**: `DB_POOL_MIN_SIZE`, `DB_POOL_MAX_SIZE`, `DB_COMMAND_TIMEOUT` environment variables
+
+**New Files**
+- `backend/app/api/v1/admin.py` — Admin user management routes
+- `backend/app/services/estimate_service.py` — EstimateService business logic
+- `backend/app/services/storage_service.py` — Dual-backend object storage
+- `backend/app/services/background_tasks.py` — Async background task definitions
+- `backend/alembic/` — Full Alembic migration infrastructure
+- `backend/migrations/002_add_role_column.sql` — RBAC raw SQL migration
+
+**Testing**
+- 29 new RBAC tests covering role hierarchy, require_role enforcement, admin API, self-demotion
+- 25 new Phase 3 tests covering service layer, storage abstraction, background tasks, pool config
+- 48 new API integration tests
+- Total test suite: **214 → 316 tests** (0 failures, 0 regressions)
+
+**New Environment Variables**: `DB_POOL_MIN_SIZE`, `DB_POOL_MAX_SIZE`, `DB_COMMAND_TIMEOUT`, `STORAGE_BACKEND`, `S3_BUCKET_NAME`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT_URL`, `LOCAL_STORAGE_PATH`
+
+---
 
 ### v3.1.1 — April 24, 2026
 
@@ -1893,4 +2122,4 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 ---
 
-> *Built by Atharv Sawane & Team - Predictify v3.1.6*
+> *Built by Atharv Sawane & Team - Predictify v3.2.0*
