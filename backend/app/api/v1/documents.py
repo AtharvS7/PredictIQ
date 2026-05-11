@@ -6,9 +6,10 @@ Files are stored as BYTEA in Neon PostgreSQL.
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 import structlog
 import json
-from app.core.security import get_current_user, CurrentUser
+from app.core.security import get_current_user, require_role, CurrentUser
 from app.core.database import get_db
 from app.models.document import DocumentUploadRequest, DocumentMetadata
+from app.services.storage_service import storage_service
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -17,7 +18,7 @@ logger = structlog.get_logger()
 @router.post("/documents/upload", response_model=DocumentMetadata)
 async def confirm_document_upload(
     request: DocumentUploadRequest,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_role("editor")),
 ):
     """
     Confirm a document upload — stores metadata in the database.
@@ -71,8 +72,9 @@ async def upload_document_file(
     user: CurrentUser = Depends(get_current_user),
 ):
     """
-    Upload a document file directly to the backend.
-    File bytes are stored in the database (BYTEA column).
+    Upload a document file.
+    Files are stored via the configured storage backend (local filesystem or S3).
+    Only metadata is saved in the database.
     """
     try:
         # Read file content
@@ -100,30 +102,40 @@ async def upload_document_file(
                 detail=f"Unsupported file type: {mime}. Allowed: PDF, DOCX, TXT",
             )
 
-        pool = await get_db()
-        storage_path = f"{user.id}/{file.filename}"
+        # Upload to storage backend (local or S3)
+        storage_key = storage_service.generate_key(user.id, file.filename)
+        await storage_service.upload(file_content, storage_key, mime)
 
+        # Save metadata to database (no BYTEA — file data is in object storage)
+        pool = await get_db()
         row = await pool.fetchrow(
             """INSERT INTO document_uploads
-               (user_id, storage_path, original_filename, file_size_bytes, mime_type, status, file_data)
-               VALUES ($1, $2, $3, $4, $5, 'uploaded', $6)
+               (user_id, storage_path, original_filename, file_size_bytes, mime_type, status)
+               VALUES ($1, $2, $3, $4, $5, 'uploaded')
                RETURNING id, user_id, storage_path, original_filename, file_size_bytes,
                          mime_type, status, parsed_text_preview, created_at""",
             user.id,
-            storage_path,
+            storage_key,
             file.filename,
             file_size,
             mime,
-            file_content,
         )
 
         if not row:
+            # Cleanup uploaded file if DB insert fails
+            await storage_service.delete(storage_key)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to save document",
             )
 
-        logger.info("document_file_uploaded", doc_id=str(row["id"]), user_id=user.id, size=file_size)
+        logger.info(
+            "document_file_uploaded",
+            doc_id=str(row["id"]),
+            user_id=user.id,
+            size=file_size,
+            storage_key=storage_key,
+        )
 
         return DocumentMetadata(
             id=str(row["id"]),

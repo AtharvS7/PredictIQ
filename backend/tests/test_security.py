@@ -25,9 +25,9 @@ class TestCurrentUserModel:
         assert user.email == "test@example.com"
 
     def test_default_role(self):
-        """Default role should be 'authenticated'."""
+        """Default role should be 'editor'."""
         user = CurrentUser(id="user-123")
-        assert user.role == "authenticated"
+        assert user.role == "editor"
 
     def test_custom_role(self):
         """Custom role should be accepted."""
@@ -56,11 +56,11 @@ class TestCurrentUserModel:
         d = user.model_dump()
         assert d["id"] == "user-123"
         assert d["email"] == "a@b.com"
-        assert d["role"] == "authenticated"
+        assert d["role"] == "editor"
 
     def test_json_serialization(self):
         """Model should serialize to JSON string."""
         user = CurrentUser(id="user-123")
         json_str = user.model_dump_json()
         assert "user-123" in json_str
-        assert "authenticated" in json_str
+        assert "editor" in json_str
