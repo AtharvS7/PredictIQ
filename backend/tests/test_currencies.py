@@ -3,13 +3,13 @@ Predictify — Currency Service & Endpoint Tests
 Tests the live exchange rate fetching, caching, and conversion logic.
 """
 
-import pytest
 import asyncio
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch
 
+import pytest
 from app.services.currency_service import (
-    CurrencyService,
     EMERGENCY_FALLBACK_RATES,
+    CurrencyService,
 )
 
 

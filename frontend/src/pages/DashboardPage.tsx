@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
 import SEOHead from '@/components/shared/SEOHead';
@@ -18,8 +18,6 @@ export default function DashboardPage() {
   const { profile } = useAuthStore();
   const { estimates, totalEstimates, loading, fetchEstimates } =
     useEstimateStore();
-
-  const navigate = useNavigate();
 
   // Sidebar state
   const [collapsed, setCollapsed] = useState(false);
@@ -52,17 +50,18 @@ export default function DashboardPage() {
   }).length;
 
   const getRiskColor = (risk?: string) => {
-    if (!risk) return 'black';
+    if (!risk) return 'var(--text-secondary)';
 
     switch (risk.toLowerCase()) {
       case 'low':
-        return '#DC2626';
+        return 'var(--color-success)';
       case 'medium':
-        return '#1E3A8A';
+        return 'var(--color-warning)';
       case 'high':
-        return '#16A34A';
+      case 'critical':
+        return 'var(--color-danger)';
       default:
-        return 'black';
+        return 'var(--text-secondary)';
     }
   };
 
@@ -103,10 +102,10 @@ export default function DashboardPage() {
             <div
               style={{
                 marginBottom: 32,
-                border: `2px solid var(--text-primary)`,
+                border: '1px solid var(--border-color)',
                 borderRadius: 16,
                 padding: '28px 32px',
-                background: 'transparent'
+                background: 'var(--bg-surface)'
               }}
             >
               <h1
@@ -142,9 +141,9 @@ export default function DashboardPage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 8,
-                  background: 'transparent',
-                  border: `2px solid var(--text-primary)`,
-                  color: 'var(--text-primary)',
+                  background: 'var(--color-primary)',
+                  border: '1px solid var(--color-primary)',
+                  color: 'white',
                   fontWeight: 600,
                   padding: '10px 16px',
                   borderRadius: 8,
@@ -175,7 +174,7 @@ export default function DashboardPage() {
                 {
                   icon: Target,
                   label: 'Avg Confidence',
-                  value: `${avgConfidence}%`
+                  value: estimates.length ? `${avgConfidence}%` : '—'
                 },
                 {
                   icon: Calendar,
@@ -222,7 +221,7 @@ export default function DashboardPage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
                 gap: 20
               }}
             >
@@ -252,7 +251,7 @@ export default function DashboardPage() {
                         color: 'var(--text-primary)'
                       }}
                     >
-                      Drop a project document
+                      Choose a project document
                     </p>
 
                     <p
@@ -301,14 +300,14 @@ export default function DashboardPage() {
                     }}
                   >
                     {estimates.slice(0, 5).map((est) => (
-                      <div
+                      <Link
                         key={est.id}
-                        onClick={() =>
-                          navigate(
-                            `/estimate/${est.id}/results`
-                          )
-                        }
+                        to={`/estimate/${est.id}/results`}
                         style={{
+                          color: 'var(--text-primary)',
+                          textDecoration: 'none',
+                          gap: 12,
+                          overflowWrap: 'anywhere',
                           padding: '10px 12px',
                           borderRadius: 10,
                           display: 'flex',
@@ -356,7 +355,7 @@ export default function DashboardPage() {
                             {est.risk_level}
                           </span>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 )}

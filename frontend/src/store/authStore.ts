@@ -1,6 +1,7 @@
 /**
- * Predictify — Auth Store (Firebase Auth)
+ * Predictify — Auth Store (Firebase Auth + RBAC)
  * Zustand store managing authentication state via Firebase.
+ * Extracts role from Firebase custom claims for RBAC enforcement.
  */
 import { create } from 'zustand';
 import { auth } from '@/lib/firebase';
@@ -24,6 +25,8 @@ interface AuthState {
   profile: UserProfile | null;
   loading: boolean;
   initialized: boolean;
+  /** User's RBAC role extracted from Firebase custom claims */
+  role: 'admin' | 'editor' | 'viewer';
   /** Convenience getter — true when user is signed in */
   session: { user: User } | null;
   setProfile: (profile: UserProfile | null) => void;
@@ -35,6 +38,8 @@ interface AuthState {
   resetPassword: (email: string) => Promise<void>;
   fetchProfile: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  /** Check if user has at least the given role */
+  hasRole: (minimumRole: 'admin' | 'editor' | 'viewer') => boolean;
 }
 
 const googleProvider = new GoogleAuthProvider();
@@ -64,11 +69,14 @@ function mapFirebaseError(error: any): Error {
   return new Error(messages[code] || error?.message || 'Authentication failed. Please try again.');
 }
 
+const ROLE_LEVELS: Record<string, number> = { viewer: 1, editor: 2, admin: 3 };
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
   loading: false,
   initialized: false,
+  role: 'editor',
   session: null,
 
   setProfile: (profile) => set({ profile }),
@@ -76,13 +84,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     return new Promise<void>((resolve) => {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        set({
-          user,
-          session: user ? { user } : null,
-          initialized: true,
-        });
-
         if (user) {
+          // Extract role from Firebase custom claims
+          const tokenResult = await user.getIdTokenResult();
+          const role = (tokenResult.claims.role as string) || 'editor';
+          const validRole = ['admin', 'editor', 'viewer'].includes(role)
+            ? (role as 'admin' | 'editor' | 'viewer')
+            : 'editor';
+
+          set({
+            user,
+            role: validRole,
+            session: { user },
+            initialized: true,
+          });
+
           // Fetch profile from backend
           try {
             await get().fetchProfile();
@@ -90,7 +106,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             // Profile may not exist yet for new users
           }
         } else {
-          set({ profile: null });
+          set({
+            user: null,
+            role: 'editor',
+            session: null,
+            profile: null,
+            initialized: true,
+          });
         }
 
         resolve();
@@ -206,10 +228,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (error: any) {
       if (error?.code === 'auth/popup-closed-by-user') {
-        throw new Error('Sign-in popup was closed');
+        throw new Error('Sign-in popup was closed', { cause: error });
       }
       if (error?.code === 'auth/unauthorized-domain') {
-        throw new Error('Add domain in Firebase console');
+        throw new Error('Add domain in Firebase console', { cause: error });
       }
       throw error;
     }
@@ -217,7 +239,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     await firebaseSignOut(auth);
-    set({ user: null, session: null, profile: null });
+    set({ user: null, session: null, profile: null, role: 'editor' });
   },
 
   resetPassword: async (email) => {
@@ -256,5 +278,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('Update profile error:', error);
       throw error;
     }
+  },
+
+  hasRole: (minimumRole) => {
+    const userLevel = ROLE_LEVELS[get().role] ?? 0;
+    const requiredLevel = ROLE_LEVELS[minimumRole] ?? 0;
+    return userLevel >= requiredLevel;
   },
 }));

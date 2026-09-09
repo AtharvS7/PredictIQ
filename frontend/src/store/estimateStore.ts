@@ -64,7 +64,7 @@ export const useEstimateStore = create<EstimateState>((set, get) => ({
   },
 
   fetchEstimate: async (id) => {
-    set({ loading: true, error: null });
+    set({ loading: true, error: null, currentEstimate: null });
     try {
       const response = await getEstimate(id);
       set({ currentEstimate: response.data });
@@ -77,15 +77,18 @@ export const useEstimateStore = create<EstimateState>((set, get) => ({
   },
 
   removeEstimate: async (id) => {
+    set({ error: null });
     try {
       await deleteEstimate(id);
       set((state) => ({
         estimates: state.estimates.filter((e) => e.id !== id),
-        totalEstimates: state.totalEstimates - 1,
+        totalEstimates: Math.max(0, state.totalEstimates - 1),
+        currentEstimate: state.currentEstimate?.estimate_id === id ? null : state.currentEstimate,
       }));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete estimate';
       set({ error: message });
+      throw error;
     }
   },
 

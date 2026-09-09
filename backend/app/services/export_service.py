@@ -5,17 +5,22 @@ Supports multi-currency output with live exchange rates.
 """
 import io
 from datetime import datetime
-from typing import Optional
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch, cm
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    HRFlowable, PageBreak
-)
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from html import escape
+
 import structlog
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    HRFlowable,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
 logger = structlog.get_logger()
 
@@ -129,18 +134,6 @@ def generate_pdf_report(
         textColor=BRAND_DARK,
         leading=14,
     )
-    metric_label = ParagraphStyle(
-        "MetricLabel",
-        parent=styles["Normal"],
-        fontSize=9,
-        textColor=BRAND_GRAY,
-    )
-    metric_value = ParagraphStyle(
-        "MetricValue",
-        parent=styles["Normal"],
-        fontSize=18,
-        textColor=BRAND_DARK,
-    )
 
     elements = []
     inputs = estimate.get("inputs", {})
@@ -149,7 +142,7 @@ def generate_pdf_report(
     # ── Header ──────────────────────────────────────────────
     elements.append(Paragraph("Predictify", title_style))
     elements.append(Paragraph(
-        f"Cost Estimation Report — {estimate.get('project_name', 'Project')}",
+        f"Cost Estimation Report — {escape(str(estimate.get('project_name', 'Project')))}",
         subtitle_style,
     ))
     elements.append(HRFlowable(
@@ -220,7 +213,7 @@ def generate_pdf_report(
 
     conf_pct = outputs.get("confidence_pct", 0)
     elements.append(Paragraph(
-        f"<b>Confidence:</b> {conf_pct:.0f}% | "
+        f"<b>Heuristic confidence (not a calibrated probability):</b> {conf_pct:.0f}% | "
         f"<b>Risk Score:</b> {outputs.get('risk_score', 0):.0f}/100 "
         f"({outputs.get('risk_level', 'N/A')})",
         body_style,
@@ -269,8 +262,8 @@ def generate_pdf_report(
 
         elements.append(Paragraph(
             f'<font color="{sev_color}">●</font> '
-            f'<b>{risk.get("name", "")}</b> ({severity}): '
-            f'{risk.get("description", "")}',
+            f'<b>{escape(str(risk.get("name", "")))}</b> ({escape(str(severity))}): '
+            f'{escape(str(risk.get("description", "")))}',
             body_style,
         ))
         elements.append(Spacer(1, 4))
@@ -278,11 +271,11 @@ def generate_pdf_report(
     # ── Benchmark & Insights ────────────────────────────────
     if outputs.get("benchmark_comparison"):
         elements.append(Paragraph("Benchmark Comparison", heading_style))
-        elements.append(Paragraph(outputs["benchmark_comparison"], body_style))
+        elements.append(Paragraph(escape(str(outputs["benchmark_comparison"])), body_style))
 
     if outputs.get("model_explanation"):
         elements.append(Paragraph("AI Model Insights", heading_style))
-        elements.append(Paragraph(outputs["model_explanation"], body_style))
+        elements.append(Paragraph(escape(str(outputs["model_explanation"])), body_style))
 
     # ── Exchange Rate Note ──────────────────────────────────
     if cc != "USD":

@@ -3,6 +3,7 @@ Predictify — Document Parser Tests
 Tests for PDF, DOCX, and TXT text extraction.
 """
 import io
+
 import pytest
 from app.services.document_parser import DocumentParser
 
@@ -57,9 +58,9 @@ class TestPdfParsing:
     def _make_minimal_pdf(self, text: str = "Sample project specification") -> bytes:
         """Create a PDF in memory using ReportLab with enough content to pass validation."""
         try:
-            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
             from reportlab.lib.styles import getSampleStyleSheet
             from reportlab.lib.units import inch
+            from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
             buf = io.BytesIO()
             doc = SimpleDocTemplate(buf)
             styles = getSampleStyleSheet()

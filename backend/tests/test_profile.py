@@ -3,10 +3,12 @@ Predictify — Profile Module Tests
 Tests for ALLOWED_PROFILE_COLUMNS allowlist and _build_update_query() SQL safety.
 """
 import pytest
-from fastapi import HTTPException
 from app.api.v1.profile import (
-    ALLOWED_PROFILE_COLUMNS, _build_update_query, ProfileUpdate,
+    ALLOWED_PROFILE_COLUMNS,
+    ProfileUpdate,
+    _build_update_query,
 )
+from fastapi import HTTPException
 
 
 class TestAllowedColumns:

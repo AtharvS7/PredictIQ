@@ -18,6 +18,7 @@ import os
 import re
 import sys
 import subprocess
+from urllib.parse import urlsplit
 
 # ── Configuration ──────────────────────────────────────────────────
 
@@ -32,6 +33,7 @@ SKIP_DIRS = {
     "node_modules", ".git", "venv", ".venv", "__pycache__",
     "dist", "build", ".pytest_cache", ".mypy_cache", ".ruff_cache",
     "artifacts", ".code-review-graph",
+    ".tools", ".agents", ".claude", "coverage", "test-results", "playwright-report",
 }
 
 SKIP_FILES = {
@@ -49,7 +51,7 @@ SECRET_PATTERNS = [
     ("AWS Access Key", r"AKIA[0-9A-Z]{16}", True),
     ("Private Key Block", r"-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----", True),
     ("Hardcoded Password", r"(?:password|passwd|pwd)\s*[=:]\s*['\"][^'\"]{8,}['\"]", False),
-    ("Database URL with credentials", r"(?:postgres|mysql|mongodb)://[^:]+:[^@]+@[^/]+/", True),
+    ("Database URL with credentials", r"(?:postgres(?:ql)?|mysql|mongodb)://[^\s:]+:[^\s@]+@[^\s/]+/", True),
 ]
 
 # .gitignore entries that MUST exist
@@ -100,7 +102,7 @@ def check_secrets() -> list[str]:
 
     for root, dirs, files in os.walk(PROJECT_ROOT):
         # Skip ignored directories
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".agents-")]
 
         for filename in files:
             if filename in SKIP_FILES:
@@ -125,6 +127,9 @@ def check_secrets() -> list[str]:
 
             for name, pattern, is_critical in SECRET_PATTERNS:
                 matches = re.findall(pattern, content, re.IGNORECASE)
+                if name == "Database URL with credentials":
+                    matches = [value for value in matches if urlsplit(value).hostname not in
+                               {"localhost", "127.0.0.1", "host", "db", "postgres", "example.com"}]
                 if matches:
                     severity = "CRITICAL" if is_critical else "WARNING"
                     issue = f"{severity}: {name} found in {rel_path}"
@@ -148,6 +153,10 @@ def check_env_not_tracked() -> list[str]:
             capture_output=True, text=True, cwd=PROJECT_ROOT,
         )
         tracked = result.stdout.strip().split("\n") if result.stdout.strip() else []
+        if result.returncode:
+            issue = "CRITICAL: Git metadata unavailable; tracked secret files cannot be verified"
+            log_fail(issue)
+            return [issue]
     except FileNotFoundError:
         log_warn("git not found — skipping tracked-file check")
         return issues

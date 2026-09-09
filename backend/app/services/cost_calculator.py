@@ -5,9 +5,7 @@ Layer 1: IFPUG Function Point Estimation
 Layer 2: XGBoost ML Prediction (via ml_service)
 Layer 3: Parametric Cost Conversion
 """
-import numpy as np
 import structlog
-from typing import Optional
 
 logger = structlog.get_logger()
 

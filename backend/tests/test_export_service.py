@@ -2,12 +2,11 @@
 Predictify — Export Service Tests
 Tests for PDF generation and currency formatting in export_service.py
 """
-import pytest
 from app.services.export_service import (
-    _format_currency, generate_pdf_report,
-    CURRENCY_SYMBOLS, BRAND_BLUE, BRAND_DARK,
+    CURRENCY_SYMBOLS,
+    _format_currency,
+    generate_pdf_report,
 )
-
 
 # ── Sample estimate fixture ────────────────────────────────────
 
@@ -56,6 +55,13 @@ def _make_estimate(project_name="Test Project"):
 
 
 # ── Currency Formatting Tests ──────────────────────────────────
+
+def test_pdf_treats_customer_text_as_text_not_reportlab_markup():
+    estimate = _make_estimate('<img src="/does-not-exist/private-file"/> & Customer')
+    estimate["outputs"]["model_explanation"] = '<img src="/does-not-exist/private-file"/>'
+    estimate["outputs"]["benchmark_comparison"] = "Cost < budget & timeline > target"
+    estimate["outputs"]["top_risks"][0]["description"] = "<broken markup & raw data"
+    assert generate_pdf_report(estimate).startswith(b"%PDF")
 
 class TestFormatCurrency:
     """Tests for _format_currency() helper."""

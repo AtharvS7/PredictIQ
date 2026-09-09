@@ -8,11 +8,11 @@ calls predictor.predict() for effort estimation.
 Used by estimates.py via: ml_service.predict(params)
 """
 
+
 import numpy as np
 import structlog
-from typing import Any
-
-from ml.inference import predictor
+from fastapi import HTTPException
+from ml.inference import MLUnavailableError, predictor
 
 logger = structlog.get_logger()
 
@@ -44,8 +44,10 @@ METHODOLOGY_T05: dict[str, float] = {
 # the ISBSG repository statistics for software function points.
 FP_TRANSACTION_RATIO = 0.85     # Transactions ≈ 85% of total FP (EI + EO + EQ)
 FP_ENTITY_RATIO = 0.30          # Entities ≈ 30% of total FP (ILF + EIF)
-FP_ADJUSTMENT_BASE = 0.80       # Base value adjustment factor (VAF minimum)
+FP_ADJUSTMENT_BASE = 0.80       # Product heuristic for the value adjustment factor
 FP_ADJUSTMENT_SCALE = 0.04      # Complexity scaling factor per T-factor unit
+FP_VAF_INTERCEPT = 0.65        # Training Adjustment is total influence, not VAF
+FP_VAF_INFLUENCE_SCALE = 0.01
 
 
 def _team_size_to_exp(team_size: int) -> float:
@@ -78,7 +80,10 @@ class MLService:
         """
         feature_vector = self._build_feature_vector(params)
 
-        result = predictor.predict(feature_vector)
+        try:
+            result = predictor.predict(feature_vector)
+        except MLUnavailableError as exc:
+            raise HTTPException(status_code=503, detail="Prediction service is unavailable") from exc
 
         logger.info(
             "ml_prediction_complete",
@@ -100,6 +105,8 @@ class MLService:
         size_fp = float(params.get("size_fp", 150.0))
         duration = float(params.get("duration_months", 6.0))
         team_size = int(params.get("team_size", 4))
+        if not np.isfinite([size_fp, duration]).all() or size_fp <= 0 or duration <= 0 or team_size <= 0:
+            raise ValueError("Project size, duration and team size must be positive and finite")
         complexity = params.get("complexity", "Medium")
         methodology = params.get("methodology", "Agile")
 
@@ -117,8 +124,11 @@ class MLService:
         # Derived FP components (using IFPUG-derived constants)
         transactions = size_fp * FP_TRANSACTION_RATIO
         entities = size_fp * FP_ENTITY_RATIO
-        raw_fp = size_fp / max(FP_ADJUSTMENT_BASE + c_score * FP_ADJUSTMENT_SCALE, 0.01)
-        adjustment = size_fp / max(raw_fp, 1.0)
+        value_adjustment_factor = FP_ADJUSTMENT_BASE + c_score * FP_ADJUSTMENT_SCALE
+        raw_fp = size_fp / value_adjustment_factor
+        # Dataset units: adjusted FP = raw FP * (0.65 + 0.01 * Adjustment).
+        # Preserve the existing VAF heuristic while matching the trained column.
+        adjustment = (value_adjustment_factor - FP_VAF_INTERCEPT) / FP_VAF_INFLUENCE_SCALE
 
         # T-factors: systematic mapping from project characteristics
         t01 = min(5.0, max(1.0, c_score * 0.9))       # Data communication

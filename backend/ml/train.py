@@ -18,42 +18,36 @@ Run: python backend/ml/train.py
 Fully autonomous -- no user interaction required.
 """
 
-import os
-import sys
+import hashlib
 import json
 import pickle
+import sys
 import time
 import warnings
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-import matplotlib
-matplotlib.use("Agg")  # Non-interactive backend
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-warnings.filterwarnings("ignore")
-
-from sklearn.model_selection import train_test_split, cross_val_score, KFold
-from sklearn.preprocessing import StandardScaler, RobustScaler
-from sklearn.linear_model import LinearRegression, Ridge, Lasso
-from sklearn.ensemble import (
-    RandomForestRegressor,
-    GradientBoostingRegressor,
-    ExtraTreesRegressor,
-)
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-
 import xgboost as xgb
+from sklearn.ensemble import (
+    ExtraTreesRegressor,
+    GradientBoostingRegressor,
+    RandomForestRegressor,
+)
+from sklearn.linear_model import Lasso, LinearRegression, Ridge
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
+from sklearn.preprocessing import StandardScaler
 
+plt.switch_backend("Agg")  # Non-interactive backend
+warnings.filterwarnings("ignore")
 
 # -- Paths -------------------------------------------------------------
 ML_DIR = Path(__file__).parent
-DATA_CSV = ML_DIR / "Predictify_merged_dataset.csv"
+DATA_CSV = ML_DIR / "predictiq_merged_dataset.csv"
 OUT_DIR = ML_DIR / "artifacts"
 OUT_DIR.mkdir(exist_ok=True)
 
@@ -80,7 +74,7 @@ def load_data() -> pd.DataFrame:
     """Load and validate the 740-row multi-source training dataset."""
     log("=" * 60)
     log("Predictify ML Training Pipeline v2.0 -- Starting")
-    log(f"Dataset: 740 projects (4 international sources)")
+    log("Dataset: 740 projects (4 international sources)")
     log(f"XGBoost version: {xgb.__version__}")
     log(f"NumPy version:   {np.__version__}")
     log(f"Pandas version:  {pd.__version__}")
@@ -88,9 +82,13 @@ def load_data() -> pd.DataFrame:
 
     if not DATA_CSV.exists():
         log(f"ERROR: Dataset not found at {DATA_CSV}")
-        log("Copy Predictify_merged_dataset.csv to backend/ml/ and retry.")
+        log("Copy predictiq_merged_dataset.csv to backend/ml/ and retry.")
         sys.exit(1)
 
+    with DATA_CSV.open("rb") as stream:
+        digest = hashlib.file_digest(stream, "sha256").hexdigest()
+    if digest == "fb3f923e5cd3ab7ed1567a2cf9a343dc0b900ada3460aec33a696f46ff695e01":
+        raise ValueError("Training blocked: 481 corrupted effort labels. Run rebuild_dataset.py and train_research.py.")
     df = pd.read_csv(DATA_CSV)
     log(f"\nDataset loaded: {df.shape[0]} rows x {df.shape[1]} columns")
     log(f"Effort range: {df['effort_hours'].min():.0f} - "
@@ -137,7 +135,7 @@ def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, list[st
     log(f"Samples per feature: {len(df) / len(feature_names):.1f}")
 
     # Save feature list (critical for inference)
-    feat_path = ML_DIR / "Predictify_features.json"
+    feat_path = ML_DIR / "predictiq_features.json"
     with open(feat_path, "w") as f:
         json.dump(feature_names, f, indent=2)
     log(f"Feature list saved -> {feat_path}")
@@ -163,7 +161,7 @@ def split_and_scale(
     X_test_s = scaler.transform(X_test)
 
     # Save scaler
-    scaler_path = ML_DIR / "Predictify_scaler.pkl"
+    scaler_path = ML_DIR / "predictiq_scaler.pkl"
     with open(scaler_path, "wb") as f:
         pickle.dump(scaler, f)
     log(f"Scaler saved -> {scaler_path}")
@@ -502,15 +500,13 @@ def save_artifacts(
     log("\n-- Step 10: Saving artifacts --")
 
     # Best model
-    model_path = ML_DIR / "Predictify_best_model.pkl"
+    model_path = ML_DIR / "predictiq_best_model.pkl"
     with open(model_path, "wb") as f:
         pickle.dump(best_model, f)
     size_kb = model_path.stat().st_size / 1024
     log(f"  Best model saved -> {model_path} ({size_kb:.1f} KB)")
 
     # Compute final evaluation metrics for best model
-    y_pred_log = best_model.predict(X_test_s)
-    y_pred = np.expm1(y_pred_log)
     y_true = np.expm1(np.array(y_test))
 
     # Find best model metrics from results
@@ -538,9 +534,9 @@ def save_artifacts(
         "top_features": top_features,
         "feature_list": feature_names,
         "production": {
-            "model_file": "Predictify_best_model.pkl",
-            "scaler_file": "Predictify_scaler.pkl",
-            "features_file": "Predictify_features.json",
+            "model_file": "predictiq_best_model.pkl",
+            "scaler_file": "predictiq_scaler.pkl",
+            "features_file": "predictiq_features.json",
             "effort_range": {
                 "min": int(y_true.min()),
                 "max": int(y_true.max()),
@@ -557,7 +553,7 @@ def save_artifacts(
         },
     }
 
-    report_path = ML_DIR / "Predictify_model_report.json"
+    report_path = ML_DIR / "predictiq_model_report.json"
     with open(report_path, "w") as f:
         json.dump(report, f, indent=2)
     log(f"  Model report saved -> {report_path}")
@@ -612,7 +608,7 @@ def main() -> None:
     plot_predictions(best_model, X_te, y_te, best_name, n_samples)
 
     # Save everything
-    report = save_artifacts(
+    save_artifacts(
         best_name, best_model, results, cv_results,
         fnames, top_features, X_te, y_te, n_samples,
     )

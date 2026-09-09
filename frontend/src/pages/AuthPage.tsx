@@ -191,7 +191,7 @@ export default function AuthPage() {
 
             {mode === 'register' && (
               <div>
-                <label className="label">Full Name</label>
+                <label className="label" htmlFor="auth-full-name">Full Name</label>
                 <div style={{ position: 'relative' }}>
                   <User size={16} style={{
                     position: 'absolute',
@@ -203,6 +203,8 @@ export default function AuthPage() {
 
                   <input
                     type="text"
+                    id="auth-full-name"
+                    autoComplete="name"
                     className="input-field"
                     style={{ paddingLeft: 36 }}
                     placeholder="John Smith"
@@ -215,7 +217,7 @@ export default function AuthPage() {
             )}
 
             <div>
-              <label className="label">Email</label>
+              <label className="label" htmlFor="auth-email">Email</label>
               <div style={{ position: 'relative' }}>
                 <Mail size={16} style={{
                   position: 'absolute',
@@ -227,6 +229,8 @@ export default function AuthPage() {
 
                 <input
                   type="email"
+                  id="auth-email"
+                  autoComplete="email"
                   className="input-field"
                   style={{ paddingLeft: 36 }}
                   placeholder="you@company.com"
@@ -239,7 +243,7 @@ export default function AuthPage() {
 
             {mode !== 'forgot' && (
               <div>
-                <label className="label">Password</label>
+                <label className="label" htmlFor="auth-password">Password</label>
                 <div style={{ position: 'relative' }}>
                   <Lock size={16} style={{
                     position: 'absolute',
@@ -251,6 +255,8 @@ export default function AuthPage() {
 
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    id="auth-password"
+                    autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                     className="input-field"
                     style={{ paddingLeft: 36, paddingRight: 40 }}
                     placeholder={mode === 'register'
@@ -264,10 +270,17 @@ export default function AuthPage() {
 
                   <button
                     type="button"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-controls="auth-password"
+                    aria-pressed={showPassword}
                     onClick={() => setShowPassword(!showPassword)}
                     style={{
                       position: 'absolute',
-                      right: 12,
+                      right: 0,
+                      width: 44,
+                      height: 44,
+                      display: 'grid',
+                      placeItems: 'center',
                       top: '50%',
                       transform: 'translateY(-50%)',
                       background: 'none',
@@ -284,7 +297,7 @@ export default function AuthPage() {
 
             {mode === 'register' && (
               <div>
-                <label className="label">Confirm Password</label>
+                <label className="label" htmlFor="auth-confirm-password">Confirm Password</label>
                 <div style={{ position: 'relative' }}>
                   <Lock size={16} style={{
                     position: 'absolute',
@@ -296,6 +309,8 @@ export default function AuthPage() {
 
                   <input
                     type="password"
+                    id="auth-confirm-password"
+                    autoComplete="new-password"
                     className="input-field"
                     style={{ paddingLeft: 36 }}
                     placeholder="Re-enter password"

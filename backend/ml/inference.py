@@ -1,34 +1,42 @@
-"""
+﻿"""
 Predictify Production Inference Module v2.0
 ============================================
 Loads trained model at server startup (via FastAPI lifespan).
 Provides predict() method used by ml_service.py.
-Falls back to demo mode if pkl artifacts are missing.
+Fails closed if artifacts or inference are invalid.
 
 Updated for 740-project multi-source dataset.
 Effort clamp range: 1-9587 hours (matching dataset bounds).
 
-Thread-safe: the predictor singleton is loaded once at startup
-and is read-only during request processing.
+The predictor singleton is loaded once at startup. Artifact failures
+disable readiness until the service is restarted or artifacts reloaded.
 """
 
-import pickle
 import json
 import logging
-import numpy as np
+import pickle
+import warnings
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
+
+import numpy as np
+from sklearn.exceptions import InconsistentVersionWarning
+
+from ml.artifact_safety import REVOKED_MODEL_SHA256, require_unrevoked
 
 logger = logging.getLogger(__name__)
 ML_DIR = Path(__file__).parent
 
-# Demo-mode plausible predictions keyed by size_fp bucket
-_DEMO_EFFORT_LOOKUP: dict[str, dict[str, float]] = {
-    "small":  {"likely": 800,  "min": 640,  "max": 1120},
-    "medium": {"likely": 2500, "min": 2000, "max": 3500},
-    "large":  {"likely": 5000, "min": 4000, "max": 7000},
-    "xlarge": {"likely": 8000, "min": 6400, "max": 9587},
-}
+EXPECTED_FEATURES = [
+    "TeamExp", "ManagerExp", "duration_months", "Transactions", "Entities",
+    "PointsNonAdjust", "Adjustment", "size_fp",
+    *[f"T{i:02d}" for i in range(1, 16)],
+    "log_size_fp", "complexity_score", "team_skill_avg", "risk_score",
+]
+
+
+class MLUnavailableError(RuntimeError):
+    """No trustworthy model prediction can be produced."""
 
 
 class PredictifyInference:
@@ -36,29 +44,42 @@ class PredictifyInference:
     Production ML inference engine.
 
     Loads model artifacts once at startup. Provides predict()
-    for concurrent request processing without locks (read-only).
+    for concurrent request processing. Runtime failures disable readiness.
     """
 
     def __init__(self) -> None:
-        self.model: Optional[Any] = None
-        self.scaler: Optional[Any] = None
-        self.feature_names: Optional[list[str]] = None
-        self.model_report: Optional[dict] = None
-        self.training_report: Optional[dict] = None
+        self.model: Any | None = None
+        self.scaler: Any | None = None
+        self.feature_names: list[str] | None = None
+        self.model_report: dict | None = None
+        self.training_report: dict | None = None
         self.is_ready: bool = False
         self.model_name: str = "unknown"
         self.n_features: int = 0
 
-    def load(self) -> bool:
+    def load(self, model_path=None, scaler_path=None, feature_path=None) -> bool:
         """
         Load model artifacts from backend/ml/.
-        Returns True if loaded successfully, False → demo mode.
+        Returns True only for a compatible, complete artifact bundle.
         """
-        model_path = ML_DIR / "Predictify_best_model.pkl"
-        scaler_path = ML_DIR / "Predictify_scaler.pkl"
-        feature_path = ML_DIR / "Predictify_features.json"
-        report_path = ML_DIR / "Predictify_model_report.json"
-        training_report_path = ML_DIR / "training_report.json"
+        self.is_ready = False
+        self.model = None
+        self.scaler = None
+        self.feature_names = None
+        self.model_report = None
+        self.training_report = None
+        self.model_name = "unknown"
+        self.n_features = 0
+
+        def artifact_path(value, filename):
+            path = Path(value) if value is not None else ML_DIR / filename
+            return path if path.is_absolute() else ML_DIR.parent / path
+
+        model_path = artifact_path(model_path, "predictiq_best_model.pkl")
+        scaler_path = artifact_path(scaler_path, "predictiq_scaler.pkl")
+        feature_path = artifact_path(feature_path, "predictiq_features.json")
+        report_path = model_path.parent / "predictiq_model_report.json"
+        training_report_path = model_path.parent / "training_report.json"
 
         missing = [
             p.name for p in [model_path, scaler_path, feature_path]
@@ -67,7 +88,7 @@ class PredictifyInference:
 
         if missing:
             logger.warning(
-                "ML artifacts missing: %s. Running in DEMO MODE. "
+                "ML artifacts missing: %s. Predictions unavailable. "
                 "Run `python backend/ml/train.py` to generate artifacts.",
                 missing,
             )
@@ -75,12 +96,24 @@ class PredictifyInference:
             return False
 
         try:
-            with open(model_path, "rb") as f:
-                self.model = pickle.load(f)
-            with open(scaler_path, "rb") as f:
-                self.scaler = pickle.load(f)
-            with open(feature_path, "r") as f:
-                self.feature_names = json.load(f)
+            require_unrevoked(model_path, REVOKED_MODEL_SHA256)
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", InconsistentVersionWarning)
+                with open(model_path, "rb") as model_file:
+                    self.model = pickle.load(model_file)
+                with open(scaler_path, "rb") as scaler_file:
+                    self.scaler = pickle.load(scaler_file)
+            with open(feature_path, "r") as feature_file:
+                self.feature_names = json.load(feature_file)
+
+            if self.feature_names != EXPECTED_FEATURES:
+                raise ValueError("Unsupported feature names or order")
+            for artifact in (self.scaler, self.model):
+                if getattr(artifact, "n_features_in_", None) != len(EXPECTED_FEATURES):
+                    raise ValueError("Artifact feature count mismatch")
+                names = getattr(artifact, "feature_names_in_", None)
+                if names is not None and list(names) != self.feature_names:
+                    raise ValueError("Artifact feature order mismatch")
 
             if report_path.exists():
                 with open(report_path, "r") as f:
@@ -101,7 +134,14 @@ class PredictifyInference:
 
             self.n_features = len(self.feature_names)
             self.model_name = type(self.model).__name__
+            if self.training_report:
+                if self.training_report.get("n_features", self.n_features) != self.n_features:
+                    raise ValueError("Training report feature count mismatch")
+                if self.training_report.get("feature_list", self.feature_names) != self.feature_names:
+                    raise ValueError("Training report feature order mismatch")
             self.is_ready = True
+            # Exercise preprocessing and prediction before advertising readiness.
+            self.predict(dict.fromkeys(self.feature_names, 1.0))
 
             logger.info(
                 "ML model loaded: %s | Features: %d | Samples: %s",
@@ -130,36 +170,50 @@ class PredictifyInference:
 
         Args:
             feature_dict: Keys matching Predictify_features.json.
-                          Missing keys are zero-filled.
+                          Every trained feature is required and must be finite.
 
         Returns:
             Dict with effort_hours (min/likely/max),
             confidence_pct, and model_mode.
         """
         if not self.is_ready:
-            return self._demo_predict(feature_dict)
+            raise MLUnavailableError("Prediction service is unavailable")
 
+        model_executed = False
         try:
             # Build vector in exact training order
             assert self.feature_names is not None
+            if self.scaler is None or self.model is None:
+                raise MLUnavailableError("Prediction artifacts are unavailable")
+            if set(feature_dict) != set(self.feature_names):
+                raise ValueError("Prediction features do not match trained features")
             vector = np.array(
-                [float(feature_dict.get(feat, 0.0)) for feat in self.feature_names],
+                [float(feature_dict[feat]) for feat in self.feature_names],
                 dtype=np.float64,
             ).reshape(1, -1)
 
-            # Replace any inf/-inf/nan
-            vector = np.nan_to_num(vector, nan=0.0, posinf=0.0, neginf=0.0)
+            if not np.isfinite(vector).all():
+                raise ValueError("Prediction features must be finite")
 
             # Scale using fitted scaler
+            model_executed = True
             vector_scaled = self.scaler.transform(vector)
+            if np.shape(vector_scaled) != vector.shape or not np.isfinite(vector_scaled).all():
+                raise ValueError("Invalid scaler output")
 
             # Predict in log space
-            log_pred = float(self.model.predict(vector_scaled)[0])
+            prediction = np.asarray(self.model.predict(vector_scaled))
+            if prediction.shape != (1,) or not np.isfinite(prediction).all():
+                raise ValueError("Invalid model output")
+            log_pred = float(prediction[0])
+            if log_pred < 0:
+                raise ValueError("Model predicted negative effort")
 
             # Convert back to effort hours
-            effort_likely = float(np.expm1(log_pred))
+            with np.errstate(over="raise", invalid="raise"):
+                effort_likely = float(np.expm1(log_pred))
 
-            # Confidence intervals -- asymmetric (conservative side wider)
+            # Heuristic scenario bounds, not calibrated confidence intervals.
             effort_min = effort_likely * 0.80
             effort_max = effort_likely * 1.40
 
@@ -176,21 +230,27 @@ class PredictifyInference:
                 "effort_hours_min": round(effort_min, 1),
                 "effort_hours_max": round(effort_max, 1),
                 "confidence_pct": confidence,
+                "confidence_method": "heuristic_not_calibrated_probability",
+                "interval_method": "heuristic_0.8x_1.4x_with_clamps",
                 "model_mode": "live",
                 "model_name": self.model_name,
                 "log_pred": round(log_pred, 4),
             }
 
         except Exception as e:
-            logger.error("Inference error: %s", e)
-            return self._demo_predict(feature_dict)
+            if model_executed:
+                self.is_ready = False
+            logger.error("Inference failed: %s", type(e).__name__)
+            raise MLUnavailableError("Prediction service is unavailable") from e
 
     def _estimate_confidence(
         self, effort_likely: float, feature_dict: dict
     ) -> float:
         """
-        Estimate prediction confidence based on:
-        - Model R² from training report
+        Compute a legacy heuristic score, not a probability of correctness.
+        It is not calibrated and does not quantify prediction interval coverage.
+        Inputs:
+        - Model RÂ² from training report
         - How well features were extracted (non-zero count)
         - Whether size_fp is in training distribution
         """
@@ -205,6 +265,8 @@ class PredictifyInference:
                     break
 
         base_confidence = base_r2 * 100 + 10
+        if not np.isfinite(base_confidence):
+            raise ValueError("Invalid confidence metadata")
 
         # Bonus for well-populated feature vectors
         non_zero = sum(
@@ -222,33 +284,6 @@ class PredictifyInference:
 
         return round(min(95.0, max(45.0, confidence)), 1)
 
-    def _demo_predict(self, feature_dict: dict) -> dict:
-        """
-        Demo mode: return realistic values based on size_fp.
-        Used when model artifacts are absent.
-        """
-        size_fp = float(feature_dict.get("size_fp", 150))
-
-        if size_fp <= 100:
-            bucket = "small"
-        elif size_fp <= 300:
-            bucket = "medium"
-        elif size_fp <= 600:
-            bucket = "large"
-        else:
-            bucket = "xlarge"
-
-        effort = _DEMO_EFFORT_LOOKUP[bucket]
-        return {
-            "effort_hours_likely": float(effort["likely"]),
-            "effort_hours_min": float(effort["min"]),
-            "effort_hours_max": float(effort["max"]),
-            "confidence_pct": 60.0,
-            "model_mode": "demo",
-            "model_name": "DemoMode",
-            "log_pred": float(np.log1p(effort["likely"])),
-        }
-
     def get_feature_importance(self) -> dict:
         """Return top feature importances from the model report."""
         report = self.training_report or self.model_report
@@ -260,8 +295,10 @@ class PredictifyInference:
         """Return model metadata for health endpoint."""
         info: dict[str, Any] = {
             "model_loaded": self.is_ready,
-            "model_mode": "live" if self.is_ready else "demo",
+            "model_mode": "live" if self.is_ready else "unavailable",
             "model_version": "2.0.0",
+            "confidence_method": "heuristic_not_calibrated_probability",
+            "interval_method": "heuristic_0.8x_1.4x_with_clamps",
         }
 
         report = self.training_report or self.model_report
@@ -277,7 +314,7 @@ class PredictifyInference:
                 ["albrecht", "china", "existing_desharnais_maxwell", "nasa93"]
             )
         else:
-            info["best_model"] = self.model_name if self.is_ready else "DemoMode"
+            info["best_model"] = self.model_name if self.is_ready else "unavailable"
             info["training_samples"] = 740
             info["n_features"] = self.n_features or 27
             info["r2_score"] = 0.0
@@ -289,3 +326,4 @@ class PredictifyInference:
 
 # Module-level singleton -- import this from anywhere
 predictor = PredictifyInference()
+

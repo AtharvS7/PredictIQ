@@ -7,7 +7,9 @@ import CurrencySelector from '@/components/shared/CurrencySelector';
 import { useEstimateStore } from '@/store/estimateStore';
 import { useCurrencyStore } from '@/store/currencyStore';
 import { useToast } from '@/App';
+import { useTheme } from '@/components/ThemeProvider';
 import { exportPDF, duplicateEstimate, createShareLink } from '@/lib/api';
+import { RISK_COLORS } from '@/lib/risk';
 import { Bar, PolarArea, Pie, Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement,
@@ -39,8 +41,10 @@ function getThemeColor(varName: string, fallback: string): string {
 type ChartType = 'bar' | 'polar' | 'pie' | 'line';
 
 export default function ResultsPage() {
+  // Canvas colors must be recomputed when appearance or system preference changes.
+  useTheme();
   const { id } = useParams<{ id: string }>();
-  const { currentEstimate, loading, fetchEstimate } = useEstimateStore();
+  const { currentEstimate, loading, error, fetchEstimate } = useEstimateStore();
   const { format, convert, symbol } = useCurrencyStore();
   const sym = symbol();
   const { addToast } = useToast();
@@ -80,12 +84,31 @@ export default function ResultsPage() {
     if (!id) return;
     try {
       const { data } = await createShareLink(id, { expires_in_days: 7 });
-      navigator.clipboard.writeText(window.location.origin + data.share_url);
+      await navigator.clipboard.writeText(window.location.origin + data.share_url);
       addToast('success', 'Share link copied to clipboard!');
     } catch {
       addToast('error', 'Failed to create share link');
     }
   };
+
+  if (!loading && (error || !currentEstimate)) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+        <Navbar />
+        <div style={{ display: 'flex' }}>
+          <Sidebar />
+          <main style={{ flex: 1, padding: '2rem' }}>
+            <div role="alert">
+              <h1>Unable to load estimate</h1>
+              <p>{error || 'This estimate is unavailable.'}</p>
+              {id && <button className="btn-primary" onClick={() => fetchEstimate(id)}>Try again</button>}
+              <Link to="/estimates">Back to estimates</Link>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   if (loading || !currentEstimate) {
     return (
@@ -115,9 +138,7 @@ export default function ResultsPage() {
     fill: PHASE_COLORS[i % PHASE_COLORS.length],
   }));
 
-  const riskColor = {
-    Low: '#EF4444', Medium: '#3B82F6', High: '#10B981', Critical: '#EF4444',
-  }[outputs.risk_level] || '#64748B';
+  const riskColor = RISK_COLORS[outputs.risk_level] || '#64748B';
 
   /* ── Shared Chart Config ─────────────────────────────────────────────── */
   const tooltipConfig = {
@@ -326,7 +347,7 @@ export default function ResultsPage() {
                 {new Date(currentEstimate.created_at).toLocaleDateString()}
               </p>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <CurrencySelector />
               <button className="btn-secondary" onClick={handleExportPDF}><Download size={15} /> PDF ({sym})</button>
               <button className="btn-secondary" onClick={handleShare}><Share2 size={15} /> Share</button>
@@ -335,7 +356,7 @@ export default function ResultsPage() {
           </div>
 
           {/* Cost Summary */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 16, marginBottom: 20 }}>
             {[
               { label: 'Optimistic', value: outputs.cost_min_usd, color: '#10B981', sub: `${outputs.effort_min_hours.toLocaleString()} hrs` },
               { label: 'Most Likely', value: outputs.cost_likely_usd, color: '#1A56DB', sub: `${outputs.effort_likely_hours.toLocaleString()} hrs`, primary: true },
@@ -359,14 +380,15 @@ export default function ResultsPage() {
           </div>
 
           {/* Confidence + Timeline + Risk row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 16, marginBottom: 20 }}>
             {/* Confidence */}
             <div className="card" style={{ padding: 20, textAlign: 'center' }}>
               <TrendingUp size={20} color="var(--color-primary)" />
               <p style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: 4 }}>
                 {outputs.confidence_pct.toFixed(0)}%
               </p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Confidence</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Heuristic confidence</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>This score and effort range are not calibrated probabilities.</p>
             </div>
 
             {/* Timeline */}
@@ -396,23 +418,24 @@ export default function ResultsPage() {
 
           {/* Phase Breakdown Chart */}
           <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
               <h3 style={{ fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                 <TrendingUp size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
                 Phase Breakdown
               </h3>
               {/* Chart Type Switcher */}
               <div style={{
-                display: 'flex', gap: 4,
+                display: 'flex', gap: 4, flexWrap: 'wrap',
                 background: 'var(--bg-elevated)', borderRadius: 10, padding: 3,
               }}>
                 {chartOptions.map(opt => (
                   <button
                     key={opt.key}
+                    aria-pressed={chartType === opt.key}
                     onClick={() => setChartType(opt.key)}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 4,
-                      padding: '6px 12px', borderRadius: 8, border: 'none',
+                      padding: '6px 12px', minHeight: 44, borderRadius: 8, border: 'none',
                       fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       background: chartType === opt.key ? 'var(--color-primary)' : 'transparent',
@@ -462,7 +485,7 @@ export default function ResultsPage() {
           </div>
 
           {/* Risk Panel + Insights */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 20, marginBottom: 20 }}>
             {/* Risks */}
             <div className="card" style={{ padding: 24 }}>
               <h3 style={{ fontWeight: 600, marginBottom: 16, color: 'var(--text-primary)' }}>
@@ -471,9 +494,7 @@ export default function ResultsPage() {
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {outputs.top_risks.map((risk, i) => {
-                  const sevColor = {
-                    Low: '#EF4444', Medium: '#3B82F6', High: '#10B981', Critical: '#EF4444',
-                  }[risk.severity];
+                  const sevColor = RISK_COLORS[risk.severity];
                   return (
                     <div key={i} style={{
                       padding: '10px 12px', borderRadius: 10,
@@ -536,6 +557,11 @@ export default function ResultsPage() {
                 { label: 'Methodology', value: inputs.methodology },
                 { label: 'Hourly Rate', value: `$${inputs.hourly_rate_usd}/hr` },
                 { label: 'Tech Stack', value: inputs.tech_stack.join(', ') || 'Not specified' },
+                { label: 'Features', value: inputs.feature_count ?? 'Not recorded' },
+                { label: 'Integrations', value: inputs.integration_count ?? 'Not recorded' },
+                { label: 'Requirements Volatility (1–5)', value: inputs.volatility_score ?? 'Not recorded' },
+                { label: 'Team Experience (1–4)', value: inputs.team_experience ?? 'Not recorded' },
+                { label: 'Function Points', value: inputs.size_fp ?? 'Not recorded' },
               ].map((item, i) => (
                 <div key={i} style={{ padding: '8px 0' }}>
                   <p style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</p>

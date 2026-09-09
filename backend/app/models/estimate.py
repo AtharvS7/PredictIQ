@@ -2,22 +2,30 @@
 Predictify Pydantic Models — Estimate
 Request/response schemas for estimation endpoints.
 """
-from pydantic import BaseModel, Field
-from typing import Optional, Literal
-from datetime import datetime
+from typing import Annotated, Literal, Optional
 from uuid import UUID
+
+from pydantic import BaseModel, Field, StringConstraints, field_validator
+
+ProjectName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+ProjectType = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+Technology = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+TechStack = Annotated[list[Technology], Field(max_length=50)]
 
 
 class EstimateOverrides(BaseModel):
     """User-corrected parameters from Step 2 of the wizard."""
-    project_type: Optional[str] = None
+    project_type: Optional[ProjectType] = None
     team_size: Optional[int] = Field(None, ge=1, le=100)
     duration_months: Optional[float] = Field(None, ge=1, le=60)
     complexity: Optional[Literal["Low", "Medium", "High", "Very High"]] = None
     methodology: Optional[Literal["Agile", "Waterfall", "Hybrid"]] = None
     hourly_rate_usd: Optional[float] = Field(None, ge=10, le=500)
-    tech_stack: Optional[list[str]] = None
-    project_name: Optional[str] = None
+    tech_stack: Optional[TechStack] = None
+    project_name: Optional[ProjectName] = None
+    integration_count: Optional[int] = Field(None, ge=0, le=15)
+    volatility_score: Optional[int] = Field(None, ge=1, le=5)
+    team_experience: Optional[float] = Field(None, ge=1, le=4)
 
 
 class EstimateRequest(BaseModel):
@@ -28,14 +36,17 @@ class EstimateRequest(BaseModel):
 
 class ManualEstimateRequest(BaseModel):
     """Request body for manual estimate without document upload."""
-    project_name: str = Field(..., min_length=1, max_length=200)
-    project_type: str = "Web App"
+    project_name: ProjectName
+    project_type: ProjectType = "Web App"
     team_size: int = Field(5, ge=1, le=100)
     duration_months: float = Field(6, ge=1, le=60)
     complexity: Literal["Low", "Medium", "High", "Very High"] = "Medium"
     methodology: Literal["Agile", "Waterfall", "Hybrid"] = "Agile"
     hourly_rate_usd: float = Field(75.0, ge=10, le=500)
-    tech_stack: list[str] = Field(default_factory=list)
+    tech_stack: TechStack = Field(default_factory=list)
+    integration_count: int = Field(2, ge=0, le=15)
+    volatility_score: int = Field(3, ge=1, le=5)
+    team_experience: float = Field(2.0, ge=1, le=4)
 
 
 class PhaseBreakdown(BaseModel):
@@ -83,6 +94,13 @@ class EstimateInputs(BaseModel):
     complexity: str
     methodology: str
     hourly_rate_usd: float
+    # Older estimates did not persist these values. None means unknown, not a
+    # retrospectively assumed default that could misrepresent their prediction.
+    feature_count: Optional[int] = None
+    integration_count: Optional[int] = None
+    volatility_score: Optional[int] = None
+    team_experience: Optional[float] = None
+    size_fp: Optional[float] = None
 
 
 class EstimateResult(BaseModel):
@@ -128,7 +146,14 @@ class EstimateListResponse(BaseModel):
 class ShareLinkRequest(BaseModel):
     """Request to generate a share link."""
     expires_in_days: int = Field(7, ge=1, le=365)
-    password: Optional[str] = None
+    password: Optional[str] = Field(None, max_length=72)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_bytes(cls, value):
+        if value is not None and len(value.encode("utf-8")) > 72:
+            raise ValueError("Password must not exceed 72 UTF-8 bytes")
+        return value
 
 
 class ShareLinkResponse(BaseModel):

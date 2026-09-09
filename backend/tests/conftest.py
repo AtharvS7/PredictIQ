@@ -2,16 +2,54 @@
 Predictify — Pytest Configuration and Shared Fixtures
 Provides reusable test data for all test modules.
 """
-import sys
 import os
+import sys
+
 import pytest
 
 # Ensure backend/ is importable
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-# Load environment variables for tests
-from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+# Tests must never inherit usable cloud credentials from a developer's .env.
+os.environ["APP_ENV"] = "test"
+os.environ["DATABASE_URL"] = "postgresql://test:test@127.0.0.1:1/predictiq_test"
+os.environ["FIREBASE_CREDENTIALS_JSON"] = ""
+os.environ["FIREBASE_CREDENTIALS_PATH"] = "./missing-test-service-account.json"
+os.environ["STORAGE_BACKEND"] = "local"
+os.environ["S3_ACCESS_KEY_ID"] = ""
+os.environ["S3_SECRET_ACCESS_KEY"] = ""
+
+
+@pytest.fixture
+def contract_model_artifacts(tmp_path, monkeypatch):
+    """Real serialized sklearn bundle for API contracts, NOT an accuracy fixture.
+
+    The distributed model is revoked; numerical correctness is tested separately.
+    This constant model keeps persistence/export tests independent of bad labels.
+    """
+    import json
+    import pickle
+
+    import numpy as np
+    import pandas as pd
+    from app.core.config import settings
+    from ml.inference import EXPECTED_FEATURES, predictor
+    from sklearn.dummy import DummyRegressor
+    from sklearn.preprocessing import StandardScaler
+
+    frame = pd.DataFrame(np.ones((4, 27)), columns=EXPECTED_FEATURES)
+    scaler = StandardScaler().fit(frame)
+    model = DummyRegressor().fit(scaler.transform(frame), np.full(4, np.log1p(1000)))
+    model_path, scaler_path, features_path = [tmp_path / name for name in ("model.pkl", "scaler.pkl", "features.json")]
+    model_path.write_bytes(pickle.dumps(model))
+    scaler_path.write_bytes(pickle.dumps(scaler))
+    features_path.write_text(json.dumps(EXPECTED_FEATURES))
+    for key, value in (("ML_MODEL_PATH", model_path), ("ML_SCALER_PATH", scaler_path), ("ML_FEATURES_PATH", features_path)):
+        monkeypatch.setattr(settings, key, str(value))
+    previous = predictor.__dict__.copy()
+    yield model_path, scaler_path, features_path
+    predictor.__dict__.clear()
+    predictor.__dict__.update(previous)
 
 
 @pytest.fixture

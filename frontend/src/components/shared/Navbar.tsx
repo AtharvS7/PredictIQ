@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore';
 import { LogOut, User, LogIn, Sun, Moon } from 'lucide-react';
 import React, { useState, useRef, useEffect } from 'react';
 import logoImg from '@/assets/logo.png';
+import { useTheme } from '../ThemeProvider';
 
 export default function Navbar() {
   const { user, profile, signOut } = useAuthStore();
@@ -10,34 +11,12 @@ export default function Navbar() {
 
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuId = React.useId();
 
-  // Theme state
-  const [theme, setTheme] = useState<'light' | 'dark'>(
-    document.documentElement.getAttribute('data-theme') === 'dark'
-      ? 'dark'
-      : 'light'
-  );
-
-  // Load saved theme
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-
-    if (savedTheme) {
-      setTheme(savedTheme as 'light' | 'dark');
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-  }, []);
-
-  // Save theme
-  useEffect(() => {
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  // Toggle theme
+  const { resolvedTheme, setTheme } = useTheme();
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
+    setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
   };
 
   // Close dropdown when clicking outside
@@ -68,6 +47,7 @@ export default function Navbar() {
     alignItems: 'center',
     gap: 8,
     padding: '8px 12px',
+    minHeight: 44,
     borderRadius: 8,
     width: '100%',
     border: 'none',
@@ -148,9 +128,10 @@ export default function Navbar() {
         <button
           onClick={toggleTheme}
           title="Toggle appearance"
+          aria-label="Toggle appearance"
           style={{
-            width: 36,
-            height: 36,
+            width: 44,
+            height: 44,
             borderRadius: '50%',
             border: '1px solid var(--border-color)',
             background: 'var(--bg-surface)',
@@ -162,19 +143,32 @@ export default function Navbar() {
             transition: 'all 0.2s',
           }}
         >
-          {theme === 'light'
+          {resolvedTheme === 'light'
             ? <Sun size={18} />
             : <Moon size={18} />
           }
         </button>
 
         {/* User Menu */}
-        <div ref={menuRef} style={{ position: 'relative' }}>
+        <div ref={menuRef} style={{ position: 'relative' }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape' && showMenu) {
+              setShowMenu(false);
+              menuButtonRef.current?.focus();
+            }
+          }}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setShowMenu(false);
+          }}>
           <button
+            ref={menuButtonRef}
+            aria-label="Account options"
+            aria-expanded={showMenu}
+            aria-controls={showMenu ? menuId : undefined}
             onClick={() => setShowMenu(!showMenu)}
             style={{
-              width: 36,
-              height: 36,
+              width: 44,
+              height: 44,
               borderRadius: '50%',
               background: 'white',              // changed
               border: '1px solid var(--border-color)', // added
@@ -195,6 +189,7 @@ export default function Navbar() {
           {/* Dropdown */}
           {showMenu && (
             <div
+              id={menuId}
               style={{
                 position: 'absolute',
                 right: 0,

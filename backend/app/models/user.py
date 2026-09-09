@@ -2,8 +2,9 @@
 Predictify Pydantic Models — User
 Schemas for user profile operations.
 """
-from pydantic import BaseModel, Field
-from typing import Optional, Literal
+from typing import Literal, Optional
+
+from pydantic import BaseModel, Field, HttpUrl, TypeAdapter, field_validator
 
 
 class UserProfile(BaseModel):
@@ -22,8 +23,16 @@ class UserProfile(BaseModel):
 class UserProfileUpdate(BaseModel):
     """Request body for updating user profile."""
     full_name: Optional[str] = Field(None, max_length=200)
-    avatar_url: Optional[str] = None
+    avatar_url: Optional[str] = Field(None, max_length=2048)
     hourly_rate_usd: Optional[float] = Field(None, ge=10, le=500)
-    currency: Optional[Literal["USD", "EUR", "GBP", "INR"]] = None
+    currency: Optional[str] = Field(None, pattern=r"^[A-Z]{3}$")
     theme: Optional[Literal["light", "dark", "system"]] = None
-    timezone: Optional[str] = None
+    timezone: Optional[str] = Field(None, min_length=1, max_length=100)
+
+    @field_validator("avatar_url")
+    @classmethod
+    def validate_avatar_url(cls, value: Optional[str]) -> Optional[str]:
+        # Empty clears the avatar. Nonempty values must be browser-safe HTTP(S).
+        if value:
+            TypeAdapter(HttpUrl).validate_python(value)
+        return value

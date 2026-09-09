@@ -1,15 +1,17 @@
 """Run the initial schema migration against Neon PostgreSQL."""
 import asyncio
-import asyncpg
 import os
 import sys
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://neondb_owner:npg_i5UIodKy6MYc@ep-soft-salad-ao7x2yo4-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
-)
+import asyncpg
+
 
 async def main():
+    database_url = os.environ.get("DATABASE_URL", "").strip()
+    if not database_url:
+        print("ERROR: DATABASE_URL must be provided explicitly.", file=sys.stderr)
+        return 1
+
     sql_path = os.path.join(os.path.dirname(__file__), "..", "migrations", "001_initial_schema.sql")
     sql_path = os.path.abspath(sql_path)
 
@@ -20,8 +22,12 @@ async def main():
     with open(sql_path, "r") as f:
         sql = f.read()
 
-    print(f"Connecting to Neon PostgreSQL...")
-    conn = await asyncpg.connect(DATABASE_URL, ssl="require")
+    print("Connecting to Neon PostgreSQL...")
+    try:
+        conn = await asyncpg.connect(database_url, ssl="require")
+    except Exception:
+        print("[FAIL] Database connection failed. Check credentials and connectivity.", file=sys.stderr)
+        return 1
     try:
         print("Running 001_initial_schema.sql ...")
         await conn.execute(sql)
@@ -34,11 +40,12 @@ async def main():
         print(f"\nTables in database ({len(tables)}):")
         for t in tables:
             print(f"  • {t['tablename']}")
-    except Exception as e:
-        print(f"[FAIL] Migration failed: {e}")
+    except Exception:
+        print("[FAIL] Migration failed. Inspect database server logs securely.", file=sys.stderr)
         sys.exit(1)
     finally:
         await conn.close()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    sys.exit(asyncio.run(main()))
+

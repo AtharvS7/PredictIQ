@@ -1,20 +1,22 @@
 """
 Predictify Security Module
-Firebase Admin SDK token verification.
+Firebase Admin SDK token verification + RBAC.
 
 Strategy:
   Verify Firebase ID tokens using the Firebase Admin SDK.
-  This validates the token signature, expiration, audience, and issuer
-  against Google's public keys — no shared secret needed.
+  Extracts role from Firebase custom claims for RBAC enforcement.
+  Provides require_role() dependency factory for route-level access control.
 """
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel
 from typing import Optional
-import structlog
 
 import firebase_admin
-from firebase_admin import auth as firebase_auth, credentials
+import structlog
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from firebase_admin import auth as firebase_auth
+from firebase_admin import credentials
+from pydantic import BaseModel
+from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
 
@@ -67,14 +69,22 @@ def init_firebase():
     )
 
 
+# ── RBAC ───────────────────────────────────────────────────────
+
+# Role hierarchy — higher number = more privileges
+ROLE_HIERARCHY = {"viewer": 1, "editor": 2, "admin": 3}
+VALID_ROLES = frozenset(ROLE_HIERARCHY.keys())
+
+
 class CurrentUser(BaseModel):
     """Represents the authenticated user extracted from a Firebase ID token."""
     id: str
     email: Optional[str] = None
-    role: str = "authenticated"
+    role: str = "editor"
 
 
 async def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> CurrentUser:
     """
@@ -85,11 +95,14 @@ async def get_current_user(
       - Token expiration
       - Audience matches our Firebase project
       - Issuer is correct
+
+    Extracts role from Firebase custom claims (set via Admin SDK).
+    Falls back to 'editor' if no custom claim is present.
     """
     token = credentials.credentials
 
     try:
-        decoded = firebase_auth.verify_id_token(token)
+        decoded = await run_in_threadpool(firebase_auth.verify_id_token, token, check_revoked=True)
         user_id = decoded.get("uid")
         if not user_id:
             raise HTTPException(
@@ -97,22 +110,24 @@ async def get_current_user(
                 detail="Invalid token: missing user ID",
             )
 
-        logger.debug("jwt_verified", method="firebase_admin", user_id=user_id)
-        return CurrentUser(
+        # Extract role from Firebase custom claims
+        role = decoded.get("role", "editor")
+        if role not in VALID_ROLES:
+            role = "viewer"
+
+        logger.debug("jwt_verified", method="firebase_admin", user_id=user_id, role=role)
+        user = CurrentUser(
             id=user_id,
             email=decoded.get("email"),
-            role="authenticated",
+            role=role,
         )
+        request.state.user_id = user.id
+        request.state.user_role = user.role
+        return user
     except firebase_auth.ExpiredIdTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    except firebase_auth.InvalidIdTokenError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid authentication token: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except firebase_auth.RevokedIdTokenError:
@@ -121,10 +136,54 @@ async def get_current_user(
             detail="Token has been revoked",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except Exception as e:
-        logger.error("auth_error", error=str(e))
+    except (firebase_auth.InvalidIdTokenError, firebase_auth.UserDisabledError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Authentication failed: {str(e)}",
+            detail="Invalid authentication token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    except HTTPException:
+        raise
+    except Exception:
+        logger.error("auth_verification_failed")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+def require_role(minimum_role: str):
+    """FastAPI dependency factory — enforces a minimum role level.
+
+    Usage:
+        @router.post("/admin-only")
+        async def admin_action(user: CurrentUser = Depends(require_role("admin"))):
+            ...
+
+    Role hierarchy: admin > editor > viewer
+    A user with 'admin' role passes checks for 'editor' and 'viewer'.
+    """
+    if minimum_role not in VALID_ROLES:
+        raise ValueError(f"Invalid role: {minimum_role}. Must be one of {VALID_ROLES}")
+
+    required_level = ROLE_HIERARCHY[minimum_role]
+
+    async def _check_role(
+        user: CurrentUser = Depends(get_current_user),
+    ) -> CurrentUser:
+        user_level = ROLE_HIERARCHY.get(user.role, 0)
+        if user_level < required_level:
+            logger.warning(
+                "rbac_denied",
+                user_id=user.id,
+                user_role=user.role,
+                required_role=minimum_role,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Insufficient permissions. Required role: {minimum_role}",
+            )
+        return user
+
+    return _check_role

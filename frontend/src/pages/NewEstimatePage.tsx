@@ -1,3 +1,4 @@
+import { useTheme } from '@/components/ThemeProvider';
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
@@ -48,7 +49,6 @@ const fieldStyle: React.CSSProperties = {
   background: 'var(--bg-surface)',
   color: 'var(--text-primary)',
   fontSize: '0.875rem',
-  outline: 'none',
   transition: 'border-color 0.15s',
 };
 
@@ -74,8 +74,8 @@ export default function NewEstimatePage() {
   const currency = useCurrencyStore((s) => s.currency);
   const getRate = useCurrencyStore((s) => s.getRate);
 
-  const isDark =
-    document.documentElement.getAttribute('data-theme') === 'dark';
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
   const [step, setStep] = useState(1);
   const [useManual, setUseManual] = useState(false);
@@ -89,14 +89,11 @@ export default function NewEstimatePage() {
 
   /* Step 3 — Processing */
   const [processing, setProcessing] = useState(false);
-  const [processingStep, setProcessingStep] = useState(0);
+  const [estimateError, setEstimateError] = useState<string | null>(null);
+  const processingStep = 0;
 
   const processingSteps = [
-    'Analyzing document...',
-    'Extracting features...',
-    'Running AI model...',
-    'Calculating risk...',
-    'Building report...',
+    'Waiting for your estimate...',
   ];
 
   /* Step 2 — Parameters */
@@ -111,7 +108,7 @@ export default function NewEstimatePage() {
     tech_stack: '' as string,
     integration_count: 2,
     volatility_score: 3,
-    team_experience: 'Mixed',
+    team_experience: 2,
   });
 
   /* ── Handlers ───────────────────────────────────────── */
@@ -156,11 +153,10 @@ export default function NewEstimatePage() {
     setUploading(true);
     setUploadProgress(0);
 
-    try {
-      const interval = setInterval(() => {
+    const interval = setInterval(() => {
         setUploadProgress((p) => Math.min(p + 10, 60));
       }, 200);
-
+    try {
       // Step 1: Upload the file
       const { data } = await uploadDocumentFile(file);
 
@@ -178,13 +174,6 @@ export default function NewEstimatePage() {
         // Map NLP results to form fields
         const techArray: string[] = nlp.tech_stack || [];
         const expValue = nlp.team_experience;
-        let expLabel = 'Mixed';
-        if (typeof expValue === 'number') {
-          if (expValue <= 1.5) expLabel = 'Junior';
-          else if (expValue <= 3.5) expLabel = 'Mixed';
-          else expLabel = 'Senior';
-        }
-
         setParams({
           project_name: nlp.project_name || file.name.replace(/\.[^/.]+$/, ''),
           project_type: nlp.project_type || 'Web App',
@@ -194,20 +183,16 @@ export default function NewEstimatePage() {
           methodology: nlp.methodology || 'Agile',
           hourly_rate_usd: 75,
           tech_stack: techArray.join(', '),
-          integration_count: nlp.integration_count || 2,
+          integration_count: nlp.integration_count ?? 2,
           volatility_score: nlp.volatility_score || 3,
-          team_experience: expLabel,
+          team_experience: typeof expValue === 'number' ? expValue : 2,
         });
 
         addToast('success', 'Document analyzed — parameters extracted!');
-      } catch (extractErr) {
-        // NLP extraction failed — fallback to filename only
-        console.warn('NLP extraction failed, using defaults', extractErr);
-        setParams((prev) => ({
-          ...prev,
-          project_name: file.name.replace(/\.[^/.]+$/, ''),
-        }));
-        addToast('success', 'Document uploaded (extraction unavailable, enter manually)');
+      } catch {
+        setDocumentId(null);
+        addToast('error', 'Document extraction failed. Try another document or choose manual entry.');
+        return;
       }
 
       setUploadProgress(100);
@@ -215,18 +200,16 @@ export default function NewEstimatePage() {
     } catch {
       addToast('error', 'Upload failed');
     } finally {
+      clearInterval(interval);
       setUploading(false);
     }
   };
 
   const handleEstimate = async () => {
+    if (processing) return;
+    setEstimateError(null);
     setStep(3);
     setProcessing(true);
-
-    for (let i = 0; i < processingSteps.length; i++) {
-      setProcessingStep(i);
-      await new Promise((r) => setTimeout(r, 800));
-    }
 
     try {
       const techArray = params.tech_stack
@@ -249,8 +232,13 @@ export default function NewEstimatePage() {
 
       addToast('success', 'Estimate generated!');
       navigate(`/estimate/${response.data.estimate_id}/results`);
-    } catch {
-      addToast('error', 'Estimation failed');
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      const message = status === 503
+        ? 'Prediction service is unavailable. Your inputs are preserved; try again after the service is restored.'
+        : 'Could not generate the estimate. Check your inputs and try again.';
+      setEstimateError(message);
+      addToast('error', message);
       setStep(2);
     } finally {
       setProcessing(false);
@@ -313,6 +301,8 @@ export default function NewEstimatePage() {
             {['Upload', 'Parameters', 'Generate'].map((label, i) => (
               <div
                 key={i}
+                className="estimate-step"
+                aria-current={step === i + 1 ? 'step' : undefined}
                 style={{ display: 'flex', alignItems: 'center', gap: 8 }}
               >
                 <div
@@ -358,6 +348,7 @@ export default function NewEstimatePage() {
 
                 {i < 2 && (
                   <div
+                    className="estimate-step-connector"
                     style={{
                       width: 40,
                       height: 1,
@@ -420,6 +411,8 @@ export default function NewEstimatePage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   minHeight: 220,
+                  flexDirection: 'column',
+                  gap: 12,
                   textAlign: 'center',
                 }}
               >
@@ -430,6 +423,10 @@ export default function NewEstimatePage() {
                   onChange={handleFileSelect}
                   style={{ display: 'none' }}
                 />
+                <button type="button" style={{ ...secondaryBtnStyle, minHeight: 44 }}
+                  onClick={(event) => { event.stopPropagation(); document.getElementById('file-input')?.click(); }}>
+                  Choose document
+                </button>
 
                 {file ? (
                   <div>
@@ -575,7 +572,9 @@ export default function NewEstimatePage() {
               STEP 2 — Parameters
              ══════════════════════════════════════════════ */}
           {step === 2 && (
-            <div className="card" style={{ padding: 32 }}>
+            <form className="card" style={{ padding: 32 }}
+              onSubmit={(event) => { event.preventDefault(); void handleEstimate(); }}>
+              {estimateError && <p role="alert" style={{ color: 'var(--color-danger)', marginBottom: 16 }}>{estimateError}</p>}
               <h2
                 style={{
                   fontSize: '1.25rem',
@@ -606,29 +605,32 @@ export default function NewEstimatePage() {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
                   gap: 16,
                 }}
               >
                 {/* Project Name — full width */}
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Project Name</label>
+                  <label style={labelStyle} htmlFor="estimate-project_name">Project Name</label>
                   <input
                     style={fieldStyle}
-                    value={params.project_name}
+                    id="estimate-project_name" value={params.project_name}
                     onChange={(e) =>
                       setParams({ ...params, project_name: e.target.value })
                     }
                     placeholder="My Project"
+                    required
+                    maxLength={200}
+                    pattern=".*\S.*"
                   />
                 </div>
 
                 {/* Project Type */}
                 <div>
-                  <label style={labelStyle}>Project Type</label>
+                  <label style={labelStyle} htmlFor="estimate-project_type">Project Type</label>
                   <select
                     style={fieldStyle}
-                    value={params.project_type}
+                    id="estimate-project_type" value={params.project_type}
                     onChange={(e) =>
                       setParams({ ...params, project_type: e.target.value })
                     }
@@ -641,10 +643,10 @@ export default function NewEstimatePage() {
 
                 {/* Complexity */}
                 <div>
-                  <label style={labelStyle}>Complexity</label>
+                  <label style={labelStyle} htmlFor="estimate-complexity">Complexity</label>
                   <select
                     style={fieldStyle}
-                    value={params.complexity}
+                    id="estimate-complexity" value={params.complexity}
                     onChange={(e) =>
                       setParams({ ...params, complexity: e.target.value })
                     }
@@ -657,13 +659,13 @@ export default function NewEstimatePage() {
 
                 {/* Team Size */}
                 <div>
-                  <label style={labelStyle}>Team Size</label>
+                  <label style={labelStyle} htmlFor="estimate-team_size">Team Size</label>
                   <input
                     type="number"
                     style={fieldStyle}
                     min={1}
                     max={100}
-                    value={params.team_size}
+                    id="estimate-team_size" value={params.team_size}
                     onChange={(e) =>
                       setParams({ ...params, team_size: Number(e.target.value) })
                     }
@@ -672,13 +674,14 @@ export default function NewEstimatePage() {
 
                 {/* Duration */}
                 <div>
-                  <label style={labelStyle}>Duration (months)</label>
+                  <label style={labelStyle} htmlFor="estimate-duration_months">Duration (months)</label>
                   <input
                     type="number"
                     style={fieldStyle}
                     min={1}
                     max={60}
-                    value={params.duration_months}
+                    step="any"
+                    id="estimate-duration_months" value={params.duration_months}
                     onChange={(e) =>
                       setParams({
                         ...params,
@@ -690,10 +693,10 @@ export default function NewEstimatePage() {
 
                 {/* Methodology */}
                 <div>
-                  <label style={labelStyle}>Methodology</label>
+                  <label style={labelStyle} htmlFor="estimate-methodology">Methodology</label>
                   <select
                     style={fieldStyle}
-                    value={params.methodology}
+                    id="estimate-methodology" value={params.methodology}
                     onChange={(e) =>
                       setParams({ ...params, methodology: e.target.value })
                     }
@@ -706,18 +709,20 @@ export default function NewEstimatePage() {
 
                 {/* Hourly Rate + Currency */}
                 <div>
-                  <label style={labelStyle}>Hourly Rate (per hour)</label>
+                  <label style={labelStyle} htmlFor="estimate-rate">Hourly Rate ({currency}/hour)</label>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <input
                       type="number"
                       style={{ ...fieldStyle, flex: 1 }}
-                      min={10}
-                      max={50000}
-                      value={params.hourly_rate_usd}
+                      min={10 * getRate()}
+                      max={500 * getRate()}
+                      step="any"
+                      required
+                      id="estimate-rate" value={Number((params.hourly_rate_usd * getRate()).toFixed(2))}
                       onChange={(e) =>
                         setParams({
                           ...params,
-                          hourly_rate_usd: Number(e.target.value),
+                          hourly_rate_usd: Number(e.target.value) / getRate(),
                         })
                       }
                     />
@@ -725,19 +730,19 @@ export default function NewEstimatePage() {
                   </div>
                   {currency !== 'USD' && (
                     <p style={hintStyle}>
-                      ≈ ${(params.hourly_rate_usd / getRate()).toFixed(2)} USD/hr
+                      ≈ ${params.hourly_rate_usd.toFixed(2)} USD/hr
                     </p>
                   )}
                 </div>
 
                 {/* Technology Stack — full width */}
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>
+                  <label style={labelStyle} htmlFor="estimate-tech">
                     Technology Stack (comma-separated)
                   </label>
                   <input
                     style={fieldStyle}
-                    value={params.tech_stack}
+                    id="estimate-tech" value={params.tech_stack}
                     onChange={(e) =>
                       setParams({ ...params, tech_stack: e.target.value })
                     }
@@ -747,13 +752,13 @@ export default function NewEstimatePage() {
 
                 {/* External Integrations */}
                 <div>
-                  <label style={labelStyle}>External Integrations</label>
+                  <label style={labelStyle} htmlFor="estimate-integration_count">External Integrations</label>
                   <input
                     type="number"
                     style={fieldStyle}
                     min={0}
-                    max={30}
-                    value={params.integration_count}
+                    max={15}
+                    id="estimate-integration_count" value={params.integration_count}
                     onChange={(e) =>
                       setParams({
                         ...params,
@@ -768,10 +773,10 @@ export default function NewEstimatePage() {
 
                 {/* Requirements Volatility */}
                 <div>
-                  <label style={labelStyle}>Requirements Volatility</label>
+                  <label style={labelStyle} htmlFor="estimate-volatility_score">Requirements Volatility</label>
                   <select
                     style={fieldStyle}
-                    value={params.volatility_score}
+                    id="estimate-volatility_score" value={params.volatility_score}
                     onChange={(e) =>
                       setParams({
                         ...params,
@@ -789,18 +794,18 @@ export default function NewEstimatePage() {
 
                 {/* Team Experience */}
                 <div>
-                  <label style={labelStyle}>Team Experience</label>
+                  <label style={labelStyle} htmlFor="estimate-experience">Team Experience</label>
                   <select
                     style={fieldStyle}
-                    value={params.team_experience}
+                    id="estimate-experience" value={Math.round(params.team_experience)}
                     onChange={(e) =>
-                      setParams({ ...params, team_experience: e.target.value })
+                      setParams({ ...params, team_experience: Number(e.target.value) })
                     }
                   >
-                    <option value="Junior">Junior (0-2 yrs avg)</option>
-                    <option value="Mixed">Mixed (2-5 yrs avg)</option>
-                    <option value="Senior">Senior (5-10 yrs avg)</option>
-                    <option value="Expert">Expert (10+ yrs avg)</option>
+                    <option value="1">Junior (0-2 yrs avg)</option>
+                    <option value="2">Mixed (2-5 yrs avg)</option>
+                    <option value="3">Senior (5-10 yrs avg)</option>
+                    <option value="4">Expert (10+ yrs avg)</option>
                   </select>
                 </div>
               </div>
@@ -814,6 +819,7 @@ export default function NewEstimatePage() {
                 }}
               >
                 <button
+                  type="button"
                   onClick={() => setStep(1)}
                   style={secondaryBtnStyle}
                 >
@@ -821,8 +827,8 @@ export default function NewEstimatePage() {
                 </button>
 
                 <button
-                  onClick={handleEstimate}
-                  disabled={!params.project_name}
+                  type="submit"
+                  disabled={processing || !params.project_name.trim()}
                   style={{
                     ...primaryBtnStyle,
                     opacity: !params.project_name ? 0.5 : 1,
@@ -831,7 +837,7 @@ export default function NewEstimatePage() {
                   Generate Estimate <Zap size={16} />
                 </button>
               </div>
-            </div>
+            </form>
           )}
 
           {/* ══════════════════════════════════════════════
@@ -840,6 +846,8 @@ export default function NewEstimatePage() {
           {step === 3 && (
             <div
               className="card"
+              role="status"
+              aria-live="polite"
               style={{ padding: 48, textAlign: 'center' }}
             >
               <div

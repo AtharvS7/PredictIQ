@@ -2,12 +2,12 @@
 Predictify API — Auth Endpoints
 Firebase token verification and user sync (backed by Neon PostgreSQL).
 """
+import structlog
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-import structlog
 
-from app.core.security import get_current_user, CurrentUser
 from app.core.database import get_db
+from app.core.security import CurrentUser, get_current_user
 
 router = APIRouter()
 logger = structlog.get_logger()

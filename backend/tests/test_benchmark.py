@@ -2,17 +2,25 @@
 Predictify — Benchmark Service Tests
 Tests for historical dataset comparison logic.
 """
+import pandas as pd
 import pytest
-from app.services.benchmark import get_benchmark_comparison, load_benchmark_data
+from app.services import benchmark
+from app.services.benchmark import get_benchmark_comparison
 
 
 class TestBenchmarkComparison:
     """Tests for the benchmark comparison engine."""
 
     @pytest.fixture(autouse=True)
-    def ensure_data_loaded(self):
-        """Load benchmark data before each test."""
-        load_benchmark_data()
+    def ensure_data_loaded(self, monkeypatch):
+        """Exercise comparison arithmetic with explicitly valid fixture labels."""
+        monkeypatch.setattr(benchmark, "_benchmark_df", pd.DataFrame({
+            "size_fp": [50, 200, 250, 300], "effort_hours": [500, 2000, 3000, 4000],
+        }))
+
+    def test_comparison_uses_observed_hour_median(self):
+        result = get_benchmark_comparison(250, 3000, 225000, 6)
+        assert "median: 3,000 hrs" in result
 
     def test_returns_string(self):
         """get_benchmark_comparison must return a string."""

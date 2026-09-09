@@ -2,16 +2,20 @@
 Predictify API — Export Endpoints
 PDF and JSON export for estimates with multi-currency support.
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse, JSONResponse
 import io
 import json
-import structlog
+from uuid import UUID
 
-from app.core.security import get_current_user, CurrentUser
+import structlog
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse, StreamingResponse
+from starlette.concurrency import run_in_threadpool
+
 from app.core.database import get_db
-from app.services.export_service import generate_pdf_report
+from app.core.security import CurrentUser, get_current_user
 from app.services.currency_service import currency_service
+from app.services.export_service import generate_pdf_report
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -19,7 +23,7 @@ logger = structlog.get_logger()
 
 @router.get("/estimates/{estimate_id}/export/pdf")
 async def export_pdf(
-    estimate_id: str,
+    estimate_id: UUID,
     currency: str = Query("USD", description="Target currency code (e.g., USD, INR, EUR)"),
     user: CurrentUser = Depends(get_current_user),
 ):
@@ -27,7 +31,7 @@ async def export_pdf(
     try:
         pool = await get_db()
         row = await pool.fetchrow(
-            """SELECT * FROM estimates WHERE id = $1 AND user_id = $2""",
+            """SELECT * FROM estimates WHERE id = $1 AND user_id = $2 AND status != 'deleted'""",
             estimate_id, user.id,
         )
 
@@ -62,13 +66,14 @@ async def export_pdf(
                 )
                 currency_code = "USD"
 
-        pdf_bytes = generate_pdf_report(
+        pdf_bytes = await run_in_threadpool(
+            generate_pdf_report,
             estimate,
             currency_code=currency_code,
             exchange_rate=exchange_rate,
         )
 
-        safe_id = estimate_id[:8] if len(estimate_id) >= 8 else estimate_id
+        safe_id = str(estimate_id)[:8]
         filename = f"Predictify_Estimate_{safe_id}_{currency_code}.pdf"
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
@@ -79,19 +84,19 @@ async def export_pdf(
         raise
     except Exception as e:
         logger.error("pdf_export_error", error=str(e))
-        raise HTTPException(status_code=500, detail=f"PDF export failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="PDF export failed")
 
 
 @router.get("/estimates/{estimate_id}/export/json")
 async def export_json(
-    estimate_id: str,
+    estimate_id: UUID,
     user: CurrentUser = Depends(get_current_user),
 ):
     """Export estimate as JSON."""
     try:
         pool = await get_db()
         row = await pool.fetchrow(
-            """SELECT * FROM estimates WHERE id = $1 AND user_id = $2""",
+            """SELECT * FROM estimates WHERE id = $1 AND user_id = $2 AND status != 'deleted'""",
             estimate_id, user.id,
         )
 
@@ -105,9 +110,9 @@ async def export_json(
             if not isinstance(value, bytes)  # Exclude binary data from JSON export
         }
 
-        return JSONResponse(content=result_dict)
+        return JSONResponse(content=jsonable_encoder(result_dict))
     except HTTPException:
         raise
     except Exception as e:
         logger.error("json_export_error", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="JSON export failed")

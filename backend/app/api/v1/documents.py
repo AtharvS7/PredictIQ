@@ -1,14 +1,19 @@
 """
 Predictify API — Document Endpoints
 Handles document upload (direct file + metadata) and retrieval.
-Files are stored as BYTEA in Neon PostgreSQL.
+Files are stored in object storage; PostgreSQL holds metadata.
 """
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from uuid import UUID
+
 import structlog
-import json
-from app.core.security import get_current_user, CurrentUser
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+
 from app.core.database import get_db
-from app.models.document import DocumentUploadRequest, DocumentMetadata
+from app.core.security import CurrentUser, get_current_user, require_role
+from app.models.document import DocumentMetadata, DocumentUploadRequest
+from app.services.document_analysis import MAX_DOCUMENT_BYTES, parse_stored_document
+from app.services.document_parser import document_parser
+from app.services.storage_service import storage_service
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -17,104 +22,78 @@ logger = structlog.get_logger()
 @router.post("/documents/upload", response_model=DocumentMetadata)
 async def confirm_document_upload(
     request: DocumentUploadRequest,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_role("editor")),
 ):
     """
     Confirm a document upload — stores metadata in the database.
     (Legacy endpoint for metadata-only confirmation.)
     """
-    try:
-        pool = await get_db()
-        row = await pool.fetchrow(
-            """INSERT INTO document_uploads (user_id, storage_path, original_filename, file_size_bytes, mime_type, status)
-               VALUES ($1, $2, $3, $4, $5, 'uploaded')
-               RETURNING *""",
-            user.id,
-            request.storage_path,
-            request.original_filename,
-            request.file_size_bytes,
-            request.mime_type,
-        )
-
-        if not row:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to save document metadata",
-            )
-
-        logger.info("document_uploaded", doc_id=str(row["id"]), user_id=user.id)
-
-        return DocumentMetadata(
-            id=str(row["id"]),
-            user_id=row["user_id"],
-            storage_path=row["storage_path"],
-            original_filename=row["original_filename"],
-            file_size_bytes=row["file_size_bytes"],
-            mime_type=row["mime_type"],
-            status=row["status"],
-            parsed_text_preview=row.get("parsed_text_preview"),
-            created_at=str(row["created_at"]),
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error("document_upload_error", error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Upload failed: {str(e)}",
-        )
+    raise HTTPException(status_code=410, detail="Use /documents/upload-file to upload document bytes")
 
 
 @router.post("/documents/upload-file", response_model=DocumentMetadata)
 async def upload_document_file(
     file: UploadFile = File(...),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_role("editor")),
 ):
     """
-    Upload a document file directly to the backend.
-    File bytes are stored in the database (BYTEA column).
+    Upload a document file.
+    Files are stored via the configured storage backend (local filesystem or S3).
+    Only metadata is saved in the database.
     """
+    storage_key = None
+    saved = False
     try:
-        # Read file content
-        file_content = await file.read()
+        # Bounded read, including when Content-Length is absent or dishonest.
+        file_content = await file.read(MAX_DOCUMENT_BYTES + 1)
         file_size = len(file_content)
 
         # Validate file size (10 MB limit)
-        if file_size > 10 * 1024 * 1024:
+        if file_size > MAX_DOCUMENT_BYTES:
             raise HTTPException(
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 detail="File too large. Maximum size is 10 MB.",
             )
+        if file_size == 0:
+            raise HTTPException(status_code=422, detail="Document file is empty")
+        if not file.filename or len(file.filename) > 255:
+            raise HTTPException(status_code=422, detail="Filename must contain 1 to 255 characters")
 
         # Validate MIME type
         allowed_types = [
             "application/pdf",
             "text/plain",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "application/msword",
         ]
         mime = file.content_type or "application/octet-stream"
         if mime not in allowed_types:
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                detail=f"Unsupported file type: {mime}. Allowed: PDF, DOCX, TXT",
+                detail="Unsupported file type. Allowed: PDF, DOCX, TXT",
             )
 
-        pool = await get_db()
-        storage_path = f"{user.id}/{file.filename}"
+        try:
+            document_parser.validate_content(file_content, mime)
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Invalid document content") from None
 
+        # Upload to storage backend (local or S3)
+        storage_key = storage_service.generate_key(user.id, file.filename)
+        await storage_service.upload(file_content, storage_key, mime)
+
+        # Save metadata to database (no BYTEA — file data is in object storage)
+        pool = await get_db()
         row = await pool.fetchrow(
             """INSERT INTO document_uploads
-               (user_id, storage_path, original_filename, file_size_bytes, mime_type, status, file_data)
-               VALUES ($1, $2, $3, $4, $5, 'uploaded', $6)
+               (user_id, storage_path, original_filename, file_size_bytes, mime_type, status)
+               VALUES ($1, $2, $3, $4, $5, 'uploaded')
                RETURNING id, user_id, storage_path, original_filename, file_size_bytes,
                          mime_type, status, parsed_text_preview, created_at""",
             user.id,
-            storage_path,
+            storage_key,
             file.filename,
             file_size,
             mime,
-            file_content,
         )
 
         if not row:
@@ -122,8 +101,15 @@ async def upload_document_file(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to save document",
             )
+        saved = True
 
-        logger.info("document_file_uploaded", doc_id=str(row["id"]), user_id=user.id, size=file_size)
+        logger.info(
+            "document_file_uploaded",
+            doc_id=str(row["id"]),
+            user_id=user.id,
+            size=file_size,
+            storage_key=storage_key,
+        )
 
         return DocumentMetadata(
             id=str(row["id"]),
@@ -142,13 +128,20 @@ async def upload_document_file(
         logger.error("document_file_upload_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Upload failed: {str(e)}",
+            detail="Document upload failed",
         )
+    finally:
+        await file.close()
+        if storage_key and not saved:
+            try:
+                await storage_service.delete(storage_key)
+            except Exception:
+                logger.error("document_upload_cleanup_failed")
 
 
 @router.get("/documents/{document_id}", response_model=DocumentMetadata)
 async def get_document(
-    document_id: str,
+    document_id: UUID,
     user: CurrentUser = Depends(get_current_user),
 ):
     """Retrieve document metadata by ID."""
@@ -186,26 +179,25 @@ async def get_document(
         logger.error("document_get_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e),
+            detail="Could not retrieve document",
         )
 
 
 @router.post("/documents/{document_id}/extract")
 async def extract_document_parameters(
-    document_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    document_id: UUID,
+    user: CurrentUser = Depends(require_role("editor")),
 ):
     """
     Run NLP extraction on an uploaded document and return extracted parameters.
     Called by the frontend after upload to pre-fill the Step 2 form.
     """
-    from app.services.document_parser import document_parser
     from app.services.nlp_extractor import nlp_extractor
 
     try:
         pool = await get_db()
         doc = await pool.fetchrow(
-            """SELECT id, file_data, mime_type, original_filename
+            """SELECT id, storage_path, status, mime_type, original_filename
                FROM document_uploads
                WHERE id = $1 AND user_id = $2""",
             document_id,
@@ -215,20 +207,7 @@ async def extract_document_parameters(
         if not doc:
             raise HTTPException(status_code=404, detail="Document not found")
 
-        # Parse document to extract raw text
-        file_data = doc["file_data"]
-        if not file_data:
-            raise HTTPException(status_code=400, detail="No file data stored")
-
-        try:
-            parse_result = document_parser.parse(bytes(file_data), doc["mime_type"])
-        except Exception as parse_err:
-            logger.warning("document_parse_error_extract", error=str(parse_err))
-            raise HTTPException(
-                status_code=422,
-                detail=f"Could not parse document: {str(parse_err)}",
-            )
-
+        parse_result = await parse_stored_document(doc, user.id)
         raw_text = parse_result.get("raw_text", "")
         if not raw_text or len(raw_text.strip()) < 20:
             raise HTTPException(
@@ -275,5 +254,5 @@ async def extract_document_parameters(
         logger.error("document_extract_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Extraction failed: {str(e)}",
+            detail="Document extraction failed",
         )

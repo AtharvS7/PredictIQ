@@ -3,11 +3,11 @@ Predictify — ML Service Tests
 Tests for feature vector construction and prediction pipeline.
 """
 import json
+from pathlib import Path
+
 import numpy as np
 import pytest
-from pathlib import Path
 from app.services.ml_service import MLService
-
 
 ml = MLService()
 
@@ -26,8 +26,8 @@ class TestBuildFeatureVector:
         assert len(vector) == 27
 
     def test_keys_match_features_json(self, sample_project_params):
-        """All vector keys must match the features listed in Predictify_features.json."""
-        features_path = Path(__file__).parent.parent / "ml" / "Predictify_features.json"
+        """All vector keys must match the features listed in predictiq_features.json."""
+        features_path = Path(__file__).parent.parent / "ml" / "predictiq_features.json"
         if features_path.exists():
             with open(features_path) as f:
                 expected_features = json.load(f)
@@ -63,6 +63,17 @@ class TestBuildFeatureVector:
 class TestMLServicePredict:
     """Tests for the full ML service prediction pipeline."""
 
+    @pytest.fixture(autouse=True)
+    def ready_predictor(self, monkeypatch):
+        from unittest.mock import Mock
+
+        from ml.inference import EXPECTED_FEATURES, predictor
+        monkeypatch.setattr(predictor, "is_ready", True)
+        monkeypatch.setattr(predictor, "feature_names", EXPECTED_FEATURES)
+        monkeypatch.setattr(predictor, "n_features", 27)
+        monkeypatch.setattr(predictor, "scaler", Mock(transform=lambda x: x))
+        monkeypatch.setattr(predictor, "model", Mock(predict=lambda x: np.array([np.log1p(1000)])))
+
     def test_predict_returns_dict(self, sample_project_params):
         """predict() must return a dictionary."""
         result = ml.predict(sample_project_params)
@@ -83,3 +94,42 @@ class TestMLServicePredict:
         info = ml.get_model_info()
         assert isinstance(info, dict)
         assert len(info) > 0
+
+
+def test_unavailable_model_returns_503(monkeypatch, sample_project_params):
+    from fastapi import HTTPException
+    from ml.inference import predictor
+    monkeypatch.setattr(predictor, "is_ready", False)
+    with pytest.raises(HTTPException) as error:
+        ml.predict(sample_project_params)
+    assert error.value.status_code == 503
+
+
+@pytest.mark.parametrize('field,value', [('size_fp', float('nan')), ('size_fp', -1), ('duration_months', float('inf')), ('team_size', 0)])
+def test_invalid_project_numeric_features(field, value):
+    with pytest.raises((ValueError, OverflowError)):
+        ml._build_feature_vector({field: value})
+
+
+@pytest.mark.parametrize('complexity', ['Low', 'Medium', 'High', 'Very High'])
+def test_adjustment_uses_training_influence_units(complexity):
+    vector = ml._build_feature_vector({'complexity': complexity, 'size_fp': 250})
+    assert vector['PointsNonAdjust'] * (0.65 + 0.01 * vector['Adjustment']) == pytest.approx(250)
+    assert 19 <= vector['Adjustment'] <= 35.000001
+
+
+def test_dataset_adjustment_provenance_and_derived_features():
+    import csv
+    rows = list(csv.DictReader((Path(__file__).parent.parent / 'ml' / 'predictiq_merged_dataset.csv').open()))
+    observed = [row for row in rows if float(row['Adjustment']) > 0]
+    assert len(rows) == 740
+    assert len(observed) == 81
+    # Source FP values are rounded; one source row differs by 1.62 FP.
+    for row in observed:
+        expected = float(row['PointsNonAdjust']) * (0.65 + 0.01 * float(row['Adjustment']))
+        assert float(row['size_fp']) == pytest.approx(expected, abs=1.63)
+    for row in rows:
+        assert float(row['complexity_score']) == pytest.approx(sum(float(row[k]) for k in ['T07', 'T10', 'T11']) / 3)
+        assert float(row['team_skill_avg']) == pytest.approx(sum(float(row[k]) for k in ['T12', 'T13', 'T14', 'T15']) / 4)
+        assert float(row['risk_score']) == pytest.approx((float(row['T08']) + float(row['T09'])) / 2)
+        assert float(row['log_effort']) == pytest.approx(np.log1p(float(row['effort_hours'])))

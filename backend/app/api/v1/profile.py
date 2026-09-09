@@ -2,13 +2,12 @@
 Predictify API — Profile Endpoints
 User profile management (backed by Neon PostgreSQL).
 """
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from typing import Optional
 import structlog
+from fastapi import APIRouter, Depends, HTTPException
 
-from app.core.security import get_current_user, CurrentUser
 from app.core.database import get_db
+from app.core.security import CurrentUser, get_current_user, require_role
+from app.models.user import UserProfileUpdate as ProfileUpdate
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -20,15 +19,6 @@ ALLOWED_PROFILE_COLUMNS = frozenset({
     "full_name", "avatar_url", "hourly_rate_usd",
     "currency", "theme", "timezone",
 })
-
-
-class ProfileUpdate(BaseModel):
-    full_name: Optional[str] = None
-    avatar_url: Optional[str] = None
-    hourly_rate_usd: Optional[float] = None
-    currency: Optional[str] = None
-    theme: Optional[str] = None
-    timezone: Optional[str] = None
 
 
 def _build_update_query(updates: dict) -> tuple[str, list]:
@@ -71,7 +61,7 @@ async def get_profile(user: CurrentUser = Depends(get_current_user)):
 @router.post("/profile")
 async def create_or_update_profile(
     data: ProfileUpdate,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_role("editor")),
 ):
     """Create or update the current user's profile (upsert)."""
     pool = await get_db()
@@ -111,7 +101,7 @@ async def create_or_update_profile(
 @router.patch("/profile")
 async def patch_profile(
     data: ProfileUpdate,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_role("editor")),
 ):
     """Partially update the current user's profile."""
     pool = await get_db()

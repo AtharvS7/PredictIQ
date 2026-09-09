@@ -2,12 +2,11 @@
 Predictify — Cost Calculator Tests
 Tests for IFPUG function point estimation and cost conversion.
 """
-import pytest
 from app.services.cost_calculator import (
-    estimate_function_points,
     calculate_cost,
-    calculate_timeline,
     calculate_phase_breakdown,
+    calculate_timeline,
+    estimate_function_points,
 )
 
 

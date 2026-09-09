@@ -2,10 +2,7 @@
 Tests for the Audit Logging Middleware (S6).
 Validates structured audit log entries for SOC 2 compliance.
 """
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from app.middleware.audit_log import AuditLogMiddleware, _SKIP_PATHS
-
+from app.middleware.audit_log import _SKIP_PATHS, AuditLogMiddleware
 
 # ── Skip Paths ───────────────────────────────────────────────
 
@@ -60,43 +57,4 @@ class TestAuditLogMiddleware:
 
 # ── User ID Extraction Logic ────────────────────────────────
 
-class TestUserIdExtraction:
-    """Test the bearer token fingerprinting logic."""
-
-    def test_anonymous_without_auth_header(self):
-        """Requests without auth header should log as 'anonymous'."""
-        auth_header = ""
-        if auth_header.startswith("Bearer ") and len(auth_header) > 20:
-            user_id = f"bearer:...{auth_header[-8:]}"
-        else:
-            user_id = "anonymous"
-        assert user_id == "anonymous"
-
-    def test_bearer_token_fingerprint(self):
-        """Valid bearer tokens should show last 8 chars only."""
-        auth_header = "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.test12345678"
-        if auth_header.startswith("Bearer ") and len(auth_header) > 20:
-            user_id = f"bearer:...{auth_header[-8:]}"
-        else:
-            user_id = "anonymous"
-        assert user_id == "bearer:...12345678"
-        # Full token must never appear in the user_id
-        assert "eyJhbGci" not in user_id
-
-    def test_short_bearer_treated_as_anonymous(self):
-        """Very short tokens (invalid) should be treated as anonymous."""
-        auth_header = "Bearer short"
-        if auth_header.startswith("Bearer ") and len(auth_header) > 20:
-            user_id = f"bearer:...{auth_header[-8:]}"
-        else:
-            user_id = "anonymous"
-        assert user_id == "anonymous"
-
-    def test_non_bearer_auth_treated_as_anonymous(self):
-        """Non-bearer auth (e.g. Basic) should be treated as anonymous."""
-        auth_header = "Basic dXNlcjpwYXNzd29yZA=="
-        if auth_header.startswith("Bearer ") and len(auth_header) > 20:
-            user_id = f"bearer:...{auth_header[-8:]}"
-        else:
-            user_id = "anonymous"
-        assert user_id == "anonymous"
+# Actual middleware identity/redaction behavior is covered in test_request_hardening.py.

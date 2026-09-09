@@ -9,14 +9,41 @@ Handles corrupt files gracefully — never crashes the API.
 
 import io
 import re
+import zipfile
+
 import structlog
-from typing import Optional
 
 logger = structlog.get_logger()
 
 
 class DocumentParser:
     """Handles text extraction from various document formats."""
+
+    @staticmethod
+    def validate_content(content: bytes, mime_type: str) -> None:
+        """Check signatures and archive expansion before invoking a parser."""
+        if not content or len(content) > 10 * 1024 * 1024:
+            raise ValueError("Document is empty or exceeds 10 MB")
+        if mime_type == "application/pdf":
+            if not content.startswith(b"%PDF-"):
+                raise ValueError("Invalid PDF signature")
+        elif mime_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+            try:
+                with zipfile.ZipFile(io.BytesIO(content)) as archive:
+                    entries = archive.infolist()
+                    if (len(entries) > 2000 or sum(e.file_size for e in entries) > 20 * 1024 * 1024
+                            or any(e.flag_bits & 1 or e.file_size > max(e.compress_size, 1) * 1000 for e in entries)):
+                        raise ValueError("DOCX archive exceeds resource limits")
+                    if not {"[Content_Types].xml", "word/document.xml"}.issubset(archive.namelist()):
+                        raise ValueError("Invalid DOCX archive")
+            except zipfile.BadZipFile:
+                raise ValueError("Invalid DOCX archive") from None
+        elif mime_type == "text/plain":
+            # NUL bytes indicate binary content except in BOM-marked UTF-16 text.
+            if b"\x00" in content and not content.startswith((b"\xff\xfe", b"\xfe\xff")):
+                raise ValueError("Binary content is not plain text")
+        else:
+            raise ValueError("Unsupported file type")
 
     @staticmethod
     def parse(file_content: bytes, mime_type: str) -> dict:
@@ -33,6 +60,7 @@ class DocumentParser:
         Raises:
             ValueError: If file type is unsupported or content is unreadable.
         """
+        DocumentParser.validate_content(file_content, mime_type)
         try:
             if mime_type == "application/pdf":
                 return DocumentParser._parse_pdf(file_content)
@@ -63,6 +91,8 @@ class DocumentParser:
         try:
             with pdfplumber.open(io.BytesIO(content)) as pdf:
                 page_count = len(pdf.pages)
+                if page_count > 50:
+                    raise ValueError("PDF exceeds 50 pages")
                 for i, page in enumerate(pdf.pages):
                     page_text = page.extract_text()
                     if page_text:

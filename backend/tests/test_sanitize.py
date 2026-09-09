@@ -2,7 +2,6 @@
 Predictify — Input Sanitization Tests
 Tests for _sanitize_text() XSS prevention in estimates.py
 """
-import pytest
 from app.api.v1.estimates import _sanitize_text
 
 

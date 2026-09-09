@@ -1,12 +1,24 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+import { visualizer } from 'rollup-plugin-visualizer'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    // Bundle size analysis — run with: ANALYZE=true npm run build
+    process.env.ANALYZE && visualizer({
+      open: true,
+      filename: 'dist/bundle-stats.html',
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ].filter(Boolean),
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
   server: {
@@ -16,6 +28,22 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
+    },
+  },
+
+  // ── Vitest Configuration ────────────────────────────────
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    css: false,
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/test/**', 'src/**/*.test.*', 'src/main.tsx', 'src/vite-env.d.ts'],
     },
   },
 
@@ -37,7 +65,7 @@ export default defineConfig({
               return 'react-vendor';
             }
             // Charting library — only needed on ResultsPage
-            if (id.includes('recharts') || id.includes('d3-')) {
+            if (id.includes('chart.js') || id.includes('react-chartjs-2')) {
               return 'charts';
             }
             // Firebase client — auth
@@ -79,4 +107,3 @@ export default defineConfig({
     ],
   },
 })
-

@@ -12,6 +12,7 @@ Each log entry includes:
   - Request ID (for correlation)
 """
 import time
+
 import structlog
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -32,29 +33,22 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
 
         start = time.perf_counter()
 
-        # Extract user ID if available (set by auth middleware/dependency)
-        user_id = "anonymous"
-        auth_header = request.headers.get("authorization", "")
-        if auth_header.startswith("Bearer ") and len(auth_header) > 20:
-            # We log a truncated token fingerprint for correlation (not the full token)
-            user_id = f"bearer:...{auth_header[-8:]}"
-
         # Process the request
         response = await call_next(request)
 
         duration_ms = round((time.perf_counter() - start) * 1000, 1)
         request_id = getattr(request.state, "request_id", "N/A")
+        route = request.scope.get("route")
 
         logger.info(
             "api_request",
             method=request.method,
-            path=request.url.path,
+            path=getattr(route, "path", "unmatched"),
             status=response.status_code,
             duration_ms=duration_ms,
-            user=user_id,
+            user=getattr(request.state, "user_id", "anonymous"),
             ip=request.client.host if request.client else "unknown",
             request_id=request_id,
-            query=str(request.query_params) if request.query_params else None,
         )
 
         return response

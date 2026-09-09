@@ -4,8 +4,11 @@ Tests for connection pool retry configuration and state management.
 """
 import pytest
 from app.core.database import (
-    _MAX_RETRIES, _BASE_DELAY_SECONDS,
-    get_db, init_db_pool, close_db_pool,
+    _BASE_DELAY_SECONDS,
+    _MAX_RETRIES,
+    close_db_pool,
+    get_db,
+    init_db_pool,
 )
 
 

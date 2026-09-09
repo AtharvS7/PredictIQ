@@ -1,10 +1,12 @@
+> **ML integrity correction (2026-09-09):** The shipped model and benchmark CSV are revoked after confirming 481 incorrect effort labels. Prediction is unavailable pending a validated replacement. A 787-project research model has been trained; it is not production approved. See [data reconstruction and measured results](docs/ml_rebuild_2026-09-09.md). Previous model accuracy claims below are withdrawn.
+
+> **Current engineering state (2026-09-08):** Follow [Current setup and verification](docs/CURRENT_SETUP.md) and [repair progress](docs/engineering_progress_2026-09-08.md). Older setup/version references below are historical and are being reconciled. The current stack is Firebase + PostgreSQL + FastAPI + React 19, with Alembic migrations and object-storage document analysis.
 # Predictify — AI-Powered Software Project Cost & Timeline Predictor
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![Node](https://img.shields.io/badge/Node.js-20+-339933?logo=nodedotjs&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![ML](https://img.shields.io/badge/ML-RandomForest-orange)
-![R²](https://img.shields.io/badge/R²-0.8953-blue)
 
 ## What is Predictify?
 

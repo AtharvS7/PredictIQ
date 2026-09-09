@@ -1,45 +1,42 @@
-"""Test: verify Email/Password sign-in is enabled in Firebase."""
-import urllib.request
+"""Check signup against an explicitly configured local Firebase Auth emulator."""
 import json
+import os
+import secrets
+import sys
+import urllib.request
+from urllib.parse import urlsplit
 
-API_KEY = "AIzaSyByFZVlJyyH6PYjlq8oOTZacVdJPPfIW1g"
 
-url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
-req = urllib.request.Request(
-    url,
-    data=json.dumps({
-        "email": "test-migration-check2@example.com",
-        "password": "TestPassword123!",
-        "returnSecureToken": True,
-    }).encode(),
-    headers={"Content-Type": "application/json"},
-)
+def main():
+    host = os.environ.get("FIREBASE_AUTH_EMULATOR_HOST", "")
+    parsed = urlsplit("http://" + host)
+    if parsed.hostname not in {"127.0.0.1", "localhost", "::1"} or not parsed.port or parsed.path:
+        print("Set FIREBASE_AUTH_EMULATOR_HOST to a loopback host and port.", file=sys.stderr)
+        return 1
+    base = f"http://{host}/identitytoolkit.googleapis.com/v1"
 
-try:
-    resp = urllib.request.urlopen(req)
-    data = json.loads(resp.read())
-    uid = data.get("localId", "unknown")
-    print(f"[OK] Email/Password sign-in: ENABLED (test user: {uid})")
+    def call(action, payload):
+        request = urllib.request.Request(
+            f"{base}/accounts:{action}?key=emulator-only",
+            data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return json.load(response)
 
-    # Clean up
-    delete_url = f"https://identitytoolkit.googleapis.com/v1/accounts:delete?key={API_KEY}"
-    delete_req = urllib.request.Request(
-        delete_url,
-        data=json.dumps({"idToken": data["idToken"]}).encode(),
-        headers={"Content-Type": "application/json"},
-    )
-    urllib.request.urlopen(delete_req)
-    print("   (test user cleaned up)")
+    token = None
+    try:
+        result = call("signUp", {"email": f"test-{secrets.token_hex(12)}@example.invalid",
+            "password": secrets.token_urlsafe(24), "returnSecureToken": True})
+        token = result["idToken"]
+        print("[OK] Emulator signup works")
+        return 0
+    except Exception:
+        print("[FAIL] Emulator signup failed", file=sys.stderr)
+        return 1
+    finally:
+        if token:
+            call("delete", {"idToken": token})
 
-except urllib.error.HTTPError as e:
-    body = json.loads(e.read())
-    msg = body.get("error", {}).get("message", "unknown")
-    if "OPERATION_NOT_ALLOWED" in msg:
-        print("[FAIL] Email/Password sign-in: NOT ENABLED")
-        print("   -> Go to Firebase Console -> Authentication -> Sign-in method -> Enable Email/Password")
-    elif "EMAIL_EXISTS" in msg:
-        print("[OK] Email/Password sign-in: ENABLED (test email already exists)")
-    else:
-        print(f"[WARN] Unexpected: {msg}")
-except Exception as e:
-    print(f"[FAIL] Error: {e}")
+
+if __name__ == "__main__":
+    sys.exit(main())

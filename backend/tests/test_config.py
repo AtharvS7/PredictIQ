@@ -19,6 +19,16 @@ class TestSettingsDefaults:
         """Default hourly rate should be 75.0."""
         assert settings.DEFAULT_HOURLY_RATE_USD == 75.0
 
+    def test_production_rejects_ephemeral_local_storage(self):
+        with pytest.raises(ValueError, match="Production requires S3"):
+            Settings(_env_file=None, APP_ENV="production", STORAGE_BACKEND="local",
+                ALLOW_LOCAL_STORAGE_IN_PRODUCTION=False)
+
+    def test_production_accepts_explicit_durable_mount(self):
+        configured = Settings(_env_file=None, APP_ENV="production", STORAGE_BACKEND="local",
+            ALLOW_LOCAL_STORAGE_IN_PRODUCTION=True)
+        assert configured.STORAGE_BACKEND == "local"
+
     def test_app_env_set(self):
         """APP_ENV should be a non-empty string."""
         assert isinstance(settings.APP_ENV, str)

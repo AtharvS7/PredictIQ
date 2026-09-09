@@ -6,6 +6,11 @@ export interface EstimateInputs {
   complexity: string;
   methodology: string;
   hourly_rate_usd: number;
+  feature_count?: number | null;
+  integration_count?: number | null;
+  volatility_score?: number | null;
+  team_experience?: number | null;
+  size_fp?: number | null;
 }
 
 export interface RiskItem {

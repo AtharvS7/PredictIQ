@@ -1,30 +1,32 @@
 """
 Predictify Backend — FastAPI Application Entry Point
 """
-import structlog
-from uuid import uuid4
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from dotenv import load_dotenv
+from uuid import uuid4
 
-# Load environment variables
-load_dotenv()
-
-from app.core.config import settings
-from app.core.database import init_db_pool, close_db_pool
-from app.core.security import init_firebase
-from app.api.v1.health import router as health_router
+import structlog
+from app.api.v1.admin import router as admin_router
+from app.api.v1.auth import router as auth_router
+from app.api.v1.currencies import router as currencies_router
 from app.api.v1.documents import router as documents_router
 from app.api.v1.estimates import router as estimates_router
 from app.api.v1.export import router as export_router
-from app.api.v1.currencies import router as currencies_router
+from app.api.v1.health import router as health_router
 from app.api.v1.profile import router as profile_router
-from app.api.v1.auth import router as auth_router
+from app.api.v1.shared import router as shared_router
+
+# Load environment variables
+from app.core.config import settings
+from app.core.database import close_db_pool, init_db_pool
+from app.core.rate_limit import limiter
+from app.core.security import init_firebase
 from app.middleware.audit_log import AuditLogMiddleware
+from app.middleware.body_limit import BodyLimitMiddleware
+from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 # Configure structured logging
 structlog.configure(
@@ -53,32 +55,30 @@ async def lifespan(app: FastAPI):
     # Initialize database connection pool
     await init_db_pool()
 
-    # Load ML model
-    from ml.inference import predictor
-    predictor.load()
-    model_info = predictor.get_model_info()
-    logger.info("ml_model_status", ready=predictor.is_ready, mode=model_info.get("model_mode"))
+    try:
+        # Load ML model
+        from ml.inference import predictor
+        predictor.load(settings.ML_MODEL_PATH, settings.ML_SCALER_PATH, settings.ML_FEATURES_PATH)
+        model_info = predictor.get_model_info()
+        logger.info("ml_model_status", ready=predictor.is_ready, mode=model_info.get("model_mode"))
 
-    # Load benchmark data
-    from app.services.benchmark import load_benchmark_data
-    load_benchmark_data()
+        # Load benchmark data
+        from app.services.benchmark import load_benchmark_data
+        load_benchmark_data()
 
-    # Startup diagnostics checklist
-    logger.info("startup_checklist",
-        model_loaded=predictor.is_ready,
-        model_mode=model_info.get("model_mode", "unknown"),
-        training_samples=model_info.get("training_samples", 0),
-        cors_origins=settings.cors_origins,
-        app_env=settings.APP_ENV,
-    )
+        # Startup diagnostics checklist
+        logger.info("startup_checklist",
+            model_loaded=predictor.is_ready,
+            model_mode=model_info.get("model_mode", "unknown"),
+            training_samples=model_info.get("training_samples", 0),
+            cors_origins=settings.cors_origins,
+            app_env=settings.APP_ENV,
+        )
 
-    yield
-
-    # Shutdown
-    await close_db_pool()
-    logger.info("shutting_down_Predictify")
-
-
+        yield
+    finally:
+        await close_db_pool()
+        logger.info("shutting_down_Predictify")
 # Create FastAPI application
 app = FastAPI(
     title="Predictify API",
@@ -88,7 +88,7 @@ app = FastAPI(
 )
 
 # Rate limiting — prevents API abuse
-limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+app.add_middleware(SlowAPIMiddleware)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -105,25 +105,7 @@ app.add_middleware(
     expose_headers=["X-Request-ID"],
 )
 
-# Maximum request body size (1 MB for JSON payloads) — prevents DoS (S9)
-MAX_BODY_SIZE = 1 * 1024 * 1024  # 1 MB
-
-
-@app.middleware("http")
-async def limit_request_body(request: Request, call_next) -> Response:
-    """Reject requests with body larger than MAX_BODY_SIZE (except file uploads)."""
-    content_length = request.headers.get("content-length")
-    # Skip limit for multipart/form-data (file uploads have their own 10MB limit)
-    content_type = request.headers.get("content-type", "")
-    if content_length and "multipart" not in content_type:
-        if int(content_length) > MAX_BODY_SIZE:
-            from fastapi.responses import JSONResponse
-            return JSONResponse(
-                status_code=413,
-                content={"detail": "Request body too large (max 1MB)"},
-            )
-    return await call_next(request)
-
+app.add_middleware(BodyLimitMiddleware)
 
 # Security headers middleware — OWASP best practices (S8)
 @app.middleware("http")
@@ -132,7 +114,11 @@ async def add_security_headers(request: Request, call_next) -> Response:
     response = await call_next(request)
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    # Share URLs contain bearer credentials. Protect error responses as well as
+    # successful reads; endpoint headers are discarded on HTTPException.
+    if request.url.path.startswith("/api/v1/shared/"):
+        response.headers["Cache-Control"] = "no-store"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     return response
@@ -161,6 +147,8 @@ app.include_router(export_router, prefix="/api/v1", tags=["Export"])
 app.include_router(currencies_router, prefix="/api/v1", tags=["Currencies"])
 app.include_router(profile_router, prefix="/api/v1", tags=["Profile"])
 app.include_router(auth_router, prefix="/api/v1", tags=["Auth"])
+app.include_router(admin_router, prefix="/api/v1", tags=["Admin"])
+app.include_router(shared_router, prefix="/api/v1", tags=["Shared estimates"])
 
 
 @app.get("/")
@@ -172,3 +160,4 @@ async def root():
         "docs": "/docs",
         "health": "/api/v1/health",
     }
+

@@ -2,6 +2,76 @@
 
 @import "tailwindcss";
 
+/* Shared workspace shell: desktop rail and compact mobile navigation. */
+.workspace-nav {
+  flex: 0 0 232px;
+  width: 232px;
+  min-height: calc(100dvh - 64px);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-color);
+}
+.workspace-nav.is-collapsed { flex-basis: 76px; width: 76px; }
+.workspace-nav-links { display: flex; flex-direction: column; gap: 8px; }
+.workspace-nav-link, .workspace-nav-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.workspace-nav-link:hover { background: var(--bg-elevated, var(--bg-base)); color: var(--text-primary); }
+.workspace-nav-link.is-active {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--text-primary);
+  font-weight: 700;
+  box-shadow: inset 3px 0 var(--color-primary);
+}
+.workspace-nav-link svg { flex-shrink: 0; }
+.workspace-nav-toggle { margin-top: auto; border: 1px solid var(--border-color); background: transparent; cursor: pointer; }
+.workspace-nav.is-collapsed .workspace-nav-link { justify-content: center; padding-inline: 0; }
+.workspace-nav.is-collapsed .workspace-nav-link span { display: none; }
+.workspace-nav + main { min-width: 0; }
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+@media (max-width: 767px) {
+  .estimate-step { flex-direction: column; flex: 1; min-width: 0; }
+  .estimate-step-connector { display: none; }
+  .workspace-nav, .workspace-nav.is-collapsed {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 45;
+    width: 100%;
+    min-height: auto;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    border-right: 0;
+    border-top: 1px solid var(--border-color);
+  }
+  .workspace-nav-links { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .workspace-nav-link, .workspace-nav.is-collapsed .workspace-nav-link {
+    flex-direction: column; gap: 4px; padding: 8px 2px; font-size: 11px;
+    text-align: center; justify-content: center;
+  }
+  .workspace-nav.is-collapsed .workspace-nav-link span { display: inline; }
+  .workspace-nav-link.is-active { box-shadow: inset 0 3px var(--color-primary); }
+  .workspace-nav-toggle { display: none; }
+  .workspace-nav + main { padding: 24px 16px calc(120px + env(safe-area-inset-bottom)) !important; }
+  html { scroll-padding-bottom: 120px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
 /* ── CSS Custom Properties (Design Tokens) ────────────── */
 :root {
   --color-primary: #1A56DB;
@@ -25,8 +95,8 @@
   --bg-surface: #FFFFFF;
   --bg-elevated: #F1F5F9;
   --text-primary: #0F172A;
-  --text-secondary: #64748B;
-  --text-tertiary: #94A3B8;
+  --text-secondary: #475569;
+  --text-tertiary: #526176;
   --border-color: #E2E8F0;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -42,8 +112,8 @@
   --bg-surface: #1E293B;
   --bg-elevated: #334155;
   --text-primary: #F1F5F9;
-  --text-secondary: #94A3B8;
-  --text-tertiary: #64748B;
+  --text-secondary: #CBD5E1;
+  --text-tertiary: #B6C2D2;
   --border-color: #334155;
   --border-subtle: rgba(255, 255, 255, 0.06);
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
@@ -334,14 +404,14 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.025em;
 }
 
-.risk-low { background: #FEF2F2; color: #991B1B; }
-.risk-medium { background: #EFF6FF; color: #1E40AF; }
-.risk-high { background: #ECFDF5; color: #065F46; }
+.risk-low { background: #ECFDF5; color: #065F46; }
+.risk-medium { background: #FFFBEB; color: #92400E; }
+.risk-high { background: #FEF2F2; color: #991B1B; }
 .risk-critical { background: #FEF2F2; color: #991B1B; }
 
-[data-theme="dark"] .risk-low { background: #7F1D1D; color: #FCA5A5; }
-[data-theme="dark"] .risk-medium { background: #1E3A5F; color: #93C5FD; }
-[data-theme="dark"] .risk-high { background: #064E3B; color: #6EE7B7; }
+[data-theme="dark"] .risk-low { background: #064E3B; color: #6EE7B7; }
+[data-theme="dark"] .risk-medium { background: #78350F; color: #FCD34D; }
+[data-theme="dark"] .risk-high { background: #7F1D1D; color: #FCA5A5; }
 [data-theme="dark"] .risk-critical { background: #7F1D1D; color: #FCA5A5; }
 
 /* ── Skeleton Loading ─────────────────────────────────── */

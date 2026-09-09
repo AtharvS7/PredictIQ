@@ -4,6 +4,7 @@ import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
 import SEOHead from '@/components/shared/SEOHead';
 import { useAuthStore } from '@/store/authStore';
+import { useCurrencyStore } from '@/store/currencyStore';
 import { useTheme, useToast } from '@/App';
 import { User, DollarSign, Save, LogOut } from 'lucide-react';
 
@@ -13,12 +14,15 @@ export default function SettingsPage() {
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const [fullName, setFullName] = useState(profile?.full_name || '');
-  const [hourlyRate, setHourlyRate] = useState(
-    profile?.hourly_rate_usd?.toString() || '75'
-  );
-  const [currency, setCurrency] = useState(profile?.currency || 'USD');
+  // Untouched fields follow asynchronously loaded profile data; edits take priority.
+  const [nameEdit, setFullName] = useState<string | null>(null);
+  const [rateEdit, setHourlyRate] = useState<string | null>(null);
+  const [currencyEdit, setCurrency] = useState<string | null>(null);
+  const fullName = nameEdit ?? profile?.full_name ?? '';
+  const hourlyRate = rateEdit ?? profile?.hourly_rate_usd?.toString() ?? '75';
+  const currency = currencyEdit ?? profile?.currency ?? 'USD';
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const cardStyle = {
     padding: 24,
@@ -29,18 +33,26 @@ export default function SettingsPage() {
   };
 
   const handleSave = async () => {
+    const rate = Number(hourlyRate);
+    if (!hourlyRate.trim() || !Number.isFinite(rate) || rate < 10 || rate > 500) {
+      setSaveError('Enter an hourly rate between 10 and 500 USD.');
+      return;
+    }
+    setSaveError(null);
     setSaving(true);
 
     try {
       await updateProfile({
         full_name: fullName,
-        hourly_rate_usd: parseFloat(hourlyRate) || 75,
+        hourly_rate_usd: rate,
         currency,
         theme,
       });
+      useCurrencyStore.getState().setCurrency(currency);
 
       addToast('success', 'Settings saved!');
     } catch {
+      setSaveError('Could not save settings. Your changes are preserved; please try again.');
       addToast('error', 'Failed to save settings');
     } finally {
       setSaving(false);
@@ -84,6 +96,8 @@ export default function SettingsPage() {
             Settings
           </h1>
 
+          <form noValidate onSubmit={(event) => { event.preventDefault(); void handleSave(); }}>
+          {saveError && <p role="alert" style={{ color: 'var(--color-danger)', marginBottom: 16 }}>{saveError}</p>}
           {/* Profile */}
 
           <div className="card" style={cardStyle}>
@@ -100,9 +114,12 @@ export default function SettingsPage() {
               <User size={18} /> Profile
             </h3>
 
-            <label className="label">Full Name</label>
+            <label className="label" htmlFor="settings-name">Full Name</label>
 
             <input
+              id="settings-name"
+              autoComplete="name"
+              maxLength={200}
               className="input-field"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -129,27 +146,32 @@ export default function SettingsPage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
                 gap: 14,
               }}
             >
               <div>
-                <label className="label">Hourly Rate</label>
+                <label className="label" htmlFor="settings-rate">Hourly Rate (USD)</label>
 
                 <input
+                  id="settings-rate"
+                  aria-describedby="settings-rate-help"
                   type="number"
                   className="input-field"
                   value={hourlyRate}
                   onChange={(e) => setHourlyRate(e.target.value)}
                   min={10}
                   max={500}
+                  step="any"
                 />
+                <p id="settings-rate-help" style={{ color: 'var(--text-secondary)', fontSize: 12 }}>10–500 USD per hour. Display currency does not change this amount.</p>
               </div>
 
               <div>
-                <label className="label">Currency</label>
+                <label className="label" htmlFor="settings-currency">Display Currency</label>
 
                 <select
+                  id="settings-currency"
                   className="input-field"
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
@@ -158,6 +180,7 @@ export default function SettingsPage() {
                   <option value="EUR">EUR</option>
                   <option value="GBP">GBP</option>
                   <option value="INR">INR</option>
+                  {!['USD', 'EUR', 'GBP', 'INR'].includes(currency) && <option value={currency}>{currency}</option>}
                 </select>
               </div>
             </div>
@@ -166,7 +189,7 @@ export default function SettingsPage() {
           {/* Save Changes — SAME THEME LOGIC AS ESTIMATE PAGE */}
 
           <button
-            onClick={handleSave}
+            type="submit"
             disabled={saving}
             style={{
               padding: '10px 18px',
@@ -204,6 +227,7 @@ export default function SettingsPage() {
             <Save size={16} />
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
+          </form>
 
           {/* Logout */}
 
@@ -215,6 +239,8 @@ export default function SettingsPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 16,
             }}
           >
             <div>

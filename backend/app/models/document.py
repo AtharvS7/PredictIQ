@@ -2,8 +2,9 @@
 Predictify Pydantic Models — Document
 Schemas for document upload and metadata.
 """
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class DocumentUploadRequest(BaseModel):

@@ -83,3 +83,16 @@ tooling/
 # Jupyter notebooks at root (keep only in backend/ml/)
 /*.ipynb
 
+
+# Workspace-local Python tooling
+.tools/
+backend/ml/data/research/
+backend/ml/experiments/
+
+# Local agent installations and generated browser reports
+.agents/
+.agents-*/
+test-results/
+playwright-report/
+coverage/
+

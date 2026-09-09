@@ -4,8 +4,8 @@ Fetches live exchange rates for frontend use.
 Public endpoints — no auth required.
 """
 
-from fastapi import APIRouter
 import structlog
+from fastapi import APIRouter
 
 from app.services.currency_service import currency_service
 

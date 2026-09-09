@@ -2,10 +2,11 @@
 Predictify Benchmark Service
 Compares current estimate against historical training dataset.
 """
-import pandas as pd
-import numpy as np
-import structlog
 from pathlib import Path
+
+import pandas as pd
+import structlog
+from ml.artifact_safety import REVOKED_DATA_SHA256, require_unrevoked
 
 logger = structlog.get_logger()
 
@@ -15,9 +16,15 @@ _benchmark_df: pd.DataFrame | None = None
 def load_benchmark_data():
     """Load the training dataset for benchmark comparisons."""
     global _benchmark_df
-    csv_path = Path(__file__).parent.parent.parent / "ml" / "Predictify_merged_dataset.csv"
+    _benchmark_df = None
+    csv_path = Path(__file__).parent.parent.parent / "ml" / "predictiq_merged_dataset.csv"
 
     if csv_path.exists():
+        try:
+            require_unrevoked(csv_path, REVOKED_DATA_SHA256)
+        except ValueError:
+            logger.warning("benchmark_data_revoked", reason="invalid_training_labels")
+            return
         _benchmark_df = pd.read_csv(csv_path)
         logger.info("benchmark_data_loaded", rows=len(_benchmark_df))
     else:
@@ -65,12 +72,10 @@ def get_benchmark_comparison(
 
     # Calculate comparison metrics
     median_effort = similar["effort_hours"].median()
-    mean_effort = similar["effort_hours"].mean()
     p25_effort = similar["effort_hours"].quantile(0.25)
     p75_effort = similar["effort_hours"].quantile(0.75)
 
     median_cost = median_effort * hourly_rate
-    mean_cost = mean_effort * hourly_rate
 
     # Percentile of current estimate
     percentile = (similar["effort_hours"] <= effort_hours_likely).mean() * 100

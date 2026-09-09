@@ -114,6 +114,9 @@ export const createManualEstimate = (data: {
   methodology: string;
   hourly_rate_usd: number;
   tech_stack: string[];
+  integration_count?: number;
+  volatility_score?: number;
+  team_experience?: number;
 }) => api.post('/estimates/manual', data);
 
 export const listEstimates = (params?: {

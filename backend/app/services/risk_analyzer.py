@@ -2,10 +2,18 @@
 Predictify Risk Analyzer Service
 Computes risk scores and identifies top risk factors.
 """
+from typing import Callable, Literal, TypedDict
+
 from app.models.estimate import RiskItem
 
 
-RISK_FACTORS = [
+class RiskFactor(TypedDict):
+    name: str
+    check: Callable[[dict], bool]
+    description: str
+    weight: int
+
+RISK_FACTORS: list[RiskFactor] = [
     {
         "name": "Scope Ambiguity",
         "check": lambda p: p.get("feature_count", 0) < 5 or p.get("complexity") == "Very High",
@@ -138,7 +146,7 @@ def analyze_risk(params: dict) -> dict:
     }
 
 
-def _weight_to_severity(weight: int) -> str:
+def _weight_to_severity(weight: int) -> Literal["Low", "Medium", "High", "Critical"]:
     """Convert risk weight to severity level."""
     if weight >= 14:
         return "Critical"

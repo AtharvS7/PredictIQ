@@ -1,3 +1,4 @@
+import { useTheme } from '@/components/ThemeProvider';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
@@ -49,8 +50,8 @@ export default function EstimatesPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
 
-  const isDark =
-    document.documentElement.getAttribute('data-theme') === 'dark';
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
   useEffect(() => {
     fetchEstimates();
@@ -89,8 +90,12 @@ export default function EstimatesPage() {
   ) => {
     e.stopPropagation();
     if (!confirm('Delete this estimate?')) return;
-    await removeEstimate(id);
-    addToast('info', 'Estimate deleted');
+    try {
+      await removeEstimate(id);
+      addToast('info', 'Estimate deleted');
+    } catch {
+      addToast('error', 'Failed to delete estimate. Please try again.');
+    }
   };
 
   return (

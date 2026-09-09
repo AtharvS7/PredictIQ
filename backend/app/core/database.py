@@ -4,8 +4,10 @@ Async connection pool for Neon PostgreSQL via asyncpg.
 Includes exponential backoff retry for production resilience (Q5).
 """
 import asyncio
+
 import asyncpg
 import structlog
+
 from app.core.config import settings
 
 logger = structlog.get_logger()
@@ -32,14 +34,14 @@ async def init_db_pool():
         try:
             _pool = await asyncpg.create_pool(
                 dsn=settings.DATABASE_URL,
-                min_size=2,
-                max_size=10,
-                command_timeout=30,
+                min_size=settings.DB_POOL_MIN_SIZE,
+                max_size=settings.DB_POOL_MAX_SIZE,
+                command_timeout=settings.DB_COMMAND_TIMEOUT,
             )
             logger.info(
                 "database_pool_created",
-                min_size=2,
-                max_size=10,
+                min_size=settings.DB_POOL_MIN_SIZE,
+                max_size=settings.DB_POOL_MAX_SIZE,
                 attempt=attempt,
             )
             return

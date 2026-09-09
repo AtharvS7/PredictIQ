@@ -3,12 +3,14 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useCurrencyStore } from '@/store/currencyStore';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import ThemeProvider from '@/components/ThemeProvider';
 
 // ── Lazy-loaded pages (code splitting) ───────────────────
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const AuthPage = lazy(() => import('@/pages/AuthPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const NewEstimatePage = lazy(() => import('@/pages/NewEstimatePage'));
+const SharedEstimatePage = lazy(() => import('./pages/SharedEstimatePage'));
 const ResultsPage = lazy(() => import('@/pages/ResultsPage'));
 const EstimatesPage = lazy(() => import('@/pages/EstimatesPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
@@ -30,48 +32,8 @@ function PageSpinner() {
 }
 
 // ── Theme Context ────────────────────────────────────────
-interface ThemeContextType {
-  theme: string;
-  setTheme: (theme: string) => void;
-}
+export { ThemeContext, useTheme } from '@/components/ThemeProvider';
 
-export const ThemeContext = createContext<ThemeContextType>({
-  theme: 'dark',
-  setTheme: () => {},
-});
-
-export const useTheme = () => useContext(ThemeContext);
-
-function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState(() => {
-    const saved = localStorage.getItem('Predictify-theme');
-    if (saved) return saved;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
-
-  const setTheme = (newTheme: string) => {
-    if (newTheme === 'system') {
-      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', sys);
-    } else {
-      document.documentElement.setAttribute('data-theme', newTheme);
-    }
-    localStorage.setItem('Predictify-theme', newTheme);
-    setThemeState(newTheme);
-  };
-
-  useEffect(() => {
-    setTheme(theme);
-  }, []);
-
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-// ── Toast Management ─────────────────────────────────────
 interface Toast {
   id: string;
   type: 'success' | 'error' | 'info';
@@ -194,6 +156,7 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/share/:token" element={<SharedEstimatePage />} />
                 <Route
                   path="/dashboard"
                   element={<RequireAuth><DashboardPage /></RequireAuth>}

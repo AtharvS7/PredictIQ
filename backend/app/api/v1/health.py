@@ -3,11 +3,13 @@ Predictify API — Health Check
 Exposes model status, training metrics, DB connectivity, and Firebase status.
 """
 import time
+
 import structlog
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from ml.inference import predictor
-from app.core.database import get_db
+
 from app.core.config import settings
+from app.core.database import get_db
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -17,7 +19,8 @@ _start_time = time.time()
 
 
 @router.get("/health")
-async def health_check():
+@router.get("/ready")
+async def health_check(response: Response):
     """
     Comprehensive health check — verifies DB, ML model, and reports uptime.
     Used by load balancers, Docker HEALTHCHECK, and monitoring tools (D2).
@@ -51,6 +54,7 @@ async def health_check():
     )
 
     uptime_seconds = int(time.time() - _start_time)
+    response.status_code = 200 if all_healthy else 503
 
     return {
         "status": "healthy" if all_healthy else "degraded",
@@ -63,3 +67,9 @@ async def health_check():
         },
         **model_info,
     }
+
+
+@router.get("/live")
+async def liveness():
+    """Process liveness independent of external dependency readiness."""
+    return {"status": "alive"}
