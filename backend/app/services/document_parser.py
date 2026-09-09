@@ -77,8 +77,8 @@ class DocumentParser:
         except ValueError:
             raise
         except Exception as e:
-            logger.error("document_parse_error", error=str(e), mime_type=mime_type)
-            raise ValueError(f"Failed to parse document: {e}")
+            logger.error("document_parse_error", error_type=type(e).__name__, mime_type=mime_type)
+            raise ValueError("Failed to parse document. Check the file format and upload it again.") from None
 
     @staticmethod
     def _parse_pdf(content: bytes) -> dict:
@@ -117,11 +117,11 @@ class DocumentParser:
                         )
                         break
         except Exception as e:
-            logger.error("pdf_parse_error", error=str(e))
+            logger.error("pdf_parse_error", error_type=type(e).__name__)
             raise ValueError(
-                f"Could not parse PDF: {e}. "
+                "Could not parse PDF. "
                 "Ensure it's a text-based PDF (not a scanned image)."
-            )
+            ) from None
 
         raw_text = DocumentParser._clean_text("\n\n".join(text_pages))
 
@@ -165,8 +165,8 @@ class DocumentParser:
                         text_parts.append(row_text)
 
         except Exception as e:
-            logger.error("docx_parse_error", error=str(e))
-            raise ValueError(f"Could not parse DOCX: {e}")
+            logger.error("docx_parse_error", error_type=type(e).__name__)
+            raise ValueError("Could not parse DOCX. Check the file and upload it again.") from None
 
         raw_text = DocumentParser._clean_text("\n\n".join(text_parts))
 

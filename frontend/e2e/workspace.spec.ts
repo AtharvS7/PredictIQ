@@ -87,10 +87,12 @@ test('workspace responsive navigation and keyboard controls', async ({ page }) =
   await nav.getByRole('link', { name: 'New Estimate' }).click();
   await expect(page.getByRole('button', { name: 'Choose document' })).toBeVisible();
   await page.getByRole('button', { name: /manual/i }).click();
+  await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toBeFocused();
   await page.getByLabel('Project Name').fill('Preserved project');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: /generate estimate/i }).click();
   await expect(page.getByRole('main').getByRole('alert')).toContainText('Prediction service is unavailable');
+  await expect(page.getByRole('main').getByRole('heading', { level: 2 })).toBeFocused();
   await expect(page.getByLabel('Project Name')).toHaveValue('Preserved project');
   await nav.getByRole('link', { name: 'Settings', exact: true }).click();
   await page.getByLabel('Hourly Rate (USD)').fill('0');

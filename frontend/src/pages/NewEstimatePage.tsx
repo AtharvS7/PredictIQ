@@ -1,5 +1,5 @@
 import { useTheme } from '@/components/ThemeProvider';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
@@ -78,6 +78,8 @@ export default function NewEstimatePage() {
   const isDark = resolvedTheme === 'dark';
 
   const [step, setStep] = useState(1);
+  const stepHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { stepHeading.current?.focus(); }, [step]);
   const [useManual, setUseManual] = useState(false);
 
   /* Step 1 — Upload */
@@ -365,7 +367,7 @@ export default function NewEstimatePage() {
              ══════════════════════════════════════════════ */}
           {step === 1 && (
             <div className="card" style={{ padding: 32 }}>
-              <h2
+              <h2 ref={stepHeading} tabIndex={-1}
                 style={{
                   fontSize: '1.25rem',
                   fontWeight: 700,
@@ -575,7 +577,7 @@ export default function NewEstimatePage() {
             <form className="card" style={{ padding: 32 }}
               onSubmit={(event) => { event.preventDefault(); void handleEstimate(); }}>
               {estimateError && <p role="alert" style={{ color: 'var(--color-danger)', marginBottom: 16 }}>{estimateError}</p>}
-              <h2
+              <h2 ref={stepHeading} tabIndex={-1}
                 style={{
                   fontSize: '1.25rem',
                   fontWeight: 700,
@@ -867,7 +869,7 @@ export default function NewEstimatePage() {
                 <Brain size={28} color={isDark ? 'black' : 'white'} />
               </div>
 
-              <h2
+              <h2 ref={stepHeading} tabIndex={-1}
                 style={{
                   fontSize: '1.25rem',
                   fontWeight: 700,

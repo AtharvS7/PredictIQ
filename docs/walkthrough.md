@@ -6,6 +6,8 @@
 
 ## Current engineering status — September 9, 2026
 
+The [project mandate](PROJECT_MANDATE.md) records the user's authorization for substantive UI, backend, security, dataset, model, and documentation improvements, including the `dev2`-only backup boundary.
+
 This section supersedes the historical versioned descriptions below. PredictIQ is under active repair and is **not production-ready**. The legacy model's reported R² of 0.8953 is withdrawn: 481 China records used the Resource category as effort hours, and 108 labels were capped. The exact model and dataset hashes are revoked before inference, training, and benchmark use. New prediction requests fail with an unavailable response instead of presenting unreliable estimates. Historical results require revalidation.
 
 ### Repaired application flow
@@ -55,6 +57,18 @@ Remaining work, easiest to hardest: finish UI/accessibility acceptance; verify l
 The authorized backup branch is `dev2` only. No production deployment or main-branch push is part of this work. Local environments, credentials, downloaded research datasets, experiment binaries, caches, agent installations, and generated reports are excluded from the backup.
 
 Backup preparation verified all 477 backend tests from a separate checkout based on the upstream history. A subsequent cross-platform CSV revocation regression adds coverage for both LF and CRLF; all nine related artifact/research tests and focused Ruff passed. Local PostgreSQL 18 dump/restore to a separate rehearsal database preserved Alembic head `003_estimate_lineage`, five public tables, and 22 constraints. The source test database contained no estimates at that point, so this proves schema restoration only; populated-data and uploaded-object recovery remain release gates.
+
+### Follow-up acceptance evidence
+
+- Configuration: local dotenv inspection found the database setting and all six frontend Firebase fields populated, but the configured backend Admin credential absent. Provider-backed authentication is therefore not verified. No credential values were printed or changed.
+- Recovery: a subsequent populated rehearsal restored synthetic profile, document, estimate and share records into a new isolated PostgreSQL database. Estimate JSON, lineage UUID, document/share references, migration head, and restored local document SHA-256 matched. This does not certify production S3 recovery or establish production RPO/RTO.
+- Parser privacy: library error details are removed from parser messages and structured logs; error type remains available for diagnosis. Seventy focused parser/document-flow tests passed. Process isolation and resource exhaustion controls beyond existing file/archive/page limits remain open.
+- UI: wizard step transitions now move keyboard focus to the active heading, including return from an unavailable prediction request. This extends the earlier UI-UX Pro Max accessibility work.
+- Dataset: `reconstructed-v1` contains 787 projects and five columns (`source`, `project_id`, `size_fp`, `effort_hours`, `duplicate_group`). Only `size_fp` is an input feature; `effort_hours` is the target. The remaining columns support provenance and split integrity. No larger production dataset or serving approval is claimed.
+
+Whole-project completion remains unmeasured. These are acceptance findings, not equally weighted units of implementation effort.
+
+Latest verification: **481 backend tests passed**, the Chromium workspace test passed including step-focus assertions, frontend TypeScript passed, and focused parser Ruff passed.
 
 ## Historical walkthrough (version 3.2)
 
