@@ -1,6 +1,23 @@
 # Release Checklist — Predictify
 
-Use this checklist for every release. Do not skip steps.
+## Current release policy — September 15, 2026
+
+This section supersedes the historical checklist below. The authorized source branch is **dev2 only**. Do not push main, other branches or tags. Hosting targets and access are pending; no deployment has occurred. See [deployment inputs](runbooks/DEPLOYMENT_INPUTS.md).
+
+- [ ] Select hosting projects, budget, region and frontend/API URLs.
+- [ ] Resolve the owner's ML execution hold; obtain compatible licensed data and independently approve a model.
+- [ ] Install provider secrets and pass offline preflight, then verify actual access separately.
+- [ ] Pass tests, build, type/lint and security checks on the exact release commit.
+- [ ] Back up database and objects before additive migrations through `005_role_retry`.
+- [ ] Deploy staging with readiness checks; verify real-provider estimation with the approved model and cross-user denial.
+- [ ] Verify SPA deep links, HTTPS/CORS, private uploads and persistence across restart.
+- [ ] Rehearse populated database/object restoration and rollback; record recovery targets.
+- [ ] Configure resource limits, monitoring, alerts and retention; verify load behavior.
+- [ ] Promote the same reviewed commit/artifact hashes and record production acceptance evidence.
+
+The old tag-triggered production and `dev` staging workflows below are historical, not the current authorized deployment procedure. Keep provider auto-deploy disabled until the release path and ML execution hold are resolved.
+
+## Historical checklist (superseded)
 
 ---
 

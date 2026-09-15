@@ -6,6 +6,10 @@
 
 ## Current engineering status — September 15, 2026
 
+### Deployment preparation follow-up
+
+Added Railway configuration for the root Dockerfile, canonical pre-deploy migrations and readiness, plus a provider-port-aware single-worker backend entry point. Added Vercel SPA routing/security headers and an offline production configuration checker that never prints supplied values. Fourteen startup/readiness tests passed; eight script tests passed and three container tests were skipped because no test image was selected. Hosting configuration parsed successfully; no provider deployment or new ML execution was performed. The [deployment input list](runbooks/DEPLOYMENT_INPUTS.md) records required access, settings, model and live acceptance gates. The owner reports credential rotation complete.
+
 ### Latest reliability and production ML implementation checkpoint
 
 This checkpoint supersedes the older acceptance summaries below. Rough engineering completion is **about 85%**, a judgment of implementation and validation effort rather than a measured test percentage. The project remains **not production-ready**, chiefly because no model has passed production validation and live operational acceptance remains incomplete.

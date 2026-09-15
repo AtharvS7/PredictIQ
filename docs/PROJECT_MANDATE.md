@@ -18,6 +18,8 @@ The intended outcome is a polished, credible, resume-worthy project with excelle
 
 ## Current order of work
 
+Latest deployment steering: prepare production and staging and deploy once target projects, access, budget and acceptance gates are resolved. Credential rotation is reported complete by the owner. Preserve the dev2-only push boundary. This does not by itself override the earlier explicit ML execution hold; clarification is pending.
+
 September 15 steering: write and statically review the production ML training, evaluation and serving code, but **do not execute training, model evaluation, promotion or the new production model until the user explicitly authorizes execution**. Ordinary non-ML tests and authenticated workflow checks using a deterministic contract fixture remain authorized. UI direction is professional, restrained and minimal, using UI-UX Pro Max selectively. The user accepts a clearly labelled rough engineering-completion estimate rather than an exact percentage.
 
 UI acceptance → configuration verification → populated recovery rehearsal → authenticated E2E → authorization and parser reliability → production ML validation and integration. Newly verified critical defects can take priority over this order.
