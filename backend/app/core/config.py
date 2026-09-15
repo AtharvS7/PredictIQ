@@ -2,6 +2,7 @@
 Predictify Backend Configuration
 Loads environment variables via pydantic-settings.
 """
+import os
 import warnings
 from typing import List, Literal
 
@@ -53,6 +54,8 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _validate_secrets(self) -> "Settings":
         """Crash fast if critical secrets are still placeholder values."""
+        if os.environ.get("FIREBASE_AUTH_EMULATOR_HOST") and self.APP_ENV not in ("test", "testing", "ci"):
+            raise ValueError("Firebase Auth emulator is only permitted in isolated test environments")
         if (self.APP_ENV.lower() in ("prod", "production", "staging")
                 and self.STORAGE_BACKEND == "local" and not self.ALLOW_LOCAL_STORAGE_IN_PRODUCTION):
             raise ValueError("Production requires S3 storage or explicit durable local storage opt-in")

@@ -6,6 +6,8 @@
 
 ## Current engineering status — September 9, 2026
 
+**September 15 follow-up:** [Authentication and model validation](validation_2026-09-15.md) records the 891-row research collection, frozen-model external evaluation, and real SDK authentication tests. The tuned model failed to improve external accuracy and remains research-only.
+
 The [project mandate](PROJECT_MANDATE.md) records the user's authorization for substantive UI, backend, security, dataset, model, and documentation improvements, including the `dev2`-only backup boundary.
 
 This section supersedes the historical versioned descriptions below. PredictIQ is under active repair and is **not production-ready**. The legacy model's reported R² of 0.8953 is withdrawn: 481 China records used the Resource category as effort hours, and 108 labels were capped. The exact model and dataset hashes are revoked before inference, training, and benchmark use. New prediction requests fail with an unavailable response instead of presenting unreliable estimates. Historical results require revalidation.
