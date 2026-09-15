@@ -32,10 +32,12 @@ async def health_check(response: Response):
     try:
         pool = await get_db()
         result = await pool.fetchval("SELECT 1")
+        # Connectivity alone cannot prove that authorization's required schema exists.
+        await pool.execute('SELECT role_managed, role_sync_pending, role_sync_after FROM profiles LIMIT 0')
         db_status = "connected" if result == 1 else "error"
     except Exception as e:
         db_status = f"error: {type(e).__name__}"
-        logger.warning("health_check_db_fail", error=str(e))
+        logger.warning("health_check_db_fail", error_type=type(e).__name__)
 
     # Firebase status (check if SDK initialized)
     firebase_status = "unknown"

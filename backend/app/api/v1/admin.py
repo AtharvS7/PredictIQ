@@ -8,27 +8,14 @@ from typing import Literal, Optional
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.concurrency import run_in_threadpool
-from firebase_admin import auth as firebase_auth
 from pydantic import BaseModel
 
 from app.core.database import get_db
 from app.core.security import CurrentUser, require_role
+from app.services.role_sync import sync_pending
 
 router = APIRouter()
 logger = structlog.get_logger()
-
-
-def _sync_role_claims(user_id: str, role: str) -> None:
-    """Firebase replaces the claims object: preserve fields owned by other features.
-
-    This is not a compare-and-swap operation. Durable reconciliation and concurrent
-    external writers remain part of the outstanding role-sync audit finding.
-    """
-    record = firebase_auth.get_user(user_id)
-    claims = dict(record.custom_claims or {})
-    claims["role"] = role
-    firebase_auth.set_custom_user_claims(user_id, claims)
 
 
 class RoleUpdateRequest(BaseModel):
@@ -87,46 +74,32 @@ async def update_user_role(
 
     pool = await get_db()
 
-    # Verify user exists
+    # Lock, update authority and queue synchronization in one database statement.
     existing = await pool.fetchrow(
-        "SELECT id, role FROM profiles WHERE id = $1", user_id
+        """WITH previous AS MATERIALIZED (
+               SELECT id, role FROM profiles WHERE id=$2 FOR UPDATE
+           ) UPDATE profiles SET role=$1, role_managed=TRUE, role_sync_pending=TRUE,
+                 role_sync_after=NOW(), updated_at=NOW()
+             FROM previous WHERE profiles.id=previous.id
+             RETURNING profiles.id, previous.role""", data.role, user_id
     )
     if not existing:
         raise HTTPException(status_code=404, detail="User not found")
 
     old_role = existing["role"] or "editor"
 
-    # Update role in database
-    await pool.execute(
-        "UPDATE profiles SET role = $1, updated_at = NOW() WHERE id = $2",
-        data.role, user_id,
-    )
-
-    # Sync role to Firebase custom claims
+    # Best effort delivery: failure leaves a durable pending update, never a rollback
+    # that could race another administrator or restore an already revoked privilege.
     try:
-        await run_in_threadpool(_sync_role_claims, user_id, data.role)
-        logger.info(
-            "rbac_role_updated",
-            admin_id=admin.id,
-            target_user_id=user_id,
-            old_role=old_role,
-            new_role=data.role,
-        )
+        synced = bool(await sync_pending(user_id))
     except Exception as e:
-        # Rollback DB change if Firebase sync fails
-        await pool.execute(
-            "UPDATE profiles SET role = $1, updated_at = NOW() WHERE id = $2",
-            old_role, user_id,
-        )
+        synced = False
         logger.error("firebase_claim_sync_failed", error_type=type(e).__name__, user_id=user_id)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to sync role to authentication provider",
-        )
 
     return {
         "user_id": user_id,
         "old_role": old_role,
         "new_role": data.role,
-        "synced_to_firebase": True,
+        "synced_to_firebase": synced,
+        "sync_pending": not synced,
     }

@@ -4,7 +4,42 @@
 
 ---
 
-## Current engineering status — September 9, 2026
+## Current engineering status — September 15, 2026
+
+### Latest reliability and production ML implementation checkpoint
+
+This checkpoint supersedes the older acceptance summaries below. Rough engineering completion is **about 85%**, a judgment of implementation and validation effort rather than a measured test percentage. The project remains **not production-ready**, chiefly because no model has passed production validation and live operational acceptance remains incomplete.
+
+- Authenticated estimation now passes with real Firebase **emulator** sign-in and SDK token verification, actual PostgreSQL persistence, upload, extraction, result reload, cost conversion, sign-out and cross-user read denial. Prediction alone is a deterministic contract fixture; this is not production-model or live-provider E2E evidence. The fixture checks that all nine proposed planning inputs reach prediction, including the previously omitted integration count.
+- Fixed duplicate auth redirects that interrupted the upload workflow, and concurrent profile creation using conflict-safe insertion. Empty profile updates return the full existing profile.
+- PostgreSQL is authoritative for application-managed roles. Demotions apply to the next API request even with stale Firebase claims. Pending claim updates survive provider failure and restart; delayed retries allow other accounts to proceed. Apply additive migrations through `005_role_retry` before running this code. They have been applied only to the isolated local test database.
+- Document parsing runs in disposable child processes with a 30-second deadline and two active slots per API process. Deadline, invalid-document, overload and recovery tests passed. Container memory limits and hostile-document load testing remain operational gates; this is not a claim of an OS-level memory sandbox.
+- UI-UX Pro Max informed the prior responsive/accessibility work and current restrained button/card styling. Solid primary buttons replace decorative gradients; hover feedback is limited to clickable cards. Future production intervals are labelled as held-out validation coverage, not individual prediction accuracy.
+- Production training, selection, calibration, provenance and hash-pinned serving code is written. **It has not been executed**, per owner instruction. See the [production ML contract and execution runbook](runbooks/PRODUCTION_ML.md). Intake requires at least 1,000 compatible real projects and nine planning inputs; the acquired research collection is still 891 historical projects and cannot be represented as that production dataset.
+
+```mermaid
+sequenceDiagram
+    participant Admin
+    participant API
+    participant DB as PostgreSQL
+    participant Worker as Claim reconciliation
+    participant Firebase
+    Admin->>API: Change role
+    API->>DB: Commit role authority and pending sync
+    API->>Firebase: Best-effort claim update
+    Firebase-->>API: Success or provider failure
+    API-->>Admin: New role and synchronization status
+    Note over API,DB: Subsequent requests resolve managed role from DB
+    Worker->>DB: Lock due pending row; skip locked rows
+    Worker->>Firebase: Preserve other claims and update role
+    Worker->>DB: Clear pending or schedule retry
+```
+
+Current validation includes 48 authorization/request tests, nine focused role/parser/profile tests after retry scheduling, 63 parser/document-flow tests, nine browser acceptance tests, the authenticated estimation E2E, frontend type checking and production build, backend Ruff, and mypy over 42 application files. Runs overlap; these counts must not be added into a claimed unique test total. Frontend lint has zero errors but existing warnings. Deferred new production ML tests are source specifications, not executed evidence.
+
+Final checkpoint checks: all 67 frontend tests have passing evidence (59 in the broad run; the remaining eight passed on focused retry after a worker-start timeout). Eleven health/admin checks passed, including readiness rejecting missing authorization columns. The final authenticated E2E passed against migration `005_role_retry` with the nine-input contract assertion. This checkpoint is retained locally on `dev2`; pushing is deferred because push-triggered CI includes ML execution tests while the owner's execution hold is active.
+
+Remaining release gates: licensed modern project data and verified feature semantics; authorized ML test/training/evaluation and independent promotion; production provider/storage/configuration checks; production restore/rollback rehearsal and measured resource limits; final UI acceptance. The local populated recovery rehearsal is complete, but is not evidence for production S3 recovery. Credential rotation remains owner-managed before deployment.
 
 **September 15 follow-up:** [Authentication and model validation](validation_2026-09-15.md) records the 891-row research collection, frozen-model external evaluation, and real SDK authentication tests. The tuned model failed to improve external accuracy and remains research-only.
 

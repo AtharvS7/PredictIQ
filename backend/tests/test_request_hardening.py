@@ -39,6 +39,9 @@ async def test_actual_body_limit(headers, chunks, expected):
 
 
 async def test_auth_checks_revocation_and_sets_verified_identity(monkeypatch):
+    pool = AsyncMock()
+    pool.fetchval.return_value = None
+    monkeypatch.setattr(security, 'get_db', AsyncMock(return_value=pool))
     verify = Mock(return_value={"uid": "verified-user", "role": "admin"})
     monkeypatch.setattr(security.firebase_auth, "verify_id_token", verify)
     request = Request({"type": "http"})

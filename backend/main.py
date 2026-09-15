@@ -1,7 +1,8 @@
 """
 Predictify Backend — FastAPI Application Entry Point
 """
-from contextlib import asynccontextmanager
+import asyncio
+from contextlib import asynccontextmanager, suppress
 from uuid import uuid4
 
 import structlog
@@ -54,11 +55,16 @@ async def lifespan(app: FastAPI):
 
     # Initialize database connection pool
     await init_db_pool()
+    from app.services.role_sync import reconcile_roles
+    role_worker = asyncio.create_task(reconcile_roles())
 
     try:
         # Load ML model
         from ml.inference import predictor
-        predictor.load(settings.ML_MODEL_PATH, settings.ML_SCALER_PATH, settings.ML_FEATURES_PATH)
+        if settings.ML_PIPELINE_MANIFEST:
+            predictor.load_production(settings.ML_PIPELINE_MANIFEST, settings.ML_PIPELINE_MANIFEST_SHA256)
+        else:
+            predictor.load(settings.ML_MODEL_PATH, settings.ML_SCALER_PATH, settings.ML_FEATURES_PATH)
         model_info = predictor.get_model_info()
         logger.info("ml_model_status", ready=predictor.is_ready, mode=model_info.get("model_mode"))
 
@@ -77,6 +83,9 @@ async def lifespan(app: FastAPI):
 
         yield
     finally:
+        role_worker.cancel()
+        with suppress(asyncio.CancelledError):
+            await role_worker
         await close_db_pool()
         logger.info("shutting_down_Predictify")
 # Create FastAPI application

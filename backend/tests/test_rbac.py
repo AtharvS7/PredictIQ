@@ -9,7 +9,7 @@ Tests cover:
   - Route protection for viewers vs editors
 """
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
@@ -297,8 +297,7 @@ class TestAdminRouteAccess:
         })
         mock_pool.execute = AsyncMock()
 
-        with patch("app.api.v1.admin.firebase_auth.get_user", return_value=MagicMock(custom_claims={})), \
-                patch("app.api.v1.admin.firebase_auth.set_custom_user_claims") as mock_claims:
+        with patch("app.api.v1.admin.sync_pending", new=AsyncMock(return_value=True)) as pending:
             try:
                 resp = client.patch(
                     f"/api/v1/admin/users/{target_user_id}",
@@ -309,7 +308,7 @@ class TestAdminRouteAccess:
                 assert data["old_role"] == "viewer"
                 assert data["new_role"] == "editor"
                 assert data["synced_to_firebase"] is True
-                mock_claims.assert_called_once_with(target_user_id, {"role": "editor"})
+                pending.assert_awaited_once_with(target_user_id)
             finally:
                 _cleanup(app)
 

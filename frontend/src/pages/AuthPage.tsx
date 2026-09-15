@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/App';
 import Navbar from '@/components/shared/Navbar';
@@ -12,7 +12,6 @@ type AuthMode = 'login' | 'register' | 'forgot';
 export default function AuthPage() {
   const { session, signIn, signUp, signInWithOAuth, loading, resetPassword } = useAuthStore();
   const { addToast } = useToast();
-  const navigate = useNavigate();
 
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
@@ -55,11 +54,9 @@ export default function AuthPage() {
       if (mode === 'login') {
         await signIn(email, password);
         addToast('success', 'Welcome back!');
-        navigate('/dashboard');
       } else if (mode === 'register') {
         await signUp(email, password, fullName);
         addToast('success', 'Account created! Check your email for verification.');
-        navigate('/dashboard');
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Authentication failed';

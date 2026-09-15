@@ -197,19 +197,18 @@ h1, h2, h3, h4, h5, h6 {
 .card {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: 14px;
+  border-radius: 12px;
   box-shadow: var(--shadow-card);
   transition: box-shadow 0.35s var(--transition-smooth), transform 0.35s var(--transition-smooth);
 }
 
-.card:hover {
-  box-shadow: var(--shadow-card-hover);
-  transform: translateY(-2px);
+a.card:hover, button.card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card);
 }
 
 .btn-primary {
-  background: var(--gradient-brand);
-  background-size: 200% auto;
+  background: var(--color-primary);
   color: white;
   font-weight: 600;
   padding: 0.625rem 1.5rem;
@@ -226,9 +225,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary:hover {
-  background-position: right center;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(26, 86, 219, 0.35), 0 0 0 1px rgba(26, 86, 219, 0.1);
+  background: var(--color-primary-dark);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:active {

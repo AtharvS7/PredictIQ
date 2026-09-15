@@ -92,6 +92,7 @@ class EstimateService:
             "tech_stack": tech_stack,
             "size_fp": size_fp,
             "feature_count": feature_count,
+            "integration_count": integration_count,
             "methodology": methodology,
             "volatility_score": volatility_score,
             "team_experience": team_experience,

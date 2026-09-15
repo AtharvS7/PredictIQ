@@ -30,6 +30,30 @@ test('Firebase sign-in yields a verified API identity and enforces roles', async
   expect((await request.get('http://127.0.0.1:8000/api/v1/test/identity', {
     headers: { Authorization: 'Bearer invalid-token' },
   })).status()).toBe(401);
+  await page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'New Estimate' }).click();
+  await page.locator('#file-input').setInputFiles({ name: 'project.txt', mimeType: 'text/plain',
+    buffer: Buffer.from('Project: Customer Portal. Build a web application with React and Python. A team of 5 developers will work for 6 months using Agile. Users must register accounts, manage customer records, search products, export reports, and view dashboards. Integrate payment and email APIs.') });
+  await page.getByRole('button', { name: 'Upload & Continue' }).click();
+  await expect(page.getByLabel('Project Name')).toBeVisible({ timeout: 30_000 });
+  await page.getByLabel('Project Name').fill('Authenticated project flow');
+  const analyzed = page.waitForResponse(response => response.url().endsWith('/estimates/analyze') && response.request().method() === 'POST');
+  await page.getByRole('button', { name: /generate estimate/i }).click();
+  const response = await analyzed;
+  expect(response.status()).toBe(200);
+  const estimate = await response.json();
+  expect(estimate.model_version).toBe('authenticated-e2e-fixture');
+  expect(estimate.outputs.cost_likely_usd).toBeCloseTo(estimate.outputs.effort_likely_hours * estimate.inputs.hourly_rate_usd, 1);
+  await expect(page.getByRole('heading', { name: 'Authenticated project flow' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Authenticated project flow' })).toBeVisible();
+  // A second real emulator identity cannot read the first user's persisted result.
+  const other = await request.post('http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=demo-api-key', {
+    data: { email: `other-${Date.now()}@example.invalid`, password, returnSecureToken: true },
+  });
+  const otherToken = (await other.json()).idToken;
+  expect((await request.get(`http://127.0.0.1:8000/api/v1/estimates/${estimate.estimate_id}`, {
+    headers: { Authorization: `Bearer ${otherToken}` },
+  })).status()).toBe(404);
   await page.reload();
   await expect(page.getByRole('button', { name: 'Account options' })).toBeVisible();
   await page.getByRole('button', { name: 'Account options' }).click();

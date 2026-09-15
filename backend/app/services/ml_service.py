@@ -78,6 +78,16 @@ class MLService:
             Prediction result dict with effort_hours_likely/min/max,
             confidence_pct, model_mode.
         """
+        if predictor.production_bundle is not None:
+            if not predictor.is_ready:
+                raise HTTPException(status_code=503, detail="Prediction service is unavailable")
+            try:
+                return predictor.production_bundle.predict(params)
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail="Project inputs are outside the validated model domain") from exc
+            except Exception as exc:
+                predictor.is_ready = False
+                raise HTTPException(status_code=503, detail="Prediction service is unavailable") from exc
         feature_vector = self._build_feature_vector(params)
 
         try:

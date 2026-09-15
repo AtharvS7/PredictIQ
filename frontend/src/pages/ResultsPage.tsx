@@ -387,8 +387,8 @@ export default function ResultsPage() {
               <p style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: 4 }}>
                 {outputs.confidence_pct.toFixed(0)}%
               </p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Heuristic confidence</p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>This score and effort range are not calibrated probabilities.</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{currentEstimate.model_version.startsWith('production-v3-') ? 'Validation interval coverage' : 'Heuristic confidence'}</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{currentEstimate.model_version.startsWith('production-v3-') ? 'Observed coverage on held-out projects; not a guarantee for this estimate.' : 'This score and effort range are not calibrated probabilities.'}</p>
             </div>
 
             {/* Timeline */}

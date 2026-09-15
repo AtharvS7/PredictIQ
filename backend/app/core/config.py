@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     ML_MODEL_PATH: str = "./ml/predictiq_best_model.pkl"
     ML_SCALER_PATH: str = "./ml/predictiq_scaler.pkl"
     ML_FEATURES_PATH: str = "./ml/predictiq_features.json"
+    ML_PIPELINE_MANIFEST: str = ""
+    ML_PIPELINE_MANIFEST_SHA256: str = ""
 
     # Application
     DEFAULT_HOURLY_RATE_USD: float = 75.0

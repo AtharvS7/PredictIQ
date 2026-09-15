@@ -1,0 +1,17 @@
+{
+  "sources": [
+    {
+      "name": "licensed_project_export",
+      "path": "data/approved_projects.csv",
+      "sha256": "REPLACE_WITH_VERIFIED_SHA256",
+      "schema": "predictiq-planning-inputs-v1",
+      "grain": "completed_project",
+      "effort_unit": "person_hours",
+      "features_recorded_at": "planning",
+      "rights_approved": false,
+      "license_evidence": "",
+      "feature_parity_evidence": "",
+      "column_map": {}
+    }
+  ]
+}

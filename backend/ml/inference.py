@@ -17,12 +17,15 @@ import logging
 import pickle
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from sklearn.exceptions import InconsistentVersionWarning
 
 from ml.artifact_safety import REVOKED_MODEL_SHA256, require_unrevoked
+
+if TYPE_CHECKING:
+    from ml.production_serving import ProductionBundle
 
 logger = logging.getLogger(__name__)
 ML_DIR = Path(__file__).parent
@@ -56,6 +59,24 @@ class PredictifyInference:
         self.is_ready: bool = False
         self.model_name: str = "unknown"
         self.n_features: int = 0
+        self.production_bundle: ProductionBundle | None = None
+
+    def load_production(self, manifest_path, expected_hash) -> bool:
+        from ml.production_serving import ProductionBundle
+
+        self.is_ready = False
+        self.production_bundle = None
+        self.model = None
+        self.scaler = None
+        self.model_report = None
+        self.training_report = None
+        try:
+            self.production_bundle = ProductionBundle(manifest_path, expected_hash)
+            self.is_ready = True
+            return True
+        except Exception as exc:
+            logger.error("Production pipeline unavailable: %s", type(exc).__name__)
+            return False
 
     def load(self, model_path=None, scaler_path=None, feature_path=None) -> bool:
         """
@@ -63,6 +84,7 @@ class PredictifyInference:
         Returns True only for a compatible, complete artifact bundle.
         """
         self.is_ready = False
+        self.production_bundle = None
         self.model = None
         self.scaler = None
         self.feature_names = None
@@ -293,6 +315,8 @@ class PredictifyInference:
 
     def get_model_info(self) -> dict:
         """Return model metadata for health endpoint."""
+        if self.production_bundle is not None and self.is_ready:
+            return self.production_bundle.get_model_info()
         info: dict[str, Any] = {
             "model_loaded": self.is_ready,
             "model_mode": "live" if self.is_ready else "unavailable",

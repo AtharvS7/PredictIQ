@@ -13,7 +13,7 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def healthy_dependencies(monkeypatch):
-    monkeypatch.setattr(health, 'get_db', AsyncMock(return_value=Mock(fetchval=AsyncMock(return_value=1))))
+    monkeypatch.setattr(health, 'get_db', AsyncMock(return_value=Mock(fetchval=AsyncMock(return_value=1), execute=AsyncMock())))
     monkeypatch.setattr(health.predictor, 'is_ready', True)
     monkeypatch.setattr(firebase_admin, 'get_app', lambda: object())
 
@@ -28,6 +28,13 @@ def test_ready_status_and_schema(path):
     assert set(data['services']) == {'database', 'ml_model', 'firebase'}
     assert isinstance(data['uptime_seconds'], int)
     assert data['uptime_seconds'] >= 0
+
+
+def test_missing_authorization_schema_fails_readiness(monkeypatch):
+    pool = Mock(fetchval=AsyncMock(return_value=1), execute=AsyncMock(side_effect=RuntimeError('missing column')))
+    monkeypatch.setattr(health, 'get_db', AsyncMock(return_value=pool))
+    assert client.get('/api/v1/ready').status_code == 503
+    assert client.get('/api/v1/live').status_code == 200
 
 @pytest.mark.parametrize('dependency', ['database', 'model', 'firebase'])
 @pytest.mark.parametrize('path', ['/health', '/ready'])

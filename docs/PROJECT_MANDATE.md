@@ -18,6 +18,8 @@ The intended outcome is a polished, credible, resume-worthy project with excelle
 
 ## Current order of work
 
+September 15 steering: write and statically review the production ML training, evaluation and serving code, but **do not execute training, model evaluation, promotion or the new production model until the user explicitly authorizes execution**. Ordinary non-ML tests and authenticated workflow checks using a deterministic contract fixture remain authorized. UI direction is professional, restrained and minimal, using UI-UX Pro Max selectively. The user accepts a clearly labelled rough engineering-completion estimate rather than an exact percentage.
+
 UI acceptance → configuration verification → populated recovery rehearsal → authenticated E2E → authorization and parser reliability → production ML validation and integration. Newly verified critical defects can take priority over this order.
 
 This mandate records the user's project scope. It does not replace `AGENTS.md` or remove the need to protect secrets and preserve unrelated work.

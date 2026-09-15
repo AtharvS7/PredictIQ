@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
+from app.core.database import get_db
 
 logger = structlog.get_logger()
 security = HTTPBearer()
@@ -114,6 +115,18 @@ async def get_current_user(
         role = decoded.get("role", "editor")
         if role not in VALID_ROLES:
             role = "viewer"
+
+        # Preserve existing Firebase-only provisioning until a role is managed here.
+        # Once managed, the durable DB role overrides even an older signed token.
+        try:
+            pool = await get_db()
+            managed = await pool.fetchval('SELECT role FROM profiles WHERE id=$1 AND role_managed', user_id)
+        except Exception:
+            raise HTTPException(status_code=503, detail="Authorization service is unavailable") from None
+        if managed is not None:
+            if managed not in VALID_ROLES:
+                raise HTTPException(status_code=503, detail="Authorization service is unavailable")
+            role = managed
 
         logger.debug("jwt_verified", method="firebase_admin", user_id=user_id, role=role)
         user = CurrentUser(

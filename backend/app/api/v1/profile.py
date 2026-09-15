@@ -68,7 +68,7 @@ async def create_or_update_profile(
 
     # Check if profile exists
     existing = await pool.fetchrow(
-        "SELECT id FROM profiles WHERE id = $1", user.id
+        "SELECT * FROM profiles WHERE id = $1", user.id
     )
 
     if existing:
@@ -84,6 +84,7 @@ async def create_or_update_profile(
         row = await pool.fetchrow(
             """INSERT INTO profiles (id, full_name, avatar_url, hourly_rate_usd, currency, theme, timezone)
                VALUES ($1, $2, $3, $4, $5, $6, $7)
+               ON CONFLICT (id) DO NOTHING
                RETURNING *""",
             user.id,
             data.full_name or "",
@@ -93,6 +94,9 @@ async def create_or_update_profile(
             data.theme or "system",
             data.timezone or "UTC",
         )
+        if row is None:
+            # Another sign-in callback created the profile first. Preserve it.
+            row = await pool.fetchrow("SELECT * FROM profiles WHERE id = $1", user.id)
 
     logger.info("profile_upserted", user_id=user.id)
     return dict(row)
