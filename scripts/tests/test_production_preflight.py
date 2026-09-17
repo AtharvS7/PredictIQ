@@ -29,6 +29,19 @@ class ProductionPreflightTests(unittest.TestCase):
         result = json.dumps(preflight.check_environment(env))
         self.assertNotIn('test-secret', result)
 
+    def test_supabase_storage_path_is_valid_but_not_a_cors_origin(self):
+        endpoint = 'https://project.storage.supabase.co/storage/v1/s3'
+        env = self.valid() | {'S3_ENDPOINT_URL': endpoint}
+        self.assertEqual(preflight.check_environment(env), [])
+        self.assertFalse(preflight.https_origin(endpoint))
+
+    def test_storage_endpoint_rejects_embedded_credentials_and_query(self):
+        for endpoint in ['https://user:password@storage.example.test/s3',
+                         'https://storage.example.test/s3?token=private',
+                         'http://storage.example.test/s3']:
+            env = self.valid() | {'S3_ENDPOINT_URL': endpoint}
+            self.assertTrue(preflight.check_environment(env))
+
     def test_rejects_unsafe_origins(self):
         for origin in ['*', 'http://app.example.test', 'https://localhost', 'https://user:secret@app.example.test',
                        'https://app.example.test/path', 'https://app.example.test?secret=value']:

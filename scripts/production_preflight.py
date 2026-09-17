@@ -9,13 +9,13 @@ import re
 from urllib.parse import urlsplit
 
 
-def https_origin(value):
+def https_origin(value, allow_path=False):
     try:
         parsed = urlsplit(value)
         return (parsed.scheme == 'https' and bool(parsed.hostname)
                 and parsed.hostname not in {'localhost', '127.0.0.1', '::1'}
                 and not parsed.username and not parsed.password
-                and parsed.path in {'', '/'} and not parsed.query and not parsed.fragment
+                and (allow_path or parsed.path in {'', '/'}) and not parsed.query and not parsed.fragment
                 and parsed.port in {None, 443})
     except ValueError:
         return False
@@ -50,8 +50,8 @@ def check_environment(env):
         failures.append('STORAGE_BACKEND/S3_BUCKET_NAME: durable S3-compatible storage required for this hosting path')
     if bool(env.get('S3_ACCESS_KEY_ID')) != bool(env.get('S3_SECRET_ACCESS_KEY')):
         failures.append('S3 credentials: provide both fields or a provider-managed identity')
-    if env.get('S3_ENDPOINT_URL') and not https_origin(env['S3_ENDPOINT_URL']):
-        failures.append('S3_ENDPOINT_URL: HTTPS service origin required')
+    if env.get('S3_ENDPOINT_URL') and not https_origin(env['S3_ENDPOINT_URL'], allow_path=True):
+        failures.append('S3_ENDPOINT_URL: HTTPS service endpoint without credentials or query required')
     if not env.get('ML_PIPELINE_MANIFEST') or not re.fullmatch(r'[a-fA-F0-9]{64}', env.get('ML_PIPELINE_MANIFEST_SHA256', '')):
         failures.append('ML_PIPELINE_MANIFEST/SHA256: reviewed bundle path and hash required')
     return failures

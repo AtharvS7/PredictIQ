@@ -152,6 +152,11 @@ export default function App() {
       <ThemeProvider>
         <ToastProvider>
           <BrowserRouter>
+            {import.meta.env.VITE_APP_ENV === 'preview' && (
+              <div role="status" style={{ padding: '12px 20px', textAlign: 'center', background: 'var(--bg-secondary)', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
+                UI preview — the backend is not connected. Estimates and saved project data are unavailable.
+              </div>
+            )}
             <Suspense fallback={<PageSpinner />}>
               <Routes>
                 <Route path="/" element={<LandingPage />} />

@@ -126,6 +126,7 @@ class S3StorageBackend(StorageBackend):
         endpoint_url: str = "",
     ):
         import boto3
+        from botocore.config import Config
 
         self.bucket = bucket
         client_kwargs = {
@@ -136,6 +137,9 @@ class S3StorageBackend(StorageBackend):
             client_kwargs.update(aws_access_key_id=access_key, aws_secret_access_key=secret_key)
         if endpoint_url:
             client_kwargs["endpoint_url"] = endpoint_url
+            # S3-compatible gateways can include a path prefix (e.g. Supabase).
+            # Keep the bucket in the path rather than rewriting the endpoint host.
+            client_kwargs["config"] = Config(s3={"addressing_style": "path"})
 
         self.client = boto3.client(**client_kwargs)
         logger.info(

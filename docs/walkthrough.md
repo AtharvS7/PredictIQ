@@ -6,6 +6,12 @@
 
 ## Current engineering status — September 15, 2026
 
+### September 17: connected hosting and UI preview
+
+Verified Vercel Hobby access and the owner-confirmed Render workspace. Uploaded frontend source from the local `dev2` checkout to the dedicated `predictiq-preview` Vercel project using the owner's explicit manual-preview authorization. Deployment `dpl_44NFQbjbtqZzb8jC83rUT5xccNmF` is READY. Although the request targeted preview, Vercel reports the first deployment as this separate project's production target. This is a labelled UI preview, not the product's production release; the backend is not connected. Default Vercel authentication protection was preserved. Chromium verified the preview notice and landing heading with no page runtime errors; the `/auth` deep link returned the app. No main-branch push, ML execution or paid resource was requested.
+
+Supabase S3 endpoint paths are now accepted by the offline checker without weakening CORS origin validation. Custom S3 gateways use path-style bucket addressing. Six preflight and two storage tests passed, as did focused Ruff and the frontend build. Render backend creation remains pending private storage credentials, the resource-fit check and a validated model; no empty or knowingly unusable backend service was created. Hosting MCP connections now replace the need to request local Render/Vercel tokens.
+
 ### Deployment preparation follow-up
 
 Added Railway configuration for the root Dockerfile, canonical pre-deploy migrations and readiness, plus a provider-port-aware single-worker backend entry point. Added Vercel SPA routing/security headers and an offline production configuration checker that never prints supplied values. Fourteen startup/readiness tests passed; eight script tests passed and three container tests were skipped because no test image was selected. Hosting configuration parsed successfully; no provider deployment or new ML execution was performed. The [deployment input list](runbooks/DEPLOYMENT_INPUTS.md) records required access, settings, model and live acceptance gates. The owner reports credential rotation complete.
