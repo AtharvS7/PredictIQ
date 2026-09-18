@@ -57,3 +57,16 @@ Provisional engineering gates: external MAE at least 15% better than the trainin
 5. Deploy only trusted, hash-pinned local artifacts; pickle can execute code and checksums do not make an untrusted artifact safe. Serving checks the exact sklearn version, manifest and model hashes before loading. Keep the previous approved bundle for rollback; the revoked legacy model is not a rollback candidate.
 
 Remaining production ML gates: acquire sufficient compatible licensed modern data; train and evaluate on genuine compatible data; validate extraction-to-training parity, accuracy and subgroups, latency and memory; independently approve a bundle; rehearse deployment, monitoring and rollback. Neither the deterministic authenticated E2E fixture nor static checks close these gates.
+
+
+## September 18 expanded historical experiment
+
+`python -m ml.expanded_research ml/experiments/expanded-v3-20260918` trained eight fixed candidates on the 891-row historical development collection. Model selection used five held-out-source folds, excluding matching size/effort pairs across each fold. Source identity does not establish organization independence. Earlier external outcomes are now development data, explicitly not reused as untouched tests.
+
+Acquired 24 Albrecht projects for a separate external diagnostic: `AdjFP` is the size column and `Effort` is converted from thousands of person-hours to hours. Total research collection: **915 projects**, with **891 used to fit** and **24 reserved for external evaluation**. This is not a 915-row training set or a nine-feature production dataset.
+
+Selected power-law Huber: external MAE 17,178.48 hours, MdAPE 68.55%, PRED(25) 4.17%, R-squared -0.189. Median baseline MAE 19,694.75 hours. The roughly 12.8% MAE reduction versus a constant median does not establish improvement over the earlier fitted model or satisfy production quality gates. Candidate remains unapproved, and the now-observed external cohort must not guide further tuning as if untouched.
+
+Source: https://github.com/Derek-Jones/Software-estimation-datasets/blob/main/albrecht.arff . Public research provenance is recorded; production redistribution rights, measurement compatibility and prospective validation remain unresolved. Only scripts and tests belong in Git; raw data and experiment artifacts remain local.
+
+Additional source screened: [Itemlet](https://zenodo.org/records/19411554), 727,282 issue records across 204 projects and 108 columns under stated CC-BY 4.0. Downloaded its dictionary and project summaries for inspection, not its full issue corpus. The dictionary includes post-outcome activity and target-derived features, incomplete dates, and a documented completion-time derivation error. Issue-level logged hours and elapsed cycle time cannot be relabelled as complete-project effort. This source is not merged into PredictIQ production data.

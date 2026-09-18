@@ -2264,3 +2264,23 @@ flowchart LR
 ```
 
 Live provider checks: the supplied S3 credentials passed bucket access plus temporary object upload/download/deletion. The configured Neon hostname still failed DNS resolution while neon.tech resolved; no production schema changes were attempted. Database connectivity and model acceptance remain blocking.
+
+
+## Neon migration and research update, September 18
+
+Neon MCP identified the existing PredictIQ project on the free plan. Retrieved the current connection string into ignored production configuration. The endpoint resolves using public DNS; the local system resolver fails. Verified both synchronous TLS certificate/hostname validation and asyncpg access using a process-local DNS diagnostic; no OS resolver, hosts file or application DNS behavior was changed.
+
+Rehearsed the repository Alembic migrations on a temporary Neon branch, obtained the owner confirmation required by the migration tool, then applied through `005_role_retry` to production. Verified 11 profiles, 23 estimates and 20 documents retained; original-content checksums matched for profiles, estimates, documents and share links. Estimate lineage uniqueness exists and no lineage is missing. Temporary rehearsal branch was deleted by the tool. This is migration validation, not a completed independent backup/restore rehearsal.
+
+Trained eight research candidates on 891 historical projects and evaluated the selected model on 24 additional Albrecht projects (915 total research records). External error remains unacceptable for production; no model promotion occurred. See the production ML runbook for metrics and source limitations. Render backend creation and live model-backed estimation remain blocked by model acceptance, rather than missing Neon credentials.
+
+```mermaid
+flowchart LR
+    Neon[Neon production: migration 005 verified] --> API[Render backend: pending model acceptance]
+    S3[Storage round-trip verified] --> API
+    Research[915 historical research projects] --> Gate[External quality gate: failed]
+    Gate --> Review[Acquire compatible data and revise candidate]
+    Review --> Model[Validated production model: pending]
+    Model --> API
+    API --> E2E[Live authenticated estimation: pending]
+```
