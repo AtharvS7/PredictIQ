@@ -10,7 +10,7 @@ spec.loader.exec_module(preflight)
 
 class ProductionPreflightTests(unittest.TestCase):
     def valid(self):
-        return {'APP_ENV': 'staging', 'DATABASE_URL': 'postgresql://user:test-secret@db.example.test/app',
+        return {'APP_ENV': 'staging', 'DATABASE_URL': 'postgresql://db.example.test/app',
                 'ALLOWED_ORIGINS': 'https://app.example.test',
                 'FIREBASE_CREDENTIALS_JSON': json.dumps({'type': 'service_account', 'project_id': 'fixture',
                                                         'client_email': 'fixture@example.test', 'private_key': 'test-secret'}),

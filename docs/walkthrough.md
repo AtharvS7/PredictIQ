@@ -2240,3 +2240,27 @@ python -m pytest tests/ --cov=app --cov-report=html
 ---
 
 > *Built by Atharv Sawane & Team - Predictify v3.2.0*
+
+
+## September 18 deployment verification
+
+- Owner approval lifts the production ML execution hold; it does not replace independent acceptance evidence.
+- Broad backend run: 504/509 passed initially; five database failures were caused by the stopped isolated PostgreSQL server. After restarting it, all six tests in the affected group passed, covering those failures.
+- Five production pipeline regression tests pass, including real fitting/export on a synthetic fixture. This is not production accuracy evidence.
+- The Linux backend image builds. Two isolated text parsers under a 512 MiB / 0.1 CPU container completed in 24.59 seconds with 210.8 MiB peak container memory. No production model was loaded; full-service memory and live readiness remain open.
+- Vercel continues to host the explicitly labelled UI-only preview. No PredictIQ Render backend has been created.
+- Current production training remains blocked by incompatible/incomplete historical source data and the absence of a bundle that passes the independent gates.
+
+```mermaid
+flowchart LR
+    UI[Vercel UI preview] --> API[Render backend: pending]
+    API --> DB[Database connection verification]
+    API --> Storage[Durable S3 storage verification]
+    API --> Model[Independent model acceptance: pending]
+    DB --> Gate[Live authenticated estimation and recovery gates]
+    Storage --> Gate
+    Model --> Gate
+    Gate --> Release[Production release]
+```
+
+Live provider checks: the supplied S3 credentials passed bucket access plus temporary object upload/download/deletion. The configured Neon hostname still failed DNS resolution while neon.tech resolved; no production schema changes were attempted. Database connectivity and model acceptance remain blocking.

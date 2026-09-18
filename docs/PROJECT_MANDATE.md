@@ -1,6 +1,6 @@
 # PredictIQ engineering mandate
 
-User authorization, updated September 9, 2026.
+User authorization, updated September 18, 2026.
 
 The user authorizes autonomous engineering across the entire project: UI/UX redesign, backend architecture and logic, security hardening, database and API improvements, dataset replacement or expansion, model training and evaluation, testing, and documentation. Make substantive improvements when justified by implementation evidence; do not restrict work to cosmetic fixes or the original audit alone.
 
@@ -18,9 +18,11 @@ The intended outcome is a polished, credible, resume-worthy project with excelle
 
 ## Current order of work
 
-Latest deployment steering: prepare production and staging and deploy once target projects, access, budget and acceptance gates are resolved. Credential rotation is reported complete by the owner. Preserve the dev2-only push boundary. This does not by itself override the earlier explicit ML execution hold; clarification is pending.
+September 18 steering: the owner explicitly approved proceeding with the model after authorizing remaining backend deployment work. The earlier ML execution hold is lifted. Training, evaluation and promotion work may proceed; production approval still requires genuine compatible data, independent evaluation and passing release gates. Owner approval is not evidence of model accuracy.
 
-September 15 steering: write and statically review the production ML training, evaluation and serving code, but **do not execute training, model evaluation, promotion or the new production model until the user explicitly authorizes execution**. Ordinary non-ML tests and authenticated workflow checks using a deterministic contract fixture remain authorized. UI direction is professional, restrained and minimal, using UI-UX Pro Max selectively. The user accepts a clearly labelled rough engineering-completion estimate rather than an exact percentage.
+Deploy within the zero-cost budget using the approved Render workspace and Vercel project. Keep dev2-only pushes. Do not substitute ephemeral production storage, fabricated data or the revoked legacy model to bypass readiness. Credential rotation is reported complete by the owner.
+
+UI direction remains professional, restrained and minimal, using UI-UX Pro Max selectively. The user accepts a clearly labelled rough engineering-completion estimate rather than an exact percentage.
 
 UI acceptance → configuration verification → populated recovery rehearsal → authenticated E2E → authorization and parser reliability → production ML validation and integration. Newly verified critical defects can take priority over this order.
 
