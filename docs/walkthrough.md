@@ -2330,3 +2330,20 @@ flowchart LR
     Result --> Hold
     Hold --> Next[Improve absolute accuracy before production]
 ```
+
+## Verified source labels and model refinement, September 22
+
+Implemented deterministic original-record verification against reviewed public Jira hosts. **21 of 21 sampled effort labels matched** across eight projects on the ONAP and Atlassian hosts. The unit concern is resolved for this sample; it is not dataset-wide certification. The checker rejects redirects, mismatched issue IDs, conflicting time fields and invalid durations, and does not collect descriptions or user information.
+
+Trained four nonlinear challengers using the original training partition only. None beat Ridge's development RMSLE (0.9974), so Ridge remains the selected candidate. Calibration and previously observed test cohorts were not reused for tuning. Story points exist in only 28.16% of training rows; planning-time features and team history remain important data gaps. 62 related tests passed and lint was corrected. Production remains blocked by absolute prediction error and incomplete independent evidence.
+
+```mermaid
+flowchart LR
+    Sample[21 deterministic issue samples] --> Jira[Original public Jira time totals]
+    Jira --> Verified[21 matched effort labels]
+    Verified --> Scope[Sample evidence only]
+    Train[11541 training tasks] --> Compare[Ridge plus four nonlinear challengers]
+    Compare --> Retain[Retain Ridge: lowest development RMSLE]
+    Retain --> Next[Acquire verified planning snapshots and team history]
+    Scope --> Next
+```
