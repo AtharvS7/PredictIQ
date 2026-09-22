@@ -3,7 +3,9 @@
 Run from backend: python -m ml.acquire_research
 Data remain local; availability does not imply production approval.
 """
+import argparse
 import hashlib
+import shutil
 import tempfile
 from pathlib import Path
 from urllib.request import urlopen
@@ -19,12 +21,17 @@ SNAPSHOTS = [
     ('josse/LICENSE.md', 'https://raw.githubusercontent.com/ml-see/josse/main/LICENSE.md',
      'e245e22cc4ac72353781c345657077c5c0306131859e9cfd38174e27f41eb443', 1109),
 ]
+ITEMLET = ('itemlet/itemlet_dataset.csv',
+           'https://zenodo.org/records/19411554/files/itemlet_dataset.csv?download=1',
+           'f03d31866326a89690fa43c806bfc75b527e014de21c438e8d2bbe59dd3faf4a', 438479440)
 
 
 def fetch_snapshot(destination, url, expected_hash, expected_bytes):
     destination = Path(destination)
     if destination.exists():
-        if destination.stat().st_size != expected_bytes or hashlib.sha256(destination.read_bytes()).hexdigest() != expected_hash:
+        with destination.open('rb') as existing:
+            checksum = hashlib.file_digest(existing, 'sha256').hexdigest()
+        if destination.stat().st_size != expected_bytes or checksum != expected_hash:
             raise ValueError('Existing snapshot differs; preserve it and review manually')
         return
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -44,13 +51,17 @@ def fetch_snapshot(destination, url, expected_hash, expected_bytes):
             raise ValueError('Downloaded snapshot checksum or size mismatch')
         # Exclusive target creation avoids silently replacing another writer's file.
         with destination.open('xb') as final:
-            final.write(temporary.read_bytes())
+            with temporary.open('rb') as verified:
+                shutil.copyfileobj(verified, final, length=65536)
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
 
 
 if __name__ == '__main__':
-    for name, url, checksum, size in SNAPSHOTS:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--itemlet', action='store_true', help='Also fetch the 438 MB intake-only Itemlet snapshot')
+    args = parser.parse_args()
+    for name, url, checksum, size in SNAPSHOTS + ([ITEMLET] if args.itemlet else []):
         fetch_snapshot(ROOT / name, url, checksum, size)
         print(f'Verified {name}', flush=True)

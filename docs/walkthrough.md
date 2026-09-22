@@ -2309,3 +2309,24 @@ flowchart TD
     Compare --> Block[No demonstrated reliable improvement: promotion blocked]
     Block --> Next[Acquire independent compatible effort observations]
 ```
+
+## Larger-data model iteration, September 22
+
+Acquired the full Itemlet research dataset (727,282 issues, 204 projects, 108 columns). This is a raw research inventory, not 727,282 usable project-cost examples. After completed-task, positive-hour, date and duplicate checks, 17,660 tasks across 106 projects qualified for a provisional experiment. Source hour-field documentation conflicts with extraction code; original-label verification remains open.
+
+Trained four text/structured candidates with summaries, story points, issue type and priority. The selected model reduced held-out MAE from 7.52 to 6.99 hours (7.1%) across 4,173 tasks from 22 held-out projects. Project-bootstrap uncertainty supports the relative gain. Absolute error remains too high: MdAPE 76.7%, PRED(25) 14.6%. It is not production-approved and is not directly comparable to the invalid legacy project-cost model. A separate nested JOSSE human-estimate calibration experiment retained the human baseline in every fold.
+
+Added streaming snapshot acquisition, target-integrity auditing, new model pipelines, and regression coverage. 52 related tests and Ruff passed. Model artifacts and source datasets remain local; production serving is unchanged.
+
+```mermaid
+flowchart LR
+    Raw[727282 Itemlet issues] --> Audit[Units and label-provenance audit]
+    Raw --> Filter[Completed tasks / dates / deduplication]
+    Filter --> Eligible[17660 eligible research tasks]
+    Eligible --> Split[Whole-project train / calibration / test]
+    Split --> Candidate[Summary + story points + type + priority]
+    Candidate --> Result[7.1 percent lower MAE vs median baseline]
+    Audit --> Hold[Original-label verification still required]
+    Result --> Hold
+    Hold --> Next[Improve absolute accuracy before production]
+```
