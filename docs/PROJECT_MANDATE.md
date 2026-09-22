@@ -27,3 +27,6 @@ UI direction remains professional, restrained and minimal, using UI-UX Pro Max s
 UI acceptance → configuration verification → populated recovery rehearsal → authenticated E2E → authorization and parser reliability → production ML validation and integration. Newly verified critical defects can take priority over this order.
 
 This mandate records the user's project scope. It does not replace `AGENTS.md` or remove the need to protect secrets and preserve unrelated work.
+
+
+September 22 ML steering: prioritize model reliability and defer deployment. The owner explicitly authorizes replacing the old dataset format, feature set and model architecture. The old nine-feature contract is optional, not a business requirement. Choose observed planning-time inputs supported by evidence, and update the application only after a candidate demonstrates improvement. Keep research cohorts at their actual grain: tasks are not complete projects, story points are not person-hours, and retrospective descriptions are not proven planning-time snapshots. The zero-cost boundary remains in force; no paid purchase was specifically approved.

@@ -2284,3 +2284,28 @@ flowchart LR
     Model --> API
     API --> E2E[Live authenticated estimation: pending]
 ```
+
+## ML evidence update, September 22
+
+Implemented reproducible, checksum-verified acquisition and two research pipelines with new feature contracts. SiP supplies 8,175 eligible completed tasks across 18 project codes; JOSSE supplies 23,116 eligible issue/task records across 370 project codes. These are task records, not 31,291 completed software projects, and the two sources are not pooled into a project-cost dataset.
+
+SiP predicts task effort using an existing human estimate plus category/subcategory, with purged chronological splits. Its test MAE was 4.097 hours versus 4.118 for human estimates, but median percentage error and PRED(25) were worse. JOSSE uses description text with project-separated training/calibration/test cohorts; test MAE was 3.010 hours versus 3.029 for the median baseline, with weak percentage accuracy. Project-cluster bootstrap intervals include zero improvement for both. Neither candidate qualifies for production; artifacts remain local and cannot replace the production model.
+
+SEERA source review found that all 120 actual-effort labels exactly equal the authors' duration/staffing/hours formula. The checksum-pinned `ml.audit_seera` command reproduces this finding. SEERA is excluded as evidence of independently logged effort prediction accuracy; actual duration is also unavailable at planning time. Synthetic SMOGN rows are not counted as real projects.
+
+Corrected overlapping boundary dates in SiP's development validation windows and added a regression test. Existing experiment reports remain historical results from their recorded code hashes; no retuning on exposed test cohorts is presented as independent validation.
+
+```mermaid
+flowchart TD
+    Sources[Reviewed primary-source datasets] --> Hash[Bounded downloads and SHA-256 verification]
+    Hash --> Provenance[Target provenance and planning-time feature review]
+    Provenance --> SiP[SiP: human-estimate calibration]
+    Provenance --> JOSSE[JOSSE: task-description model]
+    Provenance --> SEERA[SEERA: derived-target audit / excluded]
+    SiP --> Time[Purged chronological validation]
+    JOSSE --> Groups[Whole-project holdouts]
+    Time --> Compare[Compare baselines and project-cluster uncertainty]
+    Groups --> Compare
+    Compare --> Block[No demonstrated reliable improvement: promotion blocked]
+    Block --> Next[Acquire independent compatible effort observations]
+```

@@ -70,3 +70,46 @@ Selected power-law Huber: external MAE 17,178.48 hours, MdAPE 68.55%, PRED(25) 4
 Source: https://github.com/Derek-Jones/Software-estimation-datasets/blob/main/albrecht.arff . Public research provenance is recorded; production redistribution rights, measurement compatibility and prospective validation remain unresolved. Only scripts and tests belong in Git; raw data and experiment artifacts remain local.
 
 Additional source screened: [Itemlet](https://zenodo.org/records/19411554), 727,282 issue records across 204 projects and 108 columns under stated CC-BY 4.0. Downloaded its dictionary and project summaries for inspection, not its full issue corpus. The dictionary includes post-outcome activity and target-derived features, incomplete dates, and a documented completion-time derivation error. Issue-level logged hours and elapsed cycle time cannot be relabelled as complete-project effort. This source is not merged into PredictIQ production data.
+
+
+## September 22: alternative contracts and larger task datasets
+
+The owner explicitly permits replacing the nine-feature format. Deployment is deferred while model reliability is investigated. The existing prospective project pipeline remains an optional contract; it must not constrain new evidence-backed model designs.
+
+### Reproducible acquisition
+
+From `backend`, run `python -m ml.acquire_research` to fetch or verify the reviewed SiP CSV snapshots and JOSSE SQLite database/license. Downloads are size-bounded and SHA-256 checked; changed existing files are preserved and rejected. Do not execute downloaded code. Research data and generated artifacts stay untracked.
+
+### Human-estimate calibration experiment
+
+`python -m ml.task_calibration ml/data/research/sip ml/experiments/task-calibration-v1-20260918`
+
+New inputs: planned task hours, work category and subcategory. Target: actual task person-hours. SiP contains 12,299 developer rows representing 10,266 unique tasks; repeated developer rows must not multiply task totals. Completed, dated, positive-effort intake retained **8,175 tasks across 18 project codes**. Time-separated train/calibration/test counts were **6,485 / 860 / 806**; 24 tasks whose outcomes crossed partition boundaries were purged. Six candidate configurations included the unchanged human estimate as a comparator. Selected model: log-target histogram boosting with seven leaves.
+
+Later-task MAE: **4.097 hours**, versus **4.118 hours** for human estimates. Model MdAPE **36.15%** versus human **31.83%**; PRED(25) **38.34%** versus human **46.53%**. The project-clustered 95% bootstrap interval for MAE difference was **[-0.686, +0.441] hours**. The tiny average-error reduction is not a clear improvement. Observed 90%-nominal interval coverage was **88.21%**; task dependence and population shift prevent a coverage guarantee. Candidate remains unapproved.
+
+Source: https://github.com/Derek-Jones/SiP_dataset and https://arxiv.org/abs/1901.01621 . Public research availability does not resolve production redistribution rights. Category snapshots may have changed after planning. This model calibrates existing human estimates; it cannot replace document-to-project estimation.
+
+### Task-description experiment
+
+`python -m ml.text_effort ml/data/research/josse/JOSSE_18092020.sqlite3 ml/experiments/text-effort-v1-20260922`
+
+New input: task description text. Target: logged task person-hours; JIRA seconds are divided by 3,600. JOSSE source: https://github.com/ml-see/josse (MIT; retain upstream license). Read-only SQLite intake excludes activity/comment counts, IDs and project codes from model features. Removed 12 invalid entries and 58 repeated normalized descriptions from **23,186 records**, leaving **23,116 tasks across 370 project codes**. These are task records, not 23,116 completed software projects.
+
+Whole-project train/calibration/test split: **13,802 / 2,820 / 6,494 tasks**, across **222 / 74 / 74 projects**. Training-only grouped CV selects between two TF-IDF/log-Ridge configurations. Vocabulary/preprocessing are fitted inside each fold. Held-out-project results: MAE **3.010 hours**, MdAPE **78.64%**, PRED(25) **13.81%**. Median baseline MAE **3.029 hours**, PRED(25) **15.66%**. Project-clustered MAE-difference interval **[-0.150, +0.127] hours** includes zero. On the 909 test tasks with expert estimates, model PRED(25) was **14.30%** versus expert **40.92%**. Candidate remains unapproved.
+
+Observed interval coverage **95.29%** does not rescue poor point estimates or establish useful intervals; median interval width was **14.65 hours**. Source descriptions are retrospective snapshots without planning-time histories. Project separation is not organization separation, and no chronological or prospective claim is made.
+
+### Interpretation and next evidence requirement
+
+Neither larger task dataset established a reliable replacement. The paired comparison helper resamples entire projects, suppresses confidence claims with fewer than five groups, and requires no regression in MdAPE/PRED(25) before labelling a cohort result a clear improvement. Even a passing statistical comparison never automatically grants production approval.
+
+Do not add task counts to the 915 historical project count, promote a model because one metric marginally improves, tune against these now-observed test outcomes while calling them untouched, or sum individual task intervals as a calibrated whole-project interval. Further model designs need stronger planning-time context and genuinely independent validation. Modern datasets and project-level alternatives remain under investigation.
+
+### SEERA provenance audit and validation correction (September 22)
+
+Primary source: https://zenodo.org/records/4312777. Archive SHA-256 `4eb4ccd32d3c6d86f0ef6a8feec6ad823a0feae56556aa54b622ff94119dcc75`, 3,311,539 bytes. The included **SEERA dataset attribute formulas.pdf** defines actual effort as actual duration times effective staffing times daily hours times 22 working days. All 120 rows in the prediction CSV match exactly (maximum absolute difference: zero hours). This is a derived capacity target, not independent recorded labor. Do not use its actual-duration feature for planning inference or report fitting this formula as demonstrated actual-effort accuracy. SMOGN files are synthetic and excluded from real-project counts.
+
+Reproduce from backend: `python -m ml.audit_seera ml/data/research/seera/dataset.zip`. The audit requires the reviewed archive hash and performs no training or promotion.
+
+The SiP rolling validation implementation now uses disjoint, half-open date windows. Earlier experiment output remains unchanged and identifies its original code hash; previously observed test cohorts cannot be claimed as untouched evidence after further tuning. Regression coverage verifies no duplicate validation dates and no future completed outcomes in fitting.

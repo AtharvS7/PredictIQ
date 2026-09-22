@@ -1,8 +1,8 @@
-"""Prospective project-effort pipeline. NOT executed until the owner authorizes it.
+"""Prospective project-effort pipeline with explicit data and approval gates.
 
 Input: a local manifest of licensed CSV sources with the canonical schema below.
 Output: immutable candidate bundle, evaluation and provenance; never auto-promotes.
-Run later from backend: python -m ml.production_pipeline manifest.json output-directory
+Run from backend: python -m ml.production_pipeline manifest.json output-directory
 """
 import argparse
 import hashlib
