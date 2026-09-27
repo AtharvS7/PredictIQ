@@ -1,10 +1,34 @@
 # Predictify — Technical Walkthrough
 
-> **Version:** 3.2.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** May 11, 2026
+> **Version:** 3.2.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** September 26, 2026
 
 ---
 
-## Current engineering status — September 15, 2026
+## Current engineering status - September 26, 2026
+
+This checkpoint supersedes the dated historical checkpoints below. The ML execution hold has been lifted, research training has run, Neon production is migrated through `005_role_retry`, and backups are pushed only to `dev2`. The project is still **not production-ready**: an independently accepted ML bundle and hosted operational acceptance remain open. Earlier rough completion percentages are historical judgments, not current measurements.
+
+- September 26 backend verification: 552 tests passed in the broad suite; its five database-dependent skips were covered by a subsequent six-test PostgreSQL run, all passing. These runs overlap and must not be added as unique tests.
+- Frontend type check and production build passed. All 67 frontend tests passed in a serial retry after cold-start worker failures. Frontend lint reports zero errors and 19 existing warnings. Python and frontend production dependency audits found no known vulnerabilities.
+- Updated Vitest and coverage tooling to 4.1.11 for the reported mocker path-traversal advisory; CI now audits development dependencies as well as production dependencies.
+- Added CI browser acceptance and authenticated-estimation coverage using the Firebase emulator, actual disposable PostgreSQL, and an explicit prediction fixture. Retired automatic dev/tag Railway deployment triggers and disabled the legacy deployment jobs. The Docker smoke check now expects the revoked model to be rejected.
+- Added `scripts/rehearse_recovery.py`, which creates fresh local databases, applies migration 005, inserts linked fixtures, restores a database dump and document objects, and checks every application table plus document bytes. The populated rehearsal passed; measured restoration took 0.625 seconds for this small synthetic fixture, not a production recovery target.
+- Offline preflight with supplied production configuration reports only the missing reviewed ML manifest and SHA-256. This checks configuration shape, not current live-provider availability. No secrets, research datasets, model artifacts or recovery dumps are included in Git.
+- All nine browser acceptance tests passed. A fresh frontend Docker build passed all three proxy/header/upload/privacy checks. The authenticated browser rerun passed on September 27, including persisted result reload and cross-user denial, after an initial overall-timeout failure under concurrent workload. Assertions and timeouts were unchanged. No claim of live production authentication or approved-model E2E is made.
+
+```mermaid
+flowchart LR
+    Commit[Reviewed dev2 commit] --> CI[Unit / integration / security / build]
+    CI --> Browser[Browser and emulator estimation contract]
+    Recovery[Populated migration-005 local recovery] --> Release[Production release gate]
+    Browser --> Release
+    ML[Independent ML acceptance: open] --> Release
+    Live[Hosted auth / storage / restore / monitoring: open] --> Release
+```
+
+See the [release checklist](RELEASE_CHECKLIST.md) and [deployment runbook](runbooks/production-deployment.md) for current release rules. The detailed ML experiments are in [PRODUCTION_ML.md](runbooks/PRODUCTION_ML.md).
+
+## Historical engineering checkpoints - September 15-17, 2026
 
 ### September 17: connected hosting and UI preview
 

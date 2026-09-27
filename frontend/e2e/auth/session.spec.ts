@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
 
 test('Firebase sign-in yields a verified API identity and enforces roles', async ({ page, request }) => {
   const email = `e2e-${Date.now()}@example.invalid`;
-  const password = 'Local-test-only-123!';
+  const password = randomUUID();
   const created = await request.post('http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=demo-api-key', {
     data: { email, password, returnSecureToken: true },
   });

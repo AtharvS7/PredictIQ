@@ -1,90 +1,28 @@
-# Production Deployment Runbook
+﻿# Production deployment runbook
 
-> **Who can do this:** Atharv + Teammate C (both have required credentials and GitHub access).
+Updated September 26, 2026. Source branch: **dev2 only**. Do not push main, another branch, or a tag. The earlier Railway/tag workflow is obsolete. Approved targets are the existing Vercel preview project and Render's My Workspace, within the ₹0 budget. Deployment is currently deferred while model acceptance remains open.
 
----
+## Required release evidence
 
-## Prerequisites
+1. Verify the exact dev2 commit with backend tests, frontend type/lint/tests/build, browser acceptance, authenticated E2E, dependency checks and CI.
+2. Independently approve a production model bundle. Research test gains are insufficient: verify absolute errors, planning-time feature parity, provenance, uncertainty and intended applicability. Keep the revoked model rejected.
+3. Populate ignored production environment configuration with the approved manifest path/hash and provider values. Run `python scripts/production_preflight.py` with those values in the process environment; the command deliberately does not load a development `.env`. Never print secrets or commit environment files.
+4. Verify actual Firebase, Neon and durable S3 connectivity separately. Neon is already migrated through `005_role_retry`; do not reapply historical SQL or alter migration history.
+5. Back up the database and objects and verify restoration to isolated destinations before a production change. The local rehearsal below verifies mechanics only; it is not evidence of production backup coverage.
+6. Deploy the reviewed commit to the approved backend, connect the frontend HTTPS API URL, and configure exact CORS origins. Confirm `/api/v1/live` and `/api/v1/ready`; degraded or fixture-backed behavior is not production acceptance.
+7. Exercise real sign-in, document upload, extraction, estimation, persistence, export/share, sign-out and cross-user denial. Verify private object access and persistence across restart.
+8. Verify resource limits, monitoring and alert delivery, retention, load behavior and rollback. Record commit, model-manifest hash, provider deployment IDs and recovery evidence before declaring completion.
 
-Before starting a production deployment, verify:
+## Local verification
 
-- [ ] All features for this release are merged to `dev`
-- [ ] `python -m pytest backend/tests/ -v` returns 0 failures
-- [ ] `cd frontend && npm run build` succeeds with 0 TypeScript errors
-- [ ] `python scripts/pre_push_check.py` passes all checks
-- [ ] The CI pipeline on `dev` branch is fully green
+Use only the isolated PostgreSQL integration endpoint, `127.0.0.1:15439/predictiq_integration`, through `PREDICTIQ_TEST_DATABASE_URL`. The authenticated test server rejects another endpoint. Apply canonical migrations to that disposable database first.
 
----
+From frontend, run normal browser acceptance with `npx playwright test`. Run authentication with the Firebase Auth emulator: `firebase emulators:exec --only auth --project demo-predictiq --config firebase.test.json "npx playwright test --config playwright.auth.config.ts"`. The CI workflow installs Firebase CLI 15.29.0 and uses a disposable PostgreSQL service. These tests deliberately use a deterministic model fixture and do not measure prediction accuracy.
 
-## Steps
+From the repository root, run `backend/.venv/Scripts/python.exe scripts/rehearse_recovery.py --output .tools/recovery-UNIQUE` with the same isolated database environment variable. The tool creates two new uniquely named databases, applies migrations, inserts synthetic related records, dumps/restores the database and document bytes, and compares all four application tables and object contents. It leaves databases and evidence for inspection, does not modify the existing integration database, and does not connect to production. PostgreSQL binaries can be selected with `--pg-bin`.
 
-### 1. Update version numbers
-```bash
-# Update backend version
-# File: backend/app/core/config.py → APP_VERSION = "2.X.0"
-```
+## Rollback
 
-### 2. Update CHANGELOG.md
-Add a new section at the top of `CHANGELOG.md` following the Keep a Changelog format.
+Retain the last accepted deployment and matching model/configuration references before replacement. Roll back application and frontend deployments through their approved provider projects; verify readiness, authentication and persisted data afterward. Additive database migrations should not be automatically reversed. Restore data only into an isolated destination first and compare it before any destructive production recovery.
 
-### 3. Commit and push
-```bash
-git add .
-git commit -m "release: v2.X.0"
-git push origin dev
-```
-
-### 4. Create Pull Request
-- Open PR on GitHub: `dev` → `main`
-- Title: `Release: v2.X.0`
-- Description: Copy the CHANGELOG entry for this version
-
-### 5. Wait for CI
-- All CI checks must be green (backend-tests, frontend-build, security-scan)
-- Get approval from at least **ONE** other team member
-
-### 6. Merge the PR
-- Use **squash merge** to keep main history clean
-
-### 7. Tag the release
-```bash
-git checkout main
-git pull origin main
-git tag -a v2.X.0 -m "Predictify v2.X.0 — brief summary of changes"
-git push origin v2.X.0
-```
-
-### 8. Verify deployment
-- The `cd-production.yml` pipeline starts automatically on tag push
-- Wait ~5 minutes for Railway + Vercel deployments
-- Verify at: `<PRODUCTION_API_URL>/api/v1/health`
-- Check the frontend loads correctly at the Vercel production URL
-
-### 9. Announce
-- Post in team group chat: `v2.X.0 is live ✅`
-
----
-
-## If Deployment Fails
-
-1. **Do NOT panic** — the old version is still running (Railway keeps it)
-2. Check the GitHub Actions log for the failing step
-3. If the smoke test fails, the old deployment remains active
-4. Fix the issue on a `hotfix/fix-deploy` branch
-5. Merge hotfix to main and re-tag:
-   ```bash
-   git tag -a v2.X.1 -m "hotfix: fix deployment issue"
-   git push origin v2.X.1
-   ```
-
----
-
-## Rollback (if production is broken)
-
-```bash
-# Railway keeps previous deployments — roll back via dashboard:
-# railway.app → Project → Deployments → Click previous successful deployment → Rollback
-
-# For Vercel:
-# vercel.com → Project → Deployments → Click "..." on previous → Promote to Production
-```
+The live Neon/S3 recovery rehearsal and approved-model hosted estimation remain open gates. See [release checklist](../RELEASE_CHECKLIST.md) for current evidence.

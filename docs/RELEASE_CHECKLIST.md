@@ -1,55 +1,18 @@
-# Release Checklist — Predictify
+# Release checklist — PredictIQ
 
-## Current release policy — September 15, 2026
+Updated September 26, 2026. This replaces the obsolete dev/main/tag release instructions. Authorized backups go only to `dev2`. Budget remains ₹0. Deployment was deferred while ML quality is unresolved; do not promote research artifacts to bypass readiness.
 
-This section supersedes the historical checklist below. The authorized source branch is **dev2 only**. Do not push main, other branches or tags. Hosting targets and access are pending; no deployment has occurred. See [deployment inputs](runbooks/DEPLOYMENT_INPUTS.md).
+| Gate | Current evidence | Remaining work |
+|---|---|---|
+| Source and hosting | dev2 backups; approved Render workspace and Vercel preview project | Deploy the reviewed backend only after model acceptance |
+| Credentials/configuration | Credentials supplied; storage round-trip previously passed; Neon access verified | Re-run offline preflight and live connectivity for the release configuration |
+| Database migration | Neon migrated through `005_role_retry`; original-record checksums preserved | No further schema change currently required |
+| Backend correctness | September 26: 552 broad-suite tests passed; all six focused database tests passed afterward | Exact release-commit CI |
+| UI/build | Type checking/build passed; 67 frontend tests passed serially; nine browser tests and three fresh-container checks passed; lint has 19 warnings, no errors | Lint-warning cleanup |
+| Authentication | September 27 emulator E2E passed sign-in, estimation, persistence and cross-user denial | Repeat with live providers and an approved model |
+| Recovery | New populated local rehearsal passed at 005 with table/object checksums | Live Neon/S3 recovery rehearsal |
+| ML | Training authorized; larger datasets and candidates evaluated; research Ridge improves median-baseline MAE by 7.1% | Adequate absolute accuracy, planning-time parity and independent production acceptance remain open |
+| Security/load | Authorization/parser/storage regression checks pass; Python production audit and frontend full dependency audit found no known vulnerabilities | Exact-commit CI, hosted limits and monitoring verification |
+| Release | No accepted production ML bundle; UI preview exists | Live readiness, full authenticated estimation, restart persistence and rollback acceptance |
 
-- [ ] Select hosting projects, budget, region and frontend/API URLs.
-- [ ] Resolve the owner's ML execution hold; obtain compatible licensed data and independently approve a model.
-- [ ] Install provider secrets and pass offline preflight, then verify actual access separately.
-- [ ] Pass tests, build, type/lint and security checks on the exact release commit.
-- [ ] Back up database and objects before additive migrations through `005_role_retry`.
-- [ ] Deploy staging with readiness checks; verify real-provider estimation with the approved model and cross-user denial.
-- [ ] Verify SPA deep links, HTTPS/CORS, private uploads and persistence across restart.
-- [ ] Rehearse populated database/object restoration and rollback; record recovery targets.
-- [ ] Configure resource limits, monitoring, alerts and retention; verify load behavior.
-- [ ] Promote the same reviewed commit/artifact hashes and record production acceptance evidence.
-
-The old tag-triggered production and `dev` staging workflows below are historical, not the current authorized deployment procedure. Keep provider auto-deploy disabled until the release path and ML execution hold are resolved.
-
-## Historical checklist (superseded)
-
----
-
-## Pre-Release (Developer)
-
-- [ ] All features for this version merged to `dev`
-- [ ] `python -m pytest backend/tests/ -v` passes with 0 failures
-- [ ] `cd frontend && npm run build` succeeds with 0 TypeScript errors
-- [ ] `python scripts/pre_push_check.py` passes with 0 issues
-- [ ] `CHANGELOG.md` updated with all changes under new version header
-- [ ] `APP_VERSION` in `backend/app/core/config.py` updated
-- [ ] `docs/walkthrough.md` version number and changelog section updated
-- [ ] `README.md` badge version updated if applicable
-
-## Review (Second Team Member)
-
-- [ ] PR from `dev` → `main` reviewed and approved
-- [ ] All CI checks green (lint, tests, security-scan, build)
-- [ ] Staging deployment verified manually (check `/api/v1/health`)
-- [ ] One manual test of the full flow (upload SRS → see estimate)
-
-## Release (Owner)
-
-- [ ] PR merged to `main`
-- [ ] Tag created: `git tag -a vX.Y.Z -m "Predictify vX.Y.Z — brief"`
-- [ ] Tag pushed: `git push origin vX.Y.Z`
-- [ ] CD pipeline completes successfully
-- [ ] Production health check passes
-- [ ] GitHub Release created automatically by `cd-production.yml`
-
-## Post-Release
-
-- [ ] Team notified in group chat
-- [ ] If professor demo: test the production URL yourself before the demo
-- [ ] Monitor production logs for 30 minutes after deployment
+Completion of local contract tests does not establish model accuracy or live production readiness. See [ML evidence](runbooks/PRODUCTION_ML.md), [deployment runbook](runbooks/production-deployment.md), and [walkthrough](walkthrough.md).
