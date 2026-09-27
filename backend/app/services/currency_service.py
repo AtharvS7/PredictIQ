@@ -91,7 +91,7 @@ class CurrencyService:
                     logger.warning(
                         "currency_fetch_failed",
                         url=url,
-                        error=str(e),
+                        error_type=type(e).__name__,
                     )
         return {}
 

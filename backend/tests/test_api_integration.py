@@ -17,6 +17,21 @@ import pytest
 from app.core.security import CurrentUser, get_current_user
 from fastapi.testclient import TestClient
 
+
+@pytest.mark.parametrize('route,module,operation', [
+    ('/api/v1/estimates', 'app.api.v1.estimates', 'list_estimates'),
+    ('/api/v1/estimates/00000000-0000-0000-0000-000000000001', 'app.api.v1.estimates', 'get_estimate'),
+])
+def test_database_exception_details_never_reach_route_logs(client, route, module, operation):
+    secret = 'private-document-text-and-database-password'
+    with patch(f'{module}.estimate_service.{operation}', new=AsyncMock(side_effect=RuntimeError(secret))), \
+            patch(f'{module}.logger') as logger:
+        response = client.get(route)
+    assert response.status_code == 500
+    assert secret not in response.text
+    logger.error.assert_called_once()
+    assert logger.error.call_args.kwargs == {'error_type': 'RuntimeError'}
+
 # ── Fixtures ───────────────────────────────────────────────────────────
 
 

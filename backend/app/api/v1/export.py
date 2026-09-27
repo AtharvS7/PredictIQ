@@ -83,7 +83,7 @@ async def export_pdf(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("pdf_export_error", error=str(e))
+        logger.error("pdf_export_error", error_type=type(e).__name__)
         raise HTTPException(status_code=500, detail="PDF export failed")
 
 
@@ -114,5 +114,5 @@ async def export_json(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("json_export_error", error=str(e))
+        logger.error("json_export_error", error_type=type(e).__name__)
         raise HTTPException(status_code=500, detail="JSON export failed")

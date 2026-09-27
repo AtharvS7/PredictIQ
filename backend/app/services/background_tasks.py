@@ -41,7 +41,7 @@ async def log_estimation_analytics(
         )
     except Exception as e:
         # Background tasks should never crash — log and continue
-        logger.error("analytics_background_task_failed", error=str(e))
+        logger.error("analytics_background_task_failed", error_type=type(e).__name__)
 
 
 async def update_document_preview(document_id: str, text_preview: str):
@@ -60,7 +60,7 @@ async def update_document_preview(document_id: str, text_preview: str):
         )
         logger.debug("document_preview_updated", document_id=document_id)
     except Exception as e:
-        logger.error("document_preview_update_failed", error=str(e), document_id=document_id)
+        logger.error("document_preview_update_failed", error_type=type(e).__name__, document_id=document_id)
 
 
 async def sync_profile_role(user_id: str, role: str):
@@ -76,4 +76,4 @@ async def sync_profile_role(user_id: str, role: str):
             role, user_id,
         )
     except Exception as e:
-        logger.error("profile_role_sync_failed", error=str(e), user_id=user_id)
+        logger.error("profile_role_sync_failed", error_type=type(e).__name__, user_id=user_id)

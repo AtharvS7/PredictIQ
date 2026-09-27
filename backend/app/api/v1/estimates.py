@@ -155,7 +155,7 @@ async def analyze_estimate(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("estimate_analyze_error", error=str(e))
+        logger.error("estimate_analyze_error", error_type=type(e).__name__)
         raise HTTPException(status_code=500, detail="Estimation failed")
 
 
@@ -199,7 +199,7 @@ async def manual_estimate(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("manual_estimate_error", error=str(e))
+        logger.error("manual_estimate_error", error_type=type(e).__name__)
         raise HTTPException(status_code=500, detail="Estimation failed")
 
 
@@ -221,7 +221,7 @@ async def list_estimates(
             project_type=project_type,
         )
     except Exception as e:
-        logger.error("list_estimates_error", error=str(e))
+        logger.error("list_estimates_error", error_type=type(e).__name__)
         raise HTTPException(status_code=500, detail="Estimate operation failed")
 
 
@@ -239,7 +239,7 @@ async def get_estimate(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("get_estimate_error", error=str(e))
+        logger.error("get_estimate_error", error_type=type(e).__name__)
         raise HTTPException(status_code=500, detail="Estimate operation failed")
 
 
@@ -257,7 +257,7 @@ async def duplicate_estimate(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("duplicate_estimate_error", error=str(e))
+        logger.error("duplicate_estimate_error", error_type=type(e).__name__)
         raise HTTPException(status_code=500, detail="Estimate operation failed")
 
 
@@ -275,7 +275,7 @@ async def delete_estimate(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("delete_estimate_error", error=str(e))
+        logger.error("delete_estimate_error", error_type=type(e).__name__)
         raise HTTPException(status_code=500, detail="Estimate operation failed")
 
 
@@ -301,5 +301,5 @@ async def create_share_link(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("share_link_error", error=str(e))
+        logger.error("share_link_error", error_type=type(e).__name__)
         raise HTTPException(status_code=500, detail="Estimate operation failed")

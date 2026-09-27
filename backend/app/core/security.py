@@ -53,7 +53,7 @@ def init_firebase():
                         project_id=cert_dict.get("project_id"))
             return
         except Exception as e:
-            logger.error("firebase_json_env_parse_error", error=str(e))
+            logger.error("firebase_json_env_parse_error", error_type=type(e).__name__)
 
     # Option 2: JSON file on disk
     cred_path = settings.FIREBASE_CREDENTIALS_PATH

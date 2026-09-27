@@ -4,6 +4,28 @@
 
 ---
 
+## September 27: connected staging and live browser acceptance
+
+The website at https://predictiq-preview.vercel.app is now connected to the free Render staging backend through Vercel's same-origin `/api` proxy. Source commit `a70416f` passed GitHub CI run `36329980342` and Vercel build `dpl_GJJBA8rDRxNCgSHDyY8Z6TML5Phy`. This is the dedicated preview project's default alias, not an accepted production release. Existing deployment protection settings were preserved: the unique deployment URL redirects to authentication, while the stable alias is accessible. A staging banner explicitly states that predictions await model validation.
+
+The opt-in `playwright.live.config.ts` test passed against the hosted website with real Firebase and Neon/S3 services: sign-in, persisted session reload, upload, extraction, model-specific 503 with retained-input error feedback, sign-out and protected-page redirect. No API responses or model outputs are mocked. This verifies the degraded-state user journey, not successful production estimation. Live tests are excluded from ordinary CI discovery, use only explicit synthetic operational identities, and disable traces/screenshots/video to avoid recording credentials.
+
+Vercel rollback to the previous UI deployment was rehearsed and verified at the stable alias, then the connected deployment was promoted back and `/api/v1/live` returned JSON/200 again. This verifies frontend alias rollback/recovery only; backend/model rollback remains a separate gate. The initial browser assertion matched both a toast and an inline error; scoping it to the main page resolved the test ambiguity without changing application behavior.
+
+A follow-up privacy review removed raw exception messages from API, authentication initialization, currency and background-task error logs. They now record exception types. Regression tests inject sensitive exception text and verify it reaches neither API output nor structured logs. The related API/security suite passed 59 tests.
+
+```mermaid
+flowchart LR
+    Browser[Staging website] --> Firebase[Real Firebase sign-in]
+    Browser --> Proxy[Vercel same-origin API proxy]
+    Proxy --> Render[Free Render staging]
+    Render --> Neon[Neon profiles and document metadata]
+    Render --> S3[Durable document storage]
+    S3 --> Parser[Parser and NLP]
+    Parser --> Gate[Prediction unavailable: model acceptance open]
+    Rollback[Previous frontend deployment] --> Restore[Connected frontend restored]
+```
+
 ## September 27: recovery, operations and usability checkpoint
 
 A live, read-only Neon snapshot was restored into a fresh local PostgreSQL database. Row checksums matched for 11 profiles, 23 estimates, 20 document records and two share links at migration `005_role_retry`. The live S3 write/read/delete probe passed. The owner confirmed that the 20 missing document objects belong to old tests and no originals remain; their exact IDs are recorded in an ignored, reviewed exception manifest. New missing IDs fail recovery checks. No production records were deleted or replaced. This is a local recovery destination, not a cloud failover rehearsal.

@@ -125,7 +125,7 @@ async def upload_document_file(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("document_file_upload_error", error=str(e))
+        logger.error("document_file_upload_error", error_type=type(e).__name__)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Document upload failed",
@@ -176,7 +176,7 @@ async def get_document(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("document_get_error", error=str(e))
+        logger.error("document_get_error", error_type=type(e).__name__)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not retrieve document",
@@ -251,7 +251,7 @@ async def extract_document_parameters(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("document_extract_error", error=str(e))
+        logger.error("document_extract_error", error_type=type(e).__name__)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Document extraction failed",
