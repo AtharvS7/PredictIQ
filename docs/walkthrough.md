@@ -1,6 +1,6 @@
 # Predictify — Technical Walkthrough
 
-> **Version:** 3.2.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** September 26, 2026
+> **Version:** 3.2.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** September 27, 2026
 
 ---
 
@@ -8,11 +8,11 @@
 
 A live, read-only Neon snapshot was restored into a fresh local PostgreSQL database. Row checksums matched for 11 profiles, 23 estimates, 20 document records and two share links at migration `005_role_retry`. The live S3 write/read/delete probe passed. The owner confirmed that the 20 missing document objects belong to old tests and no originals remain; their exact IDs are recorded in an ignored, reviewed exception manifest. New missing IDs fail recovery checks. No production records were deleted or replaced. This is a local recovery destination, not a cloud failover rehearsal.
 
-Readiness now has a five-second total database deadline, and uptime uses a monotonic clock. Database startup logs no longer include raw exception text. The bounded operations checker verifies both liveness and readiness, rejects redirects, limits concurrency, records latency and returns a failure exit code on degradation. Its manual GitHub workflow is prepared; hosted monitoring/notification delivery is not yet activated because no PredictIQ backend is deployed.
+Readiness now has a five-second total database deadline, and uptime uses a monotonic clock. Database startup logs no longer include raw exception text. The bounded operations checker verifies both liveness and readiness, rejects redirects, limits concurrency, records latency and returns a failure exit code on degradation. Its manual GitHub workflow is prepared; hosted checks now run against the free staging backend; recurring monitoring and notification delivery are not yet verified.
 
 UI-UX Pro Max keyboard-navigation guidance informed the estimates-list changes: real result links, pagination, labelled duplication/deletion controls, larger touch targets, page resets on filter/sort changes, and retry feedback that preserves saved records after a failed deletion. Search explicitly identifies its current-page scope. Unused code and unsafe `any` annotations were cleaned up without disabling lint rules.
 
-The previous GitHub CI run failed before backend tests because unhashed lint tools were combined with a hash-locked dependency install; those installs are now separated. The six public Firebase build variables were copied from the existing local configuration into repository Actions variables, without exposing private credentials. Browser contract tests use explicit demo configuration. Exact-checkpoint CI still needs confirmation.
+The previous GitHub CI run failed before backend tests because unhashed lint tools were combined with a hash-locked dependency install; those installs are now separated. The six public Firebase build variables were copied from the existing local configuration into repository Actions variables, without exposing private credentials. Browser contract tests use explicit demo configuration. GitHub CI run `36309615139` passed at commit `2759161`, including backend tests/lint, frontend type/build, security scanning and authenticated browser contract tests.
 
 ```mermaid
 flowchart LR
@@ -22,8 +22,20 @@ flowchart LR
     S3[Live S3] --> Probe[Write / read / cleanup verified]
     Legacy[20 acknowledged old test uploads absent] --> Exception[Exact-ID exception manifest]
     NewLoss[Any newly missing document] --> Fail[Recovery fails]
-    API[Hosted backend not deployed] --> Pending[Live monitoring / load / alert delivery pending]
+    API[Free Render staging live] --> Auth[Live Firebase / Neon / S3 API smoke passed]
+    API --> Health[Liveness 200; readiness 503: no accepted model]
+    Health --> Pending[Model / full estimation / alert delivery pending]
 ```
+
+### Live staging acceptance follow-up
+
+Render service `srv-dase5co473hc73ftfm9g` is live at https://predictiq-staging.onrender.com, deployment `dep-dase5d8473hc73ftfos0`, source commit `2759161`. It uses the free plan with automatic deployment disabled. The Vercel UI preview has not been connected or promoted to production.
+
+Two synthetic operational identities completed real Firebase password authentication. Hosted API checks passed verified identity synchronization, profile persistence, anonymous/admin denial, durable document upload and reload, cross-user document denial, actual extraction/NLP and security headers. `scripts/live_auth_smoke.py` retains one reusable fixture and keeps all credentials and evidence private. It confirms the specific prediction-unavailable response and readiness dependencies before classifying a run as partial; a generic 503 is a failed check. Five regression tests passed, and the broader script suite passed 23 tests with three container-only skips.
+
+A follow-up live recovery rehearsal restored matching checksums for 13 profiles, 21 document records, 23 estimates and two shares at migration `005_role_retry`. The newly uploaded S3 object was backed up, restored to an isolated key, read back and hash-verified. The 20 acknowledged legacy objects remain unavailable; no new missing object was found. Private evidence is retained under `.tools/live-recovery-20260927-authenticated-b`; production records and original objects were preserved.
+
+The bounded hosted check sent 20 requests at concurrency two: all ten liveness probes returned 200 (p95 390.69 ms), while all ten readiness probes returned 503 (p95 438.29 ms) because no accepted model is loaded. The monitor therefore correctly failed overall. This is a low-volume operational check, not a capacity benchmark. A Render memory sample was 200,929,280 bytes against a 536,870,900-byte limit; it does not establish peak parsing or inference memory. Full live estimation, restart/rollback acceptance, cloud failover and alert delivery remain open.
 
 ## Current engineering status - September 26, 2026
 
