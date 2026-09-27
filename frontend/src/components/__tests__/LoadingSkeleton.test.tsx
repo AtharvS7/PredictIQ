@@ -2,7 +2,7 @@
  * Predictify — LoadingSkeleton Component Tests
  */
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import LoadingSkeleton from '../../components/shared/LoadingSkeleton';
 
 describe('LoadingSkeleton', () => {

@@ -34,7 +34,7 @@ export default function AuthPage() {
         await resetPassword(email);
         addToast('success', 'Password reset email sent!');
         setMode('login');
-      } catch (err) {
+      } catch {
         addToast('error', 'Failed to send reset email');
       }
       return;

@@ -152,7 +152,7 @@ export default function ResultsPage() {
     titleFont: { size: 13, weight: 'bold' as const },
     bodyFont: { size: 12 },
     callbacks: {
-      label: (ctx: any) => `Cost: ${format(ctx.raw / convert(1))}`,
+      label: (ctx: { raw: unknown }) => `Cost: ${format(Number(ctx.raw) / convert(1))}`,
     },
   };
 

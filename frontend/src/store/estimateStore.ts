@@ -94,7 +94,7 @@ export const useEstimateStore = create<EstimateState>((set, get) => ({
 
   setCurrentEstimate: (estimate) => set({ currentEstimate: estimate }),
   setPage: (page) => set({ page }),
-  setSort: (sort) => set({ sort }),
-  setFilterType: (type) => set({ filterType: type }),
+  setSort: (sort) => set({ sort, page: 1 }),
+  setFilterType: (type) => set({ filterType: type, page: 1 }),
   clearError: () => set({ error: null }),
 }));

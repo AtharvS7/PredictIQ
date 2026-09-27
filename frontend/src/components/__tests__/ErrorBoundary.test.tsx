@@ -2,7 +2,7 @@
  * Predictify — ErrorBoundary Component Tests
  */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import ErrorBoundary from '../../components/ErrorBoundary';
 
 // A component that throws an error on render

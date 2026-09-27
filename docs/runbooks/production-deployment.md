@@ -25,4 +25,12 @@ From the repository root, run `backend/.venv/Scripts/python.exe scripts/rehearse
 
 Retain the last accepted deployment and matching model/configuration references before replacement. Roll back application and frontend deployments through their approved provider projects; verify readiness, authentication and persisted data afterward. Additive database migrations should not be automatically reversed. Restore data only into an isolated destination first and compare it before any destructive production recovery.
 
-The live Neon/S3 recovery rehearsal and approved-model hosted estimation remain open gates. See [release checklist](../RELEASE_CHECKLIST.md) for current evidence.
+The September 27 live Neon snapshot restored successfully to a local isolated database, and the live S3 probe passed. The owner confirmed 20 old test upload objects are absent; this exception does not permit ignoring any new missing documents. Cloud failover and approved-model hosted estimation remain open gates. See [release checklist](../RELEASE_CHECKLIST.md) for current evidence.
+
+## Live-provider recovery and operations
+
+Run `python scripts/rehearse_live_recovery.py --config backend/.env.production --output .tools/recovery-UNIQUE` with the isolated local database environment variable and PostgreSQL binaries available. It uses a read-only exported Neon snapshot, verifies TLS certificates, restores into a fresh local database and compares UTC-normalized table checksums. Referenced objects are backed up and restored to unique S3 rehearsal keys before only those new keys are removed. Private dumps and manifests are constrained to `.tools`.
+
+A missing object normally fails the run. Only use `--known-missing-file` with an explicitly reviewed JSON list of legacy document IDs; the September 27 list records the owner's confirmed old test data. `passed_with_legacy_gaps` means those originals were not recovered, and must never be reported as complete object recovery. Retain the result and private manifests outside Git.
+
+After deployment, run `python scripts/check_operations.py --base-url https://BACKEND_HOST --requests 20 --concurrency 2`. Set the repository Actions variable `PREDICTIQ_API_BASE_URL` to the approved backend URL before enabling the operations workflow. It checks health semantics and p95 latency and exits nonzero on failure. No active scheduling or alert delivery is claimed until a real hosted run and a deliberate failure notification have been verified. For a free sleeping backend, record cold-start behavior separately; never hide failed readiness or use synthetic prediction fixtures to pass a production gate.

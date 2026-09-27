@@ -1,6 +1,6 @@
 import { useTheme } from '@/components/ThemeProvider';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/shared/Navbar';
 import Sidebar from '@/components/shared/Sidebar';
 import SEOHead from '@/components/shared/SEOHead';
@@ -10,14 +10,10 @@ import { useCurrencyStore } from '@/store/currencyStore';
 import { useToast } from '@/App';
 import {
   Search,
-  SortAsc,
-  SortDesc,
   Trash2,
   Copy,
-  ArrowRight,
   FolderOpen,
   PlusCircle,
-  Filter,
 } from 'lucide-react';
 import { duplicateEstimate } from '@/lib/api';
 
@@ -35,7 +31,9 @@ export default function EstimatesPage() {
     estimates,
     totalEstimates,
     loading,
+    error,
     page,
+    perPage,
     sort,
     filterType,
     fetchEstimates,
@@ -92,6 +90,7 @@ export default function EstimatesPage() {
     if (!confirm('Delete this estimate?')) return;
     try {
       await removeEstimate(id);
+      if (estimates.length === 1 && page > 1) setPage(page - 1);
       addToast('info', 'Estimate deleted');
     } catch {
       addToast('error', 'Failed to delete estimate. Please try again.');
@@ -116,7 +115,8 @@ export default function EstimatesPage() {
           aria-label="Estimates list"
           style={{
             flex: 1,
-            padding: '2rem',
+            padding: 'clamp(1rem, 3vw, 2rem)',
+            minWidth: 0,
             maxWidth: 1100,
           }}
         >
@@ -125,6 +125,8 @@ export default function EstimatesPage() {
           <div
             style={{
               display: 'flex',
+              flexWrap: 'wrap',
+              gap: 12,
               justifyContent: 'space-between',
               alignItems: 'center',
               marginBottom: 24,
@@ -243,8 +245,8 @@ export default function EstimatesPage() {
               <input
                 className="input-field"
                 style={{ paddingLeft: 36 }}
-                placeholder="Search estimates..."
-                aria-label="Search estimates"
+                placeholder="Search this page..."
+                aria-label="Search estimates on this page"
                 value={search}
                 onChange={(e) =>
                   setSearch(e.target.value)
@@ -305,6 +307,12 @@ export default function EstimatesPage() {
 
           {/* Table */}
 
+          {error && (
+            <div className="card" role="alert" style={{ padding: 24 }}>
+              <p>We couldn't complete that request. Please try again.</p>
+              <button className="btn-secondary" onClick={() => fetchEstimates()} disabled={loading}>Retry</button>
+            </div>
+          )}
           {loading ? (
             <div
               style={{
@@ -327,7 +335,7 @@ export default function EstimatesPage() {
                 )
               )}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : error && estimates.length === 0 ? null : filtered.length === 0 ? (
             <div
               className="card"
               style={{
@@ -375,15 +383,11 @@ export default function EstimatesPage() {
                 <div
                   key={est.id}
                   className="card"
-                  onClick={() =>
-                    navigate(
-                      `/estimate/${est.id}/results`
-                    )
-                  }
                   style={{
                     padding: '16px 20px',
-                    cursor: 'pointer',
                     display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 16,
                     alignItems: 'center',
                     justifyContent:
                       'space-between',
@@ -397,7 +401,8 @@ export default function EstimatesPage() {
                         gap: 8,
                       }}
                     >
-                      <p
+                      <Link
+                        to={`/estimate/${est.id}/results`}
                         style={{
                           fontWeight: 600,
                           fontSize: '0.9375rem',
@@ -406,7 +411,7 @@ export default function EstimatesPage() {
                         }}
                       >
                         {est.project_name}
-                      </p>
+                      </Link>
 
                       <span
                         style={{
@@ -441,8 +446,9 @@ export default function EstimatesPage() {
                   <div
                     style={{
                       display: 'flex',
+                      flexWrap: 'wrap',
                       alignItems: 'center',
-                      gap: 24,
+                      gap: 16,
                     }}
                   >
                     <div
@@ -503,13 +509,13 @@ export default function EstimatesPage() {
                         gap: 4,
                       }}
                     >
-                      {/*  <button
+                      <button
                         onClick={(e) =>
                           handleDuplicate(est.id, e)
                         }
                         style={{
-                          width: 32,
-                          height: 32,
+                          width: 44,
+                          height: 44,
                           borderRadius: 8,
                           border:
                             '1px solid var(--border-color)',
@@ -525,9 +531,10 @@ export default function EstimatesPage() {
                             'var(--text-secondary)',
                         }}
                         title="Duplicate"
+                        aria-label={`Duplicate ${est.project_name}`}
                       >
                         <Copy size={14} />
-                      </button>*/}
+                      </button>
 
                       <button
                         onClick={(e) =>
@@ -537,8 +544,8 @@ export default function EstimatesPage() {
                           )
                         }
                         style={{
-                          width: 32,
-                          height: 32,
+                          width: 44,
+                          height: 44,
                           borderRadius: 8,
                           border:
                             '1px solid var(--border-color)',
@@ -554,6 +561,7 @@ export default function EstimatesPage() {
                             'var(--color-danger)',
                         }}
                         title="Delete"
+                        aria-label={`Delete ${est.project_name}`}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -562,6 +570,13 @@ export default function EstimatesPage() {
                 </div>
               ))}
             </div>
+          )}
+          {totalEstimates > perPage && (
+            <nav aria-label="Estimates pagination" style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', marginTop: 24 }}>
+              <button className="btn-secondary" disabled={loading || page <= 1} onClick={() => setPage(page - 1)}>Previous page</button>
+              <span aria-live="polite">Page {page} of {Math.max(1, Math.ceil(totalEstimates / perPage))}</span>
+              <button className="btn-secondary" disabled={loading || page * perPage >= totalEstimates} onClick={() => setPage(page + 1)}>Next page</button>
+            </nav>
           )}
         </main>
       </div>

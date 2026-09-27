@@ -3,24 +3,9 @@ import { useAuthStore } from '@/store/authStore';
 import Navbar from '@/components/shared/Navbar';
 import SEOHead from '@/components/shared/SEOHead';
 import {
-  Upload,
-  Brain,
-  DollarSign,
-  Clock,
-  Shield,
-  FileText,
   ArrowRight,
   ChevronRight,
 } from 'lucide-react';
-
-const features = [
-  { icon: Upload, title: 'Upload Any Doc', desc: 'PDF, DOCX, or TXT — drag and drop to start' },
-  { icon: Brain, title: 'AI Extracts Scope', desc: 'NLP identifies tech stack, complexity, and timeline' },
-  { icon: DollarSign, title: 'Cost Range', desc: 'Get min / likely / max cost with confidence interval' },
-  { icon: Clock, title: 'Timeline Breakdown', desc: 'Phase-by-phase schedule with milestones' },
-  { icon: Shield, title: 'Risk Analysis', desc: 'Top risk factors scored and prioritized' },
-  { icon: FileText, title: 'Export & Share', desc: 'Branded PDF reports and shareable links' },
-];
 
 const steps = [
   { num: '01', title: 'Upload Document', desc: 'Drop your project spec, SRS, or proposal' },

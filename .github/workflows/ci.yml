@@ -32,7 +32,8 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-      - run: pip install -r backend/requirements.lock.txt ruff mypy types-requests
+      - run: pip install -r backend/requirements.lock.txt
+      - run: pip install ruff mypy types-requests
       - name: "Ruff lint (style + import order)"
         run: ruff check backend/ --select E,W,F,I --ignore E501
       - name: "Type check (mypy)"

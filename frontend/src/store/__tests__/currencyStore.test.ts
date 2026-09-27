@@ -2,7 +2,7 @@
  * Predictify — Currency Store Unit Tests
  * Tests for the Zustand currency store: conversion, formatting, symbols.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { useCurrencyStore, CURRENCY_SYMBOLS, PRIORITY_CURRENCY_CODES } from '../currencyStore';
 
 describe('CurrencyStore', () => {

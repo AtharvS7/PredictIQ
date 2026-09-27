@@ -4,6 +4,27 @@
 
 ---
 
+## September 27: recovery, operations and usability checkpoint
+
+A live, read-only Neon snapshot was restored into a fresh local PostgreSQL database. Row checksums matched for 11 profiles, 23 estimates, 20 document records and two share links at migration `005_role_retry`. The live S3 write/read/delete probe passed. The owner confirmed that the 20 missing document objects belong to old tests and no originals remain; their exact IDs are recorded in an ignored, reviewed exception manifest. New missing IDs fail recovery checks. No production records were deleted or replaced. This is a local recovery destination, not a cloud failover rehearsal.
+
+Readiness now has a five-second total database deadline, and uptime uses a monotonic clock. Database startup logs no longer include raw exception text. The bounded operations checker verifies both liveness and readiness, rejects redirects, limits concurrency, records latency and returns a failure exit code on degradation. Its manual GitHub workflow is prepared; hosted monitoring/notification delivery is not yet activated because no PredictIQ backend is deployed.
+
+UI-UX Pro Max keyboard-navigation guidance informed the estimates-list changes: real result links, pagination, labelled duplication/deletion controls, larger touch targets, page resets on filter/sort changes, and retry feedback that preserves saved records after a failed deletion. Search explicitly identifies its current-page scope. Unused code and unsafe `any` annotations were cleaned up without disabling lint rules.
+
+The previous GitHub CI run failed before backend tests because unhashed lint tools were combined with a hash-locked dependency install; those installs are now separated. The six public Firebase build variables were copied from the existing local configuration into repository Actions variables, without exposing private credentials. Browser contract tests use explicit demo configuration. Exact-checkpoint CI still needs confirmation.
+
+```mermaid
+flowchart LR
+    Neon[Live Neon read-only snapshot] --> Dump[Private local backup]
+    Dump --> Restore[Fresh isolated PostgreSQL restore]
+    Restore --> Checks[Four table checksums match]
+    S3[Live S3] --> Probe[Write / read / cleanup verified]
+    Legacy[20 acknowledged old test uploads absent] --> Exception[Exact-ID exception manifest]
+    NewLoss[Any newly missing document] --> Fail[Recovery fails]
+    API[Hosted backend not deployed] --> Pending[Live monitoring / load / alert delivery pending]
+```
+
 ## Current engineering status - September 26, 2026
 
 This checkpoint supersedes the dated historical checkpoints below. The ML execution hold has been lifted, research training has run, Neon production is migrated through `005_role_retry`, and backups are pushed only to `dev2`. The project is still **not production-ready**: an independently accepted ML bundle and hosted operational acceptance remain open. Earlier rough completion percentages are historical judgments, not current measurements.

@@ -50,8 +50,12 @@ const githubProvider = new GithubAuthProvider();
  * Firebase v9+ merged user-not-found and wrong-password into
  * a single 'auth/invalid-credential' code for security.
  */
-function mapFirebaseError(error: any): Error {
-  const code = error?.code || '';
+function firebaseErrorCode(error: unknown): string {
+  return error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' ? error.code : '';
+}
+
+function mapFirebaseError(error: unknown): Error {
+  const code = firebaseErrorCode(error);
   const messages: Record<string, string> = {
     'auth/invalid-credential': 'Invalid email or password. Please check your credentials or sign up first.',
     'auth/user-not-found': 'No account found with this email. Please sign up first.',
@@ -66,7 +70,7 @@ function mapFirebaseError(error: any): Error {
     'auth/unauthorized-domain': 'This domain is not authorized. Add it in the Firebase console.',
     'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method (e.g., Google or GitHub).',
   };
-  return new Error(messages[code] || error?.message || 'Authentication failed. Please try again.');
+  return new Error(messages[code] || (error instanceof Error ? error.message : '') || 'Authentication failed. Please try again.');
 }
 
 const ROLE_LEVELS: Record<string, number> = { viewer: 1, editor: 2, admin: 3 };
@@ -119,7 +123,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
 
       // Store unsubscribe for cleanup if needed
-      (window as any).__authUnsubscribe = unsubscribe;
+      (window as Window & { __authUnsubscribe?: () => void }).__authUnsubscribe = unsubscribe;
     });
   },
 
@@ -156,7 +160,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user,
         session: { user },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw mapFirebaseError(error);
     } finally {
       set({ loading: false });
@@ -184,7 +188,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user,
         session: { user },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw mapFirebaseError(error);
     } finally {
       set({ loading: false });
@@ -226,11 +230,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } catch {
         // Non-critical
       }
-    } catch (error: any) {
-      if (error?.code === 'auth/popup-closed-by-user') {
+    } catch (error: unknown) {
+      if (firebaseErrorCode(error) === 'auth/popup-closed-by-user') {
         throw new Error('Sign-in popup was closed', { cause: error });
       }
-      if (error?.code === 'auth/unauthorized-domain') {
+      if (firebaseErrorCode(error) === 'auth/unauthorized-domain') {
         throw new Error('Add domain in Firebase console', { cause: error });
       }
       throw error;

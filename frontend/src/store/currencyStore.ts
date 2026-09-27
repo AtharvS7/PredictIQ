@@ -101,10 +101,10 @@ export const useCurrencyStore = create<CurrencyState>()(
           } else {
             throw new Error('Invalid rates response');
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           set({
             loading: false,
-            error: err.message ?? 'Failed to fetch exchange rates',
+            error: err instanceof Error ? err.message : 'Failed to fetch exchange rates',
           });
           // Keep existing rates (don't reset to fallback — use what we have)
         }
