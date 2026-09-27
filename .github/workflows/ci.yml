@@ -169,7 +169,9 @@ jobs:
           path: bandit-report.json
       - name: "Security regression checks"
         if: always()
-        run: python -m unittest discover -s scripts/tests -v
+        run: |
+          python -m pip install requests==2.34.2 python-dotenv==1.2.3
+          python -m unittest discover -s scripts/tests -v
       - name: "Check .env files not tracked"
         run: |
           COUNT=$(git ls-files backend/.env frontend/.env 2>/dev/null | wc -l)
