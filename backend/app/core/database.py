@@ -53,7 +53,7 @@ async def init_db_pool():
                 attempt=attempt,
                 max_retries=_MAX_RETRIES,
                 delay_seconds=delay,
-                error=str(exc),
+                error_type=type(exc).__name__,
             )
             if attempt < _MAX_RETRIES:
                 await asyncio.sleep(delay)
@@ -62,11 +62,11 @@ async def init_db_pool():
     logger.error(
         "database_connection_failed",
         max_retries=_MAX_RETRIES,
-        error=str(last_error),
+        error_type=type(last_error).__name__,
     )
     raise RuntimeError(
-        f"Failed to connect to database after {_MAX_RETRIES} attempts: {last_error}"
-    )
+        f"Failed to connect to database after {_MAX_RETRIES} attempts"
+    ) from None
 
 
 async def close_db_pool():

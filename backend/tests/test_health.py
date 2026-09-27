@@ -1,4 +1,5 @@
 ﻿"""Readiness reflects dependencies; liveness reflects the running process."""
+import asyncio
 from unittest.mock import AsyncMock, Mock
 
 import firebase_admin
@@ -49,3 +50,47 @@ def test_missing_dependency_fails_readiness(monkeypatch, dependency, path):
     assert response.status_code == 503
     assert response.json()['status'] == 'degraded'
     assert client.get('/api/v1/live').status_code == 200
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('stage', ['pool', 'query', 'schema'])
+async def test_saturated_database_times_out_without_blocking_liveness(monkeypatch, stage):
+    from fastapi import Response
+
+    cancelled = asyncio.Event()
+
+    async def stalled(*args):
+        try:
+            await asyncio.Event().wait()
+        finally:
+            cancelled.set()
+
+    pool = Mock(fetchval=AsyncMock(return_value=1), execute=AsyncMock())
+    monkeypatch.setattr(health, 'get_db', stalled if stage == 'pool' else AsyncMock(return_value=pool))
+    if stage == 'query':
+        pool.fetchval = stalled
+    elif stage == 'schema':
+        pool.execute = stalled
+    monkeypatch.setattr(health, 'READINESS_TIMEOUT_SECONDS', 0.01)
+    response = Response()
+    result = await asyncio.wait_for(health.health_check(response), timeout=1)
+    assert response.status_code == 503
+    assert result['services']['database'] == 'error: TimeoutError'
+    assert cancelled.is_set()
+    assert await health.liveness() == {'status': 'alive'}
+
+
+@pytest.mark.asyncio
+async def test_concurrent_outage_probes_all_finish_and_leave_liveness_available(monkeypatch):
+    from fastapi import Response
+
+    async def stalled():
+        await asyncio.Event().wait()
+
+    monkeypatch.setattr(health, 'get_db', stalled)
+    monkeypatch.setattr(health, 'READINESS_TIMEOUT_SECONDS', 0.02)
+    responses = [Response() for _ in range(40)]
+    probes = [health.health_check(response) for response in responses]
+    results = await asyncio.wait_for(asyncio.gather(*probes, health.liveness()), timeout=2)
+    assert all(response.status_code == 503 for response in responses)
+    assert results[-1] == {'status': 'alive'}

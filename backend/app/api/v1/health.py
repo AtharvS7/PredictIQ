@@ -2,6 +2,7 @@
 Predictify API — Health Check
 Exposes model status, training metrics, DB connectivity, and Firebase status.
 """
+import asyncio
 import time
 
 import structlog
@@ -15,7 +16,8 @@ router = APIRouter()
 logger = structlog.get_logger()
 
 # Track application start time for uptime reporting
-_start_time = time.time()
+_start_time = time.monotonic()
+READINESS_TIMEOUT_SECONDS = 5.0
 
 
 @router.get("/health")
@@ -30,10 +32,13 @@ async def health_check(response: Response):
     # DB connectivity check
     db_status = "unknown"
     try:
-        pool = await get_db()
-        result = await pool.fetchval("SELECT 1")
-        # Connectivity alone cannot prove that authorization's required schema exists.
-        await pool.execute('SELECT role_managed, role_sync_pending, role_sync_after FROM profiles LIMIT 0')
+        # Include pool acquisition in the deadline: a saturated pool must not
+        # leave health probes queued indefinitely during an outage.
+        async with asyncio.timeout(READINESS_TIMEOUT_SECONDS):
+            pool = await get_db()
+            result = await pool.fetchval("SELECT 1")
+            # Connectivity alone cannot prove authorization's required schema.
+            await pool.execute('SELECT role_managed, role_sync_pending, role_sync_after FROM profiles LIMIT 0')
         db_status = "connected" if result == 1 else "error"
     except Exception as e:
         db_status = f"error: {type(e).__name__}"
@@ -55,7 +60,7 @@ async def health_check(response: Response):
         and firebase_status == "initialized"
     )
 
-    uptime_seconds = int(time.time() - _start_time)
+    uptime_seconds = int(time.monotonic() - _start_time)
     response.status_code = 200 if all_healthy else 503
 
     return {

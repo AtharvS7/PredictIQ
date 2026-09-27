@@ -32,6 +32,8 @@ def local_connection(dsn):
 
 
 async def fingerprints(connection):
+    # Timestamptz JSON otherwise depends on each server's session timezone.
+    await connection.execute("SET TIME ZONE 'UTC'")
     result = {}
     for table in TABLES:
         # Table identifiers are fixed above, never supplied by callers.

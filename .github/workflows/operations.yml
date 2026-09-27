@@ -1,0 +1,33 @@
+name: Operations - bounded readiness checks
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: predictiq-operations
+  cancel-in-progress: false
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PREDICTIQ_API_BASE_URL: ${{ vars.PREDICTIQ_API_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Require configured backend
+        run: test -n "$PREDICTIQ_API_BASE_URL"
+      - name: Check liveness, readiness and bounded concurrent latency
+        run: python scripts/check_operations.py --base-url "$PREDICTIQ_API_BASE_URL" --requests 20 --concurrency 2 > operations-result.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: operations-result
+          path: operations-result.json
+          retention-days: 7
