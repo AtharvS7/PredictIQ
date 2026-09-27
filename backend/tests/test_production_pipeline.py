@@ -58,6 +58,29 @@ def test_serving_rejects_unapproved_manifest_before_deserialization(tmp_path, mo
         ProductionBundle(manifest, digest(manifest))
 
 
+@pytest.mark.parametrize('gates', [
+    {'mdape': True}, {'invented_gate': True},
+    dict.fromkeys(['baseline_improvement', 'mdape', 'pred25', 'coverage',
+                   'useful_intervals', 'organization_slices'], 'false'),
+    dict.fromkeys(['baseline_improvement', 'mdape', 'pred25', 'coverage',
+                   'useful_intervals', 'organization_slices'], 1),
+])
+def test_serving_requires_every_named_gate_as_boolean_true(tmp_path, monkeypatch, gates):
+    import sklearn
+
+    manifest = tmp_path / 'manifest.json'
+    manifest.write_text(json.dumps({
+        'schema': SCHEMA, 'features': FEATURES, 'sklearn_version': sklearn.__version__,
+        'production_approved': True, 'reviewer': 'test reviewer', 'approval_evidence': 'test only',
+        'eligible_for_review': True, 'gates': gates,
+    }))
+    def must_not_unpickle(*args):
+        pytest.fail('Malformed approval gates reached deserialization')
+    monkeypatch.setattr('ml.production_serving.pickle.loads', must_not_unpickle)
+    with pytest.raises(ValueError, match='Unapproved'):
+        ProductionBundle(manifest, digest(manifest))
+
+
 def test_training_writes_unapproved_bundle_with_real_preprocessing(source_manifest, tmp_path, monkeypatch):
     """Exercise fitting/export without mistaking fixture rows for real projects."""
     import pickle
@@ -100,3 +123,31 @@ def test_training_writes_unapproved_bundle_with_real_preprocessing(source_manife
     assert np.isfinite(prediction).all() and (prediction > 0).all()
     with pytest.raises(ValueError, match='Unapproved'):
         ProductionBundle(destination / 'manifest.json', digest(destination / 'manifest.json'))
+
+
+def test_valid_boolean_gate_manifest_can_load_trusted_fixture(tmp_path):
+    """Strict approval typing must not disable legitimate serving contracts."""
+    import pickle
+
+    import sklearn
+    from ml.production_pipeline import CATEGORICAL, NUMERIC, REQUIRED_GATES
+    from sklearn.dummy import DummyRegressor
+
+    params = dict(zip(FEATURES, [100, 5, 10, 2, 3, 2, 'Web App', 'Medium', 'Agile']))
+    frame = pd.DataFrame([params], columns=FEATURES)
+    model = DummyRegressor(strategy='constant', constant=100).fit(frame, [100])
+    artifact = tmp_path / 'pipeline.pkl'
+    artifact.write_bytes(pickle.dumps(model))
+    manifest = tmp_path / 'manifest.json'
+    manifest.write_text(json.dumps({
+        'schema': SCHEMA, 'features': FEATURES, 'sklearn_version': sklearn.__version__,
+        'production_approved': True, 'reviewer': 'synthetic contract test',
+        'approval_evidence': 'not real accuracy evidence', 'eligible_for_review': True,
+        'gates': dict.fromkeys(REQUIRED_GATES, True), 'log_radius': .1,
+        'interval_coverage': .9, 'model_sha256': digest(artifact),
+        'ranges': {k: [0, 1000] for k in NUMERIC},
+        'categories': {k: [params[k]] for k in CATEGORICAL},
+    }))
+    result = ProductionBundle(manifest, digest(manifest)).predict(params)
+    assert result['effort_hours_min'] < result['effort_hours_likely'] == 100
+    assert result['effort_hours_max'] > 100

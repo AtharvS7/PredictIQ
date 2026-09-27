@@ -12,7 +12,13 @@ import numpy as np
 import pandas as pd
 import sklearn
 
-from ml.production_pipeline import CATEGORICAL, FEATURES, NUMERIC, SCHEMA
+from ml.production_pipeline import (
+    CATEGORICAL,
+    FEATURES,
+    NUMERIC,
+    REQUIRED_GATES,
+    SCHEMA,
+)
 
 
 class ProductionBundle:
@@ -22,12 +28,14 @@ class ProductionBundle:
         if not expected_hash or hashlib.sha256(content).hexdigest() != expected_hash:
             raise ValueError('Deployment manifest checksum mismatch')
         report = json.loads(content)
+        gates = report.get('gates')
         if (report.get('schema') != SCHEMA or report.get('features') != FEATURES
                 or report.get('sklearn_version') != sklearn.__version__
                 or report.get('production_approved') is not True
                 or not report.get('reviewer') or not report.get('approval_evidence')
                 or report.get('eligible_for_review') is not True
-                or not report.get('gates') or not all(report['gates'].values())):
+                or not isinstance(gates, dict) or set(gates) != REQUIRED_GATES
+                or any(value is not True for value in gates.values())):
             raise ValueError('Unapproved or incompatible pipeline manifest')
         if not np.isfinite(report['log_radius']) or report['log_radius'] < 0:
             raise ValueError('Invalid calibration radius')

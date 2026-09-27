@@ -28,6 +28,8 @@ CATEGORICAL = ['project_type', 'complexity', 'methodology']
 FEATURES = NUMERIC + CATEGORICAL
 SCHEMA = 'predictiq-planning-inputs-v1'
 SEED = 20260915
+REQUIRED_GATES = frozenset({'baseline_improvement', 'mdape', 'pred25', 'coverage',
+                            'useful_intervals', 'organization_slices'})
 
 
 def digest(path):

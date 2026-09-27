@@ -14,6 +14,10 @@ Vercel rollback to the previous UI deployment was rehearsed and verified at the 
 
 A follow-up privacy review removed raw exception messages from API, authentication initialization, currency and background-task error logs. They now record exception types. Regression tests inject sensitive exception text and verify it reaches neither API output nor structured logs. The related API/security suite passed 59 tests.
 
+CI run `36330592736` passed at checkpoint `32a85c3`. Model-serving approval validation was subsequently hardened: all six named gates must exist and have literal JSON boolean `true` values. Strings, numeric truthiness and incomplete gate maps fail before deserialization. All 53 related production-pipeline, inference and ML-service tests passed, including a trusted synthetic bundle serving test. This changes release validation, not model accuracy or approval status.
+
+A free UptimeRobot request was submitted for the connected readiness URL after the owner confirmed their email. The provider returned HTTP 200, but its email-only flow intentionally does not confirm acceptance or delivery. Monitoring is pending the owner's activation link and actual alert verification; no active monitor or delivered outage alert is claimed.
+
 ```mermaid
 flowchart LR
     Browser[Staging website] --> Firebase[Real Firebase sign-in]
