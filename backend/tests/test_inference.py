@@ -54,6 +54,20 @@ def test_unloaded_model_fails_closed():
         model.predict({})
     assert model.get_model_info()['model_mode'] == 'unavailable'
 
+
+def test_unavailable_status_does_not_advertise_historical_model_metrics():
+    model = PredictifyInference()
+    model.training_report = {'training_samples': 740, 'r2_score': .99, 'best_model': 'old model'}
+    model.n_features = 27
+    info = model.get_model_info()
+    assert info['model_loaded'] is False
+    assert info['model_version'] is None
+    assert info['training_samples'] == info['n_features'] == 0
+    assert info['r2_score'] is None
+    assert info['confidence_method'] is None
+    assert info['best_model'] is None
+    assert info['dataset_sources'] == []
+
 @pytest.mark.parametrize('value', [float('nan'), float('inf'), float('-inf'), None, 'invalid'])
 def test_invalid_features_fail_closed(engine, sample_feature_vector, value):
     sample_feature_vector['size_fp'] = value

@@ -315,6 +315,18 @@ class PredictifyInference:
 
     def get_model_info(self) -> dict:
         """Return model metadata for health endpoint."""
+        if not self.is_ready:
+            # A revoked bundle or failed inference must not advertise historical
+            # training results as metadata for a currently serving model.
+            return {
+                'model_loaded': False, 'model_mode': 'unavailable',
+                'model_version': None, 'best_model': None,
+                'training_samples': 0, 'n_features': 0,
+                'r2_score': None, 'pred25': None, 'mmre': None,
+                'dataset_sources': [], 'confidence_method': None,
+                'interval_method': None,
+                'model_status_reason': 'No operational validated model is loaded',
+            }
         if self.production_bundle is not None and self.is_ready:
             return self.production_bundle.get_model_info()
         info: dict[str, Any] = {

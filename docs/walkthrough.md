@@ -2434,3 +2434,9 @@ flowchart LR
 ```
 
 The smoke-test checkpoint exposed missing `requests`/`python-dotenv` dependencies in the lean CI security job. Commit `b575789` installs the matching pinned versions before regression tests; local regression tests and Ruff pass. CI for that fix must be checked before claiming the new checkpoint fully green.
+
+## Monitoring activation and readiness incident
+
+The owner supplied UptimeRobot screenshots and confirmed receipt of the email. Monitoring is active: multiple probes detected the readiness 503 and an alert was sent. Live verification confirms liveness 200, Neon connected and Firebase initialized, with ML not loaded. This is the known unresolved prediction dependency, not a database or frontend outage. Alert delivery is now verified; successful recovery notification remains to be tested after readiness genuinely recovers.
+
+The screenshots revealed misleading legacy metadata while no model was serving. Unavailable status now returns no model version, confidence method or scores, and zero active training samples/features, instead of advertising the revoked 740-row model. This reporting repair intentionally preserves readiness 503. Loading a validated model remains necessary to resolve the incident.
