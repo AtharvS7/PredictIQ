@@ -31,6 +31,7 @@ def run(base_url, identities_file, frontend_env, evidence_path):
     if identities['project_id'] != frontend['VITE_FIREBASE_PROJECT_ID'] or len(identities['users']) != 2:
         raise ValueError('Expected two test identities for the configured Firebase project')
     checks = {}
+    estimation_status = None
 
     def require(name, condition):
         checks[name] = bool(condition)
@@ -87,6 +88,7 @@ def run(base_url, identities_file, frontend_env, evidence_path):
         require('security_headers', extracted.headers.get('X-Content-Type-Options') == 'nosniff')
         estimate = call('POST', '/estimates/analyze', owner, json={
             'document_id': document_id, 'overrides': {'project_name': 'Operational Recovery Test'}})
+        estimation_status = estimate.status_code
         if estimate.status_code == 503:
             require('prediction_unavailable_response',
                     estimate.json().get('detail') == 'Prediction service is unavailable')
@@ -102,7 +104,8 @@ def run(base_url, identities_file, frontend_env, evidence_path):
         report = {'status': status, 'checks': checks, 'estimation_http_status': estimate.status_code,
                   'scope': 'Live Firebase password sign-in, hosted API, Neon persistence, S3 and extraction; not browser E2E or model accuracy'}
     except (requests.RequestException, OSError, ValueError, KeyError, RuntimeError) as error:
-        report = {'status': 'failed', 'checks': checks, 'error_type': type(error).__name__}
+        report = {'status': 'failed', 'checks': checks, 'error_type': type(error).__name__,
+                  'estimation_http_status': estimation_status}
     (output / 'result.json').write_text(json.dumps(report, indent=2))
     return report
 

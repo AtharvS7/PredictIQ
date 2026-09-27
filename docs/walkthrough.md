@@ -35,7 +35,7 @@ Two synthetic operational identities completed real Firebase password authentica
 
 A follow-up live recovery rehearsal restored matching checksums for 13 profiles, 21 document records, 23 estimates and two shares at migration `005_role_retry`. The newly uploaded S3 object was backed up, restored to an isolated key, read back and hash-verified. The 20 acknowledged legacy objects remain unavailable; no new missing object was found. Private evidence is retained under `.tools/live-recovery-20260927-authenticated-b`; production records and original objects were preserved.
 
-The bounded hosted check sent 20 requests at concurrency two: all ten liveness probes returned 200 (p95 390.69 ms), while all ten readiness probes returned 503 (p95 438.29 ms) because no accepted model is loaded. The monitor therefore correctly failed overall. This is a low-volume operational check, not a capacity benchmark. A Render memory sample was 200,929,280 bytes against a 536,870,900-byte limit; it does not establish peak parsing or inference memory. Full live estimation, restart/rollback acceptance, cloud failover and alert delivery remain open.
+The bounded hosted check sent 20 requests at concurrency two: all ten liveness probes returned 200 (p95 390.69 ms), while all ten readiness probes returned 503 (p95 438.29 ms) because no accepted model is loaded. The monitor therefore correctly failed overall. This is a low-volume operational check, not a capacity benchmark. A Render memory sample was 200,929,280 bytes against a 536,870,900-byte limit; it does not establish peak parsing or inference memory. Full live estimation, rollback acceptance, cloud failover and alert delivery remain open. Staging replacement deployment `dep-dasecg97lnhs738qu7m0` became live at source `d4cd83e`; the subsequent live-provider rerun verified sign-in, persisted profile/document access, ownership denial and extraction across replacement. The check during the rolling update was not accepted; the completed-deployment rerun again confirmed the expected model-specific 503. This verifies application replacement persistence, not rollback or zero-downtime estimation.
 
 ## Current engineering status - September 26, 2026
 
@@ -2404,3 +2404,5 @@ flowchart LR
     Retain --> Next[Acquire verified planning snapshots and team history]
     Scope --> Next
 ```
+
+The smoke-test checkpoint exposed missing `requests`/`python-dotenv` dependencies in the lean CI security job. Commit `b575789` installs the matching pinned versions before regression tests; local regression tests and Ruff pass. CI for that fix must be checked before claiming the new checkpoint fully green.

@@ -13,6 +13,6 @@ Updated September 27, 2026. This replaces the obsolete dev/main/tag release inst
 | Recovery | Live Neon snapshot restored locally with all four table checksums (13 profiles, 21 documents, 23 estimates, 2 shares); new uploaded object restored and hash-verified; 20 owner-confirmed legacy test uploads absent | Retain private backup and exact-ID exceptions; cloud failover remains unverified |
 | ML | Training authorized; larger datasets and candidates evaluated; research Ridge improves median-baseline MAE by 7.1% | Adequate absolute accuracy, planning-time parity and independent production acceptance remain open |
 | Security/load | Authorization/parser/storage regression checks pass; Python production audit and frontend full dependency audit found no known vulnerabilities | CI passed; hosted 20-request check: liveness 10/10, p95 391 ms; readiness correctly 503. Scheduling and notification delivery remain unverified |
-| Release | No accepted production ML bundle; UI preview exists | Live readiness, full authenticated estimation, restart persistence and rollback acceptance |
+| Release | No accepted production ML bundle; UI preview exists | Live readiness, full authenticated estimation and rollback acceptance; persistence across staging replacement verified |
 
 Completion of local contract tests does not establish model accuracy or live production readiness. See [ML evidence](runbooks/PRODUCTION_ML.md), [deployment runbook](runbooks/production-deployment.md), and [walkthrough](walkthrough.md).
