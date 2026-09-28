@@ -22,6 +22,8 @@ Twenty live health probes at concurrency two passed with no failures: readiness 
 
 The post-migration live Neon snapshot restored locally with matching checksums for all five tables, including two saved budgets. All five available S3 uploads were backed up/restored and hash-verified. The 20 acknowledged legacy test-file gaps remain explicitly allowlisted; unexpected missing files: zero. Evidence is private in `.tools/live-recovery-budget-20260928`. This verifies local restoration of cloud backups, not regional failover. The owner confirmed outage email delivery earlier; the owner has now also confirmed recovery-email delivery. Backend/model rollback and ML approval are not claimed complete.
 
+Final application checkpoint `d38fe83` passed CI run `36432939384` and is live on Render `dep-dat78j3tqb8s73a24mjg` and Vercel `dpl_CvBajSvHtzhpv7f2gPA6666JXx7r`. The final health check verifies the budget schema in both release modes. Desktop/mobile visual review found and corrected the mobile navigation grid: all five links now share one row with at least 44px touch targets. The added browser assertions passed locally and in CI; the deployed layout was also checked. After the backend replacement, the pre-existing saved budget still returned the exact $440.00 total. Live readiness remained healthy for manual budgeting, with automatic prediction explicitly unavailable. Both outage and recovery emails are confirmed received by the owner.
+
 ```mermaid
 flowchart LR
     User[User-supplied tasks, hours and rates] --> Auth[Firebase authentication and editor authorization]
