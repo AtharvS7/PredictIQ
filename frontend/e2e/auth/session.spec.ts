@@ -28,6 +28,25 @@ test('Firebase sign-in yields a verified API identity and enforces roles', async
     return { status: identity.status, identity: await identity.json(), admin: admin.status };
   });
   expect(result).toEqual({ status: 200, identity: { id: localId, role: 'editor' }, admin: 403 });
+  await page.getByRole('link', { name: 'Budget Planner', exact: true }).click();
+  for (const [label, value] of [['Project name', 'Verified task budget'], ['Task name', 'Build'],
+    ['Low hours', '10'], ['Likely hours', '20'], ['High hours', '30'], ['Rate (USD/hour)', '75'], ['Contingency (%)', '10']]) {
+    await page.getByLabel(label, { exact: true }).fill(value);
+  }
+  await page.getByRole('button', { name: 'Calculate and save budget' }).click();
+  await expect(page.getByRole('region', { name: 'Saved budget result' }).getByText('$1,650.00')).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: /Verified task budget/ }).click();
+  await expect(page.getByRole('region', { name: 'Saved budget result' }).getByText('$1,650.00')).toBeVisible();
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  if (process.env.PREDICTIQ_CAPTURE_UI === '1') {
+    await page.screenshot({ path: '../.tools/budget-ui-mobile.png', fullPage: true });
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+  if (process.env.PREDICTIQ_CAPTURE_UI === '1') {
+    await page.screenshot({ path: '../.tools/budget-ui-desktop.png', fullPage: true });
+  }
   expect((await request.get('http://127.0.0.1:8000/api/v1/test/identity', {
     headers: { Authorization: 'Bearer invalid-token' },
   })).status()).toBe(401);

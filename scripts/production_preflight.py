@@ -52,7 +52,10 @@ def check_environment(env):
         failures.append('S3 credentials: provide both fields or a provider-managed identity')
     if env.get('S3_ENDPOINT_URL') and not https_origin(env['S3_ENDPOINT_URL'], allow_path=True):
         failures.append('S3_ENDPOINT_URL: HTTPS service endpoint without credentials or query required')
-    if not env.get('ML_PIPELINE_MANIFEST') or not re.fullmatch(r'[a-fA-F0-9]{64}', env.get('ML_PIPELINE_MANIFEST_SHA256', '')):
+    release_mode = env.get('RELEASE_MODE', 'prediction')
+    if release_mode not in {'prediction', 'manual_budget'}:
+        failures.append('RELEASE_MODE: must be prediction or manual_budget')
+    if release_mode != 'manual_budget' and (not env.get('ML_PIPELINE_MANIFEST') or not re.fullmatch(r'[a-fA-F0-9]{64}', env.get('ML_PIPELINE_MANIFEST_SHA256', ''))):
         failures.append('ML_PIPELINE_MANIFEST/SHA256: reviewed bundle path and hash required')
     return failures
 

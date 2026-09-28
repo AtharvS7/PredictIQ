@@ -11,7 +11,15 @@ os.environ['GCLOUD_PROJECT'] = 'demo-predictiq'
 
 import asyncpg  # noqa: E402
 import firebase_admin  # noqa: E402
-from app.api.v1 import auth, documents, estimates, export, profile, shared  # noqa: E402
+from app.api.v1 import (  # noqa: E402
+    auth,
+    budgets,
+    documents,
+    estimates,
+    export,
+    profile,
+    shared,
+)
 from app.core import database  # noqa: E402
 from app.core.rate_limit import limiter  # noqa: E402
 from app.core.security import CurrentUser, get_current_user, require_role  # noqa: E402
@@ -47,7 +55,7 @@ async def lifespan(application):
     with TemporaryDirectory(prefix='predictiq-auth-e2e-') as directory:
         database._pool = await asyncpg.create_pool(dsn, min_size=1, max_size=3)
         try:
-            assert await database._pool.fetchval('SELECT version_num FROM alembic_version') == '005_role_retry'
+            assert await database._pool.fetchval('SELECT version_num FROM alembic_version') == '006_manual_budgets'
             storage_service._backend = LocalStorageBackend(directory)
             ml_service.predict = prediction_fixture
             predictor.get_model_info = lambda: {'model_version': 'authenticated-e2e-fixture'}
@@ -59,7 +67,7 @@ async def lifespan(application):
 
 app = FastAPI(lifespan=lifespan)
 app.state.limiter = limiter
-for router in (auth.router, profile.router, documents.router, estimates.router, export.router, shared.router):
+for router in (auth.router, budgets.router, profile.router, documents.router, estimates.router, export.router, shared.router):
     app.include_router(router, prefix='/api/v1')
 app.add_middleware(CORSMiddleware, allow_origins=['http://127.0.0.1:5173'],
                    allow_methods=['GET', 'POST', 'PATCH', 'DELETE'], allow_headers=['Authorization', 'Content-Type'])

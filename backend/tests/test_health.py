@@ -14,6 +14,7 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def healthy_dependencies(monkeypatch):
+    monkeypatch.setattr(health.settings, 'RELEASE_MODE', 'prediction')
     monkeypatch.setattr(health, 'get_db', AsyncMock(return_value=Mock(fetchval=AsyncMock(return_value=1), execute=AsyncMock())))
     monkeypatch.setattr(health.predictor, 'is_ready', True)
     monkeypatch.setattr(firebase_admin, 'get_app', lambda: object())
@@ -29,6 +30,25 @@ def test_ready_status_and_schema(path):
     assert set(data['services']) == {'database', 'ml_model', 'firebase'}
     assert isinstance(data['uptime_seconds'], int)
     assert data['uptime_seconds'] >= 0
+
+
+def test_manual_release_reports_model_unavailable_truthfully(monkeypatch):
+    monkeypatch.setattr(health.settings, 'RELEASE_MODE', 'manual_budget')
+    monkeypatch.setattr(health.predictor, 'is_ready', False)
+    result = client.get('/api/v1/ready')
+    assert result.status_code == 200
+    assert result.json()['capabilities'] == {'manual_budget': True, 'automatic_prediction': False}
+    assert result.json()['services']['ml_model'] == 'not_loaded'
+    assert result.json()['model_loaded'] is False
+
+
+def test_manual_release_requires_its_schema(monkeypatch):
+    monkeypatch.setattr(health.settings, 'RELEASE_MODE', 'manual_budget')
+    pool = Mock(fetchval=AsyncMock(return_value=1), execute=AsyncMock(side_effect=[None, RuntimeError('missing budgets')]))
+    monkeypatch.setattr(health, 'get_db', AsyncMock(return_value=pool))
+    result = client.get('/api/v1/ready')
+    assert result.status_code == 503
+    assert result.json()['capabilities']['manual_budget'] is False
 
 
 def test_missing_authorization_schema_fails_readiness(monkeypatch):

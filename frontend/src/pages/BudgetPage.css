@@ -1,0 +1,34 @@
+.budget-page { min-height: 100vh; background: var(--bg-primary); color: var(--text-primary); }
+.budget-workspace { display: flex; }
+.budget-main { flex: 1; min-width: 0; max-width: 1120px; padding: clamp(16px, 3vw, 40px); }
+.budget-main h1 { font-size: clamp(1.75rem, 3vw, 2.5rem); line-height: 1.2; margin: 8px 0 16px; }
+.budget-main p { line-height: 1.6; margin: 12px 0; }
+.budget-eyebrow { font-size: .8rem; font-weight: 700; letter-spacing: .1em; }
+.budget-notice { padding: 16px; border-left: 3px solid var(--color-primary); background: var(--bg-secondary); }
+.budget-form, .budget-result, .budget-history { margin-top: 32px; }
+.budget-form fieldset { min-width: 0; border: 0; padding: 0; }
+.budget-form legend { font-size: 1.2rem; font-weight: 600; margin-bottom: 16px; }
+.budget-form label { display: flex; flex-direction: column; gap: 8px; font-weight: 500; }
+.budget-form input { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font: inherit; }
+.budget-project-fields { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.budget-form .budget-task { padding: 20px; margin: 24px 0; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); }
+.budget-task-numbers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 16px 0; }
+.budget-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.budget-page button { min-height: 44px; cursor: pointer; }
+.budget-page button:disabled { cursor: not-allowed; opacity: .6; }
+.budget-page :is(button, input, summary):focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+.budget-result { border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; }
+.budget-scenarios { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 20px 0; }
+.budget-scenarios h3 { font-size: .95rem; font-weight: 500; margin-bottom: 8px; }
+.budget-scenarios strong { font-size: clamp(1.2rem, 2vw, 1.75rem); overflow-wrap: anywhere; }
+.budget-history ul { list-style: none; padding: 0; }
+.budget-history li { border-bottom: 1px solid var(--border-color); }
+.budget-history li button { display: flex; justify-content: space-between; text-align: left; gap: 16px; width: 100%; padding: 16px 0; background: transparent; border: 0; color: inherit; font: inherit; }
+.budget-history li button:hover { color: var(--color-primary); }
+.budget-history li span, .budget-result h2, .budget-result li { overflow-wrap: anywhere; }
+.budget-result summary { cursor: pointer; padding: 12px 0; }
+@media (max-width: 700px) {
+  .budget-project-fields, .budget-scenarios { grid-template-columns: 1fr; }
+  .budget-task-numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .budget-history li button { flex-direction: column; gap: 4px; }
+}

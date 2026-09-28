@@ -18,8 +18,8 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-TABLES = ('profiles', 'document_uploads', 'estimates', 'share_links')
-HEAD = '005_role_retry'
+TABLES = ('profiles', 'document_uploads', 'estimates', 'share_links', 'budgets')
+HEAD = '006_manual_budgets'
 
 
 def local_connection(dsn):
@@ -75,6 +75,10 @@ async def rehearse(dsn, output, pg_bin):
         document = await connection.fetchval('INSERT INTO document_uploads(user_id,storage_path,original_filename,file_size_bytes,mime_type) VALUES($1,$2,$3,$4,$5) RETURNING id', owner, key, 'fixture.txt', len(payload), 'text/plain')
         estimate = await connection.fetchval('INSERT INTO estimates(user_id,document_id,project_name,inputs_json,outputs_json,model_version) VALUES($1,$2,$3,$4,$5,$6) RETURNING id', owner, document, 'Recovery fixture', json.dumps({'size_fp': 50}), json.dumps({'effort_likely_hours': 100}), 'recovery-fixture')
         await connection.execute('INSERT INTO share_links(estimate_id,token) VALUES($1,$2)', estimate, uuid.uuid4().hex)
+        await connection.execute('INSERT INTO budgets(user_id,inputs_json) VALUES($1,$2)', owner,
+                                 json.dumps({'project_name': 'Recovery budget', 'contingency_pct': '0',
+                                             'tasks': [{'name': 'Review', 'low_hours': '1', 'likely_hours': '2',
+                                                        'high_hours': '3', 'hourly_rate_usd': '75'}]}))
         before = await fingerprints(connection)
         if await connection.fetchval('SELECT version_num FROM alembic_version') != HEAD:
             raise ValueError('Unexpected migration head')

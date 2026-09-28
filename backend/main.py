@@ -8,6 +8,7 @@ from uuid import uuid4
 import structlog
 from app.api.v1.admin import router as admin_router
 from app.api.v1.auth import router as auth_router
+from app.api.v1.budgets import router as budgets_router
 from app.api.v1.currencies import router as currencies_router
 from app.api.v1.documents import router as documents_router
 from app.api.v1.estimates import router as estimates_router
@@ -150,6 +151,7 @@ app.add_middleware(AuditLogMiddleware)
 
 # Register API routers
 app.include_router(health_router, prefix="/api/v1", tags=["Health"])
+app.include_router(budgets_router, prefix="/api/v1", tags=["Manual budgets"])
 app.include_router(documents_router, prefix="/api/v1", tags=["Documents"])
 app.include_router(estimates_router, prefix="/api/v1", tags=["Estimates"])
 app.include_router(export_router, prefix="/api/v1", tags=["Export"])

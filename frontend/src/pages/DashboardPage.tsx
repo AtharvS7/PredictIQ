@@ -131,11 +131,11 @@ export default function DashboardPage() {
                   fontSize: '0.9375rem'
                 }}
               >
-                Ready to estimate? Upload a document or start a manual estimate.
+                Plan a task budget from your own hours and rates. Automatic predictions remain under validation.
               </p>
 
               <Link
-                to="/estimate/new"
+                to="/budgets"
                 style={{
                   marginTop: 16,
                   display: 'inline-flex',
@@ -151,7 +151,7 @@ export default function DashboardPage() {
                 }}
               >
                 <PlusCircle size={16} />
-                New Estimate
+                Plan a Budget
               </Link>
             </div>
 

@@ -4,6 +4,29 @@
 
 ---
 
+## September 28: explicit manual-budget release path
+
+The owner delegated the release-direction decision. A separate manual task-budget workflow is now implemented; it does not replace or validate the ML model. Users supply task names, ordered low/likely/high effort hours, per-task USD rates and optional contingency. The server sums hours × rates, adds contingency to costs only and rounds the total once using decimal arithmetic. These are user-defined scenarios, not confidence intervals or a calendar schedule. Taxes and non-labour expenses are excluded.
+
+Authenticated `/budgets` create/list/read/delete endpoints store immutable planning assumptions separately from estimates. Every query is owner-scoped, including admin requests; viewer accounts can read their own records but cannot write. Inputs reject unknown fields, non-finite or out-of-range numbers, excessive precision, inverted ranges, empty names and more than 100 tasks. Migration `006_manual_budgets` adds only a table and owner/date index. Authorization remains in the trusted API, consistent with the existing Neon deployment; no new database RLS guarantee is claimed.
+
+The React budget planner offers labelled task cards, add/remove controls, bounded numeric inputs, retained-input save errors, paginated history and saved-assumption review. The landing page describes manual planning and explicitly states automatic predictions are unavailable. UI/UX Pro Max's minimal functional style, visible focus, touch targets and responsive layout guidance informed the page.
+
+`RELEASE_MODE=prediction` remains the default and requires a ready model. Explicit `manual_budget` mode requires the budget schema, database and initialized Firebase, while reporting `automatic_prediction: false` and `ml_model: not_loaded` when the model is unavailable. Readiness and operational probes distinguish these contracts; enabling manual mode is not ML approval. Deployment and hosted acceptance remain pending until separately recorded below.
+
+Validation so far: 18 budget tests including real PostgreSQL persistence, cross-user/admin denial and viewer restrictions; 15 health tests; four new UI tests; script checks; and a populated recovery rehearsal at migration 006. All five restored tables and the test document matched checksums (`.tools/recovery-manual-budget-20260928`). Broad checks and authenticated browser acceptance are in progress. The prior live outage email was received and confirmed by the owner; recovery notification is not yet verified.
+
+```mermaid
+flowchart LR
+    User[User-supplied tasks, hours and rates] --> Auth[Firebase authentication and editor authorization]
+    Auth --> Validate[Bounded inputs and ordered scenarios]
+    Validate --> Calc[Decimal task costs plus contingency]
+    Validate --> DB[(Owner-scoped budget assumptions)]
+    DB --> Calc
+    Calc --> UI[Saved manual budget and assumptions]
+    ML[Unvalidated ML model] --> Disabled[Automatic prediction remains unavailable]
+```
+
 ## September 27: connected staging and live browser acceptance
 
 The website at https://predictiq-preview.vercel.app is now connected to the free Render staging backend through Vercel's same-origin `/api` proxy. Source commit `a70416f` passed GitHub CI run `36329980342` and Vercel build `dpl_GJJBA8rDRxNCgSHDyY8Z6TML5Phy`. This is the dedicated preview project's default alias, not an accepted production release. Existing deployment protection settings were preserved: the unique deployment URL redirects to authentication, while the stable alias is accessible. A staging banner explicitly states that predictions await model validation.
@@ -2449,4 +2472,4 @@ CI exposed an incomplete document-flow prediction fixture after unavailable meta
 
 ### September 28: investigate the prediction blocker
 
-The training-only Itemlet diagnosis covers 11,541 tasks with whole projects separated across four folds. Calibration/test records remain untouched. Positive story points do not cure poor predictions: their cohort still has roughly 70% median relative error. One suspicious 225,001-hour task contributes 75.43% of development absolute error; original-record verification returned 403, so no unverified correction or score-driven exclusion was made. The diagnosis CLI and ten related tests are now reproducible. Automatic estimates remain unavailable. A clearly labelled manual task/rate budget mode was proposed to the owner as a separate usable release path; it has not been approved or implemented.
+The training-only Itemlet diagnosis covers 11,541 tasks with whole projects separated across four folds. Calibration/test records remain untouched. Positive story points do not cure poor predictions: their cohort still has roughly 70% median relative error. One suspicious 225,001-hour task contributes 75.43% of development absolute error; original-record verification returned 403, so no unverified correction or score-driven exclusion was made. The diagnosis CLI and ten related tests are now reproducible. Automatic estimates remain unavailable. The owner subsequently delegated the release-direction decision. Manual task/rate budgeting is implemented as a separate workflow; see the September 28 section for validation and deployment status. Automatic ML approval remains blocked.

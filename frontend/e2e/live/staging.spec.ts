@@ -22,6 +22,17 @@ test('live staging sign-in, extraction, honest model failure and sign-out', asyn
   await expect(page).toHaveURL(/dashboard/, { timeout: 45_000 });
   await page.reload();
   await expect(page.getByRole('button', { name: 'Account options' })).toBeVisible();
+  await page.getByRole('link', { name: 'Budget Planner', exact: true }).click();
+  const budgetName = `Live budget acceptance ${Date.now()}`;
+  for (const [label, value] of [['Project name', budgetName], ['Task name', 'Review'],
+    ['Low hours', '2'], ['Likely hours', '4'], ['High hours', '6'], ['Rate (USD/hour)', '100'], ['Contingency (%)', '10']]) {
+    await page.getByLabel(label, { exact: true }).fill(value);
+  }
+  await page.getByRole('button', { name: 'Calculate and save budget' }).click();
+  await expect(page.getByRole('region', { name: 'Saved budget result' }).getByText('$440.00')).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: new RegExp(budgetName) }).click();
+  await expect(page.getByRole('region', { name: 'Saved budget result' }).getByText('$440.00')).toBeVisible();
   await page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'New Estimate' }).click();
   await page.locator('#file-input').setInputFiles({
     name: 'live-browser-acceptance.txt', mimeType: 'text/plain',

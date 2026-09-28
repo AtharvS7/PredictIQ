@@ -43,7 +43,16 @@ def probe(base, route, timeout):
             expected = 'alive' if route == 'live' else 'healthy'
             healthy = status == 200 and isinstance(body, dict) and body.get('status') == expected
             if route == 'ready' and healthy:
-                healthy = body.get('services') == {'database': 'connected', 'ml_model': 'ready', 'firebase': 'initialized'}
+                services = body.get('services', {})
+                mode = body.get('release_mode', 'prediction')
+                if mode == 'manual_budget':
+                    capabilities = body.get('capabilities', {})
+                    healthy = (services.get('database') == 'connected' and services.get('firebase') == 'initialized'
+                               and services.get('ml_model') in {'ready', 'not_loaded'}
+                               and capabilities.get('manual_budget') is True
+                               and capabilities.get('automatic_prediction') is (services.get('ml_model') == 'ready'))
+                else:
+                    healthy = mode == 'prediction' and services == {'database': 'connected', 'ml_model': 'ready', 'firebase': 'initialized'}
     except urllib.error.HTTPError as error:
         status, error_type = error.code, 'HTTPError'
     except Exception as error:

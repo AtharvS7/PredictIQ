@@ -39,6 +39,8 @@ async def health_check(response: Response):
             result = await pool.fetchval("SELECT 1")
             # Connectivity alone cannot prove authorization's required schema.
             await pool.execute('SELECT role_managed, role_sync_pending, role_sync_after FROM profiles LIMIT 0')
+            if settings.RELEASE_MODE == "manual_budget":
+                await pool.execute('SELECT id, user_id, inputs_json, created_at FROM budgets LIMIT 0')
         db_status = "connected" if result == 1 else "error"
     except Exception as e:
         db_status = f"error: {type(e).__name__}"
@@ -56,7 +58,7 @@ async def health_check(response: Response):
     # Overall status: healthy only if all critical services are up
     all_healthy = (
         db_status == "connected"
-        and predictor.is_ready
+        and (settings.RELEASE_MODE == "manual_budget" or predictor.is_ready)
         and firebase_status == "initialized"
     )
 
@@ -65,6 +67,11 @@ async def health_check(response: Response):
 
     return {
         "status": "healthy" if all_healthy else "degraded",
+        "release_mode": settings.RELEASE_MODE,
+        "capabilities": {
+            "manual_budget": all_healthy if settings.RELEASE_MODE == "manual_budget" else False,
+            "automatic_prediction": db_status == "connected" and predictor.is_ready and firebase_status == "initialized",
+        },
         "version": settings.APP_VERSION,
         "uptime_seconds": uptime_seconds,
         "services": {

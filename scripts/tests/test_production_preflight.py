@@ -20,6 +20,12 @@ class ProductionPreflightTests(unittest.TestCase):
     def test_complete_configuration_shape(self):
         self.assertEqual(preflight.check_environment(self.valid()), [])
 
+    def test_manual_mode_is_explicit_and_does_not_require_a_model(self):
+        env = self.valid() | {'ML_PIPELINE_MANIFEST': '', 'ML_PIPELINE_MANIFEST_SHA256': ''}
+        self.assertTrue(preflight.check_environment(env))
+        self.assertEqual(preflight.check_environment(env | {'RELEASE_MODE': 'manual_budget'}), [])
+        self.assertTrue(preflight.check_environment(env | {'RELEASE_MODE': 'typo'}))
+
     def test_rejects_emulator_and_local_storage(self):
         env = self.valid() | {'FIREBASE_AUTH_EMULATOR_HOST': 'localhost:9099', 'STORAGE_BACKEND': 'local'}
         self.assertEqual(len(preflight.check_environment(env)), 2)

@@ -8,7 +8,7 @@ from scripts.live_auth_smoke import run
 
 
 class LiveAuthSmokeTests(unittest.TestCase):
-    def exercise(self, unavailable_detail='Prediction service is unavailable', cross_status=404):
+    def exercise(self, unavailable_detail='Prediction service is unavailable', cross_status=404, manual_release=False):
         root = Path(__file__).resolve().parents[2] / '.tools'
         root.mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=root) as directory:
@@ -24,8 +24,9 @@ class LiveAuthSmokeTests(unittest.TestCase):
                 response(401), response(403), response(), response(), response(id='fixture'),
                 response(id='fixture'), response(cross_status), response(word_count=50),
                 response(503, detail=unavailable_detail),
-                response(503, services={'database': 'connected', 'ml_model': 'not_loaded',
-                                        'firebase': 'initialized'})]
+                response(200 if manual_release else 503, release_mode='manual_budget' if manual_release else 'prediction',
+                         capabilities={'manual_budget': manual_release, 'automatic_prediction': False},
+                         services={'database': 'connected', 'ml_model': 'not_loaded', 'firebase': 'initialized'})]
             with patch('dotenv.dotenv_values', return_value={
                 'VITE_FIREBASE_PROJECT_ID': 'demo', 'VITE_FIREBASE_API_KEY': 'private-key'}), \
                  patch('requests.post', side_effect=[response(localId=u['uid'], idToken='private-token')
@@ -42,6 +43,9 @@ class LiveAuthSmokeTests(unittest.TestCase):
 
     def test_model_unavailable_is_partial_not_pass(self):
         self.assertEqual(self.exercise()['status'], 'partial_model_unavailable')
+
+    def test_manual_readiness_does_not_pass_ml_acceptance(self):
+        self.assertEqual(self.exercise(manual_release=True)['status'], 'partial_model_unavailable')
 
     def test_generic_outage_is_not_mislabeled_as_model_failure(self):
         self.assertEqual(self.exercise(unavailable_detail='Database unavailable')['status'], 'failed')

@@ -1,9 +1,10 @@
 ﻿import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, FolderOpen, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calculator, LayoutDashboard, PlusCircle, FolderOpen, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, route: '/dashboard' },
+  { label: 'Budget Planner', icon: Calculator, route: '/budgets' },
   { label: 'New Estimate', icon: PlusCircle, route: '/estimate/new' },
   { label: 'My Estimates', icon: FolderOpen, route: '/estimates' },
   { label: 'Settings', icon: Settings, route: '/settings' },

@@ -20,6 +20,8 @@ class Settings(BaseSettings):
 
     # Neon PostgreSQL
     DATABASE_URL: str
+    # Explicit release contract. Manual planning never claims ML availability.
+    RELEASE_MODE: Literal["prediction", "manual_budget"] = "prediction"
     DB_POOL_MIN_SIZE: int = 2
     DB_POOL_MAX_SIZE: int = 10
     DB_COMMAND_TIMEOUT: int = 30

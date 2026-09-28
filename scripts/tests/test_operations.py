@@ -27,6 +27,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         body = {'status': 'alive' if live else 'healthy', 'services': {
             'database': 'connected', 'ml_model': 'ready', 'firebase': 'initialized'}}
+        body.update(getattr(self.server, 'payload_override', {}))
         self.wfile.write(json.dumps(body).encode())
 
 
@@ -55,6 +56,19 @@ class OperationsTests(unittest.TestCase):
         self.assertEqual(report['status'], 'failed')
         self.assertEqual(report['checks']['live']['failures'], 0)
         self.assertEqual(report['checks']['ready']['failures'], 1)
+
+    def test_manual_release_requires_explicit_truthful_capabilities(self):
+        self.server.payload_override = {
+            'release_mode': 'manual_budget',
+            'services': {'database': 'connected', 'ml_model': 'not_loaded', 'firebase': 'initialized'},
+            'capabilities': {'manual_budget': True, 'automatic_prediction': False}}
+        self.assertEqual(check(self.url)['status'], 'passed')
+        self.server.payload_override['capabilities']['automatic_prediction'] = True
+        self.assertEqual(check(self.url)['status'], 'failed')
+        self.server.payload_override['capabilities'] = {}
+        self.assertEqual(check(self.url)['status'], 'failed')
+        self.server.payload_override['release_mode'] = 'unknown'
+        self.assertEqual(check(self.url)['status'], 'failed')
 
     def test_redirect_is_not_followed(self):
         self.server.redirect = True

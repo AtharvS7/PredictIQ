@@ -9,6 +9,7 @@ import ThemeProvider from '@/components/ThemeProvider';
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const AuthPage = lazy(() => import('@/pages/AuthPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const BudgetPage = lazy(() => import('@/pages/BudgetPage'));
 const NewEstimatePage = lazy(() => import('@/pages/NewEstimatePage'));
 const SharedEstimatePage = lazy(() => import('./pages/SharedEstimatePage'));
 const ResultsPage = lazy(() => import('@/pages/ResultsPage'));
@@ -159,13 +160,14 @@ export default function App() {
             )}
             {import.meta.env.VITE_APP_ENV === 'staging' && (
               <div role="status" style={{ padding: '12px 20px', textAlign: 'center', background: 'var(--bg-secondary)', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
-                Staging — sign-in and document processing are connected. New predictions remain unavailable while model validation is in progress.
+                Staging — manual task budgets and document processing are available. Automatic predictions remain unavailable while model validation is in progress.
               </div>
             )}
             <Suspense fallback={<PageSpinner />}>
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/budgets" element={<RequireAuth><BudgetPage /></RequireAuth>} />
                 <Route path="/share/:token" element={<SharedEstimatePage />} />
                 <Route
                   path="/dashboard"

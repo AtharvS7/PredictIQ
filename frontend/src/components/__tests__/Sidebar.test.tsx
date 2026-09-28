@@ -7,7 +7,7 @@ describe('Workspace navigation', () => {
   it('keeps collapsed links accessible and expands with the keyboard button', () => {
     render(<MemoryRouter><Sidebar /></MemoryRouter>);
     fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }));
-    for (const name of ['Dashboard', 'New Estimate', 'My Estimates', 'Settings']) {
+    for (const name of ['Dashboard', 'Budget Planner', 'New Estimate', 'My Estimates', 'Settings']) {
       expect(screen.getByRole('link', { name })).toBeInTheDocument();
     }
     expect(screen.getByRole('button', { name: 'Expand sidebar' })).toHaveAttribute('aria-expanded', 'false');

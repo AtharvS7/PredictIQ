@@ -8,10 +8,10 @@ import {
 } from 'lucide-react';
 
 const steps = [
-  { num: '01', title: 'Upload Document', desc: 'Drop your project spec, SRS, or proposal' },
-  { num: '02', title: 'AI Analyzes Scope', desc: 'NLP + ML extracts parameters automatically' },
-  { num: '03', title: 'Review Prediction', desc: 'See cost, timeline, risk, and phase breakdown' },
-  { num: '04', title: 'Export & Share', desc: 'Download PDF or share a read-only link' },
+  { num: '01', title: 'Define the work', desc: 'Break your project into tasks you can review' },
+  { num: '02', title: 'Set your assumptions', desc: 'Enter low, likely and high effort hours and a rate for each task' },
+  { num: '03', title: 'Review the scenarios', desc: 'See the calculated cost range, including your chosen contingency' },
+  { num: '04', title: 'Keep a planning record', desc: 'Save budgets privately and revisit the assumptions behind them' },
 ];
 
 export default function LandingPage() {
@@ -20,8 +20,8 @@ export default function LandingPage() {
   return (
     <div style={{ minHeight: '100vh' }}>
       <SEOHead
-        title="AI-Powered Project Cost Estimation"
-        description="Predict your software project cost, timeline, and risks with AI. Upload a document and get instant estimates powered by NLP and machine learning."
+        title="Software Project Budget Planning"
+        description="Build transparent project budgets from task hours, rates and contingency. Save your assumptions and compare cost scenarios."
       />
       <Navbar />
 
@@ -47,7 +47,7 @@ export default function LandingPage() {
             textAlign: 'center',
           }}
         >
-          Predict Your Project Cost{' '}
+          Plan Your Project Budget{' '}
           <span style={{ color: 'var(--text-primary)' }}>
             Before You Build
           </span>
@@ -62,8 +62,8 @@ export default function LandingPage() {
             lineHeight: 1.7,
           }}
         >
-          AI-powered cost and timeline estimation for software teams.
-          Upload a project document and get a detailed prediction in seconds.
+          Turn your task hours and rates into a clear, saved project budget.
+          Automatic ML predictions are under validation and are not currently available.
         </p>
 
         {/* BUTTONS */}
@@ -76,7 +76,7 @@ export default function LandingPage() {
           }}
         >
           <Link
-            to={session ? '/estimate/new' : '/auth'}
+            to={session ? '/budgets' : '/auth'}
             style={{
               padding: '14px 28px',
               fontSize: '1rem',
@@ -210,11 +210,11 @@ export default function LandingPage() {
             marginBottom: 16,
           }}
         >
-          Ready to predict your next project?
+          Ready to plan your next project?
         </h2>
 
         <Link
-          to={session ? '/estimate/new' : '/auth'}
+          to={session ? '/budgets' : '/auth'}
           style={{
             padding: '16px 32px',
             fontSize: '1.0625rem',
@@ -229,7 +229,7 @@ export default function LandingPage() {
             gap: 8,
           }}
         >
-          Start Estimating Now
+          Start Planning Now
           <ChevronRight size={18} />
         </Link>
       </section>

@@ -93,8 +93,11 @@ def run(base_url, identities_file, frontend_env, evidence_path):
             require('prediction_unavailable_response',
                     estimate.json().get('detail') == 'Prediction service is unavailable')
             readiness = call('GET', '/ready')
-            require('model_unavailable_confirmed', readiness.status_code == 503
-                    and readiness.json().get('services') == {
+            readiness_body = readiness.json()
+            manual_release = (readiness.status_code == 200 and readiness_body.get('release_mode') == 'manual_budget'
+                              and readiness_body.get('capabilities') == {'manual_budget': True, 'automatic_prediction': False})
+            require('model_unavailable_confirmed', (readiness.status_code == 503 or manual_release)
+                    and readiness_body.get('services') == {
                         'database': 'connected', 'ml_model': 'not_loaded', 'firebase': 'initialized'})
             status = 'partial_model_unavailable'
         else:
