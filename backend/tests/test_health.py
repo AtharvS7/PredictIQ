@@ -30,6 +30,7 @@ def test_ready_status_and_schema(path):
     assert set(data['services']) == {'database', 'ml_model', 'firebase'}
     assert isinstance(data['uptime_seconds'], int)
     assert data['uptime_seconds'] >= 0
+    assert data['capabilities']['manual_budget'] is True
 
 
 def test_manual_release_reports_model_unavailable_truthfully(monkeypatch):
@@ -42,8 +43,9 @@ def test_manual_release_reports_model_unavailable_truthfully(monkeypatch):
     assert result.json()['model_loaded'] is False
 
 
-def test_manual_release_requires_its_schema(monkeypatch):
-    monkeypatch.setattr(health.settings, 'RELEASE_MODE', 'manual_budget')
+@pytest.mark.parametrize('mode', ['prediction', 'manual_budget'])
+def test_every_release_requires_budget_schema(monkeypatch, mode):
+    monkeypatch.setattr(health.settings, 'RELEASE_MODE', mode)
     pool = Mock(fetchval=AsyncMock(return_value=1), execute=AsyncMock(side_effect=[None, RuntimeError('missing budgets')]))
     monkeypatch.setattr(health, 'get_db', AsyncMock(return_value=pool))
     result = client.get('/api/v1/ready')

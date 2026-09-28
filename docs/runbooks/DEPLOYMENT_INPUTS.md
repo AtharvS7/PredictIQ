@@ -40,7 +40,7 @@ flowchart LR
 
 Run `python scripts/production_preflight.py` in the target process environment. It does not read local `.env`, contact providers, load models or print secret values. Passing checks configuration shape only, not credential validity, artifact approval or live readiness.
 
-Before launch, record commit/artifact hashes, CI results, migration head `005_role_retry`, HTTPS/CORS, real sign-in and revocation, estimation with the approved model, cross-user denial, deep-link reload, restart persistence, private object access and populated restoration. Monitor readiness, errors, latency, parser saturation and pending role updates.
+Before launch, record commit/artifact hashes, CI results, migration head `006_manual_budgets`, HTTPS/CORS, real sign-in and revocation, estimation with the approved model, cross-user denial, deep-link reload, restart persistence, private object access and populated restoration. Monitor readiness, errors, latency, parser saturation and pending role updates.
 
 Current blockers: selected hosting/access; compatible licensed modern project data; explicit authorization to execute and validate the new ML pipeline; independent model approval; live configuration, load, backup and rollback acceptance. The existing 891 historical projects do not constitute the required nine-feature production dataset.
 

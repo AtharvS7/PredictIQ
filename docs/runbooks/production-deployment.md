@@ -1,13 +1,21 @@
 ﻿# Production deployment runbook
 
-Updated September 27, 2026. Source branch: **dev2 only**. Do not push main, another branch, or a tag. The earlier Railway/tag workflow is obsolete. Approved targets are the existing Vercel preview project and Render's My Workspace, within the ₹0 budget. Free staging is deployed; production promotion is deferred while model acceptance remains open.
+Updated September 28, 2026. Source branch: **dev2 only**. Do not push main, another branch, or a tag. The earlier Railway/tag workflow is obsolete. Approved targets are the existing Vercel preview project and Render's My Workspace, within the ₹0 budget. Free staging is deployed; production promotion is deferred while model acceptance remains open.
 
-## Required release evidence
+## Manual-budget release contract (September 28)
+
+The owner selected the delegated recommendation to release transparent manual planning while ML remains unavailable. Migration `006_manual_budgets` has been rehearsed on an isolated Neon branch and applied after explicit confirmation; existing records retained matching fingerprints. CI passed at `de86043`.
+
+Set `RELEASE_MODE=manual_budget` on the backend only for this narrowed release. `/ready` must return the manual capability and report the actual model status. Do not claim successful ML acceptance from a manual-ready response. Real sign-in, budget save/reload, cross-user denial, recovery and monitoring remain required. `production_preflight.py` exempts only the model manifest requirement in this explicit mode; all other provider checks remain.
+
+The local ignored production configuration references a Firebase credential file. Resolve that file into `FIREBASE_CREDENTIALS_JSON` in memory when using the cloud-oriented preflight; the Render service already receives the raw JSON securely. Never print or commit it. Render environment updates themselves trigger deployment; do not request a second deploy after an environment update.
+
+## Required full ML release evidence
 
 1. Verify the exact dev2 commit with backend tests, frontend type/lint/tests/build, browser acceptance, authenticated E2E, dependency checks and CI.
 2. Independently approve a production model bundle. Research test gains are insufficient: verify absolute errors, planning-time feature parity, provenance, uncertainty and intended applicability. Keep the revoked model rejected.
 3. Populate ignored production environment configuration with the approved manifest path/hash and provider values. Run `python scripts/production_preflight.py` with those values in the process environment; the command deliberately does not load a development `.env`. Never print secrets or commit environment files.
-4. Verify actual Firebase, Neon and durable S3 connectivity separately. Neon is already migrated through `005_role_retry`; do not reapply historical SQL or alter migration history.
+4. Verify actual Firebase, Neon and durable S3 connectivity separately. Neon is already migrated through `006_manual_budgets`; do not reapply historical SQL or alter migration history.
 5. Back up the database and objects and verify restoration to isolated destinations before a production change. The local rehearsal below verifies mechanics only; it is not evidence of production backup coverage.
 6. Deploy the reviewed commit to the approved backend, connect the frontend HTTPS API URL, and configure exact CORS origins. Confirm `/api/v1/live` and `/api/v1/ready`; degraded or fixture-backed behavior is not production acceptance.
 7. Exercise real sign-in, document upload, extraction, estimation, persistence, export/share, sign-out and cross-user denial. Verify private object access and persistence across restart.
@@ -47,4 +55,4 @@ The dedicated preview project's alias `https://predictiq-preview.vercel.app` pro
 
 To exercise the real degraded-state browser journey, put the permitted staging URL in ignored `.tools/vercel-staging-access.json` as `{"url":"https://predictiq-preview.vercel.app"}` and run `npx playwright test --config playwright.live.config.ts` from frontend. The existing ignored synthetic identity file is required. This creates a synthetic uploaded document; do not include operational fixtures in training. Ordinary browser CI excludes `e2e/live`. The test expects the model-unavailable response and must be replaced by approved-model successful-estimation acceptance before production release.
 
-Frontend rollback was verified from deployment `dpl_GJJBA8rDRxNCgSHDyY8Z6TML5Phy` to the prior preview and back. Do not use this as evidence of backend/model rollback. Alerts still require recipient confirmation and provider activation/delivery evidence.
+Frontend rollback was verified from deployment `dpl_GJJBA8rDRxNCgSHDyY8Z6TML5Phy` to the prior preview and back. Do not use this as evidence of backend/model rollback. The owner confirmed the outage email was received. Verify a recovery notification separately; readiness must describe the explicitly selected release mode.

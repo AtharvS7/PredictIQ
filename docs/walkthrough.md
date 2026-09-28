@@ -1,6 +1,6 @@
 # Predictify — Technical Walkthrough
 
-> **Version:** 3.2.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** September 27, 2026
+> **Version:** 3.2.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** September 28, 2026
 
 ---
 
@@ -12,9 +12,15 @@ Authenticated `/budgets` create/list/read/delete endpoints store immutable plann
 
 The React budget planner offers labelled task cards, add/remove controls, bounded numeric inputs, retained-input save errors, paginated history and saved-assumption review. The landing page describes manual planning and explicitly states automatic predictions are unavailable. UI/UX Pro Max's minimal functional style, visible focus, touch targets and responsive layout guidance informed the page.
 
-`RELEASE_MODE=prediction` remains the default and requires a ready model. Explicit `manual_budget` mode requires the budget schema, database and initialized Firebase, while reporting `automatic_prediction: false` and `ml_model: not_loaded` when the model is unavailable. Readiness and operational probes distinguish these contracts; enabling manual mode is not ML approval. Deployment and hosted acceptance remain pending until separately recorded below.
+`RELEASE_MODE=prediction` remains the default and requires a ready model. Explicit `manual_budget` mode requires the budget schema, database and initialized Firebase, while reporting `automatic_prediction: false` and `ml_model: not_loaded` when the model is unavailable. Readiness and operational probes distinguish these contracts; enabling manual mode is not ML approval. Manual-budget deployment and hosted acceptance are verified below; ML acceptance remains open.
 
-Validation so far: 18 budget tests including real PostgreSQL persistence, cross-user/admin denial and viewer restrictions; 15 health tests; four new UI tests; script checks; and a populated recovery rehearsal at migration 006. All five restored tables and the test document matched checksums (`.tools/recovery-manual-budget-20260928`). Broad checks and authenticated browser acceptance are in progress. The prior live outage email was received and confirmed by the owner; recovery notification is not yet verified.
+Validation so far: 18 budget tests including real PostgreSQL persistence, cross-user/admin denial and viewer restrictions; 15 health tests; four new UI tests; script checks; and a populated recovery rehearsal at migration 006. All five restored tables and the test document matched checksums (`.tools/recovery-manual-budget-20260928`). All 75 frontend tests passed across the initial run and worker-startup retries. The broad backend run passed 592 tests; its six database failures occurred while PostgreSQL was starting and all passed in the 24-test database rerun. Authenticated emulator browser acceptance passed, including budget persistence and a 375px overflow check. The prior live outage email was received and confirmed by the owner; recovery notification is not yet verified.
+
+Hosted checkpoint `de86043` passed CI run `36399584660`. Render deployment `dep-dat2mb3mmadc73eqq35g` and Vercel deployment `dpl_DhUp3X5DCBzguk4VhjWunC4JGHK8` serve the manual planner at the existing preview alias. The live browser test passed in 49.4 seconds, including real Firebase sign-in, budget save/reload, extraction, the explicit ML-unavailable response and sign-out. A separate two-identity API probe verified exact $440.00 arithmetic, anonymous denial and cross-user read/delete denial.
+
+Twenty live health probes at concurrency two passed with no failures: readiness p95 436.86 ms and liveness p95 595.76 ms. This is a bounded smoke/load sample, not a high-volume capacity claim. The readiness response is HTTP 200 with `release_mode=manual_budget`, `manual_budget=true`, `automatic_prediction=false` and `ml_model=not_loaded`.
+
+The post-migration live Neon snapshot restored locally with matching checksums for all five tables, including two saved budgets. All five available S3 uploads were backed up/restored and hash-verified. The 20 acknowledged legacy test-file gaps remain explicitly allowlisted; unexpected missing files: zero. Evidence is private in `.tools/live-recovery-budget-20260928`. This verifies local restoration of cloud backups, not regional failover. The owner confirmed outage email delivery earlier; recovery-email delivery remains unconfirmed. Backend/model rollback and ML approval are not claimed complete.
 
 ```mermaid
 flowchart LR
