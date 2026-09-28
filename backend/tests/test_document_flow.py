@@ -69,7 +69,8 @@ def test_upload_extract_analyze_uses_document_values(flow, sample_document_text,
         assert params[name] == extracted.json()[name]
 
 
-def test_document_to_estimate_result_contract(flow, sample_document_text, monkeypatch):
+@pytest.mark.parametrize('model_version', ['document-flow-contract-fixture', None])
+def test_document_to_estimate_result_contract(flow, sample_document_text, monkeypatch, model_version):
     from unittest.mock import Mock
 
     from app.services import estimate_service as service_module
@@ -78,14 +79,20 @@ def test_document_to_estimate_result_contract(flow, sample_document_text, monkey
     predict = Mock(return_value={"effort_hours_likely": 1000.0, "effort_hours_min": 800.0,
         "effort_hours_max": 1400.0, "confidence_pct": 70.0, "model_mode": "live"})
     monkeypatch.setattr(service_module.ml_service, "predict", predict)
+    monkeypatch.setattr(service_module.predictor, 'get_model_info', lambda: {'model_version': model_version})
     monkeypatch.setattr(estimates, "log_estimation_analytics", AsyncMock())
     doc_id = upload(client, sample_document_text)
     extracted = client.post(f"/documents/{doc_id}/extract").json()
     response = client.post("/estimates/analyze", json={"document_id": doc_id,
         "overrides": {"hourly_rate_usd": 100, "tech_stack": [], "integration_count": 0,
             "volatility_score": 5, "team_experience": 4}})
+    if model_version is None:
+        assert response.status_code == 503
+        assert not any('INSERT INTO estimates' in call.args[0] for call in pool.fetchrow.await_args_list)
+        return
     assert response.status_code == 200, response.text
     result = response.json()
+    assert result['model_version'] == model_version
     assert result["document_id"] == doc_id
     assert result["inputs"]["duration_months"] == 12
     assert result["inputs"]["tech_stack"] == []

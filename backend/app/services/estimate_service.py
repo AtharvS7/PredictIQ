@@ -16,6 +16,7 @@ from typing import Optional
 
 import bcrypt
 import structlog
+from fastapi import HTTPException
 from ml.inference import predictor
 from starlette.concurrency import run_in_threadpool
 
@@ -99,6 +100,11 @@ class EstimateService:
         }
 
         ml_result = ml_service.predict(params)
+        # Capture provenance before the next await: another request may disable
+        # predictor readiness while this estimate waits for the database.
+        model_version = predictor.get_model_info().get("model_version")
+        if not isinstance(model_version, str) or not model_version.strip():
+            raise HTTPException(status_code=503, detail="Prediction service is unavailable")
         effort_likely = ml_result["effort_hours_likely"]
         effort_min = ml_result["effort_hours_min"]
         effort_max = ml_result["effort_hours_max"]
@@ -172,7 +178,6 @@ class EstimateService:
         pool = await get_db()
         inputs_dict = inputs.model_dump()
         outputs_dict = outputs.model_dump()
-        model_version = predictor.get_model_info()["model_version"]
 
         saved = await pool.fetchrow(
             """INSERT INTO estimates

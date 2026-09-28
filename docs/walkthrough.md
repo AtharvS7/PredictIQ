@@ -2440,3 +2440,9 @@ The smoke-test checkpoint exposed missing `requests`/`python-dotenv` dependencie
 The owner supplied UptimeRobot screenshots and confirmed receipt of the email. Monitoring is active: multiple probes detected the readiness 503 and an alert was sent. Live verification confirms liveness 200, Neon connected and Firebase initialized, with ML not loaded. This is the known unresolved prediction dependency, not a database or frontend outage. Alert delivery is now verified; successful recovery notification remains to be tested after readiness genuinely recovers.
 
 The screenshots revealed misleading legacy metadata while no model was serving. Unavailable status now returns no model version, confidence method or scores, and zero active training samples/features, instead of advertising the revoked 740-row model. This reporting repair intentionally preserves readiness 503. Loading a validated model remains necessary to resolve the incident.
+
+## September 28: readiness verification and estimate provenance
+
+Deployment `dep-dasju8u0tbcc73fol0s0` is live at source `480ef40`. Readiness now correctly reports no active model version and zero active training samples rather than legacy metrics; liveness remains 200 and readiness remains 503 with database/Firebase healthy. The underlying missing validated model is not resolved by this reporting correction.
+
+CI exposed an incomplete document-flow prediction fixture after unavailable metadata became null. The fixture now supplies its explicit synthetic model version. Estimate creation captures model provenance immediately after prediction, before awaiting database access, and rejects absent provenance with 503 before inserting any result. This also avoids orphaned persisted results followed by response validation errors if model readiness changes while awaiting the database. All 110 related document-flow and API integration tests passed; Ruff passed.
