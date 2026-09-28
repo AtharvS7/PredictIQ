@@ -10,6 +10,10 @@ The deployed Vercel domain was absent from Firebase Authentication's authorized 
 
 Social authentication now prevents concurrent popup requests, releases loading state on failure, and keeps actionable error instructions visible on the sign-in page. If browser settings explicitly block popups, users must allow popups for this site and retry, or use email sign-in. No cross-domain redirect fallback is introduced: Firebase redirects require additional same-origin helper and provider callback configuration to work reliably with modern storage restrictions.
 
+Verification: 10 focused authentication regression tests passed; production build, lint and type checks passed. Vercel deployment `dpl_Ha4oz1qy3hKu85pbVkGSz6Hg2grp` serves application commit `0cc98d5` on the stable alias. Follow-up `4386f83` corrects test-only query typing. On the deployed page, both providers reached their own sign-in pages, and simulated `window.open` blocking showed persistent instructions with retry enabled for both buttons. No provider password or consent was entered.
+
+Final CI run `36438311609` passed for `4386f83`: frontend type checks, lint, regression tests and build; backend lint and tests; security scanning; and authenticated browser contract tests. Docker build was skipped by the workflow. This verifies the application checks, not personal Google/GitHub account consent.
+
 ```mermaid
 flowchart LR
   A[Google or GitHub button] --> B{Browser permits popup?}
