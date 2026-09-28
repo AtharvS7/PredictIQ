@@ -57,7 +57,7 @@
     border-right: 0;
     border-top: 1px solid var(--border-color);
   }
-  .workspace-nav-links { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .workspace-nav-links { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
   .workspace-nav-link, .workspace-nav.is-collapsed .workspace-nav-link {
     flex-direction: column; gap: 4px; padding: 8px 2px; font-size: 11px;
     text-align: center; justify-content: center;

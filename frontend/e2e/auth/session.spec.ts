@@ -40,6 +40,12 @@ test('Firebase sign-in yields a verified API identity and enforces roles', async
   await expect(page.getByRole('region', { name: 'Saved budget result' }).getByText('$1,650.00')).toBeVisible();
   await page.setViewportSize({ width: 375, height: 812 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  const mobileLinks = await page.locator('.workspace-nav-link').evaluateAll(links => links.map(link => {
+    const box = link.getBoundingClientRect(); return { top: box.top, width: box.width, height: box.height };
+  }));
+  expect(mobileLinks).toHaveLength(5);
+  expect(new Set(mobileLinks.map(link => link.top)).size).toBe(1);
+  expect(mobileLinks.every(link => link.width >= 44 && link.height >= 44)).toBe(true);
   if (process.env.PREDICTIQ_CAPTURE_UI === '1') {
     await page.screenshot({ path: '../.tools/budget-ui-mobile.png', fullPage: true });
   }
