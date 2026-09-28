@@ -4,6 +4,23 @@
 
 ---
 
+## September 28: social sign-in repair
+
+The deployed Vercel domain was absent from Firebase Authentication's authorized domains. Added only `predictiq-preview.vercel.app`, preserving the existing domains. Both Google and GitHub providers were already enabled with configured OAuth clients. Live browser checks now reach each provider's sign-in page; personal-account consent has not been automated or claimed as tested.
+
+Social authentication now prevents concurrent popup requests, releases loading state on failure, and keeps actionable error instructions visible on the sign-in page. If browser settings explicitly block popups, users must allow popups for this site and retry, or use email sign-in. No cross-domain redirect fallback is introduced: Firebase redirects require additional same-origin helper and provider callback configuration to work reliably with modern storage restrictions.
+
+```mermaid
+flowchart LR
+  A[Google or GitHub button] --> B{Browser permits popup?}
+  B -->|Yes| C[Firebase authorized-domain check]
+  C --> D[Provider sign-in and consent]
+  D --> E[Firebase ID token]
+  E --> F[Backend token verification and profile sync]
+  B -->|No| G[Persistent allow-popups instructions]
+  G --> A
+```
+
 ## September 28: explicit manual-budget release path
 
 The owner delegated the release-direction decision. A separate manual task-budget workflow is now implemented; it does not replace or validate the ML model. Users supply task names, ordered low/likely/high effort hours, per-task USD rates and optional contingency. The server sums hours × rates, adds contingency to costs only and rounds the total once using decimal arithmetic. These are user-defined scenarios, not confidence intervals or a calendar schedule. Taxes and non-labour expenses are excluded.

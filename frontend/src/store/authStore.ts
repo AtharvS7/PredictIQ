@@ -65,9 +65,11 @@ function mapFirebaseError(error: unknown): Error {
     'auth/invalid-email': 'Please enter a valid email address.',
     'auth/too-many-requests': 'Too many failed attempts. Please wait a moment and try again.',
     'auth/network-request-failed': 'Network error. Please check your connection.',
-    'auth/operation-not-allowed': 'Email/password sign-in is not enabled. Contact support.',
+    'auth/operation-not-allowed': 'This sign-in method is not enabled. Please use another method or contact support.',
+    'auth/popup-blocked': 'Your browser blocked the sign-in window. Allow pop-ups for this site using the icon in your address bar, then try again. You can also sign in with email.',
+    'auth/cancelled-popup-request': 'Another sign-in window is already open. Complete it or close it before trying again.',
     'auth/popup-closed-by-user': 'Sign-in popup was closed.',
-    'auth/unauthorized-domain': 'This domain is not authorized. Add it in the Firebase console.',
+    'auth/unauthorized-domain': 'Social sign-in is unavailable on this address. Please use predictiq-preview.vercel.app or sign in with email.',
     'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method (e.g., Google or GitHub).',
   };
   return new Error(messages[code] || (error instanceof Error ? error.message : '') || 'Authentication failed. Please try again.');
@@ -196,6 +198,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signInWithOAuth: async (provider) => {
+    // A second click cancels Firebase's first popup request.
+    if (get().loading) return;
+    set({ loading: true });
     const authProvider = provider === 'google' ? googleProvider : githubProvider;
 
     try {
@@ -231,13 +236,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Non-critical
       }
     } catch (error: unknown) {
-      if (firebaseErrorCode(error) === 'auth/popup-closed-by-user') {
-        throw new Error('Sign-in popup was closed', { cause: error });
-      }
-      if (firebaseErrorCode(error) === 'auth/unauthorized-domain') {
-        throw new Error('Add domain in Firebase console', { cause: error });
-      }
-      throw error;
+      throw mapFirebaseError(error);
+    } finally {
+      set({ loading: false });
     }
   },
 

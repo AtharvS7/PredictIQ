@@ -19,6 +19,7 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [oauthError, setOAuthError] = useState('');
 
   if (session) {
     return <Navigate to="/dashboard" replace />;
@@ -65,11 +66,12 @@ export default function AuthPage() {
   };
 
   const handleOAuth = async (provider: 'google' | 'github') => {
+    setOAuthError('');
     try {
       await signInWithOAuth(provider);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : `${provider} auth failed`;
-      addToast('error', message);
+      setOAuthError(message);
     }
   };
 
@@ -138,6 +140,8 @@ export default function AuthPage() {
           {mode !== 'forgot' && (
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
               <button
+                type="button"
+                disabled={loading}
                 onClick={() => handleOAuth('google')}
                 style={{
                   flex: 1,
@@ -163,6 +167,8 @@ export default function AuthPage() {
               </button>
 
               <button
+                type="button"
+                disabled={loading}
                 onClick={() => handleOAuth('github')}
                 style={{
                   flex: 1,
@@ -181,6 +187,12 @@ export default function AuthPage() {
                 <GitBranch size={18} style={{ display: 'block' }} /> GitHub
               </button>
             </div>
+          )}
+
+          {oauthError && (
+            <p role="alert" style={{ color: 'var(--text-primary)', fontSize: '0.875rem', lineHeight: 1.6, marginBottom: 20 }}>
+              {oauthError}
+            </p>
           )}
 
           {/* Form */}
@@ -322,6 +334,7 @@ export default function AuthPage() {
             {/* Sign In / Register Button — color removed */}
             <button
               type="submit"
+              disabled={loading}
               style={{
                 width: '100%',
                 padding: '12px 0',
@@ -361,7 +374,7 @@ export default function AuthPage() {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: 'black',
+                    color: 'var(--text-primary)',
                     cursor: 'pointer',
                     fontWeight: 600
                   }}
@@ -376,7 +389,7 @@ export default function AuthPage() {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: 'red',
+                    color: 'var(--text-primary)',
                     cursor: 'pointer',
                     marginTop: 8,
                     fontSize: '0.85rem',
@@ -394,7 +407,7 @@ export default function AuthPage() {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: 'black',
+                    color: 'var(--text-primary)',
                     cursor: 'pointer',
                     fontWeight: 600
                   }}
