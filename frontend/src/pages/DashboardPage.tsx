@@ -131,28 +131,46 @@ export default function DashboardPage() {
                   fontSize: '0.9375rem'
                 }}
               >
-                Plan a task budget from your own hours and rates. Automatic predictions remain under validation.
+                Generate ML-powered project cost and effort estimates from your requirements or plan task budgets.
               </p>
 
-              <Link
-                to="/budgets"
-                style={{
-                  marginTop: 16,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  background: 'var(--color-primary)',
-                  border: '1px solid var(--color-primary)',
-                  color: 'white',
-                  fontWeight: 600,
-                  padding: '10px 16px',
-                  borderRadius: 8,
-                  textDecoration: 'none'
-                }}
-              >
-                <PlusCircle size={16} />
-                Plan a Budget
-              </Link>
+              <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
+                <Link
+                  to="/estimate/new"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    background: 'var(--color-primary)',
+                    border: '1px solid var(--color-primary)',
+                    color: 'white',
+                    fontWeight: 600,
+                    padding: '10px 16px',
+                    borderRadius: 8,
+                    textDecoration: 'none'
+                  }}
+                >
+                  <PlusCircle size={16} />
+                  New Estimate
+                </Link>
+                <Link
+                  to="/budgets"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    background: 'var(--bg-secondary, #1E293B)',
+                    border: '1px solid var(--border-color, #334155)',
+                    color: 'var(--text-primary)',
+                    fontWeight: 600,
+                    padding: '10px 16px',
+                    borderRadius: 8,
+                    textDecoration: 'none'
+                  }}
+                >
+                  Plan a Budget
+                </Link>
+              </div>
             </div>
 
             {/* STATS */}

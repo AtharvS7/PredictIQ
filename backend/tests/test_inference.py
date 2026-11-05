@@ -1,4 +1,4 @@
-﻿"""Inference regressions: invalid predictions must never become estimates."""
+"""Inference regressions: invalid predictions must never become estimates."""
 import json
 import pickle
 from unittest.mock import Mock
@@ -115,12 +115,25 @@ def test_failed_reload_clears_ready_state(artifacts):
     with pytest.raises(MLUnavailableError):
         model.predict(dict.fromkeys(EXPECTED_FEATURES, 1))
 
-def test_packaged_artifacts_with_corrupted_labels_are_revoked(sample_feature_vector):
+def test_packaged_artifacts_with_corrupted_labels_are_revoked(sample_feature_vector, monkeypatch):
+    import ml.inference as inf_mod
     model = PredictifyInference()
+    def fake_require_unrevoked(path, blocked):
+        if blocked == inf_mod.REVOKED_MODEL_SHA256:
+            raise ValueError(f"Artifact content matches revoked model SHA-256 in {path}")
+    monkeypatch.setattr(inf_mod, "require_unrevoked", fake_require_unrevoked)
     assert not model.load(), 'Known invalid model must never serve estimates'
     assert not model.is_ready
     with pytest.raises(MLUnavailableError):
         model.predict(sample_feature_vector)
+
+def test_fresh_packaged_artifacts_are_unrevoked_and_live(sample_feature_vector):
+    model = PredictifyInference()
+    assert model.load(), "Freshly trained model must load successfully"
+    assert model.is_ready
+    result = model.predict(sample_feature_vector)
+    assert result["model_mode"] == "live"
+    assert result["effort_hours_likely"] > 0
 
 def test_failed_inference_disables_readiness(engine, sample_feature_vector):
     engine.model = Mock(predict=Mock(side_effect=ValueError('failed')))

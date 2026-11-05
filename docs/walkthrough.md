@@ -2502,3 +2502,14 @@ CI exposed an incomplete document-flow prediction fixture after unavailable meta
 ### September 28: investigate the prediction blocker
 
 The training-only Itemlet diagnosis covers 11,541 tasks with whole projects separated across four folds. Calibration/test records remain untouched. Positive story points do not cure poor predictions: their cohort still has roughly 70% median relative error. One suspicious 225,001-hour task contributes 75.43% of development absolute error; original-record verification returned 403, so no unverified correction or score-driven exclusion was made. The diagnosis CLI and ten related tests are now reproducible. Automatic estimates remain unavailable. The owner subsequently delegated the release-direction decision. Manual task/rate budgeting is implemented as a separate workflow; see the September 28 section for validation and deployment status. Automatic ML approval remains blocked.
+
+## October 30: reproducible research-data inventory
+
+Added `python -m ml.dataset_status`, which derives the current research-data counts from named local source files rather than relying on presentation text. It explicitly distinguishes the revoked 740-row legacy CSV from research data and cannot report the research collection as production approved.
+
+- Verified core: **787** completed projects from China (499), Desharnais (81), Maxwell (62), and Kitchenham (145).
+- Expanded development collection: **891** projects after adding **104** AT&T Matson projects, with zero possible size/effort-pair overlaps found against the verified core.
+- Held-out diagnostic: **24** Albrecht projects are kept outside development tuning.
+- Total research inventory: **915** project records across six sources. This is not a 915-row production training dataset: the Albrecht cohort is held out, and the collection lacks the compatible nine planning-time inputs required by production serving.
+
+The script reports task-level research separately and never inflates its project count by treating issues or tasks as completed software projects. Its regression test and the production-pipeline contract suite passed (**11 tests**).

@@ -1,16 +1,16 @@
 """
-Predictify ML Training Pipeline v2.0
+Predictify ML Training Pipeline v3.0
 =====================================
-GPU-accelerated training on RTX 3050 (CUDA).
-Trains 8 models with expanded hyperparameter grids.
-Uses 10-fold cross-validation on 740-project multi-source dataset.
-Selects best by R2 + PRED25 composite score, saves all artifacts.
+Trains ensemble models with Stacking + Conformal Prediction.
+Uses cross-validation on multi-source dataset (correct effort labels).
+Selects best by composite score (R2 + PRED25 + low MMRE).
+Saves all artifacts with feature_names_in_ for inference.py compatibility.
 
-Dataset: 740 projects from 4 international sources:
-  - Desharnais + Maxwell (143 existing)
-  - China (481)
-  - NASA93 (92)
-  - Albrecht (24)
+Dataset: ~800 projects from 5 international sources:
+  - Desharnais + Maxwell (existing)
+  - China (corrected: actual Effort, not Resource codes)
+  - Kitchenham
+  - Albrecht
 
 Run: python backend/ml/train.py
      (from project root)
@@ -35,11 +35,13 @@ import xgboost as xgb
 from sklearn.ensemble import (
     ExtraTreesRegressor,
     GradientBoostingRegressor,
+    HistGradientBoostingRegressor,
     RandomForestRegressor,
+    StackingRegressor,
 )
-from sklearn.linear_model import Lasso, LinearRegression, Ridge
+from sklearn.linear_model import Lasso, LinearRegression, Ridge, RidgeCV
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import KFold, cross_val_score, train_test_split
+from sklearn.model_selection import KFold, cross_val_predict, cross_val_score, train_test_split
 from sklearn.preprocessing import StandardScaler
 
 plt.switch_backend("Agg")  # Non-interactive backend
@@ -52,6 +54,14 @@ OUT_DIR = ML_DIR / "artifacts"
 OUT_DIR.mkdir(exist_ok=True)
 
 LOG_FILE = ML_DIR / f"training_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+
+# -- Expected features (must match inference.py EXACTLY) ---------------
+EXPECTED_FEATURES = [
+    "TeamExp", "ManagerExp", "duration_months", "Transactions", "Entities",
+    "PointsNonAdjust", "Adjustment", "size_fp",
+    *[f"T{i:02d}" for i in range(1, 16)],
+    "log_size_fp", "complexity_score", "team_skill_avg", "risk_score",
+]
 
 
 def log(msg: str) -> None:
@@ -71,10 +81,9 @@ def log(msg: str) -> None:
 # Step 1: Load data
 # ======================================================================
 def load_data() -> pd.DataFrame:
-    """Load and validate the 740-row multi-source training dataset."""
+    """Load and validate the multi-source training dataset."""
     log("=" * 60)
-    log("Predictify ML Training Pipeline v2.0 -- Starting")
-    log("Dataset: 740 projects (4 international sources)")
+    log("Predictify ML Training Pipeline v3.0 -- Starting")
     log(f"XGBoost version: {xgb.__version__}")
     log(f"NumPy version:   {np.__version__}")
     log(f"Pandas version:  {pd.__version__}")
@@ -85,10 +94,18 @@ def load_data() -> pd.DataFrame:
         log("Copy predictiq_merged_dataset.csv to backend/ml/ and retry.")
         sys.exit(1)
 
+    # Check for revoked hash
     with DATA_CSV.open("rb") as stream:
-        digest = hashlib.file_digest(stream, "sha256").hexdigest()
-    if digest == "fb3f923e5cd3ab7ed1567a2cf9a343dc0b900ada3460aec33a696f46ff695e01":
-        raise ValueError("Training blocked: 481 corrupted effort labels. Run rebuild_dataset.py and train_research.py.")
+        if hasattr(hashlib, "file_digest"):
+            digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        else:
+            digest = hashlib.sha256(stream.read()).hexdigest()
+    if digest in {
+        "fb3f923e5cd3ab7ed1567a2cf9a343dc0b900ada3460aec33a696f46ff695e01",
+        "3a0ebd89e2855a347521549e79546b1c51509aecc56ac3a72b72cfe2cfad066f",
+    }:
+        raise ValueError("Training blocked: corrupted effort labels. Run dataset rebuild.")
+
     df = pd.read_csv(DATA_CSV)
     log(f"\nDataset loaded: {df.shape[0]} rows x {df.shape[1]} columns")
     log(f"Effort range: {df['effort_hours'].min():.0f} - "
@@ -128,7 +145,13 @@ def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, list[st
     X.replace([np.inf, -np.inf], 0, inplace=True)
     X.fillna(0, inplace=True)
 
+    # Ensure exact feature order matching EXPECTED_FEATURES
+    available = set(X.columns)
+    expected_set = set(EXPECTED_FEATURES)
+    if expected_set.issubset(available):
+        X = X[EXPECTED_FEATURES]
     feature_names = list(X.columns)
+
     log(f"Features: {len(feature_names)} columns")
     log(f"Feature list: {feature_names}")
     log(f"Target: log_effort (range {y.min():.2f} - {y.max():.2f})")
@@ -147,7 +170,7 @@ def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, list[st
 # Step 3: Train/test split + scaling
 # ======================================================================
 def split_and_scale(
-    X: pd.DataFrame, y: pd.Series
+    X: pd.DataFrame, y: pd.Series, feature_names: list[str]
 ) -> tuple[np.ndarray, np.ndarray, pd.Series, pd.Series, StandardScaler]:
     """Split data 80/20 and fit StandardScaler on training set."""
     log("\n-- Step 3: Train/test split + scaling --")
@@ -156,9 +179,17 @@ def split_and_scale(
     )
     log(f"Train: {X_train.shape[0]} samples | Test: {X_test.shape[0]} samples")
 
+    # Fit scaler on DataFrame so feature_names_in_ is populated
     scaler = StandardScaler()
-    X_train_s = scaler.fit_transform(X_train)
-    X_test_s = scaler.transform(X_test)
+    X_train_df = pd.DataFrame(X_train.values, columns=feature_names)
+    X_train_s = scaler.fit_transform(X_train_df)
+    X_test_df = pd.DataFrame(X_test.values, columns=feature_names)
+    X_test_s = scaler.transform(X_test_df)
+
+    # Verify scaler has feature_names_in_
+    assert hasattr(scaler, "feature_names_in_"), "Scaler missing feature_names_in_"
+    assert list(scaler.feature_names_in_) == feature_names, "Scaler feature order mismatch"
+    assert scaler.n_features_in_ == len(feature_names), "Scaler feature count mismatch"
 
     # Save scaler
     scaler_path = ML_DIR / "predictiq_scaler.pkl"
@@ -179,13 +210,18 @@ def evaluate_model(
     y_train: pd.Series,
     X_test: np.ndarray,
     y_test: pd.Series,
+    feature_names: list[str],
 ) -> tuple[dict, Any]:
     """Train a model and compute all evaluation metrics."""
     t0 = time.time()
-    model.fit(X_train, y_train)
+
+    # Fit on DataFrame so feature_names_in_ is populated on tree models
+    X_train_df = pd.DataFrame(X_train, columns=feature_names)
+    model.fit(X_train_df, y_train)
     train_time = time.time() - t0
 
-    pred_log = model.predict(X_test)
+    X_test_df = pd.DataFrame(X_test, columns=feature_names)
+    pred_log = model.predict(X_test_df)
     y_pred = np.expm1(pred_log)
     y_true = np.expm1(np.array(y_test))
 
@@ -234,10 +270,10 @@ def get_xgb_device() -> str:
 
 
 # ======================================================================
-# Step 6: Define all models (expanded hyperparameters for 740 samples)
+# Step 6: Define all models (expanded for Stacking Ensemble)
 # ======================================================================
 def build_models(device: str) -> dict[str, Any]:
-    """Create all model instances with optimized hyperparameters for 740-row dataset."""
+    """Create all model instances with optimized hyperparameters."""
     log(f"\n-- Step 5: Building models (XGBoost device={device}) --")
 
     models: dict[str, Any] = {}
@@ -247,7 +283,7 @@ def build_models(device: str) -> dict[str, Any]:
     models["Ridge(a=1)"] = Ridge(alpha=1.0)
     models["Lasso(a=0.01)"] = Lasso(alpha=0.01, max_iter=5000)
 
-    # Ensemble models -- expanded grids for larger dataset
+    # Ensemble models
     models["ExtraTrees"] = ExtraTreesRegressor(
         n_estimators=500,
         max_depth=15,
@@ -265,9 +301,9 @@ def build_models(device: str) -> dict[str, Any]:
         n_jobs=-1,
     )
     models["GradientBoosting"] = GradientBoostingRegressor(
-        n_estimators=500,
-        learning_rate=0.05,
-        max_depth=5,
+        n_estimators=400,
+        learning_rate=0.04,
+        max_depth=4,
         subsample=0.8,
         min_samples_split=10,
         min_samples_leaf=4,
@@ -275,7 +311,17 @@ def build_models(device: str) -> dict[str, Any]:
         random_state=42,
     )
 
-    # XGBoost -- GPU-accelerated on RTX 3050
+    # HistGradientBoosting
+    models["HistGradientBoosting"] = HistGradientBoostingRegressor(
+        max_iter=400,
+        learning_rate=0.04,
+        max_leaf_nodes=31,
+        min_samples_leaf=5,
+        l2_regularization=2.0,
+        random_state=42,
+    )
+
+    # XGBoost
     models["XGBoost"] = xgb.XGBRegressor(
         n_estimators=500,
         learning_rate=0.05,
@@ -293,7 +339,7 @@ def build_models(device: str) -> dict[str, Any]:
         verbosity=0,
     )
 
-    # XGBoost variant -- deeper trees + stronger regularization
+    # XGBoost variant
     models["XGBoost_Deep"] = xgb.XGBRegressor(
         n_estimators=800,
         learning_rate=0.03,
@@ -310,29 +356,58 @@ def build_models(device: str) -> dict[str, Any]:
         verbosity=0,
     )
 
-    log(f"  {len(models)} models configured")
+    # Stacking Ensemble: combines 4 diverse base learners with RidgeCV meta-learner
+    stacking_estimators = [
+        ("hgb", HistGradientBoostingRegressor(
+            max_iter=400, learning_rate=0.04, max_leaf_nodes=31,
+            min_samples_leaf=5, l2_regularization=2.0, random_state=42,
+        )),
+        ("rf", RandomForestRegressor(
+            n_estimators=500, max_depth=15, min_samples_leaf=2,
+            random_state=42, n_jobs=-1,
+        )),
+        ("et", ExtraTreesRegressor(
+            n_estimators=500, max_depth=15, min_samples_leaf=2,
+            random_state=42, n_jobs=-1,
+        )),
+        ("gb", GradientBoostingRegressor(
+            n_estimators=400, learning_rate=0.04, max_depth=4,
+            subsample=0.8, random_state=42,
+        )),
+    ]
+    models["StackingEnsemble"] = StackingRegressor(
+        estimators=stacking_estimators,
+        final_estimator=RidgeCV(alphas=np.logspace(-2, 3, 20)),
+        cv=5,
+        n_jobs=-1,
+    )
+
+    log(f"  {len(models)} models configured (including StackingEnsemble)")
     return models
 
 
 # ======================================================================
-# Step 7: Cross-validation (10-fold for 740 samples)
+# Step 7: Cross-validation (10-fold for dataset)
 # ======================================================================
 def cross_validate_top_models(
     models: dict[str, Any],
     X_train_s: np.ndarray,
     y_train: pd.Series,
     top_names: list[str],
+    feature_names: list[str],
 ) -> dict:
     """Run 10-fold CV on the top models to estimate generalization."""
     log("\n-- Step 7: 10-fold cross-validation on top models --")
     cv_results: dict[str, dict] = {}
     kf = KFold(n_splits=10, shuffle=True, random_state=42)
 
+    X_train_df = pd.DataFrame(X_train_s, columns=feature_names)
+
     for name in top_names:
         if name not in models:
             continue
         scores = cross_val_score(
-            models[name], X_train_s, y_train, cv=kf, scoring="r2", n_jobs=-1
+            models[name], X_train_df, y_train, cv=kf, scoring="r2", n_jobs=-1
         )
         cv_results[name] = {
             "mean_r2": round(float(scores.mean()), 4),
@@ -354,13 +429,28 @@ def plot_feature_importance(
     """Plot and return top feature importances."""
     log("\n-- Step 8: Plotting feature importance --")
 
-    if not hasattr(best_model, "feature_importances_"):
+    # Handle StackingRegressor: average importances from tree base estimators
+    if hasattr(best_model, "estimators_") and not hasattr(best_model, "feature_importances_"):
+        # This is a StackingRegressor
+        importances = np.zeros(len(feature_names))
+        n_estimators_with_fi = 0
+        for est in best_model.estimators_:
+            if hasattr(est, "feature_importances_"):
+                importances += est.feature_importances_
+                n_estimators_with_fi += 1
+        if n_estimators_with_fi > 0:
+            importances /= n_estimators_with_fi
+            fi = pd.Series(importances, index=feature_names).sort_values(ascending=False)
+        else:
+            log("  StackingRegressor: no base estimators have feature_importances_")
+            return {}
+    elif hasattr(best_model, "feature_importances_"):
+        fi = pd.Series(
+            best_model.feature_importances_, index=feature_names
+        ).sort_values(ascending=False)
+    else:
         log("  Linear model -- skipping importance plot")
         return {}
-
-    fi = pd.Series(
-        best_model.feature_importances_, index=feature_names
-    ).sort_values(ascending=False)
 
     top20 = fi.head(20)
 
@@ -385,7 +475,7 @@ def plot_feature_importance(
     ax.set_xlabel("Feature Importance Score", fontsize=12)
     ax.set_title(
         f"Predictify -- Top 20 Features ({model_name})\n"
-        f"Trained on {n_samples} software projects (4 international sources)",
+        f"Trained on {n_samples} software projects (multi-source)",
         fontsize=13,
         fontweight="bold",
     )
@@ -414,11 +504,13 @@ def plot_predictions(
     y_test: pd.Series,
     model_name: str,
     n_samples: int,
+    feature_names: list[str],
 ) -> None:
     """Generate actual-vs-predicted and residual plots."""
     log("\n-- Step 9: Generating evaluation plots --")
 
-    pred_log = best_model.predict(X_test_s)
+    X_test_df = pd.DataFrame(X_test_s, columns=feature_names)
+    pred_log = best_model.predict(X_test_df)
     y_pred = np.expm1(pred_log)
     y_true = np.expm1(np.array(y_test))
 
@@ -483,7 +575,32 @@ def plot_predictions(
 
 
 # ======================================================================
-# Step 10: Save best model + report
+# Step 10: Compute conformal prediction interval
+# ======================================================================
+def compute_conformal_radius(
+    model: Any,
+    X_train_s: np.ndarray,
+    y_train: pd.Series,
+    feature_names: list[str],
+) -> float:
+    """Compute conformal log-radius using out-of-fold CV predictions."""
+    log("\n-- Step 10a: Computing conformal prediction interval --")
+
+    kf = KFold(n_splits=5, shuffle=True, random_state=42)
+    X_train_df = pd.DataFrame(X_train_s, columns=feature_names)
+    oof_preds = cross_val_predict(model, X_train_df, y_train, cv=kf, n_jobs=-1)
+
+    abs_residuals = np.abs(np.array(y_train) - oof_preds)
+    conformal_log_radius = float(np.percentile(abs_residuals, 85))
+
+    log(f"  Conformal log-radius (85th percentile): {conformal_log_radius:.4f}")
+    log(f"  This means ~85% of training predictions fall within +/- {conformal_log_radius:.4f} in log-effort space")
+
+    return conformal_log_radius
+
+
+# ======================================================================
+# Step 11: Save best model + report
 # ======================================================================
 def save_artifacts(
     best_name: str,
@@ -495,11 +612,24 @@ def save_artifacts(
     X_test_s: np.ndarray,
     y_test: pd.Series,
     n_samples: int,
+    conformal_log_radius: float,
 ) -> dict:
     """Persist the best model and generate the full training report."""
-    log("\n-- Step 10: Saving artifacts --")
+    log("\n-- Step 11: Saving artifacts --")
 
-    # Best model
+    # Ensure model has feature_names_in_ and n_features_in_
+    if not hasattr(best_model, "feature_names_in_") or best_model.feature_names_in_ is None:
+        best_model.feature_names_in_ = np.array(feature_names, dtype=object)
+    if not hasattr(best_model, "n_features_in_") or best_model.n_features_in_ is None:
+        best_model.n_features_in_ = len(feature_names)
+
+    # Verify attributes are correct
+    assert best_model.n_features_in_ == len(feature_names), \
+        f"Model n_features_in_={best_model.n_features_in_} != {len(feature_names)}"
+    assert list(best_model.feature_names_in_) == feature_names, \
+        "Model feature_names_in_ mismatch"
+
+    # Save best model
     model_path = ML_DIR / "predictiq_best_model.pkl"
     with open(model_path, "wb") as f:
         pickle.dump(best_model, f)
@@ -523,7 +653,7 @@ def save_artifacts(
         "training_samples": n_samples,
         "dataset_shape": [n_samples, 30],
         "dataset_sources": [
-            "albrecht", "china", "existing_desharnais_maxwell", "nasa93"
+            "albrecht", "china", "desharnais", "kitchenham", "maxwell"
         ],
         "n_features": len(feature_names),
         "r2_score": best_metrics.get("R2", 0.0),
@@ -545,6 +675,7 @@ def save_artifacts(
             "effort_clamp": {"min": 1, "max": 9587},
             "cost_per_hour": 75,
             "confidence_interval": {"min_factor": 0.80, "max_factor": 1.40},
+            "conformal_log_radius": conformal_log_radius,
         },
         "methodology": {
             "sizing": "IFPUG Function Points",
@@ -578,7 +709,7 @@ def main() -> None:
     df = load_data()
     n_samples = len(df)
     X, y, fnames = prepare_features(df)
-    X_tr, X_te, y_tr, y_te, scaler = split_and_scale(X, y)
+    X_tr, X_te, y_tr, y_te, scaler = split_and_scale(X, y, fnames)
     device = get_xgb_device()
     models = build_models(device)
 
@@ -588,29 +719,41 @@ def main() -> None:
     trained: dict[str, Any] = {}
 
     for name, model in models.items():
-        r, m = evaluate_model(name, model, X_tr, y_tr, X_te, y_te)
+        r, m = evaluate_model(name, model, X_tr, y_tr, X_te, y_te, fnames)
         results.append(r)
         trained[name] = m
 
-    # Sort by R2
-    results_df = pd.DataFrame(results).sort_values("R2", ascending=False)
+    # Sort by composite score: R2 * 0.4 + PRED25 * 0.004 + (100 - MMRE) * 0.002
+    results_df = pd.DataFrame(results)
+    results_df["composite"] = (
+        results_df["R2"] * 0.4
+        + results_df["PRED25%"] * 0.004
+        + (100 - results_df["MMRE%"]) * 0.002
+    )
+    results_df = results_df.sort_values("composite", ascending=False)
     best_name = str(results_df.iloc[0]["Model"])
     best_model = trained[best_name]
 
+    log(f"\n  Best model by composite score: {best_name}")
+
     # Cross-validate top 3 (10-fold)
     top3 = results_df.head(3)["Model"].tolist()
-    cv_results = cross_validate_top_models(trained, X_tr, y_tr, top3)
+    cv_results = cross_validate_top_models(trained, X_tr, y_tr, top3, fnames)
 
     # Feature importance
     top_features = plot_feature_importance(best_model, fnames, best_name, n_samples)
 
     # Prediction plots
-    plot_predictions(best_model, X_te, y_te, best_name, n_samples)
+    plot_predictions(best_model, X_te, y_te, best_name, n_samples, fnames)
+
+    # Compute conformal prediction interval
+    conformal_log_radius = compute_conformal_radius(best_model, X_tr, y_tr, fnames)
 
     # Save everything
     save_artifacts(
         best_name, best_model, results, cv_results,
         fnames, top_features, X_te, y_te, n_samples,
+        conformal_log_radius,
     )
 
     # Final summary
@@ -626,13 +769,14 @@ def main() -> None:
     log(f"  R2      = {best_row['R2']:.4f}")
     log(f"  PRED25  = {best_row['PRED25%']:.1f}%")
     log(f"  MMRE    = {best_row['MMRE%']:.1f}%")
+    log(f"  Conformal log-radius = {conformal_log_radius:.4f}")
 
     if best_name in cv_results:
         cv = cv_results[best_name]
         log(f"  CV R2   = {cv['mean_r2']:.4f} +/- {cv['std_r2']:.4f}")
 
     log("\n-- Full Results Table --")
-    table_str = results_df[["Model", "R2", "PRED25%", "MMRE%", "RMSE"]].to_string(
+    table_str = results_df[["Model", "R2", "PRED25%", "MMRE%", "RMSE", "composite"]].to_string(
         index=False
     )
     log(table_str)

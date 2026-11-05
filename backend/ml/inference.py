@@ -1,4 +1,4 @@
-﻿"""
+"""
 Predictify Production Inference Module v2.0
 ============================================
 Loads trained model at server startup (via FastAPI lifespan).
@@ -219,12 +219,14 @@ class PredictifyInference:
 
             # Scale using fitted scaler
             model_executed = True
-            vector_scaled = self.scaler.transform(vector)
-            if np.shape(vector_scaled) != vector.shape or not np.isfinite(vector_scaled).all():
-                raise ValueError("Invalid scaler output")
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                vector_scaled = self.scaler.transform(vector)
+                if np.shape(vector_scaled) != vector.shape or not np.isfinite(vector_scaled).all():
+                    raise ValueError("Invalid scaler output")
 
-            # Predict in log space
-            prediction = np.asarray(self.model.predict(vector_scaled))
+                # Predict in log space
+                prediction = np.asarray(self.model.predict(vector_scaled))
             if prediction.shape != (1,) or not np.isfinite(prediction).all():
                 raise ValueError("Invalid model output")
             log_pred = float(prediction[0])
@@ -247,17 +249,42 @@ class PredictifyInference:
             # Derive confidence
             confidence = self._estimate_confidence(effort_likely, feature_dict)
 
-            return {
+            # Conformal prediction interval if calibrated log-radius is available
+            conformal_radius = None
+            if self.training_report and isinstance(self.training_report.get("production"), dict):
+                conformal_radius = self.training_report["production"].get("conformal_log_radius")
+            elif self.model_report and isinstance(self.model_report.get("production"), dict):
+                conformal_radius = self.model_report["production"].get("conformal_log_radius")
+
+            calibrated_min = round(float(np.expm1(max(0.0, log_pred - conformal_radius))), 1) if conformal_radius is not None else round(effort_min, 1)
+            calibrated_max = round(float(np.expm1(log_pred + conformal_radius)), 1) if conformal_radius is not None else round(effort_max, 1)
+
+            # Cost drivers
+            cost_drivers = {
+                "size_fp": round(float(feature_dict.get("size_fp", 0)), 1),
+                "complexity_score": round(float(feature_dict.get("complexity_score", 0)), 2),
+                "risk_score": round(float(feature_dict.get("risk_score", 0)), 2),
+                "team_skill_avg": round(float(feature_dict.get("team_skill_avg", 0)), 2),
+            }
+
+            result_dict = {
                 "effort_hours_likely": round(effort_likely, 1),
                 "effort_hours_min": round(effort_min, 1),
                 "effort_hours_max": round(effort_max, 1),
+                "calibrated_effort_min": calibrated_min,
+                "calibrated_effort_max": calibrated_max,
                 "confidence_pct": confidence,
                 "confidence_method": "heuristic_not_calibrated_probability",
                 "interval_method": "heuristic_0.8x_1.4x_with_clamps",
                 "model_mode": "live",
                 "model_name": self.model_name,
                 "log_pred": round(log_pred, 4),
+                "cost_drivers": cost_drivers,
             }
+            if conformal_radius is not None:
+                result_dict["conformal_log_radius"] = round(float(conformal_radius), 4)
+
+            return result_dict
 
         except Exception as e:
             if model_executed:

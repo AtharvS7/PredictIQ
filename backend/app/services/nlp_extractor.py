@@ -1003,7 +1003,9 @@ class NLPExtractor:
             "functional requirements", "features", "use cases",
             "user stories", "user requirements", "system features",
             "functional specification", "feature list",
-            "core features", "key features",
+            "core features", "key features", "specific requirements",
+            "system requirements", "requirements specification",
+            "product features", "scope of work",
         ]
         section_count = 0
         for header_key, body in doc.sections.items():

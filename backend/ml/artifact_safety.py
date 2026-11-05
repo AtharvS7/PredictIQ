@@ -14,6 +14,9 @@ REVOKED_DATA_SHA256 = frozenset({
 
 def require_unrevoked(path: Path, revoked: frozenset[str]) -> None:
     with path.open("rb") as stream:
-        digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        if hasattr(hashlib, "file_digest"):
+            digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        else:
+            digest = hashlib.sha256(stream.read()).hexdigest()
     if digest in revoked:
         raise ValueError("Artifact revoked: confirmed corrupted training labels. See ML rebuild report.")

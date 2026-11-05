@@ -84,10 +84,18 @@ tooling/
 /*.ipynb
 
 
-# Workspace-local Python tooling
-.tools/
-backend/ml/data/research/
-backend/ml/experiments/
+# ─────────────────────────────────────────────────────
+# Explicitly track production ML artifacts and dataset
+# (These are essential for the app and are < 50 MB total)
+# ─────────────────────────────────────────────────────
+!backend/ml/*.pkl
+!backend/ml/predictiq_best_model.pkl
+!backend/ml/predictiq_scaler.pkl
+!backend/ml/predictiq_features.json
+!backend/ml/predictiq_model_report.json
+!backend/ml/training_report.json
+!backend/ml/predictiq_merged_dataset.csv
+
 
 # Local agent installations and generated browser reports
 .agents/

@@ -112,7 +112,25 @@ class MLService:
         PointsNonAdjust, Adjustment, size_fp, T01–T15,
         log_size_fp, complexity_score, team_skill_avg, risk_score.
         """
-        size_fp = float(params.get("size_fp", 150.0))
+        # Unpack {"value": ..., "confidence": ...} wrappers if passed directly from nlp_extractor
+        flat_params = {}
+        for k, v in params.items():
+            if isinstance(v, dict) and "value" in v:
+                flat_params[k] = v["value"]
+            else:
+                flat_params[k] = v
+        params = flat_params
+        if "size_fp" not in params or params["size_fp"] is None:
+            fc = params.get("feature_count")
+            if fc is not None and fc > 0:
+                complexity_mult = {"Low": 8.0, "Medium": 14.0, "High": 22.0, "Very High": 30.0}.get(params.get("complexity", "Medium"), 14.0)
+                integ = params.get("integration_count", 2) or 2
+                size_fp = float(fc * complexity_mult + integ * 5.0)
+            else:
+                size_fp = 150.0
+        else:
+            size_fp = float(params["size_fp"])
+
         duration = float(params.get("duration_months", 6.0))
         team_size = int(params.get("team_size", 4))
         if not np.isfinite([size_fp, duration]).all() or size_fp <= 0 or duration <= 0 or team_size <= 0:
@@ -133,7 +151,11 @@ class MLService:
 
         # Derived FP components (using IFPUG-derived constants)
         transactions = size_fp * FP_TRANSACTION_RATIO
-        entities = size_fp * FP_ENTITY_RATIO
+        integration_count = params.get("integration_count")
+        if integration_count is not None and float(integration_count) > 0:
+            entities = size_fp * FP_ENTITY_RATIO + float(integration_count) * 2.0
+        else:
+            entities = size_fp * FP_ENTITY_RATIO
         value_adjustment_factor = FP_ADJUSTMENT_BASE + c_score * FP_ADJUSTMENT_SCALE
         raw_fp = size_fp / value_adjustment_factor
         # Dataset units: adjusted FP = raw FP * (0.65 + 0.01 * Adjustment).
@@ -141,8 +163,9 @@ class MLService:
         adjustment = (value_adjustment_factor - FP_VAF_INTERCEPT) / FP_VAF_INFLUENCE_SCALE
 
         # T-factors: systematic mapping from project characteristics
-        t01 = min(5.0, max(1.0, c_score * 0.9))       # Data communication
-        t02 = min(5.0, max(1.0, c_score * 0.8))       # Distributed processing
+        integ_boost = min(1.0, float(integration_count) * 0.1) if (integration_count is not None and float(integration_count) > 0) else 0.0
+        t01 = min(5.0, max(1.0, c_score * 0.9 + integ_boost))       # Data communication
+        t02 = min(5.0, max(1.0, c_score * 0.8 + integ_boost))       # Distributed processing
         t03 = min(5.0, max(1.0, c_score * 0.85))      # Performance
         t04 = METHODOLOGY_T04.get(methodology, 3.0)    # Configuration reuse
         t05 = METHODOLOGY_T05.get(methodology, 3.0)    # Transaction rate
@@ -154,8 +177,14 @@ class MLService:
             t08 = float(nlp_volatility)
         else:
             t08 = min(5.0, max(1.0, 5 - team_exp))     # Req volatility (inverse exp)
-        t09 = c_score                                   # Processing complexity
-        t10 = min(5.0, max(1.0, c_score * 0.9))        # Reusability
+
+        tech_stack = params.get("tech_stack")
+        tech_breadth = len(tech_stack) if isinstance(tech_stack, (list, set, tuple)) else 0
+        tech_boost = min(0.6, max(-0.4, (tech_breadth - 3) * 0.1)) if tech_breadth > 0 else 0.0
+        tech_reuse = min(0.5, tech_breadth * 0.05) if tech_breadth > 0 else 0.0
+
+        t09 = min(5.0, max(1.0, c_score + tech_boost))               # Processing complexity
+        t10 = min(5.0, max(1.0, c_score * 0.9 + tech_reuse))         # Reusability
         t11 = min(5.0, max(1.0, c_score * 0.85))       # Installation ease
         t12 = team_exp                                  # Operational ease
         t13 = min(5.0, max(1.0, team_exp * 0.8))       # Multiple sites
