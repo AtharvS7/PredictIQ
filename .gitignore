@@ -98,9 +98,24 @@ tooling/
 
 
 # Local agent installations and generated browser reports
+.agent/
 .agents/
 .agents-*/
+.agents-disabled-*/
+.tools/
 test-results/
 playwright-report/
 coverage/
+
+# Research & raw experiment data
+backend/ml/data/research/
+backend/ml/experiments/
+
+# Temporary test / audit reports
+backend/*-report.json
+backend/*-results.txt
+backend/dependency-audit.json
+frontend/*-results.txt
+frontend/dependency-audit.json
+
 
