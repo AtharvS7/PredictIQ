@@ -7,29 +7,6 @@ Provides:
 - Fixed baselines: MedianDummyPredictor, MedianProductivityPredictor, AlbrechtNominalPredictor, LogLinearBaseline, HuberPowerLawBaseline
 """
 
-from backend.ml.eval.protocol import (
-    FoldSplit,
-    LeaveOneSourceOutSplitter,
-    RepeatedGroupedKFoldSplitter,
-    load_dataset,
-)
-from backend.ml.eval.metrics import (
-    compute_metrics,
-    log_bias,
-    macro_average_metrics,
-    mae,
-    mdape,
-    mdmre,
-    mmre,
-    pred_k,
-    pred25,
-    pred30,
-    pred50,
-    r2_score,
-    rmse,
-    rmsle,
-    standardized_accuracy,
-)
 from backend.ml.eval.baselines import (
     AlbrechtNominalPredictor,
     BaseBaseline,
@@ -39,6 +16,29 @@ from backend.ml.eval.baselines import (
     MedianDummyPredictor,
     MedianProductivityPredictor,
     PowerLawBaseline,
+)
+from backend.ml.eval.metrics import (
+    compute_metrics,
+    log_bias,
+    macro_average_metrics,
+    mae,
+    mdape,
+    mdmre,
+    mmre,
+    pred25,
+    pred30,
+    pred50,
+    pred_k,
+    r2_score,
+    rmse,
+    rmsle,
+    standardized_accuracy,
+)
+from backend.ml.eval.protocol import (
+    FoldSplit,
+    LeaveOneSourceOutSplitter,
+    RepeatedGroupedKFoldSplitter,
+    load_dataset,
 )
 
 __all__ = [

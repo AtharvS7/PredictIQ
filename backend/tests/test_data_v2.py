@@ -11,6 +11,7 @@ Verifies:
 from __future__ import annotations
 
 from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -50,7 +51,7 @@ def test_positive_finite_size_and_effort(df_v2: pd.DataFrame):
     """Size and effort must be strictly positive and finite."""
     assert (df_v2["size_value"] > 0).all(), "All size values must be > 0"
     assert np.isfinite(df_v2["size_value"]).all(), "All size values must be finite"
-    
+
     assert (df_v2["effort_hours"] > 0).all(), "All effort hours must be > 0"
     assert np.isfinite(df_v2["effort_hours"]).all(), "All effort hours must be finite"
 
@@ -78,7 +79,7 @@ def test_productivity_ranges_per_source(df_v2: pd.DataFrame):
     """Productivity (hours per FP) must fall within physically plausible software engineering bounds."""
     df_calc = df_v2.copy()
     df_calc["hours_per_fp"] = df_calc["effort_hours"] / df_calc["size_value"]
-    
+
     for source, group in df_calc.groupby("source"):
         med_prod = group["hours_per_fp"].median()
         # Plausible median bounds: 1 to 150 hours per function point across all historical domains

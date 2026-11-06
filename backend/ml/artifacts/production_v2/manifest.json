@@ -1,0 +1,85 @@
+{
+  "model_version": "2.0.0-rc.1",
+  "dataset_sha256": "b05ad3b0111d4ed3ff89b7aa2a0f653e494f81953c701916f27756d1746eede3",
+  "dataset_records": 915,
+  "architecture": "MultivariateMonotoneModel + MondrianConformalPredictor",
+  "training_timestamp": "2026-11-06T09:32:26.775733+00:00",
+  "file_hashes": {
+    "model.pkl": "b3af00831805e5655a9a941198b1608efb222f94c3d8a977bef8eb0c15791873",
+    "conformal.pkl": "e8ce74d8b2ae96208ad1ecda748baa8bc1a739e69c306573420c2f1e184e6dff"
+  },
+  "allowed_inputs": [
+    "size_fp",
+    "duration_months",
+    "team_size"
+  ],
+  "banned_features": [
+    "adjustment",
+    "entities",
+    "managerexp",
+    "pointsnonadjust",
+    "risk_score",
+    "t01",
+    "t02",
+    "t03",
+    "t04",
+    "t05",
+    "t06",
+    "t07",
+    "t08",
+    "t09",
+    "t10",
+    "t11",
+    "t12",
+    "t13",
+    "t14",
+    "t15",
+    "teamexp",
+    "transactions"
+  ],
+  "environment": {
+    "python": "3.12.2",
+    "python_version": "3.12.2",
+    "python_major_minor": "3.12",
+    "scikit-learn": "1.4.2",
+    "numpy": "1.26.4",
+    "pandas": "2.2.2"
+  },
+  "model_parameters": {
+    "base_marginal": {
+      "beta0": 3.1880360932291065,
+      "a": 24.24077404471689,
+      "b": 0.8270266757672359
+    },
+    "multivariate": {
+      "beta0": 3.318083087164682,
+      "a": 27.60737886478216,
+      "b": 0.592956208655621,
+      "c": 0.528897172194948
+    },
+    "has_duration": true,
+    "n_valid_duration_train": 450
+  },
+  "calibration_spec": {
+    "nominal_coverage": 0.8,
+    "alpha": 0.2,
+    "score_type": "log_residual",
+    "global_quantile": 1.0053189146513999,
+    "bucket_quantiles": {
+      "small": 1.1481050428570816,
+      "medium": 0.9561358724813616,
+      "large": 1.1864392216832869
+    },
+    "bucket_thresholds": [
+      150.0,
+      750.0
+    ],
+    "buckets": [
+      "small",
+      "medium",
+      "large"
+    ],
+    "cal_size": 0.2,
+    "random_state": 42
+  }
+}

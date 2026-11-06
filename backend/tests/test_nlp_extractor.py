@@ -412,3 +412,31 @@ class TestNLPExtraction:
 
         # Team experience should be 1-4
         assert 1.0 <= result["team_experience"]["value"] <= 4.0
+
+
+    # ── CP15 Calibrated Sizing & Uncertainty ────────────────────────
+
+    def test_size_fp_extracted_with_uncertainty(self, sample_document_text):
+        """NLP extraction must return size_fp with calibrated uncertainty interval."""
+        result = nlp_extractor.extract(sample_document_text)
+        assert "size_fp" in result
+        size = result["size_fp"]
+        assert size["source"] == "nlp"
+        assert size["value"] > 0
+        assert "uncertainty" in size
+        unc = size["uncertainty"]
+        assert unc["p10"] < unc["p50"] < unc["p90"]
+        assert unc["p50"] == size["value"]
+        assert abs(unc["p10"] - round(size["value"] * 0.85, 1)) <= 0.1
+        assert abs(unc["p90"] - round(size["value"] * 1.15, 1)) <= 0.1
+
+    def test_empty_text_size_fp_default(self):
+        """Empty text should return default size_fp structure with uncertainty."""
+        result = nlp_extractor.extract("")
+        assert "size_fp" in result
+        size = result["size_fp"]
+        assert size["value"] == 90.0
+        assert size["source"] == "nlp"
+        assert size["uncertainty"]["p10"] == 76.5
+        assert size["uncertainty"]["p50"] == 90.0
+        assert size["uncertainty"]["p90"] == 103.5

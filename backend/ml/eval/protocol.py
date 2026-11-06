@@ -172,7 +172,7 @@ class LeaveOneSourceOutSplitter:
 
         n_samples = len(source_series)
         indices = np.arange(n_samples)
-        unique_sources = self.get_sources(source_series)
+        unique_sources = self.get_sources(list(source_series))
 
         for holdout_source in unique_sources:
             test_mask = source_series == holdout_source

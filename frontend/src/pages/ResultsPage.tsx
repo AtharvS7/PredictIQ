@@ -8,7 +8,7 @@ import { useEstimateStore } from '@/store/estimateStore';
 import { useCurrencyStore } from '@/store/currencyStore';
 import { useToast } from '@/App';
 import { useTheme } from '@/components/ThemeProvider';
-import { exportPDF, duplicateEstimate, createShareLink } from '@/lib/api';
+import { exportPDF, exportJSON, duplicateEstimate, createShareLink } from '@/lib/api';
 import { RISK_COLORS } from '@/lib/risk';
 import { Bar, PolarArea, Pie, Line } from 'react-chartjs-2';
 import {
@@ -17,10 +17,23 @@ import {
   Tooltip as ChartTooltip, Legend,
 } from 'chart.js';
 import {
-  Download, Copy, Share2, ArrowLeft, Clock,
+  Download, FileDown, Copy, Share2, ArrowLeft, Clock,
   Shield, TrendingUp, AlertTriangle, Info, FileText,
-  BarChart3, PieChart, CircleDot, LineChart,
+  BarChart3, PieChart, CircleDot, LineChart, CheckCircle2,
+  HelpCircle,
 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/shared/Card';
+import { Badge, DataQualityBadge, UncertaintyBadge, ModelVersionBadge } from '@/components/shared/Badge';
+import { ConfidenceRangeBar } from '@/components/shared/ConfidenceInterval';
+import {
+  hoursToPersonMonths,
+  determineDataQualityTier,
+  checkIsOOD,
+  TIER_PROVENANCE,
+} from '@/components/estimate/estimateUtils';
+import { ModelTransparencyModal } from '@/components/estimate/ModelTransparencyModal';
+import { OODDiagnosticsCard } from '@/components/estimate/OODDiagnosticsCard';
+import { formatEstimateToV2Contract } from '@/components/estimate/exportContractUtils';
 
 /* ── Chart.js Registration ─────────────────────────────────────────────── */
 ChartJS.register(
@@ -49,6 +62,8 @@ export default function ResultsPage() {
   const sym = symbol();
   const { addToast } = useToast();
   const [chartType, setChartType] = useState<ChartType>('bar');
+  const [showTierModal, setShowTierModal] = useState(false);
+  const [showTransparencyModal, setShowTransparencyModal] = useState(false);
 
   useEffect(() => {
     if (id) fetchEstimate(id);
@@ -62,11 +77,45 @@ export default function ResultsPage() {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Predictify_Estimate_${id.slice(0, 8)}_${currencyCode}.pdf`;
+      a.download = `PredictIQ_Estimate_${id.slice(0, 8)}_${currencyCode}.pdf`;
       a.click();
+      window.URL.revokeObjectURL(url);
       addToast('success', 'PDF exported!');
     } catch {
       addToast('error', 'PDF export failed');
+    }
+  };
+
+  const handleExportJSON = async () => {
+    if (!id || !currentEstimate) return;
+    try {
+      const currencyCode = useCurrencyStore.getState().currency;
+      const currencyRate = convert(1);
+      // Format estimate strictly adhering to api_estimate_v2.json contract
+      const v2Payload = formatEstimateToV2Contract(currentEstimate, currencyCode, currencyRate);
+      const blob = new Blob([JSON.stringify(v2Payload, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PredictIQ_Estimate_${id.slice(0, 8)}.json`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      addToast('success', 'Contract-compliant JSON exported!');
+    } catch {
+      addToast('error', 'JSON export failed');
+    }
+  };
+
+  const handleCopyJSON = async () => {
+    if (!currentEstimate) return;
+    try {
+      const currencyCode = useCurrencyStore.getState().currency;
+      const currencyRate = convert(1);
+      const v2Payload = formatEstimateToV2Contract(currentEstimate, currencyCode, currencyRate);
+      await navigator.clipboard.writeText(JSON.stringify(v2Payload, null, 2));
+      addToast('success', 'JSON contract payload copied to clipboard!');
+    } catch {
+      addToast('error', 'Failed to copy JSON to clipboard');
     }
   };
 
@@ -128,7 +177,7 @@ export default function ResultsPage() {
     );
   }
 
-  const { inputs, outputs } = currentEstimate;
+  const { inputs, outputs, model_version } = currentEstimate;
   const phaseData = outputs.phase_breakdown.map((p, i) => ({
     name: p.phase.replace('& ', '').split(' ')[0],
     fullName: p.phase,
@@ -139,6 +188,18 @@ export default function ResultsPage() {
   }));
 
   const riskColor = RISK_COLORS[outputs.risk_level] || '#64748B';
+  const tier = determineDataQualityTier(model_version, inputs);
+  const tierInfo = TIER_PROVENANCE[tier];
+  const oodStatus = checkIsOOD(inputs);
+  const isCalibrated = model_version.startsWith('production-v3-') || tier !== 'C';
+
+  const p10Hours = outputs.effort_min_hours;
+  const p50Hours = outputs.effort_likely_hours;
+  const p90Hours = outputs.effort_max_hours;
+
+  const p10PM = hoursToPersonMonths(p10Hours);
+  const p50PM = hoursToPersonMonths(p50Hours);
+  const p90PM = hoursToPersonMonths(p90Hours);
 
   /* ── Shared Chart Config ─────────────────────────────────────────────── */
   const tooltipConfig = {
@@ -339,6 +400,23 @@ export default function ResultsPage() {
               }}>
                 <ArrowLeft size={14} /> Back to estimates
               </Link>
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <button
+                  type="button"
+                  className="cursor-pointer border-0 bg-transparent p-0 inline-flex items-center"
+                  onClick={() => setShowTransparencyModal(true)}
+                  title={`${tierInfo.name}: Click for model transparency & data provenance`}
+                  data-testid="tier-badge-transparency-trigger"
+                >
+                  <DataQualityBadge tier={tier} showIcon />
+                </button>
+                <UncertaintyBadge
+                  calibrated={isCalibrated}
+                  interval="80% CI (p10–p90)"
+                  coverage={`${outputs.confidence_pct.toFixed(0)}% Conformal`}
+                />
+                <ModelVersionBadge version={model_version} />
+              </div>
               <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {currentEstimate.project_name}
               </h1>
@@ -348,19 +426,116 @@ export default function ResultsPage() {
               </p>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setShowTransparencyModal(true)}
+                title="View model architecture, empirical benchmarks, and calibration provenance"
+                data-testid="how-it-works-button"
+              >
+                <HelpCircle size={15} className="text-blue-600 dark:text-blue-400" />
+                <span>How this estimate works</span>
+              </button>
               <CurrencySelector />
               <button className="btn-secondary" onClick={handleExportPDF}><Download size={15} /> PDF ({sym})</button>
+              <button className="btn-secondary" onClick={handleExportJSON} data-testid="export-json-button"><FileDown size={15} /> JSON</button>
+              <button className="btn-secondary" onClick={handleCopyJSON} data-testid="copy-json-button"><Copy size={15} /> Copy JSON</button>
               <button className="btn-secondary" onClick={handleShare}><Share2 size={15} /> Share</button>
               <button className="btn-secondary" onClick={handleDuplicate}><Copy size={15} /> Duplicate</button>
             </div>
           </div>
 
-          {/* Cost Summary */}
+          {/* Data Provenance Details Card (collapsible / tooltip) */}
+          {showTierModal && (
+            <Card variant="subtle" padding="sm" className="mb-4 border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/30 text-xs">
+              <div className="flex items-start justify-between gap-2">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-blue-900 dark:text-blue-300">{tierInfo.name}</span>
+                    <Badge variant="primary" size="xs">{tierInfo.coverage}</Badge>
+                  </div>
+                  <p className="text-blue-800 dark:text-blue-200">{tierInfo.description}</p>
+                  <div className="flex items-center gap-1.5 pt-1 text-[11px] text-blue-700 dark:text-blue-300">
+                    <span className="font-semibold">Validated Sources:</span>
+                    {tierInfo.sources.map((s, idx) => (
+                      <span key={idx} className="px-1.5 py-0.5 rounded bg-blue-100/70 dark:bg-blue-900/60 font-mono">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTierModal(false)}
+                  className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 font-semibold"
+                >
+                  Close
+                </button>
+              </div>
+            </Card>
+          )}
+
+          {/* Out of Distribution (OOD) Guidance & Explanations */}
+          <OODDiagnosticsCard inputs={inputs} reasons={oodStatus.reasons} className="mb-5" />
+
+          {/* Calibrated Confidence Range Bar Card */}
+          <Card variant="elevated" padding="md" className="mb-5 border-t-4 border-t-[var(--color-primary)]">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <CardTitle as="h3" className="text-lg font-bold flex items-center gap-2">
+                    <span>Calibrated Effort Ranges</span>
+                    <span className="text-xs font-normal text-[var(--text-secondary)]">
+                      (Hours &amp; Person-Months at 152 hrs/PM)
+                    </span>
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Visual uncertainty range with calibrated median marker and p10–p90 bounds
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="primary" size="xs" pill>
+                    152 hrs = 1 Person-Month
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <ConfidenceRangeBar
+                p10={p10Hours}
+                p50={p50Hours}
+                p90={p90Hours}
+                unit="hours"
+                formatValue={(val) => `${Math.round(val).toLocaleString()} hrs (${hoursToPersonMonths(val).formatted})`}
+                showLabels
+                showDetails
+                ariaLabel="Calibrated prediction ranges"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Cost Summary (with person-months) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 16, marginBottom: 20 }}>
             {[
-              { label: 'Optimistic', value: outputs.cost_min_usd, color: '#10B981', sub: `${outputs.effort_min_hours.toLocaleString()} hrs` },
-              { label: 'Most Likely', value: outputs.cost_likely_usd, color: '#1A56DB', sub: `${outputs.effort_likely_hours.toLocaleString()} hrs`, primary: true },
-              { label: 'Conservative', value: outputs.cost_max_usd, color: '#F59E0B', sub: `${outputs.effort_max_hours.toLocaleString()} hrs` },
+              {
+                label: 'Optimistic (p10)',
+                value: outputs.cost_min_usd,
+                color: '#10B981',
+                sub: `${outputs.effort_min_hours.toLocaleString()} hrs (${p10PM.formatted})`,
+              },
+              {
+                label: 'Most Likely (p50)',
+                value: outputs.cost_likely_usd,
+                color: '#1A56DB',
+                sub: `${outputs.effort_likely_hours.toLocaleString()} hrs (${p50PM.formatted})`,
+                primary: true,
+              },
+              {
+                label: 'Conservative (p90)',
+                value: outputs.cost_max_usd,
+                color: '#F59E0B',
+                sub: `${outputs.effort_max_hours.toLocaleString()} hrs (${p90PM.formatted})`,
+              },
             ].map((card, i) => (
               <div key={i} className="card" style={{
                 padding: 24, textAlign: 'center',
@@ -570,6 +745,18 @@ export default function ResultsPage() {
               ))}
             </div>
           </div>
+
+          {/* Model Transparency & Provenance Modal */}
+          <ModelTransparencyModal
+            isOpen={showTransparencyModal}
+            onClose={() => setShowTransparencyModal(false)}
+            modelVersion={model_version}
+            tier={tier}
+            sizeFp={inputs.size_fp}
+            estimate={currentEstimate}
+            currencyCode={useCurrencyStore.getState().currency}
+            currencyRate={convert(1)}
+          />
         </main>
       </div>
     </div>

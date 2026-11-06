@@ -41,7 +41,12 @@ from sklearn.ensemble import (
 )
 from sklearn.linear_model import Lasso, LinearRegression, Ridge, RidgeCV
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import KFold, cross_val_predict, cross_val_score, train_test_split
+from sklearn.model_selection import (
+    KFold,
+    cross_val_predict,
+    cross_val_score,
+    train_test_split,
+)
 from sklearn.preprocessing import StandardScaler
 
 plt.switch_backend("Agg")  # Non-interactive backend

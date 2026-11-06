@@ -59,11 +59,9 @@ class PredictifyInference:
         self.is_ready: bool = False
         self.model_name: str = "unknown"
         self.n_features: int = 0
-        self.production_bundle: ProductionBundle | None = None
+        self.production_bundle: Any | None = None
 
-    def load_production(self, manifest_path, expected_hash) -> bool:
-        from ml.production_serving import ProductionBundle
-
+    def load_production(self, manifest_path=None, expected_hash=None) -> bool:
         self.is_ready = False
         self.production_bundle = None
         self.model = None
@@ -71,17 +69,22 @@ class PredictifyInference:
         self.model_report = None
         self.training_report = None
         try:
-            self.production_bundle = ProductionBundle(manifest_path, expected_hash)
+            from backend.ml.artifacts.loader import load_production_model
+            artifact_dir = Path(manifest_path).parent if manifest_path else None
+            self.production_bundle = load_production_model(
+                artifact_dir=artifact_dir,
+                expected_manifest_hash=expected_hash,
+            )
             self.is_ready = True
+            self.model_name = self.production_bundle.architecture
             return True
         except Exception as exc:
-            logger.error("Production pipeline unavailable: %s", type(exc).__name__)
+            logger.error("Production pipeline unavailable: %s", exc)
             return False
 
     def load(self, model_path=None, scaler_path=None, feature_path=None) -> bool:
         """
-        Load model artifacts from backend/ml/.
-        Returns True only for a compatible, complete artifact bundle.
+        Load model artifacts. Prefers verified production v2 bundle.
         """
         self.is_ready = False
         self.production_bundle = None
@@ -92,6 +95,19 @@ class PredictifyInference:
         self.training_report = None
         self.model_name = "unknown"
         self.n_features = 0
+
+        # Attempt to load verified production v2 bundle first
+        try:
+            from backend.ml.artifacts.loader import load_production_model
+            self.production_bundle = load_production_model()
+            self.is_ready = True
+            self.model_name = self.production_bundle.architecture
+            self.feature_names = self.production_bundle.allowed_inputs
+            self.n_features = len(self.feature_names)
+            logger.info("Loaded production v2 ML model bundle: %s", self.model_name)
+            return True
+        except Exception as prod_err:
+            logger.debug("Production v2 bundle not loaded: %s; falling back to legacy loader", prod_err)
 
         def artifact_path(value, filename):
             path = Path(value) if value is not None else ML_DIR / filename

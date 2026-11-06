@@ -74,54 +74,155 @@
 
 /* ── CSS Custom Properties (Design Tokens) ────────────── */
 :root {
+  /* Brand & Core Palette */
   --color-primary: #1A56DB;
   --color-primary-dark: #1E40AF;
   --color-primary-light: #3B82F6;
+  --color-primary-50: #EFF6FF;
+  --color-primary-100: #DBEAFE;
+  --color-primary-500: #3B82F6;
+  --color-primary-600: #2563EB;
+  --color-primary-700: #1D4ED8;
   --color-success: #10B981;
   --color-warning: #F59E0B;
   --color-danger: #EF4444;
   --color-info: #3B82F6;
 
-  /* v2.3 — New tokens */
+  /* Typography Scale Tokens */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+  --text-2xs: 0.6875rem; /* 11px */
+  --lh-2xs: 1rem;
+  --text-xs: 0.75rem;    /* 12px */
+  --lh-xs: 1rem;
+  --text-sm: 0.875rem;   /* 14px */
+  --lh-sm: 1.25rem;
+  --text-base: 1rem;     /* 16px */
+  --lh-base: 1.5rem;
+  --text-lg: 1.125rem;   /* 18px */
+  --lh-lg: 1.75rem;
+  --text-xl: 1.25rem;    /* 20px */
+  --lh-xl: 1.75rem;
+  --text-2xl: 1.5rem;    /* 24px */
+  --lh-2xl: 2rem;
+  --text-3xl: 1.875rem;  /* 30px */
+  --lh-3xl: 2.25rem;
+  --text-4xl: 2.25rem;   /* 36px */
+  --lh-4xl: 2.5rem;
+
+  /* Spacing Scale Tokens */
+  --space-3xs: 0.125rem; /* 2px */
+  --space-2xs: 0.25rem;  /* 4px */
+  --space-xs: 0.375rem;  /* 6px */
+  --space-sm: 0.5rem;    /* 8px */
+  --space-md: 0.75rem;   /* 12px */
+  --space-lg: 1rem;      /* 16px */
+  --space-xl: 1.5rem;    /* 24px */
+  --space-2xl: 2rem;     /* 32px */
+  --space-3xl: 3rem;     /* 48px */
+  --space-4xl: 4rem;     /* 64px */
+
+  /* Border Radius Tokens */
+  --radius-xs: 0.25rem;  /* 4px */
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-md: 0.5rem;   /* 8px */
+  --radius-lg: 0.75rem;  /* 12px */
+  --radius-xl: 1rem;     /* 16px */
+  --radius-2xl: 1.5rem;  /* 24px */
+  --radius-full: 9999px;
+
+  /* Gradients & Animations */
   --gradient-brand: linear-gradient(135deg, #1A56DB 0%, #7C3AED 50%, #EC4899 100%);
   --gradient-brand-subtle: linear-gradient(135deg, rgba(26,86,219,0.08), rgba(124,58,237,0.06), rgba(236,72,153,0.04));
-  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
-  --shadow-card-hover: 0 10px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
-  --border-subtle: rgba(0, 0, 0, 0.06);
   --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Light mode */
+  /* Light mode - Modern High-Contrast Palette (WCAG AAA/AA) */
   --bg-primary: #F8FAFC;
   --bg-surface: #FFFFFF;
   --bg-elevated: #F1F5F9;
+  --bg-inset: #E2E8F0;
   --text-primary: #0F172A;
   --text-secondary: #475569;
-  --text-tertiary: #526176;
+  --text-tertiary: #64748B;
+  --text-inverse: #FFFFFF;
   --border-color: #E2E8F0;
+  --border-subtle: rgba(15, 23, 42, 0.06);
+  --border-focus: #1A56DB;
+
+  /* Shadows - Light Mode */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.25rem;
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  --shadow-card-elevated: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.04);
+  --shadow-card-hover: 0 12px 28px -6px rgb(0 0 0 / 0.12), 0 8px 12px -6px rgb(0 0 0 / 0.06);
+  --shadow-glow-primary: 0 0 20px -3px rgba(26, 86, 219, 0.25);
+
+  /* Data Quality Tier Tokens */
+  --tier-a-bg: #ECFDF5;
+  --tier-a-text: #065F46;
+  --tier-a-border: #A7F3D0;
+  --tier-a-glow: rgba(16, 185, 129, 0.25);
+  --tier-b-bg: #EFF6FF;
+  --tier-b-text: #1E40AF;
+  --tier-b-border: #BFDBFE;
+  --tier-b-glow: rgba(59, 130, 246, 0.2);
+  --tier-c-bg: #FFFBEB;
+  --tier-c-text: #92400E;
+  --tier-c-border: #FDE68A;
+  --tier-c-glow: rgba(245, 158, 11, 0.2);
+
+  /* Confidence Interval & Quantile Tokens */
+  --quantile-p10: #10B981;
+  --quantile-p50: #2563EB;
+  --quantile-p90: #F59E0B;
+  --quantile-track: #E2E8F0;
+  --quantile-band: linear-gradient(90deg, rgba(16, 185, 129, 0.25) 0%, rgba(37, 99, 235, 0.35) 50%, rgba(245, 158, 11, 0.25) 100%);
+  --quantile-marker: #1E293B;
 }
 
-[data-theme="dark"] {
-  --bg-primary: #0F172A;
-  --bg-surface: #1E293B;
-  --bg-elevated: #334155;
-  --text-primary: #F1F5F9;
+[data-theme="dark"], :root.dark {
+  /* Dark mode - Startup-Grade Deep Obsidian Palette */
+  --bg-primary: #090D16;
+  --bg-surface: #111827;
+  --bg-elevated: #1E293B;
+  --bg-inset: #0B1120;
+  --text-primary: #F8FAFC;
   --text-secondary: #CBD5E1;
-  --text-tertiary: #B6C2D2;
-  --border-color: #334155;
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3);
-  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.15), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-card-hover: 0 10px 25px -5px rgb(0 0 0 / 0.25), 0 8px 10px -6px rgb(0 0 0 / 0.15);
-  --gradient-brand-subtle: linear-gradient(135deg, rgba(26,86,219,0.12), rgba(124,58,237,0.08), rgba(236,72,153,0.05));
+  --text-tertiary: #94A3B8;
+  --text-inverse: #0F172A;
+  --border-color: #1E293B;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-focus: #3B82F6;
+
+  /* Shadows - Dark Mode (with top specular highlights) */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.35), 0 1px 2px -1px rgb(0 0 0 / 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  --shadow-card-elevated: 0 6px 18px -3px rgb(0 0 0 / 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  --shadow-card-hover: 0 16px 32px -6px rgb(0 0 0 / 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  --shadow-glow-primary: 0 0 24px -2px rgba(59, 130, 246, 0.35);
+  --gradient-brand-subtle: linear-gradient(135deg, rgba(26,86,219,0.14), rgba(124,58,237,0.1), rgba(236,72,153,0.06));
+
+  /* Dark Mode Data Quality Tier Tokens */
+  --tier-a-bg: #064E3B;
+  --tier-a-text: #6EE7B7;
+  --tier-a-border: #047857;
+  --tier-a-glow: rgba(16, 185, 129, 0.35);
+  --tier-b-bg: #1E3A8A;
+  --tier-b-text: #93C5FD;
+  --tier-b-border: #1D4ED8;
+  --tier-b-glow: rgba(59, 130, 246, 0.3);
+  --tier-c-bg: #78350F;
+  --tier-c-text: #FDE68A;
+  --tier-c-border: #B45309;
+  --tier-c-glow: rgba(245, 158, 11, 0.3);
+
+  /* Dark Mode Confidence & Quantile Tokens */
+  --quantile-track: #1E293B;
+  --quantile-band: linear-gradient(90deg, rgba(16, 185, 129, 0.35) 0%, rgba(59, 130, 246, 0.45) 50%, rgba(245, 158, 11, 0.35) 100%);
+  --quantile-marker: #F8FAFC;
 }
 
 /* ── Base Styles ──────────────────────────────────────── */
@@ -205,6 +306,149 @@ h1, h2, h3, h4, h5, h6 {
 a.card:hover, button.card:hover {
   border-color: var(--color-primary);
   box-shadow: var(--shadow-card);
+}
+
+.card-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: all 0.25s var(--transition-smooth);
+}
+
+.card-elevated {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card-elevated);
+}
+
+.card-interactive {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: all 0.25s var(--transition-smooth);
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.card-accent {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-top: 4px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* ── Typography Scale Classes ─────────────────────────── */
+.text-display {
+  font-size: var(--text-4xl);
+  line-height: var(--lh-4xl);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: var(--text-primary);
+}
+
+.text-heading-xl {
+  font-size: var(--text-3xl);
+  line-height: var(--lh-3xl);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.text-heading-lg {
+  font-size: var(--text-2xl);
+  line-height: var(--lh-2xl);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+}
+
+.text-heading-md {
+  font-size: var(--text-xl);
+  line-height: var(--lh-xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.text-heading-sm {
+  font-size: var(--text-lg);
+  line-height: var(--lh-lg);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+}
+
+.text-body-lg {
+  font-size: var(--text-lg);
+  line-height: var(--lh-lg);
+  color: var(--text-primary);
+}
+
+.text-body-md {
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+  color: var(--text-primary);
+}
+
+.text-body-sm {
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-secondary);
+}
+
+.text-caption {
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-tertiary);
+}
+
+.text-overline {
+  font-size: var(--text-2xs);
+  line-height: var(--lh-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+/* ── Data Quality Tier & Uncertainty Badges ────────────── */
+.badge-tier-a {
+  background: var(--tier-a-bg);
+  color: var(--tier-a-text);
+  border: 1px solid var(--tier-a-border);
+  box-shadow: 0 0 10px var(--tier-a-glow);
+}
+
+.badge-tier-b {
+  background: var(--tier-b-bg);
+  color: var(--tier-b-text);
+  border: 1px solid var(--tier-b-border);
+  box-shadow: 0 0 8px var(--tier-b-glow);
+}
+
+.badge-tier-c {
+  background: var(--tier-c-bg);
+  color: var(--tier-c-text);
+  border: 1px solid var(--tier-c-border);
+  box-shadow: 0 0 8px var(--tier-c-glow);
+}
+
+/* ── Confidence Interval Track & Band ─────────────────── */
+.confidence-track {
+  background-color: var(--quantile-track);
+}
+
+.confidence-band {
+  background: var(--quantile-band);
 }
 
 .btn-primary {

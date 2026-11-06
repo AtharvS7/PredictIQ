@@ -33,7 +33,7 @@ predictiq-*-firebase-adminsdk-*.json
 # backend/ml/*.pkl  ← TRACKED: required for app to work
 backend/ml/*.png
 backend/ml/training_log_*.txt
-backend/ml/artifacts/
+backend/ml/artifacts/*.png
 
 # Node
 node_modules/

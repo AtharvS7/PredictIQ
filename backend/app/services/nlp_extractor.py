@@ -426,6 +426,12 @@ class NLPExtractor:
             doc, tech_stack.value, feature_count.value
         )
         project_type = self._extract_project_type(doc, tech_stack.value)
+        integration_count = self._extract_integration_count(doc)
+
+        fc_val = float(feature_count.value) if feature_count.value else 10.0
+        ic_val = float(integration_count.value) if integration_count.value else 2.0
+        derived_fp = max(10.0, fc_val * 8.0 + ic_val * 5.0)
+        size_conf = min(0.9, (feature_count.confidence + integration_count.confidence) / 2.0)
 
         extracted = {
             "project_type": project_type.to_dict(),
@@ -436,9 +442,19 @@ class NLPExtractor:
             "methodology": self._extract_methodology(doc).to_dict(),
             "feature_count": feature_count.to_dict(),
             "project_name": self._extract_project_name(doc).to_dict(),
-            "integration_count": self._extract_integration_count(doc).to_dict(),
+            "integration_count": integration_count.to_dict(),
             "volatility_score": self._estimate_volatility(doc).to_dict(),
             "team_experience": self._estimate_team_experience(doc).to_dict(),
+            "size_fp": {
+                "value": round(derived_fp, 1),
+                "confidence": round(size_conf, 2),
+                "uncertainty": {
+                    "p10": round(derived_fp * 0.85, 1),
+                    "p50": round(derived_fp, 1),
+                    "p90": round(derived_fp * 1.15, 1),
+                },
+                "source": "nlp",
+            },
         }
 
         logger.info(
@@ -528,7 +544,14 @@ class NLPExtractor:
             "volatility_score": ExtractionResult(3, 0.1, strategy="default"),
             "team_experience": ExtractionResult(2.0, 0.1, strategy="default"),
         }
-        return {k: v.to_dict() for k, v in defaults.items()}
+        res = {k: v.to_dict() for k, v in defaults.items()}
+        res["size_fp"] = {
+            "value": 90.0,
+            "confidence": 0.2,
+            "uncertainty": {"p10": 76.5, "p50": 90.0, "p90": 103.5},
+            "source": "nlp",
+        }
+        return res
 
     # ── Project Name ───────────────────────────────────────────────
 

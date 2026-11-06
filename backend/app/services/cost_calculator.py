@@ -123,6 +123,24 @@ def calculate_cost(
     }
 
 
+def calculate_cost_v2(
+    effort_hours: dict[str, float],
+    hourly_rate: float = 75.0,
+    currency: str = "USD",
+) -> dict:
+    """Convert effort hours quantiles to monetary cost adhering to api_estimate_v2 contract."""
+    p10_eff = float(effort_hours["p10"])
+    p50_eff = float(effort_hours["p50"])
+    p90_eff = float(effort_hours["p90"])
+    return {
+        "p10": round(p10_eff * hourly_rate, 2),
+        "p50": round(p50_eff * hourly_rate, 2),
+        "p90": round(p90_eff * hourly_rate, 2),
+        "currency": currency,
+        "rate": float(hourly_rate),
+    }
+
+
 def calculate_timeline(
     duration_months: float,
     team_size: int,

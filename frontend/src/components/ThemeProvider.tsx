@@ -19,6 +19,7 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     const apply = () => {
       const resolved = theme === 'system' ? (preference.matches ? 'dark' : 'light') : theme;
       document.documentElement.dataset.theme = resolved;
+      document.documentElement.classList.toggle('dark', resolved === 'dark');
       setResolvedTheme(resolved);
     };
     apply();

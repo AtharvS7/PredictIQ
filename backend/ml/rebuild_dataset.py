@@ -9,13 +9,11 @@ Implements strict validation:
 """
 from __future__ import annotations
 
-import argparse
 import csv
 import hashlib
 import io
-import json
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -24,7 +22,6 @@ import pandas as pd
 from ml.acquire_all import (
     ROOT_DATA_DIR,
     compute_sha256,
-    load_dataset,
     read_arff_named,
     verify_china_fix,
 )
@@ -314,10 +311,10 @@ def build_harmonized_records(research_dir: Path) -> tuple[pd.DataFrame, dict[str
 def analyze_deduplication(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Detect cross-source and within-source identical observations."""
     initial_count = len(df)
-    
+
     # 1. Exact match on (size_value, effort_hours)
     exact_matches = df[df.duplicated(subset=["size_value", "effort_hours"], keep=False)].copy()
-    
+
     # Check if exact matches cross sources
     cross_source_dupes = []
     grouped = exact_matches.groupby(["size_value", "effort_hours"])
@@ -330,7 +327,7 @@ def analyze_deduplication(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any
                 "sources": list(sources),
                 "project_ids": group["project_id"].tolist(),
             })
-            
+
     # Within source duplicates
     within_source_dupes = []
     grouped_src = exact_matches.groupby(["source", "size_value", "effort_hours"])
@@ -343,12 +340,12 @@ def analyze_deduplication(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any
                 "count": len(group),
                 "project_ids": group["project_id"].tolist(),
             })
-            
+
     # For projects_v2, we retain distinct project identities but flag exact identical pairs
     # Keep first occurrence of exact cross-source duplicates to ensure split integrity
     deduped_df = df.drop_duplicates(subset=["source", "size_value", "effort_hours"]).copy().reset_index(drop=True)
     final_count = len(deduped_df)
-    
+
     report = {
         "initial_rows": initial_count,
         "final_rows": final_count,
@@ -364,7 +361,7 @@ def write_dedupe_report(report: dict[str, Any], source_stats: dict[str, Any], pa
     lines = [
         "# PredictIQ projects_v2 Harmonization & Deduplication Report",
         "",
-        f"**Generated:** 2026-11-06",
+        "**Generated:** 2026-11-06",
         f"**Initial Raw Rows Ingested:** {report['initial_rows']}",
         f"**Harmonized projects_v2 Rows:** {report['final_rows']}",
         "",
@@ -380,7 +377,7 @@ def write_dedupe_report(report: dict[str, Any], source_stats: dict[str, Any], pa
         lines.append(
             f"| `{src}` | {stats['raw_rows']} | {stats['ingested']} | `{stats['unit']}` | IFPUG Function Points | Person-hours | {citation} |"
         )
-    
+
     lines.extend([
         "",
         "## 2. Cross-Source Duplicate Analysis",
@@ -393,7 +390,7 @@ def write_dedupe_report(report: dict[str, Any], source_stats: dict[str, Any], pa
             lines.append(f"| {d['size_fp']} | {d['effort_hours']} | {', '.join(d['sources'])} | {', '.join(d['project_ids'])} |")
     else:
         lines.append("No cross-source duplicates detected across disparate repositories.")
-        
+
     lines.extend([
         "",
         "## 3. Within-Source Identical (Size, Effort) Records",
@@ -406,7 +403,7 @@ def write_dedupe_report(report: dict[str, Any], source_stats: dict[str, Any], pa
             lines.append(f"| `{d['source']}` | {d['size_fp']} | {d['effort_hours']} | {d['count']} | {', '.join(d['project_ids'])} |")
     else:
         lines.append("No within-source duplicate coordinates found.")
-        
+
     lines.extend([
         "",
         "## 4. Policy Compliance Verification",
@@ -423,14 +420,14 @@ def main() -> None:
     print("=" * 80)
     print("Harmonizing datasets into projects_v2 schema...")
     print("=" * 80)
-    
+
     raw_df, stats = build_harmonized_records(ROOT_DATA_DIR)
     clean_df, report = analyze_deduplication(raw_df)
-    
+
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     clean_df.to_csv(OUTPUT_FILE, index=False)
     write_dedupe_report(report, stats, REPORT_FILE)
-    
+
     sha = compute_sha256(OUTPUT_FILE)
     print(f"projects_v2 table written to: {OUTPUT_FILE}")
     print(f"Total Rows: {len(clean_df)} (Initial: {report['initial_rows']})")

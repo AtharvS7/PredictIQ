@@ -162,7 +162,7 @@ def verify_china_fix(china_path: Path) -> None:
     df = read_arff_named(china_path)
     assert "Effort" in df.columns, "China dataset must have 'Effort' column"
     assert "Resource" in df.columns, "China dataset has 'Resource' code column"
-    
+
     # Project 1: AFP=1587, Effort=7490, Resource=4
     p1 = df[df["ID"] == 1].iloc[0]
     effort_val = float(p1["Effort"])
@@ -170,7 +170,7 @@ def verify_china_fix(china_path: Path) -> None:
     assert effort_val == 7490.0, f"Expected China Project 1 effort 7490, got {effort_val}"
     assert resource_val == 4.0, f"Expected China Project 1 resource 4, got {resource_val}"
     assert effort_val != resource_val, "Effort must NOT match resource code!"
-    
+
     # Check that effort distribution is realistic project hours (> 50 hours for 90%+ of projects)
     valid_efforts = pd.to_numeric(df["Effort"], errors="coerce").dropna()
     assert (valid_efforts > 50).mean() > 0.90, "Over 90% of China projects must have >50 person-hours"
@@ -180,27 +180,27 @@ def acquire_and_verify_all(data_dir: Path = ROOT_DATA_DIR) -> list[dict]:
     """Ensure all approved sources exist, match checksums, and parse correctly."""
     data_dir.mkdir(parents=True, exist_ok=True)
     summary: list[dict] = []
-    
+
     for spec in SOURCES:
         file_path = data_dir / spec.filename
         if not file_path.exists():
             print(f"Downloading {spec.name} from {spec.url}...")
             download_file(spec.url, file_path, spec.expected_sha256)
-        
+
         # Verify hash
         actual_sha = compute_sha256(file_path)
         if actual_sha != spec.expected_sha256:
             raise ValueError(f"Checksum mismatch for {spec.name}: {actual_sha} != {spec.expected_sha256}")
-        
+
         # Load and verify rows
         df = load_dataset(spec, file_path)
         assert spec.size_field in df.columns, f"Size field {spec.size_field} missing from {spec.name}"
         assert spec.effort_field in df.columns, f"Effort field {spec.effort_field} missing from {spec.name}"
-        
+
         # Verify China fix specifically
         if spec.name == "China":
             verify_china_fix(file_path)
-        
+
         summary.append({
             "Source": spec.name,
             "File": spec.filename,
@@ -210,7 +210,7 @@ def acquire_and_verify_all(data_dir: Path = ROOT_DATA_DIR) -> list[dict]:
             "SHA-256 Checksum": actual_sha[:16] + "...",
             "Status": "VERIFIED",
         })
-    
+
     return summary
 
 
@@ -218,11 +218,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Acquire and verify PredictIQ datasets")
     parser.add_argument("--dir", type=Path, default=ROOT_DATA_DIR, help="Target data directory")
     args = parser.parse_args()
-    
+
     print("=" * 80)
     print("PredictIQ v2 — Dataset Acquisition & Verification Pipeline")
     print("=" * 80)
-    
+
     summary = acquire_and_verify_all(args.dir)
     sum_df = pd.DataFrame(summary)
     print(sum_df.to_string(index=False))

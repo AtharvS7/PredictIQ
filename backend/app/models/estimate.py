@@ -83,6 +83,8 @@ class EstimateOutputs(BaseModel):
     phase_breakdown: list[PhaseBreakdown]
     model_explanation: str = ""
     benchmark_comparison: str = ""
+    data_quality_tier: Optional[Literal["A", "B", "C"]] = "A"
+    ood_flags: list[str] = Field(default_factory=list)
 
 
 class EstimateInputs(BaseModel):

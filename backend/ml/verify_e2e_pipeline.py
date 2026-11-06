@@ -14,31 +14,35 @@ Verifies:
   - Output contracts, confidence intervals, cost drivers, and safety validations
 """
 import sys
-import os
 from pathlib import Path
 
 # Add backend directory to path
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_DIR))
 
-from ml.inference import predictor, EXPECTED_FEATURES
-from ml.artifact_safety import REVOKED_DATA_SHA256, REVOKED_MODEL_SHA256, require_unrevoked
-from app.services.document_parser import DocumentParser
-from app.services.nlp_extractor import nlp_extractor
-from app.services.ml_service import ml_service
 from app.services.cost_calculator import (
     calculate_cost,
     calculate_timeline,
     estimate_function_points,
 )
+from app.services.document_parser import DocumentParser
+from app.services.ml_service import ml_service
+from app.services.nlp_extractor import nlp_extractor
 from app.services.risk_analyzer import analyze_risk
+
+from ml.artifact_safety import (
+    REVOKED_DATA_SHA256,
+    REVOKED_MODEL_SHA256,
+    require_unrevoked,
+)
+from ml.inference import predictor
 
 
 def run_pipeline(name: str, text: str, hourly_rate: float = 75.0):
     """Run text through NLP extractor, ML prediction, and estimation math."""
     # Step 1: NLP extraction
     extracted = nlp_extractor.extract(text)
-    
+
     # Helper to unpack value from {value, confidence}
     def get_val(key, default):
         field = extracted.get(key)
@@ -236,7 +240,7 @@ def main():
     print("  [PASS] Monotonicity confirmed: Small MVP < Medium SaaS < Large Enterprise across Effort, Cost, Risk.")
 
     # 6. Verify Actual DOCX Estimates
-    print(f"\n[CHECK 5] Actual SRS Document Result:")
+    print("\n[CHECK 5] Actual SRS Document Result:")
     print(f"  Features Extracted: {res_docx['features']}")
     print(f"  Complexity:         {res_docx['complexity']}")
     print(f"  Function Points:    {res_docx['size_fp']} FP")

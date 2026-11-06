@@ -20,6 +20,16 @@ os.environ["S3_ACCESS_KEY_ID"] = ""
 os.environ["S3_SECRET_ACCESS_KEY"] = ""
 
 
+@pytest.fixture(scope="session")
+def event_loop_policy():
+    """Use WindowsSelectorEventLoopPolicy on Windows to avoid socket hangs in sandbox."""
+    import asyncio
+    import sys
+    if sys.platform == "win32":
+        return asyncio.WindowsSelectorEventLoopPolicy()
+    return asyncio.DefaultEventLoopPolicy()
+
+
 @pytest.fixture
 def contract_model_artifacts(tmp_path, monkeypatch):
     """Real serialized sklearn bundle for API contracts, NOT an accuracy fixture.

@@ -12,7 +12,7 @@ Route handlers in estimates.py become thin controllers that delegate here.
 import json
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any, Optional
 
 import bcrypt
 import structlog
@@ -64,6 +64,7 @@ class EstimateService:
         integration_count: int = 2,
         volatility_score: int = 3,
         team_experience: float = 2.0,
+        db_pool: Any = None,
     ) -> EstimateResult:
         """Core estimation pipeline — shared by both document and manual flows.
 
@@ -102,13 +103,18 @@ class EstimateService:
         ml_result = ml_service.predict(params)
         # Capture provenance before the next await: another request may disable
         # predictor readiness while this estimate waits for the database.
-        model_version = predictor.get_model_info().get("model_version")
+        model_version = (
+            predictor.get_model_info().get("model_version")
+            or ml_service.get_model_info().get("model_version")
+        )
         if not isinstance(model_version, str) or not model_version.strip():
             raise HTTPException(status_code=503, detail="Prediction service is unavailable")
         effort_likely = ml_result["effort_hours_likely"]
         effort_min = ml_result["effort_hours_min"]
         effort_max = ml_result["effort_hours_max"]
         confidence = ml_result["confidence_pct"]
+        data_quality_tier = ml_result.get("data_quality_tier", "A")
+        ood_flags = ml_result.get("ood_flags", [])
 
         # Step 3: Cost conversion
         costs = calculate_cost(effort_likely, effort_min, effort_max, hourly_rate)
@@ -172,10 +178,12 @@ class EstimateService:
             phase_breakdown=[PhaseBreakdown.model_validate(phase) for phase in phases],
             model_explanation=explanation,
             benchmark_comparison=benchmark,
+            data_quality_tier=data_quality_tier,
+            ood_flags=ood_flags,
         )
 
         # Step 7: Save to database
-        pool = await get_db()
+        pool = db_pool if db_pool is not None else await get_db()
         inputs_dict = inputs.model_dump()
         outputs_dict = outputs.model_dump()
 

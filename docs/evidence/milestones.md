@@ -31,3 +31,70 @@ This file tracks each milestone achieved on `dev3`, the checkpoints covered, tes
 - **Harmonized Dataset:** 915 total rows, SHA-256 `b05ad3b0111d4ed3ff89b7aa2a0f653e494f81953c701916f27756d1746eede3`
 - **Productivity Range:** Min $0.32$ h/FP, Median $9.17$ h/FP, Max $95.14$ h/FP
 - **Local HEAD SHA:** `eeedb40`
+
+
+---
+
+## Milestone M2: Validated ML (`dev3-m2-validated-ml`)
+
+- **Tag:** `dev3-m2-validated-ml`
+- **Meaning:** Actuals flywheel, evaluation harness, two model tracks, frozen statistical decision rule, calibrated uncertainty.
+- **Checkpoints Covered:**
+  - **CP06 (Actuals Flywheel):** Created Alembic migration `2026_11_007_estimate_actuals.py`, SQLAlchemy model `EstimateActual`, Pydantic schemas, and API routes (`POST /estimates/{id}/actuals`, `GET /estimates/{id}/actuals`, `GET /admin/actuals/export`). All 27 unit and integration tests passed (`backend/tests/test_actuals.py`).
+  - **CP07 (Evaluation Harness):** Built `backend/ml/eval/` (`protocol.py`, `metrics.py`, `baselines.py`, `run_eval.py`). Established 6-fold Leave-One-Source-Out (LOSO) cross-validation protocol and reference baselines (LogLinear MdAPE: 56.0%, Albrecht MdAPE: 56.1%). 16 unit tests passed (`backend/tests/test_eval_harness.py`).
+  - **CP08 (Track 1 Monotone Models):** Built `backend/ml/track1/` (`MonotonePowerLaw`, `MultivariateMonotoneModel`, `SegmentedMonotoneModel`). Breakthrough: `MultivariateMonotoneModel` reduced Macro MdAPE to **53.9%** ($R^2 = 0.314$, MAE = 5712.7 hrs) with zero synthetic imputation. 22 tests passed (`backend/tests/test_track1.py`).
+  - **CP09 (Track 2 Challenger Models):** Built `backend/ml/track2/` (`MonotoneHistGradientBoosting`, `QuantileGradientBoosting`, `MultivariateHistGradientBoosting`). Enforced +1 monotonic constraint and non-crossing quantiles ($p10 \le p50 \le p90$). 26 tests passed (`backend/tests/test_track2.py`).
+  - **CP10 (Challenger Decision):** Applied frozen decision criteria from `ml_contract.md`. Track 2 ($55.4\%$ MdAPE) failed to dislodge Track 1 ($53.9\%$ MdAPE; Wilcoxon $W = 8.0, p = 0.6875$). Track 1 `MultivariateMonotoneModel` unanimously selected as primary production estimator.
+  - **CP11 (Calibrated Uncertainty):** Built `backend/ml/calibration/` (`conformal.py`, `run_calibration.py`). Implemented inductive split-conformal and Mondrian size-bucketed calibration ($q_{\text{small}} = 1.0016 < q_{\text{medium}} = 1.0537 < q_{\text{large}} = 1.1376$). Achieved **79.0% pooled empirical coverage** (target 80% nominal; macro OOD coverage 76.4%). 21 tests passed (`backend/tests/test_calibration.py`).
+
+### Verification Test Summary
+- **Evaluation Harness Suite:** 16 passed, 0 failed (`test_eval_harness.py`)
+- **Track 1 Test Suite:** 22 passed, 0 failed (`test_track1.py`)
+- **Track 2 Test Suite:** 26 passed, 0 failed (`test_track2.py`)
+- **Calibration Test Suite:** 21 passed, 0 failed (`test_calibration.py`)
+- **Actuals Flywheel Test Suite:** 27 passed, 0 failed (`test_actuals.py`)
+- **Total Milestone M2 Tests:** 112 passed, 0 failed (100% pass rate)
+- **Python Lint & Typing:**
+  - `ruff check backend/ml backend/tests/test_actuals.py backend/tests/test_calibration.py backend/tests/test_track*.py`: 0 errors
+  - `mypy --config-file backend/mypy.ini --explicit-package-bases`: 0 errors
+
+
+---
+
+## Milestone M3: Serving & NLP Cascade (`dev3-m3-serving-nlp`)
+
+- **Tag:** `dev3-m3-serving-nlp`
+- **Meaning:** Model artifact packaging, fail-closed sanity suite, honest production serving v2, calibrated NLP sizing cascade, cost & risk alignment, end-to-end integration tests.
+- **Checkpoints Covered:**
+  - **CP12 (Artifact Packaging & Safety):** Serialized `MultivariateMonotoneModel` + `MondrianConformalPredictor` into `backend/ml/artifacts/production_v2/` with SHA-256 pinned manifest. Fail-closed loading with revoked hash defense (`REVOKED_MODEL_SHA256`).
+  - **CP13 (Model Sanity Suite):** 36 comprehensive sanity tests in `backend/tests/test_model_sanity.py` testing non-crossing quantiles, domain boundaries, monotonic size grids, and fail-closed security.
+  - **CP14 (Serving v2):** Replaced fake feature vector builders in `backend/app/services/ml_service.py` with verified `ProductionModelBundle` serving. Enforced honest inputs (`size_fp`, `duration_months`, `team_size`), OOD detection, Data Quality Tiers (A/B/C), and 152 hrs/PM conversion. 12 tests passed (`test_ml_service.py`).
+  - **CP15 (NLP Cascade Upgrade):** Implemented honest sizing in `backend/app/services/nlp_extractor.py` (~8 FP/story + 5 FP/integration) with explicit $\pm 15\%$ calibrated uncertainty interval. 37 tests passed (`test_nlp_extractor.py`).
+  - **CP16 (Cost & Risk Alignment):** Parametric cost quantiles ($p \times \text{rate}$) via `calculate_cost_v2` in `cost_calculator.py`. Downstream diagnostic risk analysis without circular feedback to effort predictions. 28 tests passed (`test_risk_analyzer.py`, `test_cost_calculator.py`).
+  - **CP17 (Serving Integration Tests):** End-to-end integration testing in `backend/tests/test_serving_integration.py` verifying full pipeline conformance with `api_estimate_v2.json`. 4 tests passed.
+
+---
+
+## Milestone M4: QA & Frontend Core (`dev3-m4-qa-frontend-core`)
+
+- **Tag:** `dev3-m4-qa-frontend-core`
+- **Meaning:** Dead code pruning, CI hardening, high-contrast design system, 3-step estimation wizard, model transparency modal, contract export, full accessibility.
+- **Checkpoints Covered:**
+  - **CP18 (Dead Code & Feature Pruning):** Purged all references to General System Characteristics ($T01-T15$), $Transactions$, $Entities$, $Adjustment$. Verified clean tracked files (zero > 50MB, zero secret leaks). Ruff lint: 0 errors. Mypy typecheck: 0 issues in 48 source files.
+  - **CP19 (Test Suite Stabilization):** Resolved Windows sandbox socket constraints with selector loop policy. Stabilized all test suites without timing flakes.
+  - **CP20 (Hardened CI & Pre-commit):** Updated `.github/workflows/ci.yml` for branch `dev3` covering backend lint, frontend typecheck, vitest, postgres migrations, and build.
+  - **CP21 (Design System & Primitives):** High-contrast dual-mode design tokens in `index.css`, `index.html`. Accessible primitives `Card`, `Badge`, `ConfidenceInterval`, `Typography`.
+  - **CP22 (Redesigned Core Estimation Wizard):** 3-step wizard in `NewEstimatePage.tsx` with honest FP sizing, planning parameters, and calibrated results at 152 hrs/PM.
+  - **CP23 (Trust UX & Contract Export):** `ModelTransparencyModal.tsx`, `OODDiagnosticsCard.tsx`, and `api_estimate_v2.json` export.
+  - **CP24 (Frontend Polish & Accessibility):** WCAG 2.1 AA compliant color contrast, semantic HTML landmarks, full keyboard focus rings. 131 Vitest tests passed across 24 suites, production build completed in 10.02s.
+
+---
+
+## Milestone M5: Release Candidate (`dev3-m5-release-candidate`, `v2.0.0-rc.1`)
+
+- **Tags:** `dev3-m5-release-candidate`, `v2.0.0-rc.1`
+- **Meaning:** Truthful documentation rewrite, comprehensive multi-suite verification, release candidate delivery.
+- **Checkpoints Covered:**
+  - **CP25 (Documentation & Provenance Rewrite):** Rewrote `README.md` truthfully detailing v2 calibrated architecture, purged fabricated claims, documented 6 empirical datasets, and startup-quality UI.
+  - **CP26 (Final Verification & Gate):** Verified all 8 mandatory quality gates (Ruff, Mypy, Vitest, TSC, Vite build, Secret scan, Tracked file check, Remote safety).
+  - **CP27 (Release Tagging & MPP):** Executed Milestone Push Procedure to `origin/dev3` with annotated tags.
