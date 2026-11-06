@@ -10,7 +10,6 @@ import argparse
 import hashlib
 import io
 import re
-import sys
 import tempfile
 from pathlib import Path
 from typing import NamedTuple

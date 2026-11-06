@@ -66,3 +66,4 @@ The model outputs probability-calibrated interval estimates in natural units:
    - Artifact hash is NOT in `REVOKED_MODEL_SHA256`.
    - Python environment matches major/minor version of training environment.
    - Missing or altered artifacts trigger immediate fail-closed startup errors.
+

@@ -10,9 +10,12 @@ Implements strict validation:
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
+import io
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 import numpy as np
@@ -24,8 +27,96 @@ from ml.acquire_all import (
     load_dataset,
     read_arff_named,
     verify_china_fix,
-    SOURCES,
 )
+
+SOURCE_URL = "https://raw.githubusercontent.com/Derek-Jones/Software-estimation-datasets/main/"
+SOURCES = {
+    "china": ("china.arff", "ID", "AFP", "Effort"),
+    "desharnais": ("Desharnais.csv", "Project", "PointsAjust", "Effort"),
+    "maxwell": ("maxwell.arff", None, "Size", "Effort"),
+    "kitchenham": ("kitchenham.arff", "Project", "Adjusted.function.points", "Actual.effort"),
+}
+
+
+def read_source(path: Path) -> pd.DataFrame:
+    """Read these dense ARFF files without positional field assumptions."""
+    if path.suffix == ".csv":
+        return pd.read_csv(path)
+    attributes, records = [], []
+    in_data = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("%"):
+            continue
+        if line.lower() == "@data":
+            in_data = True
+        elif in_data:
+            records.append(line)
+        elif line.lower().startswith("@attribute"):
+            match = re.match(r"@attribute\s+(?:'([^']+)'|\"([^\"]+)\"|(\S+))\s+", line, re.IGNORECASE)
+            if match is None:
+                raise ValueError(f"Invalid attribute in {path.name}")
+            attributes.append(next(value for value in match.groups() if value is not None).strip())
+    if not attributes or not in_data or len(set(attributes)) != len(attributes):
+        raise ValueError(f"Invalid schema in {path.name}")
+    rows = list(csv.reader(io.StringIO("\n".join(records))))
+    if any(len(row) != len(attributes) for row in rows):
+        raise ValueError(f"Record width differs from schema in {path.name}")
+    return pd.DataFrame(rows, columns=attributes).replace("?", np.nan)
+
+
+def reconstruct(directory: Path) -> tuple[pd.DataFrame, dict]:
+    frames, provenance = [], {}
+    for source, (filename, id_column, size_column, effort_column) in SOURCES.items():
+        path = directory / filename
+        raw = read_source(path)
+        frame = pd.DataFrame({
+            "source": source,
+            "project_id": raw[id_column].astype(str) if id_column else raw.index.astype(str),
+            "size_fp": pd.to_numeric(raw[size_column], errors="raise"),
+            "effort_hours": pd.to_numeric(raw[effort_column], errors="raise"),
+        })
+        if frame.project_id.duplicated().any():
+            raise ValueError(f"Duplicate project identifiers in {source}")
+        valid = np.isfinite(frame[["size_fp", "effort_hours"]]).all(axis=1)
+        valid &= (frame[["size_fp", "effort_hours"]] > 0).all(axis=1)
+        provenance[source] = {
+            "url": SOURCE_URL + filename,
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            "raw_rows": len(raw), "usable_rows": int(valid.sum()),
+            "excluded_missing_or_nonpositive": int((~valid).sum()),
+            "size_column": size_column, "target_column": effort_column,
+            "target_unit": "person-hours",
+            "license_status": "not cleared for production or redistribution",
+        }
+        frames.append(frame.loc[valid].copy())
+    data = pd.concat(frames, ignore_index=True)
+    # Identical observable size/effort pairs stay in one split, even across sources.
+    data["duplicate_group"] = [hashlib.sha256(f"{s:.12g}:{e:.12g}".encode()).hexdigest()[:20]
+                               for s, e in zip(data.size_fp, data.effort_hours, strict=True)]
+    return data, provenance
+
+
+def audit_legacy(legacy: pd.DataFrame, china: pd.DataFrame) -> dict:
+    source = china.apply(pd.to_numeric, errors="raise")
+    lookup = {}
+    for _, row in source.iterrows():
+        key = (row.AFP, row.Input + row.Output + row.Enquiry, row.File + row.Interface)
+        lookup.setdefault(key, []).append(row)
+    wrong, examples = [], []
+    for index, row in legacy.iterrows():
+        matches = lookup.get((row.size_fp, row.Transactions, row.Entities), [])
+        bad = [r for r in matches if row.effort_hours == r.Resource and r.Effort != r.Resource]
+        if bad:
+            wrong.append(int(index))
+            if len(examples) < 5:
+                examples.append({"legacy_row_zero_based": int(index), "china_id": int(bad[0].ID),
+                                 "stored_hours": float(row.effort_hours),
+                                 "source_hours": float(bad[0].Effort)})
+    return {"rows": len(legacy), "resource_codes_used_as_hours": len(wrong),
+            "affected_rows_zero_based": wrong, "examples": examples,
+            "rows_at_9586_75": int(np.isclose(legacy.effort_hours, 9586.75).sum()),
+            "status": "invalid_training_labels" if wrong else "requires_review"}
 
 OUTPUT_DIR = Path(__file__).resolve().parent / "data"
 OUTPUT_FILE = OUTPUT_DIR / "projects_v2.csv"
@@ -178,14 +269,12 @@ def build_harmonized_records(research_dir: Path) -> tuple[pd.DataFrame, dict[str
     source_stats["albrecht"] = {"raw_rows": len(df_alb), "ingested": a_count, "unit": "FP"}
 
     # 6. AT&T Aptness (104 rows)
-    # File format is 5 whitespace-separated columns:
-    # 1. size_fp, 2. effort_hours, 3. os (0=Unix, 1=MVS), 4. dbms (1=IDMS, 2=IMS, 3=INFORMIX, 4=INGRESS, 5=Other), 5. language (1=COBOL, 2=PLI, 3=C, 4=Other)
     att_path = research_dir / "aptness.dat.txt"
     df_att = pd.read_csv(
         att_path,
         sep=r"\s+",
         header=None,
-        names=["size_fp", "effort_hours", "os", "dbms", "language"],
+        names=["id", "size_fp", "effort_hours", "duration_months", "os", "dbms", "language"],
     )
     att_count = 0
     os_map = {0: "Unix", 1: "MVS"}
@@ -202,7 +291,7 @@ def build_harmonized_records(research_dir: Path) -> tuple[pd.DataFrame, dict[str
         lang_str = lang_map.get(int(lang_code)) if pd.notna(lang_code) else None
         platform_str = f"{os_str} / {db_str}" if os_str or db_str else None
         records.append({
-            "project_id": f"att_{idx + 1:03d}",
+            "project_id": f"att_{int(row['id']):03d}",
             "source": "att_aptness",
             "year": None,
             "size_value": size,

@@ -74,3 +74,4 @@ These are enabled flat agent definitions:
 - `sequential-thinking`
 
 *Note regarding `code-review-graph`:* The MCP server is not installed in this environment. Falling back to native tools (Grep/Ripgrep, Glob, AST/Python checks) as required by project instructions.
+

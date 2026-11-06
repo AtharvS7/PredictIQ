@@ -66,3 +66,4 @@ When selecting between Track 1 (Simple / Transparent Power Law & Monotone Models
 
 If any of conditions (1)-(4) fails, **Track 1 simple baseline MUST be shipped**.  
 The decision evaluation is executed **EXACTLY ONCE** on the finalized validation folds; re-tuning or repeating the decision rule after inspection is strictly forbidden.
+

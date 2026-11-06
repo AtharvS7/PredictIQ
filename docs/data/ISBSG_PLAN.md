@@ -75,3 +75,4 @@ The ingestion pipeline will be implemented in `backend/ml/ingest_isbsg.py`:
 2. Place licensed export under secure offline path `backend/ml/data/private/isbsg_export.xlsx` (gitignored).
 3. Execute `python backend/ml/ingest_isbsg.py --path backend/ml/data/private/isbsg_export.xlsx`.
 4. Re-run pre-registered evaluation protocol (`backend/ml/eval/run_eval.py`) to verify transferability and check against baseline.
+

@@ -125,3 +125,4 @@ def test_leave_one_source_out_split_integrity(df_v2: pd.DataFrame):
         test_ids = set(test_set["project_id"])
         assert train_ids.isdisjoint(test_ids), f"LOSO fold for {holdout_source} has overlapping IDs!"
         assert len(train_set) + len(test_set) == len(df_v2)
+
