@@ -8,3 +8,5 @@
 | CP00 | `using-git-worktrees` (`.agents-disabled-20260908-103145/skills/using-git-worktrees/SKILL.md`) | Setting up isolated worktrees for workstreams | Configured `.worktrees/` directory and local workstream branches | Yes |
 | CP01 | `architect` (`.agents/skills/architect.md`) | Defining system contracts, API v2 schema, and ML input boundaries | Established frozen ml_contract.md and api_estimate_v2.json | Yes |
 | CP01 | `spec-miner` (`.agents/skills/spec-miner.md`) | Extracting behavioral assertions and invariants for evaluation | Structured frozen evaluation protocol and decision rule invariants | Yes |
+| CP02 | `docs-lookup` (`.agents/skills/docs-lookup.md`) | Looking up software estimation datasets and licensing constraints | Verified license, unit, and URL definitions for 17 data sources | Yes |
+| CP02 | `deep-research` (`.agents-disabled-20260908-103145/skills/deep-research/SKILL.md`) | Investigating recent academic software benchmarking datasets | Identified COSMIC Yürüm/Demirörs (2026) benchmark and ISBSG scope | Yes |
