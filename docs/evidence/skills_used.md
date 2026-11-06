@@ -11,3 +11,4 @@
 | CP02 | `docs-lookup` (`.agents/skills/docs-lookup.md`) | Looking up software estimation datasets and licensing constraints | Verified license, unit, and URL definitions for 17 data sources | Yes |
 | CP02 | `deep-research` (`.agents-disabled-20260908-103145/skills/deep-research/SKILL.md`) | Investigating recent academic software benchmarking datasets | Identified COSMIC Yürüm/Demirörs (2026) benchmark and ISBSG scope | Yes |
 | CP03 | `python-reviewer` (`.agents/skills/python-reviewer.md`) | Reviewing data ingestion script for safe file parsing and type safety | Implemented named-column parsing, atomic writes, and China Effort assertion | Yes |
+| CP04 | `mle-reviewer` (`.agents/skills/mle-reviewer.md`) | Reviewing feature schema harmonization and unit conversion integrity | Verified Albrecht thousand-hours rule and prohibited KLOC-to-FP conversions | Yes |

@@ -1,0 +1,916 @@
+project_id,source,year,size_value,size_unit,effort_hours,duration_months,team_size,platform,language,dev_type,notes
+china_001,china,,1587.0,FP,7490.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_002,china,,260.0,FP,4150.0,17.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_003,china,,152.0,FP,668.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_004,china,,252.0,FP,3238.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_005,china,,292.0,FP,2994.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_006,china,,83.0,FP,1333.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_007,china,,79.0,FP,1607.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_008,china,,97.0,FP,1158.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_009,china,,116.0,FP,1243.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_010,china,,52.0,FP,3372.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_011,china,,465.0,FP,10200.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_012,china,,67.0,FP,1704.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_013,china,,199.0,FP,2640.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_014,china,,176.0,FP,3348.0,26.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_015,china,,391.0,FP,676.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_016,china,,263.0,FP,911.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_017,china,,42.0,FP,2496.0,6.4,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_018,china,,190.0,FP,1171.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_019,china,,245.0,FP,3532.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_020,china,,77.0,FP,436.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_021,china,,355.0,FP,909.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_022,china,,3156.0,FP,9094.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_023,china,,46.0,FP,344.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_024,china,,56.0,FP,296.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_025,china,,106.0,FP,3503.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_026,china,,71.0,FP,246.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_027,china,,306.0,FP,2082.0,24.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_028,china,,244.0,FP,191.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_029,china,,98.0,FP,2974.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_030,china,,331.0,FP,328.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_031,china,,101.0,FP,406.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_032,china,,192.0,FP,1785.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_033,china,,60.0,FP,471.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_034,china,,180.0,FP,700.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_035,china,,118.0,FP,579.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_036,china,,73.0,FP,1211.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_037,china,,143.0,FP,1139.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_038,china,,2190.0,FP,14520.0,19.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_039,china,,9.0,FP,239.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_040,china,,203.0,FP,1262.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_041,china,,162.0,FP,1754.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_042,china,,183.0,FP,1514.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_043,china,,59.0,FP,667.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_044,china,,412.0,FP,5864.0,20.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_045,china,,348.0,FP,973.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_046,china,,2529.0,FP,5333.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_047,china,,250.0,FP,1775.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_048,china,,206.0,FP,204.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_049,china,,617.0,FP,3148.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_050,china,,173.0,FP,8716.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_051,china,,286.0,FP,1464.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_052,china,,52.0,FP,1358.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_053,china,,45.0,FP,281.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_054,china,,104.0,FP,2321.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_055,china,,465.0,FP,4054.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_056,china,,2145.0,FP,2400.0,84.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_057,china,,283.0,FP,5650.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_058,china,,109.0,FP,1525.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_059,china,,160.0,FP,477.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_060,china,,65.0,FP,503.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_061,china,,366.0,FP,8470.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_062,china,,63.0,FP,778.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_063,china,,309.0,FP,2597.0,7.5,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_064,china,,610.0,FP,950.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_065,china,,562.0,FP,5727.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_066,china,,156.0,FP,2040.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_067,china,,75.0,FP,3677.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_068,china,,136.0,FP,570.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_069,china,,96.0,FP,1223.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_070,china,,78.0,FP,976.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_071,china,,51.0,FP,387.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_072,china,,1092.0,FP,4416.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_073,china,,134.0,FP,286.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_074,china,,75.0,FP,305.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_075,china,,88.0,FP,129.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_076,china,,3088.0,FP,4266.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_077,china,,82.0,FP,440.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_078,china,,110.0,FP,1362.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_079,china,,308.0,FP,2533.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_080,china,,143.0,FP,225.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_081,china,,826.0,FP,11045.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_082,china,,3460.0,FP,32760.0,24.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_083,china,,73.0,FP,2054.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_084,china,,64.0,FP,252.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_085,china,,497.0,FP,2362.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_086,china,,288.0,FP,2459.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_087,china,,494.0,FP,8706.0,21.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_088,china,,130.0,FP,770.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_089,china,,204.0,FP,8111.0,36.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_090,china,,17.0,FP,762.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_091,china,,60.0,FP,136.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_092,china,,73.0,FP,358.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_093,china,,169.0,FP,481.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_094,china,,1351.0,FP,3189.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_095,china,,2087.0,FP,22500.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_096,china,,253.0,FP,11719.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_097,china,,102.0,FP,183.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_098,china,,115.0,FP,1482.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_099,china,,288.0,FP,1251.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_100,china,,199.0,FP,943.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_101,china,,163.0,FP,2684.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_102,china,,97.0,FP,729.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_103,china,,439.0,FP,3630.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_104,china,,3113.0,FP,34085.0,24.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_105,china,,153.0,FP,2856.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_106,china,,670.0,FP,5757.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_107,china,,129.0,FP,631.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_108,china,,329.0,FP,2184.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_109,china,,5684.0,FP,21014.0,37.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_110,china,,61.0,FP,417.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_111,china,,267.0,FP,2683.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_112,china,,218.0,FP,5532.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_113,china,,919.0,FP,4815.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_114,china,,66.0,FP,246.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_115,china,,54.0,FP,686.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_116,china,,245.0,FP,470.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_117,china,,54.0,FP,395.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_118,china,,151.0,FP,1080.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_119,china,,103.0,FP,1396.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_120,china,,300.0,FP,2933.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_121,china,,249.0,FP,4551.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_122,china,,224.0,FP,2999.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_123,china,,1984.0,FP,2540.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_124,china,,58.0,FP,26.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_125,china,,56.0,FP,448.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_126,china,,244.0,FP,906.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_127,china,,12.0,FP,211.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_128,china,,1416.0,FP,1724.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_129,china,,67.0,FP,1584.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_130,china,,95.0,FP,148.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_131,china,,2376.0,FP,25482.0,24.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_132,china,,442.0,FP,683.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_133,china,,68.0,FP,2521.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_134,china,,268.0,FP,2933.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_135,china,,90.0,FP,494.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_136,china,,72.0,FP,486.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_137,china,,505.0,FP,4955.0,30.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_138,china,,450.0,FP,6138.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_139,china,,230.0,FP,1451.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_140,china,,242.0,FP,311.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_141,china,,106.0,FP,2445.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_142,china,,31.0,FP,237.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_143,china,,1186.0,FP,3711.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_144,china,,256.0,FP,2941.0,19.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_145,china,,191.0,FP,2430.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_146,china,,213.0,FP,2532.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_147,china,,4562.0,FP,26408.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_148,china,,141.0,FP,1244.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_149,china,,187.0,FP,562.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_150,china,,128.0,FP,3303.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_151,china,,194.0,FP,499.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_152,china,,869.0,FP,2078.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_153,china,,125.0,FP,2326.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_154,china,,477.0,FP,2741.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_155,china,,717.0,FP,3546.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_156,china,,25.0,FP,140.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_157,china,,73.0,FP,1404.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_158,china,,100.0,FP,929.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_159,china,,273.0,FP,528.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_160,china,,587.0,FP,3748.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_161,china,,1437.0,FP,4900.0,18.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_162,china,,97.0,FP,1853.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_163,china,,224.0,FP,2890.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_164,china,,321.0,FP,1076.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_165,china,,99.0,FP,2387.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_166,china,,416.0,FP,1586.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_167,china,,71.0,FP,997.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_168,china,,120.0,FP,212.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_169,china,,213.0,FP,1278.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_170,china,,1634.0,FP,7060.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_171,china,,275.0,FP,702.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_172,china,,458.0,FP,903.0,16.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_173,china,,218.0,FP,6765.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_174,china,,498.0,FP,8227.0,19.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_175,china,,143.0,FP,334.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_176,china,,722.0,FP,4164.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_177,china,,236.0,FP,6844.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_178,china,,239.0,FP,1661.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_179,china,,1882.0,FP,6068.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_180,china,,291.0,FP,6063.0,14.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_181,china,,328.0,FP,665.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_182,china,,264.0,FP,544.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_183,china,,270.0,FP,893.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_184,china,,32.0,FP,352.0,2.5,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_185,china,,1382.0,FP,3344.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_186,china,,98.0,FP,404.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_187,china,,289.0,FP,5732.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_188,china,,1059.0,FP,22920.0,17.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_189,china,,724.0,FP,9409.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_190,china,,40.0,FP,285.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_191,china,,128.0,FP,1293.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_192,china,,1248.0,FP,15165.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_193,china,,387.0,FP,3287.0,17.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_194,china,,73.0,FP,764.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_195,china,,151.0,FP,2194.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_196,china,,465.0,FP,2014.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_197,china,,63.0,FP,827.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_198,china,,226.0,FP,2508.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_199,china,,115.0,FP,201.0,1.5,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_200,china,,189.0,FP,563.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_201,china,,55.0,FP,534.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_202,china,,85.0,FP,1039.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_203,china,,2143.0,FP,43303.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_204,china,,520.0,FP,3133.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_205,china,,113.0,FP,1801.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_206,china,,264.0,FP,2639.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_207,china,,349.0,FP,2360.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_208,china,,229.0,FP,2520.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_209,china,,172.0,FP,1788.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_210,china,,323.0,FP,1238.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_211,china,,89.0,FP,442.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_212,china,,878.0,FP,3368.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_213,china,,220.0,FP,281.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_214,china,,150.0,FP,687.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_215,china,,161.0,FP,220.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_216,china,,804.0,FP,11388.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_217,china,,272.0,FP,9720.0,14.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_218,china,,33.0,FP,145.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_219,china,,64.0,FP,140.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_220,china,,277.0,FP,1265.0,19.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_221,china,,322.0,FP,5242.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_222,china,,164.0,FP,2791.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_223,china,,145.0,FP,742.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_224,china,,73.0,FP,584.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_225,china,,245.0,FP,893.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_226,china,,406.0,FP,5639.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_227,china,,98.0,FP,5533.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_228,china,,83.0,FP,410.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_229,china,,182.0,FP,1001.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_230,china,,820.0,FP,2552.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_231,china,,545.0,FP,8740.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_232,china,,105.0,FP,198.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_233,china,,55.0,FP,2347.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_234,china,,62.0,FP,817.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_235,china,,109.0,FP,249.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_236,china,,436.0,FP,7762.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_237,china,,179.0,FP,776.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_238,china,,1710.0,FP,13130.0,21.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_239,china,,128.0,FP,1644.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_240,china,,174.0,FP,13528.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_241,china,,70.0,FP,617.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_242,china,,379.0,FP,2391.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_243,china,,258.0,FP,605.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_244,china,,129.0,FP,2064.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_245,china,,856.0,FP,2551.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_246,china,,127.0,FP,1668.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_247,china,,381.0,FP,1817.0,19.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_248,china,,234.0,FP,5103.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_249,china,,215.0,FP,2836.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_250,china,,1406.0,FP,14938.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_251,china,,85.0,FP,1049.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_252,china,,59.0,FP,1061.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_253,china,,358.0,FP,13919.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_254,china,,73.0,FP,3675.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_255,china,,597.0,FP,2542.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_256,china,,276.0,FP,2244.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_257,china,,728.0,FP,8046.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_258,china,,59.0,FP,4945.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_259,china,,98.0,FP,1313.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_260,china,,756.0,FP,3214.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_261,china,,155.0,FP,483.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_262,china,,544.0,FP,2306.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_263,china,,813.0,FP,1634.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_264,china,,75.0,FP,720.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_265,china,,112.0,FP,1073.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_266,china,,211.0,FP,3566.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_267,china,,895.0,FP,780.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_268,china,,74.0,FP,3995.0,14.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_269,china,,3331.0,FP,49034.0,42.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_270,china,,64.0,FP,392.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_271,china,,1402.0,FP,17607.0,23.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_272,china,,337.0,FP,591.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_273,china,,73.0,FP,812.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_274,china,,64.0,FP,564.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_275,china,,1703.0,FP,8549.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_276,china,,151.0,FP,391.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_277,china,,66.0,FP,1817.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_278,china,,70.0,FP,540.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_279,china,,754.0,FP,7443.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_280,china,,325.0,FP,8663.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_281,china,,168.0,FP,4622.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_282,china,,226.0,FP,915.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_283,china,,335.0,FP,25401.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_284,china,,76.0,FP,569.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_285,china,,221.0,FP,1512.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_286,china,,1010.0,FP,5053.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_287,china,,116.0,FP,1939.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_288,china,,39.0,FP,114.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_289,china,,170.0,FP,1532.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_290,china,,179.0,FP,4723.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_291,china,,166.0,FP,2971.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_292,china,,354.0,FP,5841.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_293,china,,615.0,FP,941.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_294,china,,126.0,FP,1035.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_295,china,,1390.0,FP,5597.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_296,china,,129.0,FP,2988.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_297,china,,203.0,FP,3219.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_298,china,,758.0,FP,4630.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_299,china,,558.0,FP,4112.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_300,china,,25.0,FP,580.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_301,china,,850.0,FP,10942.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_302,china,,235.0,FP,937.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_303,china,,58.0,FP,2515.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_304,china,,316.0,FP,2600.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_305,china,,7633.0,FP,25217.0,19.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_306,china,,119.0,FP,176.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_307,china,,55.0,FP,341.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_308,china,,1644.0,FP,16357.0,38.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_309,china,,1193.0,FP,3006.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_310,china,,605.0,FP,1694.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_311,china,,389.0,FP,1134.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_312,china,,132.0,FP,1186.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_313,china,,132.0,FP,1383.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_314,china,,286.0,FP,1727.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_315,china,,305.0,FP,4504.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_316,china,,268.0,FP,4800.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_317,china,,110.0,FP,2553.0,24.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_318,china,,3963.0,FP,16921.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_319,china,,397.0,FP,7459.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_320,china,,254.0,FP,3877.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_321,china,,134.0,FP,2088.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_322,china,,266.0,FP,4695.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_323,china,,237.0,FP,3201.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_324,china,,1243.0,FP,11490.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_325,china,,666.0,FP,752.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_326,china,,1810.0,FP,29399.0,35.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_327,china,,88.0,FP,2299.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_328,china,,62.0,FP,883.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_329,china,,305.0,FP,8702.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_330,china,,349.0,FP,3703.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_331,china,,156.0,FP,705.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_332,china,,100.0,FP,1434.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_333,china,,222.0,FP,2450.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_334,china,,506.0,FP,3500.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_335,china,,123.0,FP,1896.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_336,china,,252.0,FP,6821.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_337,china,,258.0,FP,1393.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_338,china,,166.0,FP,2604.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_339,china,,181.0,FP,3638.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_340,china,,284.0,FP,3234.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_341,china,,52.0,FP,252.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_342,china,,102.0,FP,1028.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_343,china,,58.0,FP,691.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_344,china,,1196.0,FP,7824.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_345,china,,38.0,FP,247.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_346,china,,84.0,FP,2738.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_347,china,,73.0,FP,1121.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_348,china,,449.0,FP,16042.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_349,china,,551.0,FP,2435.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_350,china,,194.0,FP,1440.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_351,china,,185.0,FP,6416.0,16.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_352,china,,134.0,FP,1213.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_353,china,,1241.0,FP,10222.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_354,china,,99.0,FP,241.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_355,china,,1285.0,FP,1200.0,16.5,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_356,china,,466.0,FP,1708.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_357,china,,77.0,FP,2108.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_358,china,,81.0,FP,454.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_359,china,,694.0,FP,4086.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_360,china,,62.0,FP,2027.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_361,china,,56.0,FP,293.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_362,china,,753.0,FP,4301.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_363,china,,421.0,FP,16788.0,15.5,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_364,china,,59.0,FP,566.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_365,china,,409.0,FP,2672.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_366,china,,115.0,FP,1869.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_367,china,,93.0,FP,803.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_368,china,,71.0,FP,4019.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_369,china,,971.0,FP,4867.0,14.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_370,china,,74.0,FP,3132.0,17.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_371,china,,81.0,FP,89.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_372,china,,106.0,FP,1126.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_373,china,,1168.0,FP,1538.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_374,china,,1093.0,FP,7263.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_375,china,,67.0,FP,3853.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_376,china,,1256.0,FP,28855.0,28.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_377,china,,72.0,FP,1248.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_378,china,,777.0,FP,15039.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_379,china,,131.0,FP,4947.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_380,china,,134.0,FP,2019.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_381,china,,826.0,FP,5400.0,42.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_382,china,,3180.0,FP,33028.0,36.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_383,china,,324.0,FP,5078.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_384,china,,220.0,FP,701.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_385,china,,258.0,FP,736.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_386,china,,139.0,FP,976.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_387,china,,274.0,FP,1167.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_388,china,,231.0,FP,3762.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_389,china,,126.0,FP,619.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_390,china,,93.0,FP,1101.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_391,china,,1825.0,FP,1210.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_392,china,,500.0,FP,5876.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_393,china,,373.0,FP,2395.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_394,china,,330.0,FP,1050.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_395,china,,57.0,FP,1741.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_396,china,,127.0,FP,1579.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_397,china,,1362.0,FP,3193.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_398,china,,1463.0,FP,36046.0,23.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_399,china,,148.0,FP,3437.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_400,china,,474.0,FP,1829.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_401,china,,77.0,FP,408.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_402,china,,213.0,FP,801.0,2.5,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_403,china,,175.0,FP,597.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_404,china,,360.0,FP,763.0,18.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_405,china,,331.0,FP,1238.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_406,china,,285.0,FP,1249.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_407,china,,187.0,FP,13752.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_408,china,,502.0,FP,9296.0,14.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_409,china,,303.0,FP,329.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_410,china,,174.0,FP,3088.0,17.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_411,china,,44.0,FP,380.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_412,china,,387.0,FP,2333.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_413,china,,406.0,FP,2109.0,19.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_414,china,,496.0,FP,10080.0,14.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_415,china,,116.0,FP,553.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_416,china,,53.0,FP,354.0,16.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_417,china,,209.0,FP,190.0,2.5,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_418,china,,903.0,FP,5482.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_419,china,,469.0,FP,3191.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_420,china,,1894.0,FP,3986.0,12.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_421,china,,215.0,FP,560.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_422,china,,82.0,FP,80.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_423,china,,1694.0,FP,7816.0,16.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_424,china,,81.0,FP,2002.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_425,china,,297.0,FP,1557.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_426,china,,280.0,FP,1417.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_427,china,,56.0,FP,1246.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_428,china,,492.0,FP,4158.0,11.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_429,china,,426.0,FP,646.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_430,china,,499.0,FP,2310.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_431,china,,60.0,FP,992.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_432,china,,362.0,FP,7091.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_433,china,,363.0,FP,3431.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_434,china,,53.0,FP,1007.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_435,china,,17518.0,FP,54620.0,14.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_436,china,,199.0,FP,871.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_437,china,,2171.0,FP,19699.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_438,china,,220.0,FP,1930.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_439,china,,1355.0,FP,7505.0,26.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_440,china,,374.0,FP,300.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_441,china,,62.0,FP,349.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_442,china,,311.0,FP,2038.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_443,china,,132.0,FP,601.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_444,china,,135.0,FP,667.0,15.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_445,china,,79.0,FP,3585.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_446,china,,155.0,FP,1916.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_447,china,,965.0,FP,3655.0,30.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_448,china,,296.0,FP,5432.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_449,china,,56.0,FP,170.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_450,china,,206.0,FP,1823.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_451,china,,651.0,FP,3612.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_452,china,,2323.0,FP,3981.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_453,china,,146.0,FP,1984.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_454,china,,284.0,FP,3646.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_455,china,,249.0,FP,3800.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_456,china,,32.0,FP,498.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_457,china,,1908.0,FP,27000.0,48.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_458,china,,253.0,FP,1694.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_459,china,,184.0,FP,2952.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_460,china,,76.0,FP,374.0,1.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_461,china,,276.0,FP,300.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_462,china,,3471.0,FP,7575.0,17.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_463,china,,380.0,FP,3322.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_464,china,,155.0,FP,5196.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_465,china,,327.0,FP,2566.0,16.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_466,china,,193.0,FP,1686.0,5.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_467,china,,1108.0,FP,25054.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_468,china,,363.0,FP,117.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_469,china,,249.0,FP,500.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_470,china,,769.0,FP,12551.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_471,china,,137.0,FP,399.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_472,china,,579.0,FP,784.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_473,china,,133.0,FP,2112.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_474,china,,78.0,FP,600.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_475,china,,101.0,FP,450.0,1.5,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_476,china,,1222.0,FP,5800.0,20.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_477,china,,1093.0,FP,2565.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_478,china,,222.0,FP,2385.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_479,china,,2067.0,FP,10398.0,21.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_480,china,,175.0,FP,3434.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_481,china,,230.0,FP,400.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_482,china,,104.0,FP,338.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_483,china,,177.0,FP,2835.0,17.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_484,china,,62.0,FP,594.0,2.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_485,china,,487.0,FP,1017.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_486,china,,177.0,FP,789.0,8.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_487,china,,105.0,FP,774.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_488,china,,140.0,FP,640.0,1.5,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_489,china,,230.0,FP,500.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_490,china,,236.0,FP,601.0,10.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_491,china,,846.0,FP,16179.0,13.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_492,china,,139.0,FP,2446.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_493,china,,51.0,FP,338.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_494,china,,195.0,FP,1786.0,9.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_495,china,,51.0,FP,899.0,3.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_496,china,,1106.0,FP,16560.0,20.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_497,china,,99.0,FP,526.0,4.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_498,china,,56.0,FP,440.0,6.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+china_499,china,,213.0,FP,2185.0,7.0,,,,,China PROMISE dataset. Effort confirmed person-hours.
+kitchenham_001_1,kitchenham,,101.65,FP,485.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_002_2,kitchenham,,57.12,FP,990.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_003_3,kitchenham,,1010.88,FP,13635.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_004_4,kitchenham,,45.6,FP,1576.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_005_5,kitchenham,,1022.58,FP,3826.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_006_6,kitchenham,,77.04,FP,1079.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_007_7,kitchenham,,159.6,FP,2224.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_008_8,kitchenham,,225.54,FP,1698.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_009_9,kitchenham,,144.72,FP,1173.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_010_10,kitchenham,,84.42,FP,1401.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_011_11,kitchenham,,126.42,FP,2170.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_012_12,kitchenham,,392.16,FP,1122.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_013_13,kitchenham,,18.9,FP,1024.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_014_14,kitchenham,,112.14,FP,1832.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_015_15,kitchenham,,210.08,FP,1016.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_016_16,kitchenham,,260.95,FP,322.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_017_17,kitchenham,,609.7,FP,580.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_018_18,kitchenham,,169.85,FP,1003.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_019_19,kitchenham,,56.0,FP,380.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_020_20,kitchenham,,30.0,FP,220.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_021_21,kitchenham,,241.86,FP,2356.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_022_22,kitchenham,,219.88,FP,1388.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_023_23,kitchenham,,229.71,FP,1066.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_024_24,kitchenham,,458.38,FP,2860.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_025_25,kitchenham,,177.63,FP,1143.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_026_26,kitchenham,,287.64,FP,1431.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_027_27,kitchenham,,343.54,FP,1868.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_028_28,kitchenham,,346.8,FP,2172.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_029_29,kitchenham,,1121.48,FP,8509.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_030_30,kitchenham,,761.08,FP,5927.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_031_31,kitchenham,,464.0,FP,2663.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_032_32,kitchenham,,203.01,FP,1425.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_033_33,kitchenham,,550.14,FP,3504.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_034_34,kitchenham,,86.45,FP,652.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_035_35,kitchenham,,1362.11,FP,7649.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_036_36,kitchenham,,681.0,FP,5927.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_037_37,kitchenham,,485.1,FP,6607.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_038_38,kitchenham,,172.96,FP,2591.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_039_39,kitchenham,,2075.8,FP,4494.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_040_40,kitchenham,,756.25,FP,4824.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_041_41,kitchenham,,789.66,FP,5094.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_042_42,kitchenham,,357.0,FP,3088.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_043_43,kitchenham,,62.08,FP,892.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_044_44,kitchenham,,157.56,FP,750.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_045_45,kitchenham,,322.62,FP,5646.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_046_46,kitchenham,,81.34,FP,1532.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_047_47,kitchenham,,191.0,FP,1280.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_048_48,kitchenham,,121.52,FP,313.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_049_49,kitchenham,,222.78,FP,339.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_050_50,kitchenham,,113.52,FP,583.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_051_51,kitchenham,,15.36,FP,726.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_052_52,kitchenham,,320.12,FP,1939.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_053_53,kitchenham,,84.28,FP,669.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_054_54,kitchenham,,248.88,FP,1413.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_055_55,kitchenham,,616.32,FP,4115.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_056_56,kitchenham,,515.07,FP,4009.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_057_57,kitchenham,,88.2,FP,630.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_058_58,kitchenham,,115.14,FP,718.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_059_59,kitchenham,,63.84,FP,1584.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_060_60,kitchenham,,1015.98,FP,5816.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_061_61,kitchenham,,359.64,FP,2037.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_062_62,kitchenham,,240.84,FP,1428.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_063_63,kitchenham,,285.12,FP,1252.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_064_64,kitchenham,,61.2,FP,655.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_065_65,kitchenham,,287.28,FP,1318.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_066_66,kitchenham,,172.0,FP,995.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_067_67,kitchenham,,144.06,FP,2265.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_068_68,kitchenham,,108.64,FP,654.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_069_69,kitchenham,,165.36,FP,718.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_070_70,kitchenham,,680.9,FP,2029.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_071_71,kitchenham,,409.4,FP,1650.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_072_72,kitchenham,,313.95,FP,2223.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_073_73,kitchenham,,1136.34,FP,8600.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_074_74,kitchenham,,177.0,FP,1884.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_075_75,kitchenham,,746.24,FP,5359.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_076_76,kitchenham,,274.92,FP,1159.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_077_77,kitchenham,,43.5,FP,437.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_078_78,kitchenham,,54.75,FP,570.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_079_79,kitchenham,,130.0,FP,502.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_080_80,kitchenham,,525.96,FP,1877.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_081_81,kitchenham,,311.85,FP,1693.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_082_82,kitchenham,,1185.08,FP,3319.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_083_83,kitchenham,,258.24,FP,1557.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_084_84,kitchenham,,60.0,FP,557.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_085_85,kitchenham,,303.52,FP,3050.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_086_86,kitchenham,,98.9,FP,1113.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_087_87,kitchenham,,711.9,FP,5456.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_088_88,kitchenham,,182.4,FP,763.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_089_89,kitchenham,,351.9,FP,2203.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_090_90,kitchenham,,401.98,FP,3483.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_091_91,kitchenham,,162.61,FP,2393.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_092_92,kitchenham,,1210.99,FP,15673.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_093_93,kitchenham,,156.42,FP,2972.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_094_94,kitchenham,,603.58,FP,4068.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_095_95,kitchenham,,73.92,FP,698.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_096_96,kitchenham,,121.55,FP,676.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_097_97,kitchenham,,1234.2,FP,6307.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_098_98,kitchenham,,35.0,FP,219.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_099_99,kitchenham,,61.06,FP,254.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_100_100,kitchenham,,162.0,FP,324.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_101_101,kitchenham,,1285.7,FP,874.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_102_102,kitchenham,,18137.48,FP,113930.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_103_103,kitchenham,,1020.6,FP,1722.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_104_104,kitchenham,,377.0,FP,1660.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_105_105,kitchenham,,210.45,FP,693.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_106_106,kitchenham,,410.0,FP,1455.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_107_107,kitchenham,,279.0,FP,988.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_108_108,kitchenham,,240.0,FP,1940.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_109_109,kitchenham,,230.0,FP,2408.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_110_110,kitchenham,,150.29,FP,1737.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_111_111,kitchenham,,1940.68,FP,12646.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_112_112,kitchenham,,401.0,FP,4414.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_113_113,kitchenham,,267.0,FP,2480.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_114_114,kitchenham,,102.0,FP,980.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_115_115,kitchenham,,403.0,FP,3189.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_116_116,kitchenham,,857.0,FP,2895.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_117_117,kitchenham,,69.0,FP,322.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_118_118,kitchenham,,980.95,FP,3555.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_119_119,kitchenham,,100.8,FP,570.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_120_120,kitchenham,,105.28,FP,464.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_121_121,kitchenham,,158.4,FP,1742.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_122_122,kitchenham,,219.88,FP,896.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_123_123,kitchenham,,1292.56,FP,8656.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_124_124,kitchenham,,616.08,FP,3966.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_125_125,kitchenham,,103.4,FP,989.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_126_126,kitchenham,,74.4,FP,585.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_127_127,kitchenham,,356.31,FP,1860.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_128_128,kitchenham,,862.0,FP,5249.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_129_129,kitchenham,,791.84,FP,5192.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_130_130,kitchenham,,661.27,FP,1832.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_131_131,kitchenham,,179.0,FP,928.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_132_132,kitchenham,,518.4,FP,2570.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_133_133,kitchenham,,370.0,FP,1328.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_134_134,kitchenham,,839.05,FP,2964.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_135_135,kitchenham,,243.86,FP,1304.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_136_136,kitchenham,,557.28,FP,1631.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_137_137,kitchenham,,485.94,FP,955.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_138_138,kitchenham,,698.54,FP,286.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_139_139,kitchenham,,752.64,FP,1432.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_140_140,kitchenham,,809.25,FP,321.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_141_141,kitchenham,,178.1,FP,593.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_142_142,kitchenham,,81.48,FP,302.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_143_143,kitchenham,,1093.86,FP,2634.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_144_144,kitchenham,,1002.76,FP,1040.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+kitchenham_145_145,kitchenham,,551.88,FP,887.0,,,,,,Kitchenham commercial banking study. Actual.effort in hours.
+desharnais_001,desharnais,1985.0,302.0,FP,5152.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_002,desharnais,1986.0,315.0,FP,5635.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_003,desharnais,1985.0,83.0,FP,805.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_004,desharnais,1986.0,303.0,FP,3829.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_005,desharnais,1986.0,208.0,FP,2149.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_006,desharnais,1986.0,192.0,FP,2821.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_007,desharnais,1985.0,145.0,FP,2569.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_008,desharnais,1983.0,214.0,FP,3913.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_009,desharnais,1985.0,247.0,FP,7854.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_010,desharnais,1983.0,103.0,FP,2422.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_011,desharnais,1984.0,237.0,FP,4067.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_012,desharnais,1984.0,271.0,FP,9051.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_013,desharnais,1984.0,88.0,FP,2282.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_014,desharnais,1985.0,216.0,FP,4172.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_015,desharnais,1985.0,320.0,FP,4977.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_016,desharnais,1985.0,152.0,FP,1617.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_017,desharnais,1985.0,108.0,FP,3192.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_018,desharnais,1986.0,326.0,FP,3437.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_019,desharnais,1987.0,340.0,FP,4494.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_020,desharnais,1986.0,86.0,FP,840.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_021,desharnais,1986.0,581.0,FP,14973.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_022,desharnais,1985.0,255.0,FP,5180.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_023,desharnais,1986.0,447.0,FP,5775.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_024,desharnais,1987.0,397.0,FP,10577.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_025,desharnais,1986.0,283.0,FP,3983.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_026,desharnais,1985.0,310.0,FP,3164.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_027,desharnais,1986.0,312.0,FP,3542.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_028,desharnais,1985.0,491.0,FP,4277.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_029,desharnais,1985.0,263.0,FP,7252.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_030,desharnais,1985.0,461.0,FP,3948.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_031,desharnais,1986.0,190.0,FP,3927.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_032,desharnais,1986.0,168.0,FP,710.0,,,,3,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_033,desharnais,1987.0,267.0,FP,2429.0,,,,3,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_034,desharnais,1985.0,285.0,FP,6405.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_035,desharnais,1988.0,180.0,FP,651.0,,,,3,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_036,desharnais,1986.0,432.0,FP,9135.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_037,desharnais,1987.0,351.0,FP,1435.0,,,,3,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_038,desharnais,1987.0,360.0,FP,5922.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_039,desharnais,1988.0,180.0,FP,847.0,,,,3,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_040,desharnais,1988.0,523.0,FP,8050.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_041,desharnais,1987.0,464.0,FP,4620.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_042,desharnais,1987.0,698.0,FP,2352.0,,,,3,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_043,desharnais,1988.0,106.0,FP,2174.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_044,desharnais,1986.0,591.0,FP,19894.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_045,desharnais,1986.0,308.0,FP,6699.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_046,desharnais,1987.0,424.0,FP,14987.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_047,desharnais,1988.0,241.0,FP,4004.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_048,desharnais,1985.0,361.0,FP,12824.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_049,desharnais,1985.0,103.0,FP,2331.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_050,desharnais,1985.0,192.0,FP,5817.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_051,desharnais,1985.0,156.0,FP,2989.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_052,desharnais,1985.0,131.0,FP,3136.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_053,desharnais,1985.0,342.0,FP,14434.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_054,desharnais,1987.0,130.0,FP,2583.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_055,desharnais,1986.0,155.0,FP,3647.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_056,desharnais,1986.0,350.0,FP,8232.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_057,desharnais,1986.0,129.0,FP,3276.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_058,desharnais,1987.0,139.0,FP,2723.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_059,desharnais,1987.0,197.0,FP,3472.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_060,desharnais,1987.0,62.0,FP,1575.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_061,desharnais,1986.0,205.0,FP,2926.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_062,desharnais,1986.0,117.0,FP,1876.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_063,desharnais,1986.0,140.0,FP,2520.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_064,desharnais,1986.0,113.0,FP,1603.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_065,desharnais,1986.0,291.0,FP,3626.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_066,desharnais,1987.0,309.0,FP,6783.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_067,desharnais,1987.0,507.0,FP,11361.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_068,desharnais,1986.0,67.0,FP,1267.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_069,desharnais,1987.0,105.0,FP,2548.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_070,desharnais,1987.0,117.0,FP,1155.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_071,desharnais,1986.0,99.0,FP,546.0,,,,3,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_072,desharnais,1984.0,165.0,FP,2275.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_073,desharnais,1986.0,645.0,FP,9100.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_074,desharnais,1984.0,203.0,FP,595.0,,,,3,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_075,desharnais,1984.0,245.0,FP,3941.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_076,desharnais,1986.0,688.0,FP,13860.0,,,,2,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_077,desharnais,1985.0,414.0,FP,1400.0,,,,3,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_078,desharnais,1983.0,297.0,FP,2800.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_079,desharnais,1982.0,617.0,FP,9520.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_080,desharnais,1986.0,697.0,FP,5880.0,,,,3,,Desharnais Canadian software benchmark. Effort in hours.
+desharnais_081,desharnais,1985.0,1116.0,FP,23940.0,,,,1,,Desharnais Canadian software benchmark. Effort in hours.
+maxwell_001,maxwell,,647.0,FP,7871.0,16.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_002,maxwell,,130.0,FP,845.0,5.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_003,maxwell,,254.0,FP,2330.0,8.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_004,maxwell,,1056.0,FP,21272.0,16.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_005,maxwell,,383.0,FP,4224.0,12.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_006,maxwell,,345.0,FP,2826.0,12.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_007,maxwell,,209.0,FP,7320.0,27.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_008,maxwell,,366.0,FP,9125.0,24.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_009,maxwell,,1181.0,FP,11900.0,54.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_010,maxwell,,181.0,FP,4300.0,13.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_011,maxwell,,739.0,FP,4150.0,21.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_012,maxwell,,108.0,FP,900.0,7.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_013,maxwell,,48.0,FP,583.0,10.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_014,maxwell,,249.0,FP,2565.0,19.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_015,maxwell,,371.0,FP,4047.0,11.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_016,maxwell,,211.0,FP,1520.0,13.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_017,maxwell,,1849.0,FP,25910.0,32.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_018,maxwell,,2482.0,FP,37286.0,38.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_019,maxwell,,434.0,FP,15052.0,40.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_020,maxwell,,292.0,FP,11039.0,29.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_021,maxwell,,2954.0,FP,18500.0,14.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_022,maxwell,,304.0,FP,9369.0,14.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_023,maxwell,,353.0,FP,7184.0,28.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_024,maxwell,,567.0,FP,10447.0,16.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_025,maxwell,,467.0,FP,5100.0,13.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_026,maxwell,,3368.0,FP,63694.0,45.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_027,maxwell,,253.0,FP,1651.0,4.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_028,maxwell,,196.0,FP,1450.0,10.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_029,maxwell,,185.0,FP,1745.0,12.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_030,maxwell,,387.0,FP,1798.0,6.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_031,maxwell,,430.0,FP,2957.0,28.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_032,maxwell,,204.0,FP,963.0,6.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_033,maxwell,,71.0,FP,1233.0,6.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_034,maxwell,,840.0,FP,3240.0,6.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_035,maxwell,,1648.0,FP,10000.0,11.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_036,maxwell,,1035.0,FP,6800.0,8.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_037,maxwell,,548.0,FP,3850.0,22.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_038,maxwell,,2054.0,FP,14000.0,31.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_039,maxwell,,302.0,FP,5787.0,26.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_040,maxwell,,1172.0,FP,9700.0,22.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_041,maxwell,,253.0,FP,1100.0,7.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_042,maxwell,,227.0,FP,5578.0,14.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_043,maxwell,,59.0,FP,1060.0,6.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_044,maxwell,,299.0,FP,5279.0,6.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_045,maxwell,,422.0,FP,8117.0,15.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_046,maxwell,,1058.0,FP,8710.0,9.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_047,maxwell,,65.0,FP,796.0,9.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_048,maxwell,,390.0,FP,11023.0,26.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_049,maxwell,,193.0,FP,1755.0,13.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_050,maxwell,,1526.0,FP,5931.0,28.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_051,maxwell,,575.0,FP,4456.0,13.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_052,maxwell,,509.0,FP,3600.0,13.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_053,maxwell,,583.0,FP,4557.0,12.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_054,maxwell,,315.0,FP,8752.0,14.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_055,maxwell,,138.0,FP,3440.0,12.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_056,maxwell,,257.0,FP,1981.0,9.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_057,maxwell,,423.0,FP,13700.0,30.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_058,maxwell,,495.0,FP,7105.0,20.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_059,maxwell,,622.0,FP,6816.0,16.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_060,maxwell,,204.0,FP,4620.0,12.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_061,maxwell,,616.0,FP,7451.0,15.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+maxwell_062,maxwell,,3643.0,FP,39479.0,33.0,,,,,Maxwell European aerospace agency dataset. Effort in hours.
+albrecht_001,albrecht,,1750.0,FP,102400.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_002,albrecht,,1902.0,FP,105200.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_003,albrecht,,428.0,FP,11100.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_004,albrecht,,759.0,FP,21100.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_005,albrecht,,431.0,FP,28800.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_006,albrecht,,283.0,FP,10000.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_007,albrecht,,205.0,FP,8000.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_008,albrecht,,289.0,FP,4900.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_009,albrecht,,680.0,FP,12900.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_010,albrecht,,794.0,FP,19000.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_011,albrecht,,512.0,FP,10800.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_012,albrecht,,224.0,FP,2900.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_013,albrecht,,417.0,FP,7500.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_014,albrecht,,682.0,FP,12000.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_015,albrecht,,209.0,FP,4100.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_016,albrecht,,512.0,FP,15800.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_017,albrecht,,606.0,FP,18300.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_018,albrecht,,400.0,FP,8900.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_019,albrecht,,1235.0,FP,38100.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_020,albrecht,,1572.0,FP,61200.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_021,albrecht,,500.0,FP,3600.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_022,albrecht,,694.0,FP,11800.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_023,albrecht,,199.0,FP,500.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+albrecht_024,albrecht,,260.0,FP,6100.0,,,IBM Mainframe,,,Albrecht & Gaffney (1983) IBM benchmark. Raw Effort in 1000s of work-hours converted *1000.
+att_1059,att_aptness,,15000.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_234,att_aptness,,1850.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1533,att_aptness,,13033.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_339,att_aptness,,11742.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_205,att_aptness,,283.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_420,att_aptness,,17992.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_2618,att_aptness,,36420.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_749,att_aptness,,24700.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_126,att_aptness,,1640.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_185,att_aptness,,1491.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_713,att_aptness,,6761.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_376,att_aptness,,2495.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_724,att_aptness,,3633.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_306,att_aptness,,5000.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_315,att_aptness,,2550.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1734,att_aptness,,4489.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_144,att_aptness,,9657.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_881,att_aptness,,19283.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_911,att_aptness,,8206.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_600,att_aptness,,14380.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_655,att_aptness,,28993.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_2924,att_aptness,,38608.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1238,att_aptness,,20815.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_3472,att_aptness,,72219.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_119,att_aptness,,3499.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_442,att_aptness,,12096.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_452,att_aptness,,11702.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_321,att_aptness,,2735.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_805,att_aptness,,14399.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_313,att_aptness,,15819.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_202,att_aptness,,5189.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_957,att_aptness,,22420.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_426,att_aptness,,7591.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1105,att_aptness,,15550.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_868,att_aptness,,27800.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1022,att_aptness,,3684.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_390,att_aptness,,10850.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_105,att_aptness,,3415.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_746,att_aptness,,18853.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1491,att_aptness,,38878.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_193,att_aptness,,996.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1815,att_aptness,,19059.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_171,att_aptness,,3800.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_719,att_aptness,,26822.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_596,att_aptness,,11402.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_695,att_aptness,,8848.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_367,att_aptness,,5091.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_301,att_aptness,,2032.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_220,att_aptness,,7958.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_369,att_aptness,,3962.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_137,att_aptness,,2407.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_146,att_aptness,,2281.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_221,att_aptness,,1628.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_672,att_aptness,,4887.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_422,att_aptness,,8260.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_121,att_aptness,,638.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_318,att_aptness,,5528.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_892,att_aptness,,35555.0,FP,1.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_181,att_aptness,,2600.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_163,att_aptness,,15508.0,FP,1.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_653,att_aptness,,1940.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_900,att_aptness,,6163.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_172,att_aptness,,2248.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_139,att_aptness,,3153.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_549,att_aptness,,7731.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1339,att_aptness,,10288.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_632,att_aptness,,9857.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_999,att_aptness,,13849.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1137,att_aptness,,18000.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_654,att_aptness,,21819.0,FP,0.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_342,att_aptness,,2100.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_109,att_aptness,,1264.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_360,att_aptness,,3550.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_3290,att_aptness,,50335.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_496,att_aptness,,4884.0,FP,0.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_389,att_aptness,,2760.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_534,att_aptness,,2000.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1230,att_aptness,,1393.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_268,att_aptness,,4500.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1190,att_aptness,,25360.0,FP,0.0,,,MVS / None,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_105,att_aptness,,1400.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_328,att_aptness,,3127.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_177,att_aptness,,1558.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_273,att_aptness,,6215.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_124,att_aptness,,470.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_111,att_aptness,,1086.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_355,att_aptness,,980.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_321,att_aptness,,1330.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_206,att_aptness,,597.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_102,att_aptness,,543.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_130,att_aptness,,566.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_164,att_aptness,,1840.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_278,att_aptness,,1360.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1391,att_aptness,,31581.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_499,att_aptness,,3998.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_195,att_aptness,,2193.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_243,att_aptness,,3940.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_145,att_aptness,,2301.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_280,att_aptness,,3288.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_362,att_aptness,,6271.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_694,att_aptness,,1474.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_212,att_aptness,,2333.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_1325,att_aptness,,14323.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
+att_227,att_aptness,,6578.0,FP,0.0,,,,,,"AT&T data center projects (1986-1991), JSE archive. Work hours recorded directly."
