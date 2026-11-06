@@ -103,6 +103,7 @@ tooling/
 .agents-*/
 .agents-disabled-*/
 .tools/
+.worktrees/
 test-results/
 playwright-report/
 coverage/
