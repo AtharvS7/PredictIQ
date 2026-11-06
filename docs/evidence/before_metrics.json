@@ -1,0 +1,74 @@
+{
+  "timestamp": "2026-11-06T11:24:00+05:30",
+  "legacy_model_report": {
+    "model_name": "StackingEnsemble",
+    "dataset_shape": [740, 30],
+    "dataset_sources": ["albrecht", "china", "desharnais", "kitchenham", "maxwell"],
+    "holdout_r2": 0.4861,
+    "cv_mean_r2": 0.569,
+    "cv_std_r2": 0.057,
+    "pred25": 39.9,
+    "pred50": 62.8,
+    "mae_hours": 1846.9,
+    "rmse_hours": 3130.1,
+    "mmre_percent": 91.9,
+    "conformal_log_radius": 1.1131170311863694,
+    "top_features": {
+      "log_size_fp": 0.2653,
+      "size_fp": 0.208939,
+      "duration_months": 0.181076,
+      "Transactions": 0.088603,
+      "Entities": 0.067514,
+      "PointsNonAdjust": 0.066906
+    },
+    "known_issues": "Random split over pooled sources with fabricated features at inference; 481 China rows corrupted by Resource code in legacy data."
+  },
+  "research_rebuild_2026_09_09": {
+    "model_name": "HuberPowerLaw",
+    "rows_reconstructed": 787,
+    "sources": {
+      "china": 499,
+      "desharnais": 81,
+      "maxwell": 62,
+      "kitchenham": 145
+    },
+    "test_partition_size": 158,
+    "metrics": {
+      "mae_hours": 1740.08,
+      "mdape_percent": 51.29,
+      "pred25_percent": 24.05,
+      "rmsle": 0.8726,
+      "r2_hours": 0.2998,
+      "conformal_coverage_percent": 89.24,
+      "conformal_median_width_hours": 9011.0
+    },
+    "median_baseline": {
+      "mae_hours": 2075.7,
+      "mdape_percent": 61.46,
+      "pred25_percent": 18.35,
+      "rmsle": 1.0788,
+      "r2_hours": -0.0712
+    }
+  },
+  "external_validation_2026_09_15": {
+    "evaluation_dataset": "AT&T aptness (JSE archive)",
+    "evaluation_rows": 104,
+    "total_research_rows": 891,
+    "baseline_huber": {
+      "mae_hours": 6484.92,
+      "mdape_percent": 58.85,
+      "pred25_percent": 22.12,
+      "r2": 0.139
+    },
+    "tuned_huber": {
+      "mae_hours": 6536.23,
+      "mdape_percent": 59.57,
+      "pred25_percent": 21.15,
+      "r2": 0.126
+    }
+  },
+  "shipped_artifacts_sha256": {
+    "predictiq_best_model_pkl": "0bea59fbe69a5b17acdf9953d61e659b26d3450052fd8934b2b1e0b716e0b257",
+    "predictiq_scaler_pkl": "b2ac866974acf7ef9d7dbbf58dcab255fec4008f391c7f8448cfead7b0ab81ad"
+  }
+}

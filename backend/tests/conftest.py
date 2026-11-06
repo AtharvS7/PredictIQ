@@ -40,6 +40,7 @@ def contract_model_artifacts(tmp_path, monkeypatch):
     frame = pd.DataFrame(np.ones((4, 27)), columns=EXPECTED_FEATURES)
     scaler = StandardScaler().fit(frame)
     model = DummyRegressor().fit(scaler.transform(frame), np.full(4, np.log1p(1000)))
+    model.n_features_in_ = len(EXPECTED_FEATURES)
     model_path, scaler_path, features_path = [tmp_path / name for name in ("model.pkl", "scaler.pkl", "features.json")]
     model_path.write_bytes(pickle.dumps(model))
     scaler_path.write_bytes(pickle.dumps(scaler))
