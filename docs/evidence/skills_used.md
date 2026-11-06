@@ -6,3 +6,5 @@
 | CP00 | `code-explorer` (`.agents/skills/code-explorer.md`) | Exploring test suites and model hashes | Located artifacts and test modules quickly | Yes |
 | CP00 | `opensource-sanitizer` (`.agents/skills/opensource-sanitizer.md`) | Reviewing working tree imports and untracked docs for secrets | Cleaned up .gitignore and verified no secrets committed | Yes |
 | CP00 | `using-git-worktrees` (`.agents-disabled-20260908-103145/skills/using-git-worktrees/SKILL.md`) | Setting up isolated worktrees for workstreams | Configured `.worktrees/` directory and local workstream branches | Yes |
+| CP01 | `architect` (`.agents/skills/architect.md`) | Defining system contracts, API v2 schema, and ML input boundaries | Established frozen ml_contract.md and api_estimate_v2.json | Yes |
+| CP01 | `spec-miner` (`.agents/skills/spec-miner.md`) | Extracting behavioral assertions and invariants for evaluation | Structured frozen evaluation protocol and decision rule invariants | Yes |

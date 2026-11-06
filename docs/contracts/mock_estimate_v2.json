@@ -1,0 +1,78 @@
+{
+  "estimate_id": "11111111-2222-3333-4444-555555555555",
+  "project_name": "Healthcare Claims Portal",
+  "effort_hours": {
+    "p10": 1150.0,
+    "p50": 1820.0,
+    "p90": 2940.0
+  },
+  "person_months": {
+    "p10": 7.57,
+    "p50": 11.97,
+    "p90": 19.34
+  },
+  "cost": {
+    "p10": 86250.0,
+    "p50": 136500.0,
+    "p90": 220500.0,
+    "currency": "USD",
+    "rate": 75.0
+  },
+  "size": {
+    "value": 185.0,
+    "source": "nlp",
+    "uncertainty": {
+      "p10": 160.0,
+      "p50": 185.0,
+      "p90": 220.0
+    }
+  },
+  "drivers": [
+    {
+      "name": "Functional Size",
+      "impact": "major_increase",
+      "description": "185 estimated Function Points derived from 38 detected user stories and data entities."
+    },
+    {
+      "name": "Integration Complexity",
+      "impact": "moderate_increase",
+      "description": "5 external systems identified (EHR, claims clearinghouse, identity provider, payment gateway, audit logger)."
+    },
+    {
+      "name": "Standard Modern Stack",
+      "impact": "neutral",
+      "description": "FastAPI + React tech stack with standard pattern productivity baseline."
+    }
+  ],
+  "assumptions": [
+    {
+      "category": "Sizing",
+      "description": "Uncertainty band reflects ±15% variance from automatic document parsing.",
+      "editable": true
+    },
+    {
+      "category": "Effort Conversion",
+      "description": "152 productive working hours per person-month.",
+      "editable": false
+    },
+    {
+      "category": "Hourly Rate",
+      "description": "Blended engineering rate of $75/hour (editable).",
+      "editable": true
+    }
+  ],
+  "data_quality_tier": "B",
+  "ood_flags": [],
+  "model": {
+    "version": "2.0.0-rc.1",
+    "sha256": "0bea59fbe69a5b17acdf9953d61e659b26d3450052fd8934b2b1e0b716e0b257",
+    "trained_on_rows": 787,
+    "sources": [
+      "china",
+      "desharnais",
+      "kitchenham",
+      "maxwell"
+    ],
+    "metrics_ref": "docs/evidence/model_validation_summary.md"
+  }
+}

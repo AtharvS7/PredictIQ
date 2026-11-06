@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PredictIQEstimateResponseV2",
+  "description": "Schema for PredictIQ v2 calibrated effort, cost, and uncertainty estimate responses",
+  "type": "object",
+  "required": [
+    "estimate_id",
+    "project_name",
+    "effort_hours",
+    "person_months",
+    "cost",
+    "size",
+    "drivers",
+    "assumptions",
+    "data_quality_tier",
+    "ood_flags",
+    "model"
+  ],
+  "properties": {
+    "estimate_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "project_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "effort_hours": {
+      "type": "object",
+      "required": ["p10", "p50", "p90"],
+      "properties": {
+        "p10": { "type": "number", "minimum": 0 },
+        "p50": { "type": "number", "minimum": 0 },
+        "p90": { "type": "number", "minimum": 0 }
+      }
+    },
+    "person_months": {
+      "type": "object",
+      "required": ["p10", "p50", "p90"],
+      "properties": {
+        "p10": { "type": "number", "minimum": 0 },
+        "p50": { "type": "number", "minimum": 0 },
+        "p90": { "type": "number", "minimum": 0 }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "required": ["p10", "p50", "p90", "currency", "rate"],
+      "properties": {
+        "p10": { "type": "number", "minimum": 0 },
+        "p50": { "type": "number", "minimum": 0 },
+        "p90": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "rate": { "type": "number", "minimum": 0 }
+      }
+    },
+    "size": {
+      "type": "object",
+      "required": ["value", "source", "uncertainty"],
+      "properties": {
+        "value": { "type": "number", "minimum": 0 },
+        "source": { "type": "string", "enum": ["user", "nlp"] },
+        "uncertainty": {
+          "type": "object",
+          "required": ["p10", "p50", "p90"],
+          "properties": {
+            "p10": { "type": "number", "minimum": 0 },
+            "p50": { "type": "number", "minimum": 0 },
+            "p90": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "drivers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "impact", "description"],
+        "properties": {
+          "name": { "type": "string" },
+          "impact": { "type": "string", "enum": ["major_increase", "moderate_increase", "neutral", "moderate_decrease", "major_decrease"] },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "description", "editable"],
+        "properties": {
+          "category": { "type": "string" },
+          "description": { "type": "string" },
+          "editable": { "type": "boolean" }
+        }
+      }
+    },
+    "data_quality_tier": {
+      "type": "string",
+      "enum": ["A", "B", "C"]
+    },
+    "ood_flags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "model": {
+      "type": "object",
+      "required": ["version", "sha256", "trained_on_rows", "sources", "metrics_ref"],
+      "properties": {
+        "version": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "trained_on_rows": { "type": "integer", "minimum": 1 },
+        "sources": { "type": "array", "items": { "type": "string" } },
+        "metrics_ref": { "type": "string" }
+      }
+    }
+  }
+}
