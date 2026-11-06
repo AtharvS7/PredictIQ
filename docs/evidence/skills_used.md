@@ -12,3 +12,5 @@
 | CP02 | `deep-research` (`.agents-disabled-20260908-103145/skills/deep-research/SKILL.md`) | Investigating recent academic software benchmarking datasets | Identified COSMIC Yürüm/Demirörs (2026) benchmark and ISBSG scope | Yes |
 | CP03 | `python-reviewer` (`.agents/skills/python-reviewer.md`) | Reviewing data ingestion script for safe file parsing and type safety | Implemented named-column parsing, atomic writes, and China Effort assertion | Yes |
 | CP04 | `mle-reviewer` (`.agents/skills/mle-reviewer.md`) | Reviewing feature schema harmonization and unit conversion integrity | Verified Albrecht thousand-hours rule and prohibited KLOC-to-FP conversions | Yes |
+| CP05 | `tdd-guide` (`.agents/skills/tdd-guide.md`) | Designing automated data quality and leakage test suite | Created 9 comprehensive data property tests in test_data_v2.py | Yes |
+| CP05 | `silent-failure-hunter` (`.agents/skills/silent-failure-hunter.md`) | Detecting subtle data parsing bugs and silent column misalignment | Uncovered AT&T whitespace column shift and corrected field mapping | Yes |

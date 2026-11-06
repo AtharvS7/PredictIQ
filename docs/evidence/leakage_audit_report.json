@@ -1,0 +1,57 @@
+{
+  "dataset_path": "E:\\Codex\\PredictIQ-dev3\\backend\\ml\\data\\projects_v2.csv",
+  "sha256": "b05ad3b0111d4ed3ff89b7aa2a0f653e494f81953c701916f27756d1746eede3",
+  "total_rows": 915,
+  "columns": [
+    "project_id",
+    "source",
+    "year",
+    "size_value",
+    "size_unit",
+    "effort_hours",
+    "duration_months",
+    "team_size",
+    "platform",
+    "language",
+    "dev_type",
+    "notes"
+  ],
+  "checks": {
+    "banned_features": {
+      "passed": true,
+      "present_banned": []
+    },
+    "duplicate_keys": {
+      "passed": true,
+      "duplicate_ids_count": 0,
+      "duplicate_tuples_count": 0
+    },
+    "target_leakage": {
+      "passed": true,
+      "feature_correlations_with_effort": {
+        "size_value": {
+          "correlation": 0.6439,
+          "r2": 0.4147
+        },
+        "duration_months": {
+          "correlation": 0.5432,
+          "r2": 0.2951
+        }
+      },
+      "suspicious_features": []
+    },
+    "temporal_audit": {
+      "passed": true,
+      "year_min": 1982,
+      "year_max": 1988,
+      "missing_years": 834
+    },
+    "productivity_sanity": {
+      "passed": true,
+      "min_h_per_fp": 0.32,
+      "median_h_per_fp": 9.17,
+      "max_h_per_fp": 95.14
+    }
+  },
+  "status": "PASS"
+}

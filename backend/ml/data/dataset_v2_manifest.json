@@ -1,0 +1,66 @@
+{
+  "manifest_version": "2.0.0",
+  "generated_at": "2026-11-06T11:47:00Z",
+  "dataset_file": "projects_v2.csv",
+  "dataset_sha256": "b05ad3b0111d4ed3ff89b7aa2a0f653e494f81953c701916f27756d1746eede3",
+  "total_rows": 915,
+  "schema": [
+    "project_id",
+    "source",
+    "year",
+    "size_value",
+    "size_unit",
+    "effort_hours",
+    "duration_months",
+    "team_size",
+    "platform",
+    "language",
+    "dev_type",
+    "notes"
+  ],
+  "sources_breakdown": {
+    "china": {
+      "rows": 499,
+      "size_metric": "Function Points (IFPUG)",
+      "effort_metric": "Person-Hours (verified project 1 effort = 7490)",
+      "sha256": "8b512e08e6ca6f9a7442ca650571faeb6e138b32e6a32cb412d0ff212d210a51"
+    },
+    "kitchenham": {
+      "rows": 145,
+      "size_metric": "Function Points",
+      "effort_metric": "Person-Hours",
+      "sha256": "e3204ea264101e4be81f96459ea50b07e77b47565313a48e715e71465bf195f3"
+    },
+    "desharnais": {
+      "rows": 81,
+      "size_metric": "Adjusted Function Points",
+      "effort_metric": "Person-Hours",
+      "sha256": "787f730c451ee880cf277ba3a388b1b26857faae3980456104e9a38ae2b86ab8"
+    },
+    "maxwell": {
+      "rows": 62,
+      "size_metric": "Function Points",
+      "effort_metric": "Person-Hours",
+      "sha256": "ad21e1a50ce0bb53198ebae348f060fe732738ea0e85f57cfc35fe5ae5c95779"
+    },
+    "albrecht": {
+      "rows": 24,
+      "size_metric": "Adjusted Function Points",
+      "effort_metric": "Person-Hours (Albrecht & Gaffney 1983 raw thousands * 1000)",
+      "sha256": "aa250ef2e0cfab5ee1e7655fbcfeb8a927faeb1bb3805b89a038bf3b09aa0d93"
+    },
+    "att_aptness": {
+      "rows": 104,
+      "size_metric": "Function Points",
+      "effort_metric": "Person-Hours",
+      "sha256": "79b4a4cbbf847113110531e217cbe323498eb7dc3b99db7a9df7c7e5bf85e2b0"
+    }
+  },
+  "build_script": "backend/ml/rebuild_dataset.py",
+  "audit_tool": "backend/ml/data/check_leakage.py",
+  "revocation_notice": {
+    "superseded_file": "backend/ml/data/predictiq_merged_dataset.csv",
+    "status": "REVOKED_AND_SUPERSEDED",
+    "rationale": "predictiq_merged_dataset.csv contained 481 corrupted target labels (China project 1 had effort=4 instead of 7490), fabricated features (T01-T15, Transactions, Entities, PointsNonAdjust, Adjustment, TeamExp, ManagerExp) which induced severe train/serve skew, and lack of provenance tracking. It must never be used for v2 model training."
+  }
+}

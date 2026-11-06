@@ -178,12 +178,14 @@ def build_harmonized_records(research_dir: Path) -> tuple[pd.DataFrame, dict[str
     source_stats["albrecht"] = {"raw_rows": len(df_alb), "ingested": a_count, "unit": "FP"}
 
     # 6. AT&T Aptness (104 rows)
+    # File format is 5 whitespace-separated columns:
+    # 1. size_fp, 2. effort_hours, 3. os (0=Unix, 1=MVS), 4. dbms (1=IDMS, 2=IMS, 3=INFORMIX, 4=INGRESS, 5=Other), 5. language (1=COBOL, 2=PLI, 3=C, 4=Other)
     att_path = research_dir / "aptness.dat.txt"
     df_att = pd.read_csv(
         att_path,
         sep=r"\s+",
         header=None,
-        names=["id", "size_fp", "effort_hours", "duration_months", "os", "dbms", "language"],
+        names=["size_fp", "effort_hours", "os", "dbms", "language"],
     )
     att_count = 0
     os_map = {0: "Unix", 1: "MVS"}
@@ -200,7 +202,7 @@ def build_harmonized_records(research_dir: Path) -> tuple[pd.DataFrame, dict[str
         lang_str = lang_map.get(int(lang_code)) if pd.notna(lang_code) else None
         platform_str = f"{os_str} / {db_str}" if os_str or db_str else None
         records.append({
-            "project_id": f"att_{int(row['id']):03d}",
+            "project_id": f"att_{idx + 1:03d}",
             "source": "att_aptness",
             "year": None,
             "size_value": size,
