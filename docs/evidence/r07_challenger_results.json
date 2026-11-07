@@ -1,0 +1,72 @@
+{
+  "protocol": "6-fold Leave-One-Source-Out (LOSO)",
+  "dataset_records": 915,
+  "incumbent_model": "Model A (MonotonePowerLaw - Incumbent)",
+  "models": {
+    "Model A (MonotonePowerLaw - Incumbent)": {
+      "macro_mdape": 56.31,
+      "macro_pred25": 20.21,
+      "macro_mae_hours": 5875.2,
+      "relative_mdape_gain_pct": 0.0,
+      "wilcoxon_p_value": 1.0,
+      "strictly_monotone": true,
+      "criteria_check": {
+        "c1_mdape_gain_ge_3pct": false,
+        "c2_pred25_non_inferior": true,
+        "c3_monotonicity_preserved": true,
+        "c4_clean_features_only": true,
+        "overall_pass": false
+      }
+    },
+    "Model B (Hierarchical Mixed-Effects Log-Log)": {
+      "macro_mdape": 56.14,
+      "macro_pred25": 19.6,
+      "macro_mae_hours": 5904.5,
+      "relative_mdape_gain_pct": 0.29,
+      "wilcoxon_p_value": 7.276110915272018e-17,
+      "strictly_monotone": true,
+      "criteria_check": {
+        "c1_mdape_gain_ge_3pct": false,
+        "c2_pred25_non_inferior": true,
+        "c3_monotonicity_preserved": true,
+        "c4_clean_features_only": true,
+        "overall_pass": false
+      }
+    },
+    "Model D (QuantileRegression L1 Median)": {
+      "macro_mdape": 57.84,
+      "macro_pred25": 19.75,
+      "macro_mae_hours": 5861.6,
+      "relative_mdape_gain_pct": -2.72,
+      "wilcoxon_p_value": 0.01823557555164746,
+      "strictly_monotone": true,
+      "criteria_check": {
+        "c1_mdape_gain_ge_3pct": false,
+        "c2_pred25_non_inferior": true,
+        "c3_monotonicity_preserved": true,
+        "c4_clean_features_only": true,
+        "overall_pass": false
+      }
+    },
+    "Track 2 (MonotoneHistGradientBoosting)": {
+      "macro_mdape": 56.49,
+      "macro_pred25": 20.05,
+      "macro_mae_hours": 6053.7,
+      "relative_mdape_gain_pct": -0.33,
+      "wilcoxon_p_value": 0.7096765420877327,
+      "strictly_monotone": true,
+      "criteria_check": {
+        "c1_mdape_gain_ge_3pct": false,
+        "c2_pred25_non_inferior": true,
+        "c3_monotonicity_preserved": true,
+        "c4_clean_features_only": true,
+        "overall_pass": false
+      }
+    }
+  },
+  "decision": {
+    "displaced": false,
+    "selected_model": "Model A (MonotonePowerLaw - Incumbent)",
+    "justification": "None of the challenger models met all four frozen decision criteria (>=3% relative MdAPE gain with non-inferior PRED25 and monotonicity). Model A (MonotonePowerLaw - Incumbent) is unanimously confirmed as the production estimator."
+  }
+}

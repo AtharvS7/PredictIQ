@@ -109,18 +109,25 @@ def calculate_cost(
     effort_hours_min: float,
     effort_hours_max: float,
     hourly_rate_usd: float = 75.0,
+    effort_hours_p25: float | None = None,
+    effort_hours_p75: float | None = None,
 ) -> dict:
     """
     Layer 3: Convert effort hours to monetary cost.
 
     Returns:
-        Dictionary with min, likely, max costs in USD.
+        Dictionary with min, likely, max costs in USD, plus optional p25/p75.
     """
-    return {
+    res = {
         "cost_min_usd": round(effort_hours_min * hourly_rate_usd, 2),
         "cost_likely_usd": round(effort_hours_likely * hourly_rate_usd, 2),
         "cost_max_usd": round(effort_hours_max * hourly_rate_usd, 2),
     }
+    if effort_hours_p25 is not None:
+        res["cost_p25_usd"] = round(effort_hours_p25 * hourly_rate_usd, 2)
+    if effort_hours_p75 is not None:
+        res["cost_p75_usd"] = round(effort_hours_p75 * hourly_rate_usd, 2)
+    return res
 
 
 def calculate_cost_v2(
@@ -132,13 +139,18 @@ def calculate_cost_v2(
     p10_eff = float(effort_hours["p10"])
     p50_eff = float(effort_hours["p50"])
     p90_eff = float(effort_hours["p90"])
-    return {
+    res = {
         "p10": round(p10_eff * hourly_rate, 2),
         "p50": round(p50_eff * hourly_rate, 2),
         "p90": round(p90_eff * hourly_rate, 2),
         "currency": currency,
         "rate": float(hourly_rate),
     }
+    if "p25" in effort_hours:
+        res["p25"] = round(float(effort_hours["p25"]) * hourly_rate, 2)
+    if "p75" in effort_hours:
+        res["p75"] = round(float(effort_hours["p75"]) * hourly_rate, 2)
+    return res
 
 
 def calculate_timeline(

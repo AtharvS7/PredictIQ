@@ -1,0 +1,48 @@
+{
+  "model_version": "2.0.0-rc.1",
+  "architecture": "MonotonePowerLaw + MondrianConformalPredictor",
+  "parameters": {
+    "base_marginal": {
+      "beta0": 3.1880360932291065,
+      "a": 24.24077404471689,
+      "b": 0.8270266757672359
+    },
+    "multivariate": {
+      "beta0": 3.318083087164682,
+      "a": 27.60737886478216,
+      "b": 0.592956208655621,
+      "c": 0.528897172194948
+    },
+    "has_duration": true,
+    "n_valid_duration_train": 450
+  },
+  "calibration": {
+    "conformal_80": {
+      "nominal_coverage": 0.8,
+      "global_quantile": 1.0053189146513999,
+      "bucket_quantiles": {
+        "small": 1.1481050428570816,
+        "medium": 0.9561358724813616,
+        "large": 1.1864392216832869
+      }
+    },
+    "conformal_50": {
+      "nominal_coverage": 0.5,
+      "global_quantile": 0.6004362831686461,
+      "bucket_quantiles": {
+        "small": 0.6072895110610235,
+        "medium": 0.5999012057795152,
+        "large": 0.6564913515279382
+      }
+    },
+    "bucket_thresholds": [
+      150.0,
+      750.0
+    ],
+    "buckets": [
+      "small",
+      "medium",
+      "large"
+    ]
+  }
+}

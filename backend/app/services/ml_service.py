@@ -236,6 +236,8 @@ class MLService:
         effort_p10 = float(quantiles["p10"][0])
         effort_p50 = float(quantiles["p50"][0])
         effort_p90 = float(quantiles["p90"][0])
+        effort_p25 = float(quantiles.get("p25", [effort_p10])[0])
+        effort_p75 = float(quantiles.get("p75", [effort_p90])[0])
 
         # Size uncertainty
         if size_source == "nlp":
@@ -252,33 +254,91 @@ class MLService:
             size_p50 = round(size_fp, 1)
             size_p90 = round(size_fp, 1)
 
-        # Propagate size uncertainty into effort intervals (R04)
+        # Propagate size uncertainty into effort intervals (R04, R08)
         if size_p10 > 0 and size_p90 > size_p10 and (size_p10 < size_fp or size_p90 > size_fp):
             # Log-space variance combination: Var(ln E) ~= b^2 * Var(ln S) + Var(residuals)
             b = float(self.get_model_native_explanation().get("size_elasticity_b", 0.827))
             delta_s = 0.5 * (np.log(size_p90) - np.log(size_p10))
             delta_e_size = b * delta_s
 
-            # Model base residual half-width in log space
-            q_model = 0.5 * (np.log(effort_p90) - np.log(effort_p10))
-            q_combined = float(np.sqrt(q_model**2 + delta_e_size**2))
+            # Outer 80% conformal band combination
+            q80_model = 0.5 * (np.log(effort_p90) - np.log(effort_p10))
+            q80_combined = float(np.sqrt(q80_model**2 + delta_e_size**2))
 
-            effort_p10 = effort_p50 * np.exp(-q_combined)
-            effort_p90 = effort_p50 * np.exp(q_combined)
+            effort_p10 = effort_p50 * np.exp(-q80_combined)
+            effort_p90 = effort_p50 * np.exp(q80_combined)
 
-        # Strict non-crossing guarantee: 1.0 <= p10 <= p50 <= p90
+            # Inner 50% likely band combination
+            q50_model = 0.5 * (np.log(effort_p75) - np.log(effort_p25))
+            q50_combined = float(np.sqrt(q50_model**2 + (0.526 * delta_e_size)**2))
+
+            effort_p25 = effort_p50 * np.exp(-q50_combined)
+            effort_p75 = effort_p50 * np.exp(q50_combined)
+
+        # Empirical-Bayes shrinkage to organization actuals (R05)
+        # Evaluated in R05: Relative MdAPE gain = 11.9% at k=3, 14.9% at k=5, 19.5% at k=10
+        org_calibration = {
+            "applied": False,
+            "k_actuals": 0,
+            "shrinkage_weight": 0.0,
+            "multiplier": 1.0,
+        }
+        actuals = params.get("org_actuals") or flat.get("org_actuals")
+        if actuals and isinstance(actuals, list):
+            valid_actuals = [
+                a for a in actuals
+                if isinstance(a, dict)
+                and float(a.get("size_fp", 0) or 0) > 0
+                and float(a.get("effort_hours", 0) or 0) > 0
+            ]
+            k_count = len(valid_actuals)
+            if k_count > 0:
+                # Variance ratio sigma^2 / tau^2 from 6-fold cross-validation
+                PRIOR_RATIO = 2.83
+                w_k = float(k_count / (k_count + PRIOR_RATIO))
+
+                residuals = []
+                for act in valid_actuals:
+                    s_act = float(act["size_fp"])
+                    e_act = float(act["effort_hours"])
+                    pred_act = float(self.bundle.predict_quantiles({"size_fp": s_act})["p50"][0])
+                    residuals.append(np.log(e_act) - np.log(pred_act))
+
+                mean_res = float(np.mean(residuals))
+                gamma_org = float(np.exp(w_k * mean_res))
+                gamma_org = float(np.clip(gamma_org, 0.33, 3.0))
+
+                effort_p10 *= gamma_org
+                effort_p25 *= gamma_org
+                effort_p50 *= gamma_org
+                effort_p75 *= gamma_org
+                effort_p90 *= gamma_org
+
+                org_calibration = {
+                    "applied": True,
+                    "k_actuals": k_count,
+                    "shrinkage_weight": round(w_k, 3),
+                    "multiplier": round(gamma_org, 3),
+                }
+
+        # Strict non-crossing guarantee: 1.0 <= p10 <= p25 <= p50 <= p75 <= p90
         effort_p10 = max(1.0, float(effort_p10))
-        effort_p50 = max(effort_p10, float(effort_p50))
-        effort_p90 = max(effort_p50, float(effort_p90))
+        effort_p25 = max(effort_p10, float(effort_p25))
+        effort_p50 = max(effort_p25, float(effort_p50))
+        effort_p75 = max(effort_p50, float(effort_p75))
+        effort_p90 = max(effort_p75, float(effort_p90))
 
         # Person-months at 152 hrs/PM
         pm_p10 = round(effort_p10 / HOURS_PER_PERSON_MONTH, 2)
+        pm_p25 = round(effort_p25 / HOURS_PER_PERSON_MONTH, 2)
         pm_p50 = round(effort_p50 / HOURS_PER_PERSON_MONTH, 2)
+        pm_p75 = round(effort_p75 / HOURS_PER_PERSON_MONTH, 2)
         pm_p90 = round(effort_p90 / HOURS_PER_PERSON_MONTH, 2)
 
         manifest = self.bundle.manifest
         model_hash = (
-            manifest.get("file_hashes", {}).get("model.pkl")
+            manifest.get("file_hashes", {}).get("model_params.json")
+            or manifest.get("file_hashes", {}).get("model.pkl")
             or manifest.get("dataset_sha256", "")
         )
         result = {
@@ -286,20 +346,28 @@ class MLService:
             "effort_hours_likely": round(effort_p50, 1),
             "effort_hours_min": round(effort_p10, 1),
             "effort_hours_max": round(effort_p90, 1),
+            "effort_hours_p25": round(effort_p25, 1),
+            "effort_hours_p75": round(effort_p75, 1),
             "confidence_pct": 80.0,
             "nominal_interval_coverage": 0.80,
+            "likely_band_coverage": 0.50,
             "model_mode": "production_v2_monotone",
             "model_version": self.bundle.model_version,
+            "org_calibration": org_calibration,
 
             # v2 Contract fields
             "effort_hours": {
                 "p10": round(effort_p10, 1),
+                "p25": round(effort_p25, 1),
                 "p50": round(effort_p50, 1),
+                "p75": round(effort_p75, 1),
                 "p90": round(effort_p90, 1),
             },
             "person_months": {
                 "p10": pm_p10,
+                "p25": pm_p25,
                 "p50": pm_p50,
+                "p75": pm_p75,
                 "p90": pm_p90,
             },
             "size": {

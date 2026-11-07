@@ -73,4 +73,22 @@ describe('Confidence Interval Primitives', () => {
     expect(screen.getByText('Tier A')).toBeInTheDocument();
     expect(screen.getByText('1,820 hrs')).toBeInTheDocument();
   });
+
+  it('renders inner likely band with p25 and p75', () => {
+    render(
+      <ConfidenceRangeBar
+        p10={1000}
+        p25={1300}
+        p50={1600}
+        p75={2100}
+        p90={2800}
+        unit="hours"
+        showLabels
+        showDetails
+      />
+    );
+
+    expect(screen.getByText(/Likely: 1,300 hrs – 2,100 hrs/i)).toBeInTheDocument();
+    expect(screen.getByText(/50% Likely Band \(Inner\)/i)).toBeInTheDocument();
+  });
 });

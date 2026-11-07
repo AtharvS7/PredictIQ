@@ -1,0 +1,48 @@
+{
+  "baseline_k0": {
+    "macro_mdape": 56.1403,
+    "macro_pred25": 19.6001
+  },
+  "k_experiments": {
+    "k_3": {
+      "k": 3,
+      "macro_mdape": 49.4625,
+      "macro_pred25": 24.1413,
+      "relative_gain_mdape": 0.1189,
+      "relative_gain_pct": 11.89,
+      "folds_evaluated": 6
+    },
+    "k_5": {
+      "k": 5,
+      "macro_mdape": 47.8012,
+      "macro_pred25": 25.8348,
+      "relative_gain_mdape": 0.1485,
+      "relative_gain_pct": 14.85,
+      "folds_evaluated": 6
+    },
+    "k_10": {
+      "k": 10,
+      "macro_mdape": 45.184,
+      "macro_pred25": 28.2997,
+      "relative_gain_mdape": 0.1952,
+      "relative_gain_pct": 19.52,
+      "folds_evaluated": 6
+    },
+    "k_20": {
+      "k": 20,
+      "macro_mdape": 43.3654,
+      "macro_pred25": 29.8868,
+      "relative_gain_mdape": 0.2276,
+      "relative_gain_pct": 22.76,
+      "folds_evaluated": 6
+    }
+  },
+  "decision": {
+    "threshold_relative_gain": 0.1,
+    "max_k": 10,
+    "pass_gain_criterion": true,
+    "recommendation": "Implement Empirical-Bayes actuals shrinkage in serving and UI.",
+    "best_gain_at_k_le_10": 0.1952,
+    "best_gain_at_k_le_10_pct": 19.52
+  }
+}

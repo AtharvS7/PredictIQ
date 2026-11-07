@@ -30,7 +30,9 @@
       "required": ["p10", "p50", "p90"],
       "properties": {
         "p10": { "type": "number", "minimum": 0 },
+        "p25": { "type": "number", "minimum": 0 },
         "p50": { "type": "number", "minimum": 0 },
+        "p75": { "type": "number", "minimum": 0 },
         "p90": { "type": "number", "minimum": 0 }
       }
     },
@@ -39,7 +41,9 @@
       "required": ["p10", "p50", "p90"],
       "properties": {
         "p10": { "type": "number", "minimum": 0 },
+        "p25": { "type": "number", "minimum": 0 },
         "p50": { "type": "number", "minimum": 0 },
+        "p75": { "type": "number", "minimum": 0 },
         "p90": { "type": "number", "minimum": 0 }
       }
     },
@@ -48,7 +52,9 @@
       "required": ["p10", "p50", "p90", "currency", "rate"],
       "properties": {
         "p10": { "type": "number", "minimum": 0 },
+        "p25": { "type": "number", "minimum": 0 },
         "p50": { "type": "number", "minimum": 0 },
+        "p75": { "type": "number", "minimum": 0 },
         "p90": { "type": "number", "minimum": 0 },
         "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
         "rate": { "type": "number", "minimum": 0 }

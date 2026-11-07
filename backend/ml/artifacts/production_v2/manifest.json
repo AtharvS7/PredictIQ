@@ -3,13 +3,16 @@
   "dataset_sha256": "b05ad3b0111d4ed3ff89b7aa2a0f653e494f81953c701916f27756d1746eede3",
   "dataset_records": 915,
   "architecture": "MultivariateMonotoneModel + MondrianConformalPredictor",
-  "training_timestamp": "2026-11-06T09:32:26.775733+00:00",
+  "training_timestamp": "2026-11-07T17:40:58.041884+00:00",
   "file_hashes": {
     "model.pkl": "b3af00831805e5655a9a941198b1608efb222f94c3d8a977bef8eb0c15791873",
-    "conformal.pkl": "e8ce74d8b2ae96208ad1ecda748baa8bc1a739e69c306573420c2f1e184e6dff"
+    "conformal.pkl": "d02b3f68f5e2e7ad93c1f1f247bae36c7f6cc4cc4bdb3c51b9344c6fa7810535",
+    "model_params.json": "c8f746b8c006028faec9e1dfefab8f17b22b065e8ea45aa77cb971a098dda644"
   },
   "allowed_inputs": [
-    "size_fp"
+    "size_fp",
+    "duration_months",
+    "team_size"
   ],
   "banned_features": [
     "adjustment",
@@ -67,6 +70,16 @@
       "small": 1.1481050428570816,
       "medium": 0.9561358724813616,
       "large": 1.1864392216832869
+    },
+    "conformal_50": {
+      "nominal_coverage": 0.5,
+      "alpha": 0.5,
+      "global_quantile": 0.6004362831686461,
+      "bucket_quantiles": {
+        "small": 0.6072895110610235,
+        "medium": 0.5999012057795152,
+        "large": 0.6564913515279382
+      }
     },
     "bucket_thresholds": [
       150.0,

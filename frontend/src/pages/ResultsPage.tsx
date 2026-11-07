@@ -196,6 +196,8 @@ export default function ResultsPage() {
   const p10Hours = outputs.effort_min_hours;
   const p50Hours = outputs.effort_likely_hours;
   const p90Hours = outputs.effort_max_hours;
+  const p25Hours = outputs.effort_p25_hours ?? outputs.effort_hours?.p25;
+  const p75Hours = outputs.effort_p75_hours ?? outputs.effort_hours?.p75;
 
   const p10PM = hoursToPersonMonths(p10Hours);
   const p50PM = hoursToPersonMonths(p50Hours);
@@ -503,7 +505,9 @@ export default function ResultsPage() {
             <CardContent className="pt-2">
               <ConfidenceRangeBar
                 p10={p10Hours}
+                p25={p25Hours}
                 p50={p50Hours}
+                p75={p75Hours}
                 p90={p90Hours}
                 unit="hours"
                 formatValue={(val) => `${Math.round(val).toLocaleString()} hrs (${hoursToPersonMonths(val).formatted})`}

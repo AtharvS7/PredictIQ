@@ -63,8 +63,7 @@ REQUIRED_MANIFEST_KEYS: frozenset[str] = frozenset(
 )
 REQUIRED_ARTIFACT_FILES: frozenset[str] = frozenset(
     [
-        "model.pkl",
-        "conformal.pkl",
+        "model_params.json",
     ]
 )
 
@@ -325,36 +324,73 @@ def load_production_model(
                 f"SHA-256 checksum mismatch for '{fname}': expected {expected_hash}, got {actual_hash}"
             )
 
-    # 7. Safe Deserialization of Checked Artifacts
-    model_file = dir_path / "model.pkl"
-    conformal_file = dir_path / "conformal.pkl"
+    # 7. Safe Deserialization of Checked Artifacts (Zero pickle at serving when model_params.json is present)
+    model_params_file = dir_path / "model_params.json"
+    if model_params_file.exists():
+        try:
+            with model_params_file.open("r", encoding="utf-8") as f_p:
+                params_data = json.load(f_p)
+        except Exception as exc:
+            raise RuntimeError(
+                f"Failed to parse model params artifact '{model_params_file}': {exc}"
+            ) from exc
 
-    try:
-        with model_file.open("rb") as f_m:
-            model = pickle.load(f_m)
-    except Exception as exc:
-        raise RuntimeError(
-            f"Failed to deserialize model artifact '{model_file}': {exc}"
-        ) from exc
+        p = params_data.get("parameters", {})
+        base_p = p.get("base_marginal", {})
+        multi_p = p.get("multivariate", {})
 
-    if not isinstance(model, MultivariateMonotoneModel):
-        raise RuntimeError(
-            f"Loaded model is of unexpected type: {type(model).__name__}, expected MultivariateMonotoneModel"
-        )
+        model = MultivariateMonotoneModel()
+        model.beta0_base_ = float(base_p.get("beta0", 3.188036))
+        model.a_base_ = float(base_p.get("a", np.exp(model.beta0_base_)))
+        model.b_base_ = float(base_p.get("b", 0.827027))
+        model.beta0_ = float(multi_p.get("beta0", 3.318083))
+        model.a_ = float(multi_p.get("a", np.exp(model.beta0_)))
+        model.b_ = float(multi_p.get("b", 0.592956))
+        model.c_ = float(multi_p.get("c", 0.528897))
+        model.has_duration_ = bool(p.get("has_duration", True))
+        model.n_valid_duration_train_ = int(p.get("n_valid_duration_train", 450))
 
-    try:
-        with conformal_file.open("rb") as f_c:
-            conformal = pickle.load(f_c)
-    except Exception as exc:
-        raise RuntimeError(
-            f"Failed to deserialize conformal calibrator artifact '{conformal_file}': {exc}"
-        ) from exc
+        cal_data = params_data.get("calibration", {})
+        c80 = cal_data.get("conformal_80", {})
+        c50 = cal_data.get("conformal_50", {})
 
-    if not isinstance(conformal, MondrianConformalPredictor):
-        raise RuntimeError(
-            f"Loaded conformal calibrator is of unexpected type: {type(conformal).__name__}, "
-            "expected MondrianConformalPredictor"
-        )
+        conformal = MondrianConformalPredictor(estimator=model)
+        conformal.estimator_ = model
+        conformal.global_quantile_ = float(c80.get("global_quantile", 1.005319))
+        conformal.bucket_quantiles_ = {k: float(v) for k, v in c80.get("bucket_quantiles", {}).items()}
+        conformal.global_quantile_50_ = float(c50.get("global_quantile", 0.600436))
+        conformal.bucket_quantiles_50_ = {k: float(v) for k, v in c50.get("bucket_quantiles", {}).items()}
+        conformal.is_calibrated_ = True
+    else:
+        model_file = dir_path / "model.pkl"
+        conformal_file = dir_path / "conformal.pkl"
+
+        try:
+            with model_file.open("rb") as f_m:
+                model = pickle.load(f_m)
+        except Exception as exc:
+            raise RuntimeError(
+                f"Failed to deserialize model artifact '{model_file}': {exc}"
+            ) from exc
+
+        if not isinstance(model, MultivariateMonotoneModel):
+            raise RuntimeError(
+                f"Loaded model is of unexpected type: {type(model).__name__}, expected MultivariateMonotoneModel"
+            )
+
+        try:
+            with conformal_file.open("rb") as f_c:
+                conformal = pickle.load(f_c)
+        except Exception as exc:
+            raise RuntimeError(
+                f"Failed to deserialize conformal calibrator artifact '{conformal_file}': {exc}"
+            ) from exc
+
+        if not isinstance(conformal, MondrianConformalPredictor):
+            raise RuntimeError(
+                f"Loaded conformal calibrator is of unexpected type: {type(conformal).__name__}, "
+                "expected MondrianConformalPredictor"
+            )
 
     logger.info(
         "Production model bundle loaded and verified successfully from %s (version: %s)",

@@ -233,7 +233,9 @@ class ConformalIntervalPredictor(BaseEstimator, RegressorMixin):
         # Fitted & calibrated state
         self.estimator_: Any = None
         self.global_quantile_: float | None = None
+        self.global_quantile_50_: float | None = None
         self.bucket_quantiles_: dict[str, float] = {}
+        self.bucket_quantiles_50_: dict[str, float] = {}
         self.cal_scores_: np.ndarray | None = None
         self.is_calibrated_: bool = False
 
@@ -365,9 +367,11 @@ class ConformalIntervalPredictor(BaseEstimator, RegressorMixin):
 
         self.cal_scores_ = scores
         self.global_quantile_ = compute_conformal_quantile(scores, self.alpha)
+        self.global_quantile_50_ = compute_conformal_quantile(scores, 0.50)
 
         # Compute Mondrian bucket-conditional quantiles if requested
         self.bucket_quantiles_ = {}
+        self.bucket_quantiles_50_ = {}
         if self.mondrian:
             cal_buckets = assign_mondrian_bucket(size_cal)
             for b in MONDRIAN_BUCKETS:
@@ -377,12 +381,17 @@ class ConformalIntervalPredictor(BaseEstimator, RegressorMixin):
                     self.bucket_quantiles_[b] = compute_conformal_quantile(
                         sub_scores, self.alpha
                     )
+                    self.bucket_quantiles_50_[b] = compute_conformal_quantile(
+                        sub_scores, 0.50
+                    )
                 else:
                     # Fallback to global quantile when bucket has insufficient data
                     self.bucket_quantiles_[b] = self.global_quantile_
+                    self.bucket_quantiles_50_[b] = self.global_quantile_50_
         else:
             for b in MONDRIAN_BUCKETS:
                 self.bucket_quantiles_[b] = self.global_quantile_
+                self.bucket_quantiles_50_[b] = self.global_quantile_50_
 
         self.is_calibrated_ = True
         return self
@@ -413,10 +422,10 @@ class ConformalIntervalPredictor(BaseEstimator, RegressorMixin):
         return np.maximum(np.asarray(preds, dtype=np.float64), 1.0)
 
     def predict_quantiles(self, X: Any) -> dict[str, np.ndarray]:
-        """Predict calibrated quantile intervals: p10, p50, and p90.
+        """Predict calibrated quantile intervals: p10, p25, p50, p75, and p90.
 
         Strictly enforces:
-        1. Quantile monotonicity: p10 <= p50 <= p90 everywhere.
+        1. Quantile monotonicity: 1.0 <= p10 <= p25 <= p50 <= p75 <= p90 everywhere.
         2. Positive predictions: p10 >= 1.0 person-hour.
         3. Contract compliance: rejects banned features.
 
@@ -430,8 +439,10 @@ class ConformalIntervalPredictor(BaseEstimator, RegressorMixin):
         dict[str, np.ndarray]
             Dictionary containing:
             - 'p10': 10th percentile lower bound (>= 1.0 hr).
-            - 'p50': 50th percentile median estimate (>= p10).
-            - 'p90': 90th percentile upper bound (>= p50).
+            - 'p25': 25th percentile likely lower bound (>= p10).
+            - 'p50': 50th percentile median estimate (>= p25).
+            - 'p75': 75th percentile likely upper bound (>= p50).
+            - 'p90': 90th percentile upper bound (>= p75).
         """
         if not self.is_calibrated_ or self.estimator_ is None or self.global_quantile_ is None:
             raise NotFittedError(
@@ -446,33 +457,52 @@ class ConformalIntervalPredictor(BaseEstimator, RegressorMixin):
         base_preds = np.maximum(self.estimator_.predict(X), 1.0)
 
         # Look up conformal critical thresholds per sample
+        q50_default = (
+            self.global_quantile_50_
+            if self.global_quantile_50_ is not None
+            else float(self.global_quantile_ * 0.597)
+        )
+
         if self.mondrian:
             buckets = assign_mondrian_bucket(size)
-            thresholds = np.array(
+            thresholds_80 = np.array(
                 [self.bucket_quantiles_.get(b, self.global_quantile_) for b in buckets],
                 dtype=np.float64,
             )
+            thresholds_50 = np.array(
+                [self.bucket_quantiles_50_.get(b, q50_default) for b in buckets],
+                dtype=np.float64,
+            )
         else:
-            thresholds = np.full(n_samples, self.global_quantile_, dtype=np.float64)
+            thresholds_80 = np.full(n_samples, self.global_quantile_, dtype=np.float64)
+            thresholds_50 = np.full(n_samples, q50_default, dtype=np.float64)
 
         if self.score_type == "log_residual":
-            # [p10, p90] = [y_hat * exp(-q), y_hat * exp(q)]
-            raw_p10 = base_preds * np.exp(-thresholds)
-            raw_p90 = base_preds * np.exp(thresholds)
+            # [p10, p90] = [y_hat * exp(-q80), y_hat * exp(q80)]
+            # [p25, p75] = [y_hat * exp(-q50), y_hat * exp(q50)]
+            raw_p10 = base_preds * np.exp(-thresholds_80)
+            raw_p25 = base_preds * np.exp(-thresholds_50)
+            raw_p75 = base_preds * np.exp(thresholds_50)
+            raw_p90 = base_preds * np.exp(thresholds_80)
         else:
-            # Scaled relative error: [y_hat * (1 - q), y_hat * (1 + q)]
-            raw_p10 = base_preds * np.maximum(1.0 - thresholds, 0.0)
-            raw_p90 = base_preds * (1.0 + thresholds)
+            raw_p10 = base_preds * np.maximum(1.0 - thresholds_80, 0.0)
+            raw_p25 = base_preds * np.maximum(1.0 - thresholds_50, 0.0)
+            raw_p75 = base_preds * (1.0 + thresholds_50)
+            raw_p90 = base_preds * (1.0 + thresholds_80)
 
         # Strictly enforce monotonicity and positive floor
-        # 1.0 <= p10 <= p50 <= p90
+        # 1.0 <= p10 <= p25 <= p50 <= p75 <= p90
         p10 = np.maximum(raw_p10, 1.0)
-        p50 = np.maximum(p10, base_preds)
-        p90 = np.maximum(p50, raw_p90)
+        p25 = np.maximum(p10, raw_p25)
+        p50 = np.maximum(p25, base_preds)
+        p75 = np.maximum(p50, raw_p75)
+        p90 = np.maximum(p75, raw_p90)
 
         return {
             "p10": p10,
+            "p25": p25,
             "p50": p50,
+            "p75": p75,
             "p90": p90,
         }
 

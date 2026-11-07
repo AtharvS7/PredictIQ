@@ -174,6 +174,7 @@ def train_and_bundle_production_model(
     # 3. Serialize Artifacts
     model_path = out_path / "model.pkl"
     conformal_path = out_path / "conformal.pkl"
+    model_params_path = out_path / "model_params.json"
 
     with model_path.open("wb") as f_model:
         pickle.dump(estimator, f_model, protocol=5)
@@ -181,9 +182,56 @@ def train_and_bundle_production_model(
     with conformal_path.open("wb") as f_conf:
         pickle.dump(calibrator, f_conf, protocol=5)
 
+    # Pure JSON parameter serialization (R12 - Zero pickle at serving)
+    model_params_data: dict[str, Any] = {
+        "model_version": PRODUCTION_MODEL_VERSION,
+        "architecture": "MonotonePowerLaw + MondrianConformalPredictor",
+        "parameters": {
+            "base_marginal": {
+                "beta0": float(estimator.beta0_base_),
+                "a": float(estimator.a_base_),
+                "b": float(estimator.b_base_),
+            },
+            "multivariate": {
+                "beta0": float(estimator.beta0_ if estimator.beta0_ is not None else estimator.beta0_base_),
+                "a": float(estimator.a_ if estimator.a_ is not None else estimator.a_base_),
+                "b": float(estimator.b_ if estimator.b_ is not None else estimator.b_base_),
+                "c": float(estimator.c_ if estimator.c_ is not None else 0.0),
+            },
+            "has_duration": bool(estimator.has_duration_),
+            "n_valid_duration_train": int(estimator.n_valid_duration_train_ or 0),
+        },
+        "calibration": {
+            "conformal_80": {
+                "nominal_coverage": 0.80,
+                "global_quantile": float(calibrator.global_quantile_),
+                "bucket_quantiles": {k: float(v) for k, v in calibrator.bucket_quantiles_.items()},
+            },
+            "conformal_50": {
+                "nominal_coverage": 0.50,
+                "global_quantile": float(calibrator.global_quantile_50_ or (calibrator.global_quantile_ * 0.597)),
+                "bucket_quantiles": {
+                    k: float(v)
+                    for k, v in (
+                        calibrator.bucket_quantiles_50_.items()
+                        if calibrator.bucket_quantiles_50_
+                        else {k: v * 0.597 for k, v in calibrator.bucket_quantiles_.items()}
+                    )
+                },
+            },
+            "bucket_thresholds": list(SIZE_BUCKET_THRESHOLDS),
+            "buckets": list(MONDRIAN_BUCKETS),
+        },
+    }
+
+    with model_params_path.open("w", encoding="utf-8") as f_params:
+        json.dump(model_params_data, f_params, indent=2)
+        f_params.write("\n")
+
     # 4. Compute Artifact Hashes and Safety Audit
     model_sha256 = compute_file_sha256(model_path)
     conformal_sha256 = compute_file_sha256(conformal_path)
+    model_params_sha256 = compute_file_sha256(model_params_path)
 
     if model_sha256 in REVOKED_MODEL_SHA256:
         raise RuntimeError(
@@ -192,6 +240,10 @@ def train_and_bundle_production_model(
     if conformal_sha256 in REVOKED_MODEL_SHA256:
         raise RuntimeError(
             f"Conformal artifact produced revoked checksum: {conformal_sha256}"
+        )
+    if model_params_sha256 in REVOKED_MODEL_SHA256:
+        raise RuntimeError(
+            f"Model params artifact produced revoked checksum: {model_params_sha256}"
         )
 
     # 5. Build and Write Manifest
@@ -204,6 +256,7 @@ def train_and_bundle_production_model(
         "file_hashes": {
             "model.pkl": model_sha256,
             "conformal.pkl": conformal_sha256,
+            "model_params.json": model_params_sha256,
         },
         "allowed_inputs": ["size_fp", "duration_months", "team_size"],
         "banned_features": sorted(list(BANNED_FEATURES)),
@@ -236,6 +289,12 @@ def train_and_bundle_production_model(
             "score_type": "log_residual",
             "global_quantile": calibrator.global_quantile_,
             "bucket_quantiles": calibrator.bucket_quantiles_,
+            "conformal_50": {
+                "nominal_coverage": 0.50,
+                "alpha": 0.50,
+                "global_quantile": calibrator.global_quantile_50_,
+                "bucket_quantiles": calibrator.bucket_quantiles_50_,
+            },
             "bucket_thresholds": list(SIZE_BUCKET_THRESHOLDS),
             "buckets": list(MONDRIAN_BUCKETS),
             "cal_size": cal_size,

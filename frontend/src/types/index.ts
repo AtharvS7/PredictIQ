@@ -44,6 +44,27 @@ export interface EstimateOutputs {
   phase_breakdown: PhaseBreakdown[];
   model_explanation: string;
   benchmark_comparison: string;
+  effort_p25_hours?: number;
+  effort_p75_hours?: number;
+  cost_p25_usd?: number;
+  cost_p75_usd?: number;
+  effort_hours?: {
+    p10: number;
+    p25?: number;
+    p50: number;
+    p75?: number;
+    p90: number;
+  };
+  person_months?: {
+    p10: number;
+    p25?: number;
+    p50: number;
+    p75?: number;
+    p90: number;
+  };
+  data_quality_tier?: 'A' | 'B' | 'C';
+  ood_flags?: string[];
+  org_calibration?: Record<string, any>;
 }
 
 export interface EstimateResult {

@@ -2,7 +2,7 @@
 Predictify Pydantic Models — Estimate
 Request/response schemas for estimation endpoints.
 """
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Any, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator
@@ -85,6 +85,13 @@ class EstimateOutputs(BaseModel):
     benchmark_comparison: str = ""
     data_quality_tier: Optional[Literal["A", "B", "C"]] = "A"
     ood_flags: list[str] = Field(default_factory=list)
+    org_calibration: Optional[dict[str, Any]] = None
+    effort_p25_hours: Optional[float] = None
+    effort_p75_hours: Optional[float] = None
+    cost_p25_usd: Optional[float] = None
+    cost_p75_usd: Optional[float] = None
+    effort_hours: Optional[dict[str, float]] = None
+    person_months: Optional[dict[str, float]] = None
 
 
 class EstimateInputs(BaseModel):

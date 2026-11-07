@@ -4,13 +4,17 @@ import { DataQualityBadge, type DataQualityTier, UncertaintyBadge } from './Badg
 
 export interface ConfidenceQuantiles {
   p10: number;
+  p25?: number;
   p50: number;
+  p75?: number;
   p90: number;
 }
 
 export interface ConfidenceRangeBarProps {
   p10: number;
+  p25?: number;
   p50: number;
+  p75?: number;
   p90: number;
   min?: number;
   max?: number;
@@ -27,7 +31,9 @@ export interface ConfidenceRangeBarProps {
 
 export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
   p10,
+  p25,
   p50,
+  p75,
   p90,
   min: customMin,
   max: customMax,
@@ -75,6 +81,12 @@ export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
   const p90Pct = Math.max(0, Math.min(100, ((p90 - trackMin) / rangeSpan) * 100));
   const bandWidth = Math.max(2, p90Pct - p10Pct);
 
+  // Inner likely band (p25 to p75)
+  const hasInner = p25 !== undefined && p75 !== undefined && p75 >= p25;
+  const p25Pct = hasInner ? Math.max(0, Math.min(100, ((p25 - trackMin) / rangeSpan) * 100)) : null;
+  const p75Pct = hasInner ? Math.max(0, Math.min(100, ((p75 - trackMin) / rangeSpan) * 100)) : null;
+  const innerBandWidth = (hasInner && p25Pct !== null && p75Pct !== null) ? Math.max(2, p75Pct - p25Pct) : 0;
+
   // Compute spread metric
   const spreadRatio = p10 > 0 ? (p90 / p10).toFixed(1) : null;
   const deltaUpperPct = p50 > 0 ? Math.round(((p90 - p50) / p50) * 100) : 0;
@@ -90,17 +102,31 @@ export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
       <div className="relative pt-4 pb-2">
         {/* Track Background */}
         <div className="h-2.5 sm:h-3 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden relative border border-slate-300/40 dark:border-slate-700/60">
-          {/* Calibrated Confidence Span (p10 to p90) */}
+          {/* Calibrated Plausible Range (p10 to p90, 80% CI) */}
           <div
-            className="absolute top-0 bottom-0 rounded-full transition-all duration-300"
+            className="absolute top-0 bottom-0 rounded-full transition-all duration-300 opacity-60"
             style={{
               left: `${p10Pct}%`,
               width: `${bandWidth}%`,
               background:
-                'linear-gradient(90deg, rgba(16, 185, 129, 0.45) 0%, rgba(37, 99, 235, 0.6) 50%, rgba(245, 158, 11, 0.45) 100%)',
+                'linear-gradient(90deg, rgba(16, 185, 129, 0.4) 0%, rgba(37, 99, 235, 0.4) 50%, rgba(245, 158, 11, 0.4) 100%)',
             }}
-            title={`80% Confidence Interval: ${format(p10)} to ${format(p90)}`}
+            title={`80% Plausible Range: ${format(p10)} to ${format(p90)}`}
           />
+
+          {/* Calibrated Likely Band (p25 to p75, 50% CI) */}
+          {hasInner && p25Pct !== null && (
+            <div
+              className="absolute top-0 bottom-0 rounded-full transition-all duration-300 shadow-sm"
+              style={{
+                left: `${p25Pct}%`,
+                width: `${innerBandWidth}%`,
+                background:
+                  'linear-gradient(90deg, rgba(16, 185, 129, 0.85) 0%, rgba(37, 99, 235, 0.95) 50%, rgba(245, 158, 11, 0.85) 100%)',
+              }}
+              title={`50% Likely Band: ${format(p25)} to ${format(p75)}`}
+            />
+          )}
         </div>
 
         {/* p10 Marker Tick */}
@@ -112,7 +138,7 @@ export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
 
         {/* p50 Median Marker Pip */}
         <div
-          className="absolute top-1.5 w-3.5 h-7 -translate-x-1/2 flex items-center justify-center pointer-events-none"
+          className="absolute top-1.5 w-3.5 h-7 -translate-x-1/2 flex items-center justify-center pointer-events-none z-10"
           style={{ left: `${p50Pct}%` }}
           aria-hidden="true"
         >
@@ -144,7 +170,7 @@ export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
             </span>
           </div>
 
-          {/* p50 */}
+          {/* p50 & Inner Likely Band */}
           <div className="flex flex-col items-center text-center" style={{ width: '36%' }}>
             <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
@@ -153,9 +179,15 @@ export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
             <span className="font-mono text-base font-extrabold text-[var(--color-primary)] dark:text-blue-400 tabular-nums mt-0.5">
               {format(p50)}
             </span>
-            <span className="text-[10px] text-[var(--text-tertiary)]">
-              calibrated center
-            </span>
+            {hasInner ? (
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                Likely: {format(p25)} – {format(p75)}
+              </span>
+            ) : (
+              <span className="text-[10px] text-[var(--text-tertiary)]">
+                calibrated center
+              </span>
+            )}
           </div>
 
           {/* p90 */}
@@ -184,7 +216,7 @@ export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
             </span>
           </span>
           <span className="text-[11px] text-[var(--text-tertiary)]">
-            80% Conformal Range
+            50% Likely Band (Inner) &bull; 80% Plausible Range (Outer)
           </span>
         </div>
       )}
@@ -239,7 +271,9 @@ export const ConfidenceIntervalCard: React.FC<ConfidenceIntervalCardProps> = ({
       <CardContent className="pt-2">
         <ConfidenceRangeBar
           p10={quantiles.p10}
+          p25={quantiles.p25}
           p50={quantiles.p50}
+          p75={quantiles.p75}
           p90={quantiles.p90}
           unit={unit}
           unitLabel={unitLabel}

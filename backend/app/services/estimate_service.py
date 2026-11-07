@@ -84,6 +84,34 @@ class EstimateService:
             external_interface_files=min(integration_count, 15),
         )
 
+        # Query consented organization actuals for Empirical-Bayes calibration (R05)
+        org_actuals: list[dict[str, float]] = []
+        if user_id:
+            try:
+                pool = db_pool if db_pool is not None else await get_db()
+                rows = await pool.fetch(
+                    """SELECT functional_size_delivered, actual_effort_hours
+                       FROM estimate_actuals
+                       WHERE created_by_user_id = $1 AND consent_for_training = true
+                       LIMIT 20""",
+                    user_id,
+                )
+                if rows:
+                    org_actuals = [
+                        {
+                            "size_fp": float(r["functional_size_delivered"]),
+                            "effort_hours": float(r["actual_effort_hours"]),
+                        }
+                        for r in rows
+                        if r["functional_size_delivered"] is not None
+                        and r["actual_effort_hours"] is not None
+                        and float(r["functional_size_delivered"]) > 0
+                        and float(r["actual_effort_hours"]) > 0
+                    ]
+            except Exception:
+                # Table or columns may be unavailable in isolated unit tests; fail open
+                pass
+
         # Step 2: ML Prediction
         params = {
             "project_type": project_type,
@@ -97,6 +125,7 @@ class EstimateService:
             "methodology": methodology,
             "volatility_score": volatility_score,
             "team_experience": team_experience,
+            "org_actuals": org_actuals,
         }
 
         ml_result = ml_service.predict(params)
@@ -108,12 +137,21 @@ class EstimateService:
         effort_likely = ml_result["effort_hours_likely"]
         effort_min = ml_result["effort_hours_min"]
         effort_max = ml_result["effort_hours_max"]
+        effort_p25 = ml_result.get("effort_hours_p25")
+        effort_p75 = ml_result.get("effort_hours_p75")
         confidence = ml_result["confidence_pct"]
         data_quality_tier = ml_result.get("data_quality_tier", "A")
         ood_flags = ml_result.get("ood_flags", [])
 
         # Step 3: Cost conversion
-        costs = calculate_cost(effort_likely, effort_min, effort_max, hourly_rate)
+        costs = calculate_cost(
+            effort_likely,
+            effort_min,
+            effort_max,
+            hourly_rate,
+            effort_hours_p25=effort_p25,
+            effort_hours_p75=effort_p75,
+        )
 
         # Step 4: Timeline
         timeline = calculate_timeline(duration_months, team_size)
@@ -175,6 +213,13 @@ class EstimateService:
             benchmark_comparison=benchmark,
             data_quality_tier=data_quality_tier,
             ood_flags=ood_flags,
+            org_calibration=ml_result.get("org_calibration"),
+            effort_p25_hours=effort_p25,
+            effort_p75_hours=effort_p75,
+            cost_p25_usd=costs.get("cost_p25_usd"),
+            cost_p75_usd=costs.get("cost_p75_usd"),
+            effort_hours=ml_result.get("effort_hours"),
+            person_months=ml_result.get("person_months"),
         )
 
         # Step 7: Save to database
