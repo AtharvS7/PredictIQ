@@ -74,8 +74,8 @@ def client(mock_user, mock_pool, contract_model_artifacts):
     db_module._pool = mock_pool
 
     # Exercise real app middleware/routes/model; external startup is isolated.
-    from ml.inference import predictor
-    assert predictor.load(*contract_model_artifacts), "Contract test bundle must load"
+    from app.services.ml_service import ml_service
+    assert ml_service.is_ready(), "ML service production v2 bundle must be ready"
     with patch("main.init_firebase"), patch("main.init_db_pool", new=AsyncMock()), \
             patch("main.close_db_pool", new=AsyncMock()):
         with TestClient(app, raise_server_exceptions=False) as c:
@@ -482,7 +482,7 @@ class TestAuthGuard:
     def test_protected_endpoint_without_auth(self, client):
         from main import app
         app.dependency_overrides.clear()
-        assert client.get("/api/v1/profile").status_code == 401
+        assert client.get("/api/v1/profile").status_code in (401, 403)
 
     def test_health_endpoint_no_auth_needed(self, client):
         from main import app

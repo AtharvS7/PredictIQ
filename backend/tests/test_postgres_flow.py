@@ -9,10 +9,10 @@ from app.api.v1 import documents, estimates, export, shared
 from app.core import database
 from app.core.rate_limit import limiter
 from app.core.security import CurrentUser, get_current_user
+from app.services.ml_service import ml_service
 from app.services.storage_service import LocalStorageBackend, storage_service
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from ml.inference import predictor
 
 
 @pytest.mark.integration
@@ -29,7 +29,7 @@ def test_real_document_to_persisted_result(tmp_path, monkeypatch, sample_documen
     async def lifespan(app):
         pool = await asyncpg.create_pool(dsn, min_size=1, max_size=3)
         database._pool = pool
-        assert predictor.load(*contract_model_artifacts)
+        assert ml_service.is_ready()
         try:
             yield
         finally:

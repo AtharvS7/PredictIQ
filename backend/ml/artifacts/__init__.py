@@ -7,6 +7,9 @@ Provides:
   and MondrianConformalPredictor.
 """
 
-from backend.ml.artifacts.loader import ProductionModelBundle, load_production_model
+try:
+    from backend.ml.artifacts.loader import ProductionModelBundle, load_production_model
+except ImportError:
+    from .loader import ProductionModelBundle, load_production_model
 
 __all__ = ["ProductionModelBundle", "load_production_model"]

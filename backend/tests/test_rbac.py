@@ -229,9 +229,9 @@ class TestEditorRouteAccess:
 
     def test_editor_can_create_estimate(self, contract_model_artifacts):
         """Editor should be able to POST /estimates/manual."""
-        from ml.inference import predictor
+        from app.services.ml_service import ml_service
 
-        assert predictor.load(*contract_model_artifacts)
+        assert ml_service.is_ready()
         client, mock_pool, app = _make_client("editor")
         mock_pool.fetchrow = AsyncMock(return_value={
             "id": str(uuid4()), "user_id": "test-user-rbac",

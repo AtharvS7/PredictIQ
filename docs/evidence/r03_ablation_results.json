@@ -1,0 +1,173 @@
+{
+  "dataset_total_projects": 915,
+  "duration_bearing_total": 561,
+  "folds": {
+    "china": {
+      "n_test": 499,
+      "has_duration": true,
+      "model_a_size_only": {
+        "mdape": 60.84,
+        "pred25": 20.44,
+        "a": 16.2746,
+        "b": 0.9243
+      },
+      "model_b_multivariate": {
+        "mdape": 49.66,
+        "pred25": 25.25,
+        "a": 15.9166,
+        "b": 0.6324,
+        "c": 0.7152
+      }
+    },
+    "kitchenham": {
+      "n_test": 145,
+      "has_duration": false,
+      "model_a_size_only": {
+        "mdape": 59.24,
+        "pred25": 21.38,
+        "a": 18.9314,
+        "b": 0.8814
+      },
+      "model_b_multivariate": {
+        "mdape": 59.24,
+        "pred25": 21.38,
+        "a": 24.2429,
+        "b": 0.5871,
+        "c": 0.5972
+      }
+    },
+    "att_aptness": {
+      "n_test": 104,
+      "has_duration": false,
+      "model_a_size_only": {
+        "mdape": 58.66,
+        "pred25": 22.12,
+        "a": 24.4437,
+        "b": 0.8112
+      },
+      "model_b_multivariate": {
+        "mdape": 58.66,
+        "pred25": 22.12,
+        "a": 24.2429,
+        "b": 0.5871,
+        "c": 0.5972
+      }
+    },
+    "desharnais": {
+      "n_test": 81,
+      "has_duration": false,
+      "model_a_size_only": {
+        "mdape": 52.41,
+        "pred25": 16.05,
+        "a": 19.1524,
+        "b": 0.855
+      },
+      "model_b_multivariate": {
+        "mdape": 52.41,
+        "pred25": 16.05,
+        "a": 24.2429,
+        "b": 0.5871,
+        "c": 0.5972
+      }
+    },
+    "maxwell": {
+      "n_test": 62,
+      "has_duration": true,
+      "model_a_size_only": {
+        "mdape": 37.5,
+        "pred25": 37.1,
+        "a": 21.5734,
+        "b": 0.8389
+      },
+      "model_b_multivariate": {
+        "mdape": 34.42,
+        "pred25": 25.81,
+        "a": 26.3871,
+        "b": 0.5824,
+        "c": 0.5539
+      }
+    },
+    "albrecht": {
+      "n_test": 24,
+      "has_duration": false,
+      "model_a_size_only": {
+        "mdape": 69.19,
+        "pred25": 4.17,
+        "a": 22.5996,
+        "b": 0.8304
+      },
+      "model_b_multivariate": {
+        "mdape": 69.19,
+        "pred25": 4.17,
+        "a": 24.2428,
+        "b": 0.5871,
+        "c": 0.5972
+      }
+    }
+  },
+  "duration_subset": {},
+  "all_folds_summary": {},
+  "duration_subset_evaluation": {
+    "n_samples": 561,
+    "sources": [
+      "china",
+      "maxwell"
+    ],
+    "model_a_macro_mdape": 49.17,
+    "model_a_95ci": [
+      43.21,
+      59.55
+    ],
+    "model_b_macro_mdape": 42.04,
+    "model_b_95ci": [
+      39.19,
+      49.93
+    ],
+    "relative_gain_pct": 14.5,
+    "wilcoxon_statistic": 52565.0,
+    "wilcoxon_p_value": 8.157462333312254e-12
+  },
+  "all_6_folds_evaluation": {
+    "model_a_macro_mdape": 56.31,
+    "model_a_95ci": [
+      52.63,
+      61.46
+    ],
+    "model_b_macro_mdape": 53.93,
+    "model_b_95ci": [
+      50.67,
+      58.61
+    ],
+    "relative_gain_pct": 4.22
+  },
+  "fitted_parameters_full_dataset": {
+    "model_a": {
+      "a": 20.6104,
+      "b": 0.852
+    },
+    "model_b": {
+      "a": 24.2428,
+      "b": 0.5871,
+      "c": 0.5972
+    }
+  },
+  "pre_registered_criteria_check": {
+    "criterion_1_wilcoxon_p_lt_0_05": {
+      "p_value": 8.157462333312254e-12,
+      "threshold": 0.05,
+      "passed": true
+    },
+    "criterion_2_relative_gain_gte_5pct": {
+      "relative_gain_pct": 14.5,
+      "threshold_pct": 5.0,
+      "passed": true
+    },
+    "criterion_3_defensible_direction_c_lte_0": {
+      "fitted_c": 0.5972,
+      "economic_interpretation": "c > 0 implies reducing planned duration reduces required effort, violating Brooks' Law and project scheduling physics.",
+      "passed": false
+    },
+    "overall_decision_pass": false,
+    "action_taken": "REMOVE Duration from Effort Estimate -> Strictly Size-Only Production Point Estimate (E = a * S^b)"
+  }
+}

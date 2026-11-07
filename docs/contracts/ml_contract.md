@@ -14,10 +14,11 @@ Under the v2 upgrade program, the machine learning models are strictly prohibite
 1. **`size_fp`** (*Required*, `float > 0`):
    - Unit: Function Points (IFPUG 4.x or COSMIC functional size units).
    - Provenance: Either manually entered by user or derived with calibrated uncertainty from requirements text by the NLP cascade.
+   - Primary input driving the production monotone power-law effort estimate ($E = a \cdot S^b$).
 2. **`duration_months`** (*Optional*, `float > 0` or `null`):
-   - Label in UI: **"Planned Target Duration"** (never actual duration, to prevent circularity with effort).
+   - Label in UI: **"Planned Target Duration"** (used strictly for schedule display, timeline planning, and staffing feasibility; per frozen R03 decision, does not alter raw effort estimates).
 3. **`team_size`** (*Optional*, `int >= 1` or `null`):
-   - Number of full-time equivalent software developers planned.
+   - Planned team size in full-time equivalent software developers (used for timeline calculation, schedule feasibility, and cost display; excluded from effort model inputs).
 4. **`platform` / `language` / `dev_type`** (*Optional*, categoricals):
    - Permitted ONLY if covered by empirical historical data without imputation.
 

@@ -16,7 +16,7 @@ client = TestClient(app)
 def healthy_dependencies(monkeypatch):
     monkeypatch.setattr(health.settings, 'RELEASE_MODE', 'prediction')
     monkeypatch.setattr(health, 'get_db', AsyncMock(return_value=Mock(fetchval=AsyncMock(return_value=1), execute=AsyncMock())))
-    monkeypatch.setattr(health.predictor, 'is_ready', True)
+    monkeypatch.setattr(health.ml_service, 'is_ready', lambda: True)
     monkeypatch.setattr(firebase_admin, 'get_app', lambda: object())
 
 @pytest.mark.parametrize('path', ['/health', '/ready'])
@@ -35,7 +35,7 @@ def test_ready_status_and_schema(path):
 
 def test_manual_release_reports_model_unavailable_truthfully(monkeypatch):
     monkeypatch.setattr(health.settings, 'RELEASE_MODE', 'manual_budget')
-    monkeypatch.setattr(health.predictor, 'is_ready', False)
+    monkeypatch.setattr(health.ml_service, 'is_ready', lambda: False)
     result = client.get('/api/v1/ready')
     assert result.status_code == 200
     assert result.json()['capabilities'] == {'manual_budget': True, 'automatic_prediction': False}
@@ -65,7 +65,7 @@ def test_missing_dependency_fails_readiness(monkeypatch, dependency, path):
     if dependency == 'database':
         monkeypatch.setattr(health, 'get_db', AsyncMock(side_effect=RuntimeError('offline')))
     elif dependency == 'model':
-        monkeypatch.setattr(health.predictor, 'is_ready', False)
+        monkeypatch.setattr(health.ml_service, 'is_ready', lambda: False)
     else:
         monkeypatch.setattr(firebase_admin, 'get_app', Mock(side_effect=ValueError('uninitialized')))
     response = client.get('/api/v1' + path)

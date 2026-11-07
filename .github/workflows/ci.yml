@@ -80,12 +80,9 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       APP_ENV:                   test
-      APP_VERSION:               "3.1.0"
+      APP_VERSION:               "2.0.0-rc.1"
       DATABASE_URL:              postgresql://test:test@127.0.0.1:1/predictiq_test
       DEFAULT_HOURLY_RATE_USD:   "75"
-      ML_MODEL_PATH:             ./ml/predictiq_best_model.pkl
-      ML_SCALER_PATH:            ./ml/predictiq_scaler.pkl
-      ML_FEATURES_PATH:          ./ml/predictiq_features.json
       PREDICTIQ_TEST_DATABASE_URL: postgresql://predictiq_test:test-only-password@127.0.0.1:5432/predictiq_test
     steps:
       - uses: actions/checkout@v4
@@ -205,13 +202,13 @@ jobs:
         env:
           PREDICTIQ_TEST_FRONTEND_IMAGE: predictify-frontend:ci
         run: python -m unittest discover -s scripts/tests -p test_frontend_container.py -v
-      - name: "Smoke test — packaged application imports and rejects revoked model"
+      - name: "Smoke test — packaged application verifies v2 bundle and reports ready"
         run: |
           docker run --rm \
             -e APP_ENV=test \
             -e DATABASE_URL=postgresql://test:test@127.0.0.1:1/test \
             predictify-backend:ci python -c \
-            "import hashlib, main; from ml.inference import ML_DIR, predictor; from ml.artifact_safety import REVOKED_MODEL_SHA256; assert hashlib.sha256((ML_DIR / 'predictiq_best_model.pkl').read_bytes()).hexdigest() in REVOKED_MODEL_SHA256; assert not predictor.load(); assert not predictor.is_ready"
+            "from backend.ml.artifacts.loader import load_production_model; from app.services.ml_service import ml_service; bundle = load_production_model(); assert bundle.model_version == '2.0.0-rc.1'; assert ml_service.is_ready()"
 
   authenticated-e2e:
     name: "Browser — authenticated estimation contract"

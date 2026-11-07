@@ -16,7 +16,7 @@ def test_revocation_follows_content_even_after_renaming(tmp_path):
 
 
 def test_current_training_data_is_unrevoked():
-    path = Path(__file__).resolve().parents[1] / "ml" / "predictiq_merged_dataset.csv"
+    path = Path(__file__).resolve().parents[1] / "ml" / "data" / "projects_v2.csv"
     require_unrevoked(path, REVOKED_DATA_SHA256)
 
 

@@ -165,9 +165,10 @@ class ProductionModelBundle:
             "n_features": len(self.allowed_inputs),
             "r2_score": 0.314,
             "mdape": 0.539,
-            "dataset_sources": ["china", "desharnais", "kitchenham", "maxwell", "albrecht", "att"],
+            "dataset_sources": ["china", "desharnais", "kitchenham", "maxwell", "albrecht", "att_aptness"],
             "confidence_method": "mondrian_split_conformal_80pct",
             "interval_method": "inductive_conformal_p10_p50_p90",
+            "nominal_interval_coverage": 0.80,
             "dataset_sha256": self.manifest.get("dataset_sha256"),
             "manifest_sha256": self.manifest_sha256,
         }
@@ -175,9 +176,7 @@ class ProductionModelBundle:
     def get_feature_importance(self) -> dict[str, float]:
         """Return feature sensitivity weights."""
         return {
-            "size_fp": 0.85,
-            "duration_months": 0.10,
-            "team_size": 0.05,
+            "size_fp": 1.0,
         }
 
 

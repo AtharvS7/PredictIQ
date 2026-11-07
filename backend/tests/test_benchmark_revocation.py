@@ -13,4 +13,4 @@ def test_invalid_dataset_is_not_used_and_stale_cache_is_cleared(monkeypatch):
 def test_valid_dataset_is_loaded():
     benchmark.load_benchmark_data()
     assert benchmark._benchmark_df is not None
-    assert len(benchmark._benchmark_df) == 740
+    assert len(benchmark._benchmark_df) == 915

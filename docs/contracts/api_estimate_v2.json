@@ -103,12 +103,24 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "nominal_interval_coverage": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "confidence_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
     "model": {
       "type": "object",
       "required": ["version", "sha256", "trained_on_rows", "sources", "metrics_ref"],
       "properties": {
         "version": { "type": "string" },
         "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "model_sha256": { "type": "string" },
+        "dataset_sha256": { "type": "string" },
         "trained_on_rows": { "type": "integer", "minimum": 1 },
         "sources": { "type": "array", "items": { "type": "string" } },
         "metrics_ref": { "type": "string" }

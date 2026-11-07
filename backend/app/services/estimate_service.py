@@ -17,7 +17,6 @@ from typing import Any, Optional
 import bcrypt
 import structlog
 from fastapi import HTTPException
-from ml.inference import predictor
 from starlette.concurrency import run_in_threadpool
 
 from app.core.database import get_db
@@ -30,7 +29,7 @@ from app.models.estimate import (
     PhaseBreakdown,
     ShareLinkResponse,
 )
-from app.services.benchmark import get_benchmark_comparison, get_model_explanation
+from app.services.benchmark import get_benchmark_comparison
 from app.services.cost_calculator import (
     calculate_cost,
     calculate_phase_breakdown,
@@ -102,11 +101,8 @@ class EstimateService:
 
         ml_result = ml_service.predict(params)
         # Capture provenance before the next await: another request may disable
-        # predictor readiness while this estimate waits for the database.
-        model_version = (
-            predictor.get_model_info().get("model_version")
-            or ml_service.get_model_info().get("model_version")
-        )
+        # model readiness while this estimate waits for the database.
+        model_version = ml_service.get_model_info().get("model_version")
         if not isinstance(model_version, str) or not model_version.strip():
             raise HTTPException(status_code=503, detail="Prediction service is unavailable")
         effort_likely = ml_result["effort_hours_likely"]
@@ -139,10 +135,9 @@ class EstimateService:
             hourly_rate=hourly_rate,
         )
 
-        explanation = get_model_explanation(
+        explanation = ml_service.get_model_explanation_text(
             params=params,
             effort_hours=effort_likely,
-            feature_importance=predictor.get_feature_importance(),
         )
 
         # Build result objects

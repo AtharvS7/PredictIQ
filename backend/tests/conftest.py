@@ -7,8 +7,13 @@ import sys
 
 import pytest
 
-# Ensure backend/ is importable
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+# Ensure backend/ and repository root are importable
+_backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_repo_root = os.path.abspath(os.path.join(_backend_dir, ".."))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
 
 # Tests must never inherit usable cloud credentials from a developer's .env.
 os.environ["APP_ENV"] = "test"
@@ -31,36 +36,12 @@ def event_loop_policy():
 
 
 @pytest.fixture
-def contract_model_artifacts(tmp_path, monkeypatch):
-    """Real serialized sklearn bundle for API contracts, NOT an accuracy fixture.
+def contract_model_artifacts():
+    """Ensures production v2 ML service readiness for contract/API tests."""
+    from app.services.ml_service import ml_service
 
-    The distributed model is revoked; numerical correctness is tested separately.
-    This constant model keeps persistence/export tests independent of bad labels.
-    """
-    import json
-    import pickle
-
-    import numpy as np
-    import pandas as pd
-    from app.core.config import settings
-    from ml.inference import EXPECTED_FEATURES, predictor
-    from sklearn.dummy import DummyRegressor
-    from sklearn.preprocessing import StandardScaler
-
-    frame = pd.DataFrame(np.ones((4, 27)), columns=EXPECTED_FEATURES)
-    scaler = StandardScaler().fit(frame)
-    model = DummyRegressor().fit(scaler.transform(frame), np.full(4, np.log1p(1000)))
-    model.n_features_in_ = len(EXPECTED_FEATURES)
-    model_path, scaler_path, features_path = [tmp_path / name for name in ("model.pkl", "scaler.pkl", "features.json")]
-    model_path.write_bytes(pickle.dumps(model))
-    scaler_path.write_bytes(pickle.dumps(scaler))
-    features_path.write_text(json.dumps(EXPECTED_FEATURES))
-    for key, value in (("ML_MODEL_PATH", model_path), ("ML_SCALER_PATH", scaler_path), ("ML_FEATURES_PATH", features_path)):
-        monkeypatch.setattr(settings, key, str(value))
-    previous = predictor.__dict__.copy()
-    yield model_path, scaler_path, features_path
-    predictor.__dict__.clear()
-    predictor.__dict__.update(previous)
+    assert ml_service.is_ready(), "ML service production v2 bundle must be ready"
+    yield
 
 
 @pytest.fixture

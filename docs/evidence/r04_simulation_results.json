@@ -1,0 +1,30 @@
+{
+  "simulation_parameters": {
+    "n_projects": 10000,
+    "seed": 42,
+    "nominal_target_coverage": 80.0,
+    "nlp_size_uncertainty": "+/- 15% (P10=0.85*S, P90=1.15*S)",
+    "size_elasticity_b": 0.827,
+    "base_global_quantile": 1.0053
+  },
+  "coverage_results": {
+    "method_a_point_size_coverage_pct": 82.24,
+    "method_b_propagated_coverage_pct": 82.54,
+    "coverage_deficit_of_point_model_pct": -2.24,
+    "propagated_preserves_nominal_80pct": true
+  },
+  "interval_width_comparison": {
+    "median_width_point_hours": 4044.3,
+    "median_width_propagated_hours": 4082.3,
+    "width_expansion_relative_pct": 0.94
+  },
+  "monotonicity_and_safety": {
+    "strictly_non_crossing_p10_p50_p90": true,
+    "all_p10_gte_1hr": true
+  },
+  "monte_carlo_cross_check": {
+    "mc_draws_per_point": 2000,
+    "sample_points_tested": 50,
+    "mean_agreement_with_analytic_pct": 97.73
+  }
+}

@@ -9,9 +9,7 @@
     "conformal.pkl": "e8ce74d8b2ae96208ad1ecda748baa8bc1a739e69c306573420c2f1e184e6dff"
   },
   "allowed_inputs": [
-    "size_fp",
-    "duration_months",
-    "team_size"
+    "size_fp"
   ],
   "banned_features": [
     "adjustment",

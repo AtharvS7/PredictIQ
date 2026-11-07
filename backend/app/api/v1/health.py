@@ -7,10 +7,10 @@ import time
 
 import structlog
 from fastapi import APIRouter, Response
-from ml.inference import predictor
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.services.ml_service import ml_service
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -27,7 +27,7 @@ async def health_check(response: Response):
     Comprehensive health check — verifies DB, ML model, and reports uptime.
     Used by load balancers, Docker HEALTHCHECK, and monitoring tools (D2).
     """
-    model_info = predictor.get_model_info()
+    model_info = ml_service.get_model_info()
 
     # DB connectivity check
     db_status = "unknown"
@@ -56,9 +56,10 @@ async def health_check(response: Response):
         firebase_status = "not_initialized"
 
     # Overall status: healthy only if all critical services are up
+    is_ml_ready = ml_service.is_ready()
     all_healthy = (
         db_status == "connected"
-        and (settings.RELEASE_MODE == "manual_budget" or predictor.is_ready)
+        and (settings.RELEASE_MODE == "manual_budget" or is_ml_ready)
         and firebase_status == "initialized"
     )
 
@@ -70,13 +71,13 @@ async def health_check(response: Response):
         "release_mode": settings.RELEASE_MODE,
         "capabilities": {
             "manual_budget": db_status == "connected" and firebase_status == "initialized",
-            "automatic_prediction": db_status == "connected" and predictor.is_ready and firebase_status == "initialized",
+            "automatic_prediction": db_status == "connected" and is_ml_ready and firebase_status == "initialized",
         },
         "version": settings.APP_VERSION,
         "uptime_seconds": uptime_seconds,
         "services": {
             "database": db_status,
-            "ml_model": "ready" if predictor.is_ready else "not_loaded",
+            "ml_model": "ready" if is_ml_ready else "not_loaded",
             "firebase": firebase_status,
         },
         **model_info,

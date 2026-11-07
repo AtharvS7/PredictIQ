@@ -61,14 +61,11 @@ async def lifespan(app: FastAPI):
     role_worker = asyncio.create_task(reconcile_roles())
 
     try:
-        # Load ML model
-        from ml.inference import predictor
-        if settings.ML_PIPELINE_MANIFEST:
-            predictor.load_production(settings.ML_PIPELINE_MANIFEST, settings.ML_PIPELINE_MANIFEST_SHA256)
-        else:
-            predictor.load(settings.ML_MODEL_PATH, settings.ML_SCALER_PATH, settings.ML_FEATURES_PATH)
-        model_info = predictor.get_model_info()
-        logger.info("ml_model_status", ready=predictor.is_ready, mode=model_info.get("model_mode"))
+        # Load ML model via ml_service
+        from app.services.ml_service import ml_service
+        is_ready = ml_service.is_ready()
+        model_info = ml_service.get_model_info()
+        logger.info("ml_model_status", ready=is_ready, mode=model_info.get("model_mode"))
 
         # Load benchmark data
         from app.services.benchmark import load_benchmark_data
@@ -76,7 +73,7 @@ async def lifespan(app: FastAPI):
 
         # Startup diagnostics checklist
         logger.info("startup_checklist",
-            model_loaded=predictor.is_ready,
+            model_loaded=is_ready,
             model_mode=model_info.get("model_mode", "unknown"),
             training_samples=model_info.get("training_samples", 0),
             cors_origins=settings.cors_origins,

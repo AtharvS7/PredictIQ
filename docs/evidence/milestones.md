@@ -98,3 +98,29 @@ This file tracks each milestone achieved on `dev3`, the checkpoints covered, tes
   - **CP25 (Documentation & Provenance Rewrite):** Rewrote `README.md` truthfully detailing v2 calibrated architecture, purged fabricated claims, documented 6 empirical datasets, and startup-quality UI.
   - **CP26 (Final Verification & Gate):** Verified all 8 mandatory quality gates (Ruff, Mypy, Vitest, TSC, Vite build, Secret scan, Tracked file check, Remote safety).
   - **CP27 (Release Tagging & MPP):** Executed Milestone Push Procedure to `origin/dev3` with annotated tags.
+
+---
+
+## Milestone RC2_M1: Wiring & Cleanup (`dev3-rc2-m1-wiring-cleanup`)
+
+- **Tag:** `dev3-rc2-m1-wiring-cleanup`
+- **Meaning:** Runtime decoupled from revoked legacy predictor, 30MB obsolete research artifacts & dead code purged, model input validity pre-registered and frozen (duration rejected from effort estimation under Brooks' Law, team size removed from model inputs), size uncertainty correctly propagated to effort intervals via log-space variance combination, and all test suites 100% clean.
+- **Checkpoints Covered:**
+  - **R00 (Orientation & Truth Baseline):** Audited repository and branch protection. Recorded baseline SHAs for `origin/dev2` (`d7a66b4095b8ae84f818900c2199c243f9d46b5f`) and `origin/main` (`894c3dabfc5aa71cdaf4c6071b94f1c5f7e56b43`) in `docs/evidence/rc2_snapshot.md`. Fixed test collection paths in `conftest.py`.
+  - **R01 (Decouple Legacy Predictor from Runtime):** Completely decoupled FastAPI runtime, health checks, and estimate service from `ml.inference.predictor`. Added `test_health_ready.py` (3/3 passed).
+  - **R02 (Dead Code Removal in `backend/ml/`):** Deleted revoked 30 MB legacy model `predictiq_best_model.pkl`, legacy feature lists, scalers, and 25 research scripts. Cleaned 17 obsolete research tests. Rewrote `backend/ml/README.md` to truthfully describe v2 architecture. Verified zero lingering imports.
+  - **R03 (Model Input Validity & Frozen Decision Rule):** Pre-registered frozen evaluation protocol in `docs/contracts/evaluation_protocol_rc2.md`. Ran 6-fold LOSO ablation ($N=561$): while $p=8.16 \times 10^{-12}$ and relative gain was $14.50\%$, duration coefficient $c=+0.5972 > 0$ violated Brooks' Law, failing Criterion 3. Under the frozen decision rule, duration was rejected from effort estimation $\implies$ point estimate is strictly size-only ($E = a \cdot S^b$). Team size removed from model inputs (`allowed_inputs: ["size_fp"]`). Hardened `ml_service.py` to reject missing size with HTTP 422, enforce authentic provenance hashes, and nominal interval coverage of 0.80.
+  - **R04 (Propagate Size Uncertainty into Effort Intervals):** Implemented log-space variance combination in `ml_service.py`: $q_{\text{combined}} = \sqrt{q_{\text{model}}^2 + (b \cdot \Delta_s)^2}$. Enforced strict non-crossing: $1.0 \le P_{10} \le P_{50} \le P_{90}$. 10,000 synthetic simulations confirmed empirical coverage is preserved at 82.54% ($\ge 80.0\%$), Monte Carlo agreement 97.73%. Documented in `docs/evidence/R04.md`.
+
+### Full Verification Suite Summary
+- **Backend Test Suite (Pytest):** 655 passed, 6 skipped, 0 failed in 104.56s (82% coverage across 2,514 statements)
+- **Scripts Test Suite (Pytest):** 25 passed, 4 skipped in 6.89s
+- **Frontend Typecheck (TSC):** Clean (0 errors across `tsconfig.json` and `tsconfig.test.json`)
+- **Frontend Vitest Suite:** 131 passed across 24 test files in 170.14s
+- **Frontend Production Build (Vite):** Clean build in 5.61s
+- **Python Linting (Ruff):** Clean (0 errors across `backend/app` and `backend/ml`)
+- **Python Typecheck (Mypy):** Clean (0 errors across 48 source files in `backend/app`)
+- **Secret Scan:** Clean (0 secret patterns in diff)
+- **Tracked Files Check:** Clean (0 forbidden files, 0 files > 50MB)
+- **Remote Safety:** `origin/dev2` and `origin/main` remain untouched and match baseline SHAs
+

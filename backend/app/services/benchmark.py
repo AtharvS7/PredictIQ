@@ -17,7 +17,7 @@ def load_benchmark_data():
     """Load the training dataset for benchmark comparisons."""
     global _benchmark_df
     _benchmark_df = None
-    csv_path = Path(__file__).parent.parent.parent / "ml" / "predictiq_merged_dataset.csv"
+    csv_path = Path(__file__).parent.parent.parent / "ml" / "data" / "projects_v2.csv"
 
     if csv_path.exists():
         try:
@@ -26,6 +26,8 @@ def load_benchmark_data():
             logger.warning("benchmark_data_revoked", reason="invalid_training_labels")
             return
         _benchmark_df = pd.read_csv(csv_path)
+        if "size_fp" not in _benchmark_df.columns and "size_value" in _benchmark_df.columns:
+            _benchmark_df["size_fp"] = _benchmark_df["size_value"]
         logger.info("benchmark_data_loaded", rows=len(_benchmark_df))
     else:
         logger.warning("benchmark_data_not_found", path=str(csv_path))

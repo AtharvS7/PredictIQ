@@ -30,7 +30,6 @@ from app.services.storage_service import (  # noqa: E402
 )
 from fastapi import Depends, FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
-from ml.inference import predictor  # noqa: E402
 
 firebase_admin.initialize_app(options={'projectId': 'demo-predictiq'})
 
@@ -58,7 +57,7 @@ async def lifespan(application):
             assert await database._pool.fetchval('SELECT version_num FROM alembic_version') == '006_manual_budgets'
             storage_service._backend = LocalStorageBackend(directory)
             ml_service.predict = prediction_fixture
-            predictor.get_model_info = lambda: {'model_version': 'authenticated-e2e-fixture'}
+            ml_service.get_model_info = lambda: {'model_version': 'authenticated-e2e-fixture'}
             yield
         finally:
             await database._pool.close()

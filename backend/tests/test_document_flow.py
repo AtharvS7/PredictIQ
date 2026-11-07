@@ -79,7 +79,7 @@ def test_document_to_estimate_result_contract(flow, sample_document_text, monkey
     predict = Mock(return_value={"effort_hours_likely": 1000.0, "effort_hours_min": 800.0,
         "effort_hours_max": 1400.0, "confidence_pct": 70.0, "model_mode": "live"})
     monkeypatch.setattr(service_module.ml_service, "predict", predict)
-    monkeypatch.setattr(service_module.predictor, 'get_model_info', lambda: {'model_version': model_version})
+    monkeypatch.setattr(service_module.ml_service, 'get_model_info', lambda: {'model_version': model_version})
     monkeypatch.setattr(estimates, "log_estimation_analytics", AsyncMock())
     doc_id = upload(client, sample_document_text)
     extracted = client.post(f"/documents/{doc_id}/extract").json()

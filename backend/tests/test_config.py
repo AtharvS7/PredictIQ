@@ -39,11 +39,10 @@ class TestSettingsDefaults:
         assert isinstance(settings.DATABASE_URL, str)
         assert len(settings.DATABASE_URL) > 0
 
-    def test_ml_model_paths_set(self):
-        """ML model paths should have default values."""
-        assert "pkl" in settings.ML_MODEL_PATH or "model" in settings.ML_MODEL_PATH.lower()
-        assert "pkl" in settings.ML_SCALER_PATH or "scaler" in settings.ML_SCALER_PATH.lower()
-        assert "json" in settings.ML_FEATURES_PATH or "features" in settings.ML_FEATURES_PATH.lower()
+    def test_ml_artifacts_config_exists(self):
+        """ML artifacts directory override setting should be a string."""
+        assert hasattr(settings, "ML_ARTIFACTS_DIR")
+        assert isinstance(settings.ML_ARTIFACTS_DIR, str)
 
 
 class TestCorsOrigins:

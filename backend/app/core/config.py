@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        extra="ignore",
     )
 
     # Neon PostgreSQL
@@ -33,12 +34,8 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
-    # ML Model Paths
-    ML_MODEL_PATH: str = "./ml/predictiq_best_model.pkl"
-    ML_SCALER_PATH: str = "./ml/predictiq_scaler.pkl"
-    ML_FEATURES_PATH: str = "./ml/predictiq_features.json"
-    ML_PIPELINE_MANIFEST: str = ""
-    ML_PIPELINE_MANIFEST_SHA256: str = ""
+    # ML Production Artifacts Directory (optional override, defaults to backend/ml/artifacts/production_v2)
+    ML_ARTIFACTS_DIR: str = ""
 
     # Application
     DEFAULT_HOURLY_RATE_USD: float = 75.0
