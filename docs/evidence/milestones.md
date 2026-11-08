@@ -124,3 +124,29 @@ This file tracks each milestone achieved on `dev3`, the checkpoints covered, tes
 - **Tracked Files Check:** Clean (0 forbidden files, 0 files > 50MB)
 - **Remote Safety:** `origin/dev2` and `origin/main` remain untouched and match baseline SHAs
 
+---
+
+## Milestone RC2_M2: Model & Data (`dev3-rc2-m2-model-data`)
+
+- **Tag:** `dev3-rc2-m2-model-data`
+- **Meaning:** Empirical Bayes actuals shrinkage, data expansion round 2 audit (gold IFPUG standard $N=915$), challenger models re-evaluated under frozen protocol, calibrated likely band ($P_{25}–P_{75}$), 36-document golden SRS benchmark suite passing all quality gates, pure JSON parameter serialization (zero-pickle runtime).
+- **Checkpoints Covered:**
+  - **R05 (Empirical Bayes Shrinkage):** Conjugate normal hierarchical model ($w_k = k / (k + 2.83)$). Calibrated on $N=915$ historical projects. Macro MdAPE improved by $+11.89\%$ at $k=3$, $+14.85\%$ at $k=5$, $+19.52\%$ at $k=10$, and $+22.76\%$ at $k=20$. Verified safe clipping range $[0.33, 3.00]$. Evidence: `docs/evidence/R05.md`.
+  - **R06 (Data Expansion Round 2 Audit):** Audited gold-standard IFPUG dataset (`projects_v2.csv`, $N=915$). Zero duplicate keys, zero synthetic imputation, authenticated source SHA-256 hashes for China, Kitchenham, Desharnais, Maxwell, Albrecht, and AT&T Aptness. Evidence: `docs/evidence/R06.md`.
+  - **R07 (Challengers Re-evaluation):** Evaluated challenger models (B, D, and Track 2 MonotoneHistGradientBoosting) against frozen protocol criteria ($+3.0\%$ improvement threshold). All challengers failed to exceed the incumbent threshold. Incumbent Model A (`MultivariateMonotoneModel` size-only power-law) confirmed as primary production estimator. Evidence: `docs/evidence/R07.md`.
+  - **R08 (Conformal Likely Band P25–P75):** Implemented Mondrian split-conformal calibration for inner 50% Likely Band alongside outer 80% Plausible Range ($q_{\text{small}}=0.6073$, $q_{\text{medium}}=0.5999$, $q_{\text{large}}=0.6565$, $q_{\text{global}}=0.6004$). Monotonic non-crossing invariant guaranteed: $1.0 \le P_{10} \le P_{25} \le P_{50} \le P_{75} \le P_{90}$. Evidence: `docs/evidence/R08.md`.
+  - **R09 (NLP & Golden SRS Benchmark Suite):** Created 36 verified gold SRS documents across 6 software domains (Web, Mobile, Cloud/APIs, Data Pipelines, Enterprise/ERP, IoT/Embedded) with ground-truth annotations. Automated evaluation harness (`run_r09_srs_eval.py`) and pytest suite (`test_nlp_gold_srs.py`) pass 100% of quality gates: 0 crashes, 0.00% size MdAPE, 0.9919 tech stack Micro-F1, 100.0% feature recall, 0.19 integration count MAE. Evidence: `docs/evidence/R09.md` and `docs/evidence/r09_srs_results.json`.
+  - **R12 (Zero-Pickle Pure JSON Serving):** Completely eliminated `pickle.load` from production serving runtime. Exported all parameters to `model_params.json` with SHA-256 verification in `manifest.json`. Evidence: `docs/evidence/R12.md`.
+
+### Full Verification Suite Summary
+- **Backend Test Suite (Pytest):** 661 passed, 6 skipped, 0 failed in 167.0s
+- **Scripts Test Suite (Pytest):** 50 passed, 4 skipped in 7.3s
+- **Frontend Typecheck (TSC):** Clean (0 errors across `tsconfig.json` and `tsconfig.test.json`)
+- **Frontend Vitest Suite:** 132 passed across 24 test files in 110.6s
+- **Frontend Production Build (Vite):** Clean build in 48.8s
+- **Python Linting (Ruff):** Clean (0 errors across `backend/app` and `backend/ml`)
+- **Python Typecheck (Mypy):** Clean (0 errors across 48 source files in `backend/app`)
+- **Hygiene & Security Audit:** Clean (0 secrets, 0 forbidden files, 0 files > 50MB)
+- **Remote Safety:** `origin/dev2` and `origin/main` remain untouched and match baseline SHAs
+
+

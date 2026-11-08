@@ -1,0 +1,1810 @@
+{
+  "web_01_ecommerce_platform": {
+    "doc_id": "web_01_ecommerce_platform",
+    "filename": "web_01_ecommerce_platform.md",
+    "domain": "Web Applications",
+    "project_name": "Omnichannel Retail Commerce Platform",
+    "project_type": "Web App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 116.0,
+        "range_fp": [
+          98.6,
+          133.4
+        ]
+      },
+      "tech_stack": [
+        "AWS",
+        "CSS",
+        "Docker",
+        "Express",
+        "GDPR",
+        "Kubernetes",
+        "Next.js",
+        "Node.js",
+        "OAuth2",
+        "PCI-DSS",
+        "PostgreSQL",
+        "React",
+        "Redis",
+        "S3",
+        "Tailwind CSS",
+        "TypeScript"
+      ],
+      "integration_count": 4,
+      "feature_count": 12,
+      "complexity_level": "High",
+      "team_size": 8,
+      "duration_months": 6.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 116.0,
+      "feature_count": 12,
+      "integration_count": 4,
+      "complexity_level": "Very High",
+      "tech_stack": [
+        "Kubernetes",
+        "TypeScript",
+        "PostgreSQL",
+        "Tailwind CSS",
+        "PCI-DSS",
+        "Node.js",
+        "Next.js",
+        "Express",
+        "OAuth2",
+        "Docker",
+        "Redis",
+        "React",
+        "GDPR",
+        "AWS",
+        "CSS",
+        "S3"
+      ],
+      "project_type": "Web App"
+    }
+  },
+  "web_02_saas_analytics_dashboard": {
+    "doc_id": "web_02_saas_analytics_dashboard",
+    "filename": "web_02_saas_analytics_dashboard.md",
+    "domain": "Web Applications",
+    "project_name": "CloudPulse SaaS Product Analytics Platform",
+    "project_type": "Web App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 132.0,
+        "range_fp": [
+          112.2,
+          151.8
+        ]
+      },
+      "tech_stack": [
+        "Auth0",
+        "CSS",
+        "ClickHouse",
+        "Docker",
+        "FastAPI",
+        "PostgreSQL",
+        "Python",
+        "Redis",
+        "SOC2",
+        "Tailwind CSS",
+        "TypeScript",
+        "Vue"
+      ],
+      "integration_count": 4,
+      "feature_count": 14,
+      "complexity_level": "High",
+      "team_size": 7,
+      "duration_months": 5.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 132.0,
+      "feature_count": 14,
+      "integration_count": 4,
+      "complexity_level": "Very High",
+      "tech_stack": [
+        "ClickHouse",
+        "TypeScript",
+        "PostgreSQL",
+        "Tailwind CSS",
+        "FastAPI",
+        "Python",
+        "Docker",
+        "Auth0",
+        "Redis",
+        "SOC2",
+        "Vue",
+        "CSS"
+      ],
+      "project_type": "Web App"
+    }
+  },
+  "web_03_patient_portal": {
+    "doc_id": "web_03_patient_portal",
+    "filename": "web_03_patient_portal.md",
+    "domain": "Web Applications",
+    "project_name": "CareNexus Telehealth & Patient Care Portal",
+    "project_type": "Web App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 108.0,
+        "range_fp": [
+          91.8,
+          124.2
+        ]
+      },
+      "tech_stack": [
+        "AWS",
+        "Angular",
+        "Auth0",
+        "Django",
+        "Docker",
+        "HIPAA",
+        "Nginx",
+        "PostgreSQL",
+        "Python",
+        "Redis",
+        "S3",
+        "TypeScript"
+      ],
+      "integration_count": 4,
+      "feature_count": 11,
+      "complexity_level": "High",
+      "team_size": 6,
+      "duration_months": 6.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 113.0,
+      "feature_count": 11,
+      "integration_count": 5,
+      "complexity_level": "Very High",
+      "tech_stack": [
+        "TypeScript",
+        "PostgreSQL",
+        "Angular",
+        "Python",
+        "Django",
+        "Docker",
+        "HIPAA",
+        "Auth0",
+        "Nginx",
+        "Redis",
+        "AWS",
+        "S3"
+      ],
+      "project_type": "Web App"
+    }
+  },
+  "web_04_learning_management": {
+    "doc_id": "web_04_learning_management",
+    "filename": "web_04_learning_management.md",
+    "domain": "Web Applications",
+    "project_name": "EduVantage Enterprise Learning Management Platform",
+    "project_type": "Web App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 87.0,
+        "range_fp": [
+          74.0,
+          100.0
+        ]
+      },
+      "tech_stack": [
+        "AWS",
+        "Express",
+        "MongoDB",
+        "Node.js",
+        "React",
+        "Redis",
+        "S3",
+        "TypeScript"
+      ],
+      "integration_count": 3,
+      "feature_count": 9,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 87.0,
+      "feature_count": 9,
+      "integration_count": 3,
+      "complexity_level": "High",
+      "tech_stack": [
+        "TypeScript",
+        "Node.js",
+        "Express",
+        "MongoDB",
+        "Redis",
+        "React",
+        "AWS",
+        "S3"
+      ],
+      "project_type": "Web App"
+    }
+  },
+  "web_05_crm_platform": {
+    "doc_id": "web_05_crm_platform",
+    "filename": "web_05_crm_platform.md",
+    "domain": "Web Applications",
+    "project_name": "ApexDeal Sales CRM Platform",
+    "project_type": "Web App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 95.0,
+        "range_fp": [
+          80.8,
+          109.2
+        ]
+      },
+      "tech_stack": [
+        "FastAPI",
+        "PostgreSQL",
+        "Python",
+        "React",
+        "Redis",
+        "TypeScript"
+      ],
+      "integration_count": 3,
+      "feature_count": 10,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 95.0,
+      "feature_count": 10,
+      "integration_count": 3,
+      "complexity_level": "Medium",
+      "tech_stack": [
+        "TypeScript",
+        "PostgreSQL",
+        "FastAPI",
+        "Python",
+        "Redis",
+        "React"
+      ],
+      "project_type": "Web App"
+    }
+  },
+  "web_06_real_estate_marketplace": {
+    "doc_id": "web_06_real_estate_marketplace",
+    "filename": "web_06_real_estate_marketplace.md",
+    "domain": "Web Applications",
+    "project_name": "TerraPrime Local Property Listing MVP",
+    "project_type": "Web App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 58.0,
+        "range_fp": [
+          49.3,
+          66.7
+        ]
+      },
+      "tech_stack": [
+        "CSS",
+        "Flask",
+        "HTML",
+        "Python",
+        "SQLite"
+      ],
+      "integration_count": 2,
+      "feature_count": 6,
+      "complexity_level": "Low",
+      "team_size": 2,
+      "duration_months": 2.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 58.0,
+      "feature_count": 6,
+      "integration_count": 2,
+      "complexity_level": "Low",
+      "tech_stack": [
+        "Python",
+        "SQLite",
+        "Flask",
+        "HTML",
+        "CSS"
+      ],
+      "project_type": "Web App"
+    }
+  },
+  "mobile_01_fitness_tracker": {
+    "doc_id": "mobile_01_fitness_tracker",
+    "filename": "mobile_01_fitness_tracker.md",
+    "domain": "Mobile Applications",
+    "project_name": "PulseFit Simple Workout Logger MVP",
+    "project_type": "Mobile App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 58.0,
+        "range_fp": [
+          49.3,
+          66.7
+        ]
+      },
+      "tech_stack": [
+        "Dart",
+        "Firebase",
+        "Flutter",
+        "SQLite"
+      ],
+      "integration_count": 2,
+      "feature_count": 6,
+      "complexity_level": "Low",
+      "team_size": 2,
+      "duration_months": 2.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 58.0,
+      "feature_count": 6,
+      "integration_count": 2,
+      "complexity_level": "Low",
+      "tech_stack": [
+        "Firebase",
+        "Flutter",
+        "SQLite",
+        "Dart"
+      ],
+      "project_type": "Mobile App"
+    }
+  },
+  "mobile_02_ridesharing_driver_rider": {
+    "doc_id": "mobile_02_ridesharing_driver_rider",
+    "filename": "mobile_02_ridesharing_driver_rider.md",
+    "domain": "Mobile Applications",
+    "project_name": "UrbanRide On-Demand Mobility Platform",
+    "project_type": "Mobile App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 148.0,
+        "range_fp": [
+          125.8,
+          170.2
+        ]
+      },
+      "tech_stack": [
+        "Docker",
+        "Express",
+        "Firebase",
+        "Node.js",
+        "PCI-DSS",
+        "PostgreSQL",
+        "React",
+        "React Native",
+        "Redis",
+        "TypeScript",
+        "WebSockets"
+      ],
+      "integration_count": 4,
+      "feature_count": 16,
+      "complexity_level": "High",
+      "team_size": 8,
+      "duration_months": 6.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 153.0,
+      "feature_count": 16,
+      "integration_count": 5,
+      "complexity_level": "High",
+      "tech_stack": [
+        "React Native",
+        "WebSockets",
+        "TypeScript",
+        "PostgreSQL",
+        "Firebase",
+        "PCI-DSS",
+        "Node.js",
+        "Express",
+        "Docker",
+        "Redis",
+        "React"
+      ],
+      "project_type": "Mobile App"
+    }
+  },
+  "mobile_03_digital_banking_app": {
+    "doc_id": "mobile_03_digital_banking_app",
+    "filename": "mobile_03_digital_banking_app.md",
+    "domain": "Mobile Applications",
+    "project_name": "Veritas Mobile Neobank & Wealth App",
+    "project_type": "Mobile App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 132.0,
+        "range_fp": [
+          112.2,
+          151.8
+        ]
+      },
+      "tech_stack": [
+        "Auth0",
+        "Docker",
+        "Java",
+        "Kotlin",
+        "Kubernetes",
+        "PostgreSQL",
+        "Redis",
+        "SOC2",
+        "Spring",
+        "Spring Boot",
+        "Swift"
+      ],
+      "integration_count": 4,
+      "feature_count": 14,
+      "complexity_level": "High",
+      "team_size": 9,
+      "duration_months": 7.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 132.0,
+      "feature_count": 14,
+      "integration_count": 4,
+      "complexity_level": "High",
+      "tech_stack": [
+        "Spring Boot",
+        "Kubernetes",
+        "PostgreSQL",
+        "Spring",
+        "Kotlin",
+        "Docker",
+        "Auth0",
+        "Redis",
+        "Swift",
+        "Java",
+        "SOC2"
+      ],
+      "project_type": "Mobile App"
+    }
+  },
+  "mobile_04_food_delivery_customer": {
+    "doc_id": "mobile_04_food_delivery_customer",
+    "filename": "mobile_04_food_delivery_customer.md",
+    "domain": "Mobile Applications",
+    "project_name": "CraveDirect On-Demand Food Delivery App",
+    "project_type": "Mobile App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 140.0,
+        "range_fp": [
+          119.0,
+          161.0
+        ]
+      },
+      "tech_stack": [
+        "Dart",
+        "Docker",
+        "Express",
+        "Firebase",
+        "Flutter",
+        "MongoDB",
+        "Node.js",
+        "PCI-DSS",
+        "Redis"
+      ],
+      "integration_count": 4,
+      "feature_count": 15,
+      "complexity_level": "High",
+      "team_size": 6,
+      "duration_months": 5.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 140.0,
+      "feature_count": 15,
+      "integration_count": 4,
+      "complexity_level": "High",
+      "tech_stack": [
+        "Firebase",
+        "PCI-DSS",
+        "Node.js",
+        "Express",
+        "MongoDB",
+        "Flutter",
+        "Docker",
+        "Redis",
+        "Dart"
+      ],
+      "project_type": "Mobile App"
+    }
+  },
+  "mobile_05_event_ticketing_wallet": {
+    "doc_id": "mobile_05_event_ticketing_wallet",
+    "filename": "mobile_05_event_ticketing_wallet.md",
+    "domain": "Mobile Applications",
+    "project_name": "PassFront Live Concert & Event Ticketing",
+    "project_type": "Mobile App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 87.0,
+        "range_fp": [
+          74.0,
+          100.0
+        ]
+      },
+      "tech_stack": [
+        "Express",
+        "FastAPI",
+        "PostgreSQL",
+        "Python",
+        "React",
+        "React Native",
+        "Redis",
+        "TypeScript"
+      ],
+      "integration_count": 3,
+      "feature_count": 9,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 87.0,
+      "feature_count": 9,
+      "integration_count": 3,
+      "complexity_level": "Medium",
+      "tech_stack": [
+        "React Native",
+        "TypeScript",
+        "PostgreSQL",
+        "Express",
+        "FastAPI",
+        "Python",
+        "Redis",
+        "React"
+      ],
+      "project_type": "Mobile App"
+    }
+  },
+  "mobile_06_field_service_inspection": {
+    "doc_id": "mobile_06_field_service_inspection",
+    "filename": "mobile_06_field_service_inspection.md",
+    "domain": "Mobile Applications",
+    "project_name": "FieldGrid Industrial Asset Inspection App",
+    "project_type": "Mobile App",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 95.0,
+        "range_fp": [
+          80.8,
+          109.2
+        ]
+      },
+      "tech_stack": [
+        "AWS",
+        "FastAPI",
+        "Kotlin",
+        "Python",
+        "S3",
+        "SQLite",
+        "Swift"
+      ],
+      "integration_count": 3,
+      "feature_count": 10,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 95.0,
+      "feature_count": 10,
+      "integration_count": 3,
+      "complexity_level": "Medium",
+      "tech_stack": [
+        "FastAPI",
+        "Python",
+        "Kotlin",
+        "SQLite",
+        "Swift",
+        "AWS",
+        "S3"
+      ],
+      "project_type": "Mobile App"
+    }
+  },
+  "api_01_payment_gateway": {
+    "doc_id": "api_01_payment_gateway",
+    "filename": "api_01_payment_gateway.md",
+    "domain": "Cloud / REST APIs & Microservices",
+    "project_name": "NovaPay Multi-Rail Payment Orchestration API",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 140.0,
+        "range_fp": [
+          119.0,
+          161.0
+        ]
+      },
+      "tech_stack": [
+        "Datadog",
+        "Docker",
+        "Go",
+        "Grafana",
+        "Kafka",
+        "Kubernetes",
+        "PCI-DSS",
+        "PostgreSQL",
+        "Prometheus",
+        "Rails",
+        "Redis",
+        "TLS"
+      ],
+      "integration_count": 4,
+      "feature_count": 15,
+      "complexity_level": "High",
+      "team_size": 8,
+      "duration_months": 6.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 140.0,
+      "feature_count": 15,
+      "integration_count": 4,
+      "complexity_level": "High",
+      "tech_stack": [
+        "Prometheus",
+        "Kubernetes",
+        "PostgreSQL",
+        "PCI-DSS",
+        "Datadog",
+        "Grafana",
+        "Docker",
+        "Rails",
+        "Redis",
+        "Kafka",
+        "TLS",
+        "Go"
+      ],
+      "project_type": "API/Backend"
+    }
+  },
+  "api_02_omnichannel_notification": {
+    "doc_id": "api_02_omnichannel_notification",
+    "filename": "api_02_omnichannel_notification.md",
+    "domain": "Cloud / REST APIs & Microservices",
+    "project_name": "SignalBridge Enterprise Notification Broker API",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 87.0,
+        "range_fp": [
+          74.0,
+          100.0
+        ]
+      },
+      "tech_stack": [
+        "FastAPI",
+        "PostgreSQL",
+        "Python",
+        "RabbitMQ",
+        "Redis"
+      ],
+      "integration_count": 3,
+      "feature_count": 9,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 87.0,
+      "feature_count": 9,
+      "integration_count": 3,
+      "complexity_level": "High",
+      "tech_stack": [
+        "PostgreSQL",
+        "RabbitMQ",
+        "FastAPI",
+        "Python",
+        "Redis"
+      ],
+      "project_type": "API/Backend"
+    }
+  },
+  "api_03_identity_auth_broker": {
+    "doc_id": "api_03_identity_auth_broker",
+    "filename": "api_03_identity_auth_broker.md",
+    "domain": "Cloud / REST APIs & Microservices",
+    "project_name": "AuthCentric Zero-Trust Identity & SSO Broker",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 124.0,
+        "range_fp": [
+          105.4,
+          142.6
+        ]
+      },
+      "tech_stack": [
+        "Active Directory",
+        "Auth0",
+        "Azure",
+        "CSS",
+        "Docker",
+        "Express",
+        "HIPAA",
+        "HTML",
+        "JWT",
+        "Keycloak",
+        "Kubernetes",
+        "MFA",
+        "Microsoft Azure",
+        "Node.js",
+        "OAuth2",
+        "PostgreSQL",
+        "Redis",
+        "SAML",
+        "SOC2",
+        "SSO",
+        "TLS",
+        "TypeScript"
+      ],
+      "integration_count": 4,
+      "feature_count": 13,
+      "complexity_level": "High",
+      "team_size": 7,
+      "duration_months": 5.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 119.0,
+      "feature_count": 13,
+      "integration_count": 3,
+      "complexity_level": "Very High",
+      "tech_stack": [
+        "Active Directory",
+        "Microsoft Azure",
+        "Kubernetes",
+        "TypeScript",
+        "PostgreSQL",
+        "Keycloak",
+        "Node.js",
+        "Express",
+        "OAuth2",
+        "Docker",
+        "Azure",
+        "HIPAA",
+        "Auth0",
+        "Redis",
+        "SAML",
+        "HTML",
+        "SOC2",
+        "SSO",
+        "JWT",
+        "MFA",
+        "CSS",
+        "TLS"
+      ],
+      "project_type": "API/Backend"
+    }
+  },
+  "api_04_global_inventory_api": {
+    "doc_id": "api_04_global_inventory_api",
+    "filename": "api_04_global_inventory_api.md",
+    "domain": "Cloud / REST APIs & Microservices",
+    "project_name": "StockMesh Distributed Real-Time Inventory API",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 132.0,
+        "range_fp": [
+          112.2,
+          151.8
+        ]
+      },
+      "tech_stack": [
+        "AWS",
+        "Datadog",
+        "Docker",
+        "Java",
+        "Kafka",
+        "Kubernetes",
+        "MongoDB",
+        "Redis",
+        "S3",
+        "Spring",
+        "Spring Boot",
+        "TLS"
+      ],
+      "integration_count": 4,
+      "feature_count": 14,
+      "complexity_level": "High",
+      "team_size": 7,
+      "duration_months": 5.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 132.0,
+      "feature_count": 14,
+      "integration_count": 4,
+      "complexity_level": "Very High",
+      "tech_stack": [
+        "Spring Boot",
+        "Kubernetes",
+        "Datadog",
+        "MongoDB",
+        "Spring",
+        "Docker",
+        "Redis",
+        "Kafka",
+        "Java",
+        "AWS",
+        "TLS",
+        "S3"
+      ],
+      "project_type": "API/Backend"
+    }
+  },
+  "api_05_document_conversion_service": {
+    "doc_id": "api_05_document_conversion_service",
+    "filename": "api_05_document_conversion_service.md",
+    "domain": "Cloud / REST APIs & Microservices",
+    "project_name": "DocuMorph Simple PDF Rendering Utility",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 58.0,
+        "range_fp": [
+          49.3,
+          66.7
+        ]
+      },
+      "tech_stack": [
+        "Flask",
+        "HTML",
+        "Python",
+        "SQLite"
+      ],
+      "integration_count": 2,
+      "feature_count": 6,
+      "complexity_level": "Low",
+      "team_size": 2,
+      "duration_months": 2.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 58.0,
+      "feature_count": 6,
+      "integration_count": 2,
+      "complexity_level": "Low",
+      "tech_stack": [
+        "Python",
+        "SQLite",
+        "Flask",
+        "HTML"
+      ],
+      "project_type": "API/Backend"
+    }
+  },
+  "api_06_api_rate_limiting_gateway": {
+    "doc_id": "api_06_api_rate_limiting_gateway",
+    "filename": "api_06_api_rate_limiting_gateway.md",
+    "domain": "Cloud / REST APIs & Microservices",
+    "project_name": "EdgeSentry API Traffic & Throttling Gateway",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 95.0,
+        "range_fp": [
+          80.8,
+          109.2
+        ]
+      },
+      "tech_stack": [
+        "Datadog",
+        "Docker",
+        "Go",
+        "Grafana",
+        "JWT",
+        "Prometheus",
+        "Redis",
+        "Sentry",
+        "gRPC"
+      ],
+      "integration_count": 3,
+      "feature_count": 10,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 95.0,
+      "feature_count": 10,
+      "integration_count": 3,
+      "complexity_level": "High",
+      "tech_stack": [
+        "Prometheus",
+        "Datadog",
+        "Grafana",
+        "Sentry",
+        "Docker",
+        "Redis",
+        "gRPC",
+        "JWT",
+        "Go"
+      ],
+      "project_type": "API/Backend"
+    }
+  },
+  "data_01_etl_lakehouse_pipeline": {
+    "doc_id": "data_01_etl_lakehouse_pipeline",
+    "filename": "data_01_etl_lakehouse_pipeline.md",
+    "domain": "Data & Analytics Pipelines",
+    "project_name": "NexusLake Enterprise Lakehouse Ingestion & ETL",
+    "project_type": "Data Platform",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 132.0,
+        "range_fp": [
+          112.2,
+          151.8
+        ]
+      },
+      "tech_stack": [
+        "AWS",
+        "Databricks",
+        "Datadog",
+        "Docker",
+        "MongoDB",
+        "PostgreSQL",
+        "Python",
+        "S3",
+        "SOC2",
+        "Snowflake"
+      ],
+      "integration_count": 4,
+      "feature_count": 14,
+      "complexity_level": "High",
+      "team_size": 7,
+      "duration_months": 6.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 132.0,
+      "feature_count": 14,
+      "integration_count": 4,
+      "complexity_level": "High",
+      "tech_stack": [
+        "Databricks",
+        "PostgreSQL",
+        "Snowflake",
+        "Datadog",
+        "MongoDB",
+        "Python",
+        "Docker",
+        "SOC2",
+        "AWS",
+        "S3"
+      ],
+      "project_type": "Data Platform"
+    }
+  },
+  "data_02_fraud_detection_engine": {
+    "doc_id": "data_02_fraud_detection_engine",
+    "filename": "data_02_fraud_detection_engine.md",
+    "domain": "Data & Analytics Pipelines",
+    "project_name": "FraudSentinel Real-Time Fraud Scoring Engine",
+    "project_type": "Data Platform",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 140.0,
+        "range_fp": [
+          119.0,
+          161.0
+        ]
+      },
+      "tech_stack": [
+        "Datadog",
+        "Deep Learning",
+        "Docker",
+        "Kafka",
+        "Machine Learning",
+        "PCI-DSS",
+        "PostgreSQL",
+        "PyTorch",
+        "Python",
+        "Redis",
+        "Scikit-Learn",
+        "scikit-learn"
+      ],
+      "integration_count": 4,
+      "feature_count": 15,
+      "complexity_level": "High",
+      "team_size": 8,
+      "duration_months": 6.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 145.0,
+      "feature_count": 15,
+      "integration_count": 5,
+      "complexity_level": "High",
+      "tech_stack": [
+        "Machine Learning",
+        "Deep Learning",
+        "scikit-learn",
+        "PostgreSQL",
+        "PCI-DSS",
+        "PyTorch",
+        "Datadog",
+        "Python",
+        "Docker",
+        "Redis",
+        "Kafka"
+      ],
+      "project_type": "ML/AI System"
+    }
+  },
+  "data_03_recommendation_engine": {
+    "doc_id": "data_03_recommendation_engine",
+    "filename": "data_03_recommendation_engine.md",
+    "domain": "Data & Analytics Pipelines",
+    "project_name": "VectorSense Real-Time Recommendation Engine",
+    "project_type": "Data Platform",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 116.0,
+        "range_fp": [
+          98.6,
+          133.4
+        ]
+      },
+      "tech_stack": [
+        "AWS",
+        "Datadog",
+        "Docker",
+        "FastAPI",
+        "GDPR",
+        "OpenAI",
+        "PostgreSQL",
+        "PyTorch",
+        "Python",
+        "Qdrant",
+        "Redis",
+        "S3",
+        "Sentry"
+      ],
+      "integration_count": 4,
+      "feature_count": 12,
+      "complexity_level": "High",
+      "team_size": 7,
+      "duration_months": 5.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 116.0,
+      "feature_count": 12,
+      "integration_count": 4,
+      "complexity_level": "High",
+      "tech_stack": [
+        "PostgreSQL",
+        "PyTorch",
+        "FastAPI",
+        "Datadog",
+        "Sentry",
+        "Python",
+        "OpenAI",
+        "Docker",
+        "Qdrant",
+        "Redis",
+        "GDPR",
+        "AWS",
+        "S3"
+      ],
+      "project_type": "ML/AI System"
+    }
+  },
+  "data_04_log_aggregation_platform": {
+    "doc_id": "data_04_log_aggregation_platform",
+    "filename": "data_04_log_aggregation_platform.md",
+    "domain": "Data & Analytics Pipelines",
+    "project_name": "LogStream High-Velocity Log Aggregator",
+    "project_type": "Data Platform",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 95.0,
+        "range_fp": [
+          80.8,
+          109.2
+        ]
+      },
+      "tech_stack": [
+        "ClickHouse",
+        "Datadog",
+        "Docker",
+        "Elasticsearch",
+        "Go",
+        "Grafana",
+        "Kubernetes",
+        "Prometheus",
+        "SOC2",
+        "Sentry",
+        "TLS",
+        "gRPC"
+      ],
+      "integration_count": 3,
+      "feature_count": 10,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 100.0,
+      "feature_count": 10,
+      "integration_count": 4,
+      "complexity_level": "High",
+      "tech_stack": [
+        "Elasticsearch",
+        "ClickHouse",
+        "Prometheus",
+        "Kubernetes",
+        "Datadog",
+        "Grafana",
+        "Sentry",
+        "Docker",
+        "gRPC",
+        "SOC2",
+        "TLS",
+        "Go"
+      ],
+      "project_type": "API/Backend"
+    }
+  },
+  "data_05_clickstream_stream_processor": {
+    "doc_id": "data_05_clickstream_stream_processor",
+    "filename": "data_05_clickstream_stream_processor.md",
+    "domain": "Data & Analytics Pipelines",
+    "project_name": "StreamTrack Real-Time Clickstream Processor",
+    "project_type": "Data Platform",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 87.0,
+        "range_fp": [
+          74.0,
+          100.0
+        ]
+      },
+      "tech_stack": [
+        "BigQuery",
+        "ClickHouse",
+        "GDPR",
+        "JavaScript",
+        "Python",
+        "Redis"
+      ],
+      "integration_count": 3,
+      "feature_count": 9,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 87.0,
+      "feature_count": 9,
+      "integration_count": 3,
+      "complexity_level": "High",
+      "tech_stack": [
+        "ClickHouse",
+        "JavaScript",
+        "BigQuery",
+        "Python",
+        "Redis",
+        "GDPR"
+      ],
+      "project_type": "Data Platform"
+    }
+  },
+  "data_06_financial_time_series_pipeline": {
+    "doc_id": "data_06_financial_time_series_pipeline",
+    "filename": "data_06_financial_time_series_pipeline.md",
+    "domain": "Data & Analytics Pipelines",
+    "project_name": "QuantPulse Simple Market Ticker Aggregator MVP",
+    "project_type": "Data Platform",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 58.0,
+        "range_fp": [
+          49.3,
+          66.7
+        ]
+      },
+      "tech_stack": [
+        "Pandas",
+        "Python",
+        "SQLite"
+      ],
+      "integration_count": 2,
+      "feature_count": 6,
+      "complexity_level": "Low",
+      "team_size": 2,
+      "duration_months": 2.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 58.0,
+      "feature_count": 6,
+      "integration_count": 2,
+      "complexity_level": "Low",
+      "tech_stack": [
+        "Python",
+        "Pandas",
+        "SQLite"
+      ],
+      "project_type": "Web App"
+    }
+  },
+  "erp_01_supply_chain_manager": {
+    "doc_id": "erp_01_supply_chain_manager",
+    "filename": "erp_01_supply_chain_manager.md",
+    "domain": "Enterprise / ERP Systems",
+    "project_name": "GlobalSync Supply Chain & Logistics ERP Platform",
+    "project_type": "Enterprise Software",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 148.0,
+        "range_fp": [
+          125.8,
+          170.2
+        ]
+      },
+      "tech_stack": [
+        "Angular",
+        "Docker",
+        "Java",
+        "Kafka",
+        "Kubernetes",
+        "PostgreSQL",
+        "Redis",
+        "Spring",
+        "Spring Boot"
+      ],
+      "integration_count": 4,
+      "feature_count": 16,
+      "complexity_level": "High",
+      "team_size": 9,
+      "duration_months": 7.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 148.0,
+      "feature_count": 16,
+      "integration_count": 4,
+      "complexity_level": "High",
+      "tech_stack": [
+        "Spring Boot",
+        "Kubernetes",
+        "PostgreSQL",
+        "Angular",
+        "Spring",
+        "Docker",
+        "Redis",
+        "Kafka",
+        "Java"
+      ],
+      "project_type": "Enterprise Software"
+    }
+  },
+  "erp_02_hris_payroll_system": {
+    "doc_id": "erp_02_hris_payroll_system",
+    "filename": "erp_02_hris_payroll_system.md",
+    "domain": "Enterprise / ERP Systems",
+    "project_name": "TalentCore Global HRIS & Automated Payroll System",
+    "project_type": "Enterprise Software",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 140.0,
+        "range_fp": [
+          119.0,
+          161.0
+        ]
+      },
+      "tech_stack": [
+        ".NET",
+        "ASP.NET",
+        "Auth0",
+        "C#",
+        "Docker",
+        "GDPR",
+        "PostgreSQL",
+        "React",
+        "Redis",
+        "SOC2"
+      ],
+      "integration_count": 4,
+      "feature_count": 15,
+      "complexity_level": "High",
+      "team_size": 8,
+      "duration_months": 6.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 140.0,
+      "feature_count": 15,
+      "integration_count": 4,
+      "complexity_level": "High",
+      "tech_stack": [
+        "PostgreSQL",
+        "ASP.NET",
+        "Docker",
+        "Auth0",
+        "Redis",
+        "React",
+        "GDPR",
+        ".NET",
+        "SOC2"
+      ],
+      "project_type": "Enterprise Software"
+    }
+  },
+  "erp_03_warehouse_operations_wms": {
+    "doc_id": "erp_03_warehouse_operations_wms",
+    "filename": "erp_03_warehouse_operations_wms.md",
+    "domain": "Enterprise / ERP Systems",
+    "project_name": "WarehouseMaster Automated WMS & Fulfillment System",
+    "project_type": "Enterprise Software",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 132.0,
+        "range_fp": [
+          112.2,
+          151.8
+        ]
+      },
+      "tech_stack": [
+        "AWS",
+        "Docker",
+        "Node.js",
+        "Parcel",
+        "PostgreSQL",
+        "React",
+        "Redis",
+        "S3",
+        "TypeScript"
+      ],
+      "integration_count": 4,
+      "feature_count": 14,
+      "complexity_level": "High",
+      "team_size": 7,
+      "duration_months": 6.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 137.0,
+      "feature_count": 14,
+      "integration_count": 5,
+      "complexity_level": "High",
+      "tech_stack": [
+        "TypeScript",
+        "PostgreSQL",
+        "Node.js",
+        "Parcel",
+        "Docker",
+        "Redis",
+        "React",
+        "AWS",
+        "S3"
+      ],
+      "project_type": "ML/AI System"
+    }
+  },
+  "erp_04_enterprise_billing_engine": {
+    "doc_id": "erp_04_enterprise_billing_engine",
+    "filename": "erp_04_enterprise_billing_engine.md",
+    "domain": "Enterprise / ERP Systems",
+    "project_name": "RevScale Subscription & Invoicing Engine",
+    "project_type": "Enterprise Software",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 95.0,
+        "range_fp": [
+          80.8,
+          109.2
+        ]
+      },
+      "tech_stack": [
+        "Django",
+        "PostgreSQL",
+        "Python",
+        "Redis"
+      ],
+      "integration_count": 3,
+      "feature_count": 10,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 95.0,
+      "feature_count": 10,
+      "integration_count": 3,
+      "complexity_level": "Medium",
+      "tech_stack": [
+        "PostgreSQL",
+        "Python",
+        "Django",
+        "Redis"
+      ],
+      "project_type": "Enterprise Software"
+    }
+  },
+  "erp_05_procurement_vendor_portal": {
+    "doc_id": "erp_05_procurement_vendor_portal",
+    "filename": "erp_05_procurement_vendor_portal.md",
+    "domain": "Enterprise / ERP Systems",
+    "project_name": "ProSource Vendor Governance Portal",
+    "project_type": "Enterprise Software",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 87.0,
+        "range_fp": [
+          74.0,
+          100.0
+        ]
+      },
+      "tech_stack": [
+        "Java",
+        "PostgreSQL",
+        "Spring",
+        "Spring Boot",
+        "Vue"
+      ],
+      "integration_count": 3,
+      "feature_count": 9,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 87.0,
+      "feature_count": 9,
+      "integration_count": 3,
+      "complexity_level": "Medium",
+      "tech_stack": [
+        "Spring Boot",
+        "PostgreSQL",
+        "Spring",
+        "Java",
+        "Vue"
+      ],
+      "project_type": "Web App"
+    }
+  },
+  "erp_06_fixed_asset_maintenance": {
+    "doc_id": "erp_06_fixed_asset_maintenance",
+    "filename": "erp_06_fixed_asset_maintenance.md",
+    "domain": "Enterprise / ERP Systems",
+    "project_name": "AssetGuard Simple Equipment Registry MVP",
+    "project_type": "Enterprise Software",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 58.0,
+        "range_fp": [
+          49.3,
+          66.7
+        ]
+      },
+      "tech_stack": [
+        "Flask",
+        "HTML",
+        "Python",
+        "SQLite"
+      ],
+      "integration_count": 2,
+      "feature_count": 6,
+      "complexity_level": "Low",
+      "team_size": 2,
+      "duration_months": 2.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 58.0,
+      "feature_count": 6,
+      "integration_count": 2,
+      "complexity_level": "Low",
+      "tech_stack": [
+        "Python",
+        "SQLite",
+        "Flask",
+        "HTML"
+      ],
+      "project_type": "Enterprise Software"
+    }
+  },
+  "iot_01_smart_thermostat_hub": {
+    "doc_id": "iot_01_smart_thermostat_hub",
+    "filename": "iot_01_smart_thermostat_hub.md",
+    "domain": "Embedded / IoT / Systems",
+    "project_name": "AeroComfort Simple Thermostat Prototype MVP",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 58.0,
+        "range_fp": [
+          49.3,
+          66.7
+        ]
+      },
+      "tech_stack": [
+        "C++",
+        "Python",
+        "SQLite"
+      ],
+      "integration_count": 2,
+      "feature_count": 6,
+      "complexity_level": "Low",
+      "team_size": 2,
+      "duration_months": 2.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 58.0,
+      "feature_count": 6,
+      "integration_count": 2,
+      "complexity_level": "Medium",
+      "tech_stack": [
+        "Python",
+        "SQLite"
+      ],
+      "project_type": "API/Backend"
+    }
+  },
+  "iot_02_fleet_telematics_gateway": {
+    "doc_id": "iot_02_fleet_telematics_gateway",
+    "filename": "iot_02_fleet_telematics_gateway.md",
+    "domain": "Embedded / IoT / Systems",
+    "project_name": "FleetPulse Commercial Vehicle Telematics & ELD Gateway",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 132.0,
+        "range_fp": [
+          112.2,
+          151.8
+        ]
+      },
+      "tech_stack": [
+        "AWS",
+        "Docker",
+        "Go",
+        "Kafka",
+        "PostgreSQL",
+        "Python",
+        "Redis",
+        "S3"
+      ],
+      "integration_count": 4,
+      "feature_count": 14,
+      "complexity_level": "High",
+      "team_size": 7,
+      "duration_months": 6.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 132.0,
+      "feature_count": 14,
+      "integration_count": 4,
+      "complexity_level": "High",
+      "tech_stack": [
+        "PostgreSQL",
+        "Python",
+        "Docker",
+        "Redis",
+        "Kafka",
+        "AWS",
+        "S3",
+        "Go"
+      ],
+      "project_type": "Web App"
+    }
+  },
+  "iot_03_drone_telemetry_system": {
+    "doc_id": "iot_03_drone_telemetry_system",
+    "filename": "iot_03_drone_telemetry_system.md",
+    "domain": "Embedded / IoT / Systems",
+    "project_name": "SkyCommand Autonomous Drone Telemetry & Mission Control",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 140.0,
+        "range_fp": [
+          119.0,
+          161.0
+        ]
+      },
+      "tech_stack": [
+        "AWS",
+        "C++",
+        "Datadog",
+        "Docker",
+        "PostgreSQL",
+        "Python",
+        "React",
+        "Redis",
+        "S3",
+        "WebSockets"
+      ],
+      "integration_count": 4,
+      "feature_count": 15,
+      "complexity_level": "High",
+      "team_size": 8,
+      "duration_months": 6.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 140.0,
+      "feature_count": 15,
+      "integration_count": 4,
+      "complexity_level": "High",
+      "tech_stack": [
+        "WebSockets",
+        "PostgreSQL",
+        "Datadog",
+        "Python",
+        "Docker",
+        "Redis",
+        "React",
+        "AWS",
+        "S3"
+      ],
+      "project_type": "Web App"
+    }
+  },
+  "iot_04_industrial_sensor_monitor": {
+    "doc_id": "iot_04_industrial_sensor_monitor",
+    "filename": "iot_04_industrial_sensor_monitor.md",
+    "domain": "Embedded / IoT / Systems",
+    "project_name": "VibeGuard Industrial Vibration & Heat Monitoring Hub",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 116.0,
+        "range_fp": [
+          98.6,
+          133.4
+        ]
+      },
+      "tech_stack": [
+        "Datadog",
+        "Docker",
+        "Go",
+        "Grafana",
+        "Machine Learning",
+        "PostgreSQL",
+        "Prometheus",
+        "Redis",
+        "Rust"
+      ],
+      "integration_count": 4,
+      "feature_count": 12,
+      "complexity_level": "High",
+      "team_size": 6,
+      "duration_months": 5.0,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 121.0,
+      "feature_count": 12,
+      "integration_count": 5,
+      "complexity_level": "High",
+      "tech_stack": [
+        "Machine Learning",
+        "Prometheus",
+        "PostgreSQL",
+        "Datadog",
+        "Grafana",
+        "Docker",
+        "Redis",
+        "Rust",
+        "Go"
+      ],
+      "project_type": "ML/AI System"
+    }
+  },
+  "iot_05_smart_meter_grid_controller": {
+    "doc_id": "iot_05_smart_meter_grid_controller",
+    "filename": "iot_05_smart_meter_grid_controller.md",
+    "domain": "Embedded / IoT / Systems",
+    "project_name": "GridSync Smart Meter Substation Concentrator",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 95.0,
+        "range_fp": [
+          80.8,
+          109.2
+        ]
+      },
+      "tech_stack": [
+        "C++",
+        "Datadog",
+        "Go",
+        "Kafka",
+        "PostgreSQL",
+        "Redis"
+      ],
+      "integration_count": 3,
+      "feature_count": 10,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 95.0,
+      "feature_count": 10,
+      "integration_count": 3,
+      "complexity_level": "High",
+      "tech_stack": [
+        "PostgreSQL",
+        "Datadog",
+        "Redis",
+        "Kafka",
+        "Go"
+      ],
+      "project_type": "Web App"
+    }
+  },
+  "iot_06_connected_medical_gateway": {
+    "doc_id": "iot_06_connected_medical_gateway",
+    "filename": "iot_06_connected_medical_gateway.md",
+    "domain": "Embedded / IoT / Systems",
+    "project_name": "VitalLink Patient Vital Monitor Gateway",
+    "project_type": "API/Backend",
+    "ground_truth": {
+      "functional_size": {
+        "point_fp": 87.0,
+        "range_fp": [
+          74.0,
+          100.0
+        ]
+      },
+      "tech_stack": [
+        "AWS",
+        "Auth0",
+        "C++",
+        "HIPAA",
+        "Python",
+        "S3",
+        "SQLite"
+      ],
+      "integration_count": 3,
+      "feature_count": 9,
+      "complexity_level": "Medium",
+      "team_size": 5,
+      "duration_months": 4.5,
+      "methodology": "Agile"
+    },
+    "extracted_sample": {
+      "functional_size_fp": 87.0,
+      "feature_count": 9,
+      "integration_count": 3,
+      "complexity_level": "High",
+      "tech_stack": [
+        "Python",
+        "SQLite",
+        "HIPAA",
+        "Auth0",
+        "AWS",
+        "S3"
+      ],
+      "project_type": "API/Backend"
+    }
+  }
+}
