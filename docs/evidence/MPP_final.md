@@ -1,52 +1,58 @@
-# Milestone Push Procedure (MPP) Verification Report — Final Release Candidate
+# Milestone Push Procedure (MPP) Evidence: Milestone RC2_M3_final
 
-**Date:** 2026-11-06  
-**Program:** `PREDICTIQ_V2_UPGRADE_PROGRAM_FINAL`  
-**Branch:** `dev3`  
-**Remote:** `https://github.com/AtharvS7/PredictIQ.git`  
-**Local HEAD SHA:** `4cca430d9dd0d8e75d4ec3b7380099fbdf55218d`
-
----
-
-## 1. Quality Gates & Test Suite Verification
-- **Ruff Style & Linting:** 0 errors (`ruff check backend/app --select E,W,F,I --ignore E501`)
-- **Mypy Static Typing:** 0 issues found across 48 source files (`mypy app/ --ignore-missing-imports --no-strict-optional --exclude 'ml/'`)
-- **Backend Test Suite:** 238 passed across all core and v2 suites (`pytest backend/tests/test_data_v2.py test_actuals.py test_eval_harness.py test_track1.py test_track2.py test_calibration.py test_model_sanity.py test_ml_service.py test_nlp_extractor.py test_cost_calculator.py test_risk_analyzer.py test_serving_integration.py`)
-- **Frontend Typecheck:** 0 TypeScript compiler errors (`tsc`)
-- **Frontend Unit & Component Tests:** 131 passed across 24 test suites (`npm --prefix frontend test`)
-- **Frontend Production Build:** Clean production bundle completed in ~5.88s with optimized vendor chunking (`vite build`)
-- **Secret & Tracked Files Audit:** Zero secrets tracked; 0 files > 50MB; zero unversioned credential files.
+**Program:** `PREDICTIQ_V2_RC2_HARDENING_PROGRAM`  
+**Milestone:** `RC2_M3_final: Product & Documentation`  
+**Tags:** `dev3-rc2-m3-product-docs`, `v2.0.0-rc.2`  
+**Local Commit SHA:** `a220e81738124599afc1b6bee6ab305f6cba7b19`  
+**Release Version:** `2.0.0-rc.2`  
+**Date:** 2026-11-08  
+**Compare URL:** https://github.com/AtharvS7/PredictIQ/compare/dev2...dev3  
 
 ---
 
-## 2. Remote Safety & Ref Conformance (`git ls-remote origin`)
+## 1. Remote Branch Protection Attestation
+
+Prior to push, remote tracking references were confirmed strictly against pre-registered baseline SHAs:
 
 ```text
-4cca430d9dd0d8e75d4ec3b7380099fbdf55218d	refs/heads/dev3
+git ls-remote origin dev2 main
 d7a66b4095b8ae84f818900c2199c243f9d46b5f	refs/heads/dev2
 894c3dabfc5aa71cdaf4c6071b94f1c5f7e56b43	refs/heads/main
-
-f38292b3fc4e6792377e97a0dac143c371002693	refs/tags/dev3-m1-data-foundation
-30d0c199059018d48a38ecbe453ee9df905965e0	refs/tags/dev3-m1-data-foundation^{}
-2fcd5511bcb27d6cc697729e58321a4917812671	refs/tags/dev3-m2-validated-ml
-4cca430d9dd0d8e75d4ec3b7380099fbdf55218d	refs/tags/dev3-m2-validated-ml^{}
-ed0750bac6dabc89e06ce844c8569d711ebd69dc	refs/tags/dev3-m3-serving-nlp
-4cca430d9dd0d8e75d4ec3b7380099fbdf55218d	refs/tags/dev3-m3-serving-nlp^{}
-34b50ed299f077c4b6bbe552a7ad278954dd1469	refs/tags/dev3-m4-qa-frontend-core
-4cca430d9dd0d8e75d4ec3b7380099fbdf55218d	refs/tags/dev3-m4-qa-frontend-core^{}
-58aab07f8cdd8d590f91ed7b53990e6470675323	refs/tags/dev3-m5-release-candidate
-4cca430d9dd0d8e75d4ec3b7380099fbdf55218d	refs/tags/dev3-m5-release-candidate^{}
-d303b6f24aed4ca8ac0c37f68a9a8b20ad0f3bd8	refs/tags/v2.0.0-rc.1
-4cca430d9dd0d8e75d4ec3b7380099fbdf55218d	refs/tags/v2.0.0-rc.1^{}
 ```
 
-### Protection Verification
-- Protected branch `dev2`: matches baseline snapshot SHA `d7a66b4095b8ae84f818900c2199c243f9d46b5f` (UNTOUCHED)
-- Protected branch `main`: matches baseline snapshot SHA `894c3dabfc5aa71cdaf4c6071b94f1c5f7e56b43` (UNTOUCHED)
-- Target branch `dev3`: successfully created and tracking `origin/dev3` at commit `4cca430d9dd0d8e75d4ec3b7380099fbdf55218d`.
-- Annotated tags `dev3-m1-data-foundation`, `dev3-m2-validated-ml`, `dev3-m3-serving-nlp`, `dev3-m4-qa-frontend-core`, `dev3-m5-release-candidate`, and `v2.0.0-rc.1` all successfully pushed and live on origin.
+- `origin/dev2` remains strictly locked at `d7a66b4095b8ae84f818900c2199c243f9d46b5f` (UNTOUCHED).
+- `origin/main` remains strictly locked at `894c3dabfc5aa71cdaf4c6071b94f1c5f7e56b43` (UNTOUCHED).
+- All changes are pushed strictly to `origin/dev3` and annotated milestone tags.
 
 ---
 
-## 3. GitHub Compare Link
-- **Diff URL:** https://github.com/AtharvS7/PredictIQ/compare/dev2...dev3
+## 2. Checkpoints Covered in Milestone RC2_M3_final
+
+- **R10 (Frontend Design & Responsive Quality Audit):** Audited and fixed responsive layouts across 360px (mobile), 768px (tablet), and 1280px+ (desktop). Eliminated horizontal scroll overflows, added fluid clamp spacing, unified the 50% Likely Band (P25–P75) and 80% Plausible Range (P10–P90) displays, integrated Empirical Bayes shrinkage status indicators and consented actuals download actions, and replaced all misleading copy with scientifically validated descriptions. All 24 test files (132 tests) passing. Evidence: `docs/evidence/R10.md`.
+- **R11 (Release Gate & CI Hardening):** Built unified release gate script `scripts/release_gate.py` executing all 9 quality checks with full ANSI reporting and CLI flags (`--skip-slow`, `--backend-only`, `--frontend-only`, `--fail-fast`, `--allow-uncommitted`, `--json`). Added 25 unit tests in `scripts/tests/test_release_gate.py`. Hardened `.github/workflows/ci.yml` to maintain strict 1:1 parity with local gates. Full suite passed all 9 checks in 357.06s. Evidence: `docs/evidence/R11.md`.
+- **R13 (Documentation & README Architecture Upgrade):** Completely rewrote root `README.md` into startup-grade public documentation featuring mathematical formulations (KaTeX), architectural data flows (Mermaid), 6-fold LOSO cross-validation tables, quickstart guide, API contracts, and security compliance. Created `docs/README.md` master documentation map. Evidence: `docs/evidence/R13.md`.
+- **R14 (Final Release Verification & Tagging):** Bumped package versions to `2.0.0-rc.2`, executed the complete Milestone Push Procedure (MPP), verified branch protection invariants (`origin/dev2` and `origin/main` untouched), tagged `dev3-rc2-m3-product-docs` and `v2.0.0-rc.2`, and pushed to `origin/dev3`.
+
+---
+
+## 3. Real Verification Suite Counts
+
+1. **Python Linting:** `ruff check backend/app backend/ml --select E,W,F,I --ignore E501,E402` &rarr; **0 errors**.
+2. **Python Static Typing:** `mypy app/` (in `backend/`) &rarr; **0 errors across 48 source files**.
+3. **Backend Test Suite:** `pytest backend/tests -q` &rarr; **661 passed, 6 skipped in 167.0s**.
+4. **Scripts Test Suite:** `pytest scripts/tests -q` &rarr; **50 passed, 4 skipped in 7.3s**.
+5. **Frontend Typecheck:** `npm --prefix frontend run typecheck` &rarr; **0 errors**.
+6. **Frontend Unit/Component Tests:** `npx --prefix frontend vitest run --root frontend --pool=forks` &rarr; **132 passed across 24 test files in 110.6s**.
+7. **Frontend Production Build:** `npm --prefix frontend run build` &rarr; **dist/ built cleanly in 48.8s**.
+8. **Security & Hygiene Audit:** **0 secrets, 0 forbidden files (.env, *.pem, serviceAccount*.json), 0 files > 50MB**.
+
+---
+
+## 4. Remote Verification
+
+```text
+git ls-remote origin dev3 dev3-rc2-m3-product-docs v2.0.0-rc.2
+a220e81738124599afc1b6bee6ab305f6cba7b19	refs/heads/dev3
+90285a2b3ef54cc86aebb73a7d595a42502f45f8	refs/tags/dev3-rc2-m3-product-docs
+6c34e2c0a54562ce004c4dd54ae79cef161d5544	refs/tags/v2.0.0-rc.2
+```
