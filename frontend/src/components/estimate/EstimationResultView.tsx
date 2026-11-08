@@ -95,6 +95,8 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
   const p10Hours = outputs.effort_min_hours;
   const p50Hours = outputs.effort_likely_hours;
   const p90Hours = outputs.effort_max_hours;
+  const p25Hours = outputs.effort_p25_hours ?? outputs.effort_hours?.p25;
+  const p75Hours = outputs.effort_p75_hours ?? outputs.effort_hours?.p75;
 
   const p10PM = hoursToPersonMonths(p10Hours);
   const p50PM = hoursToPersonMonths(p50Hours);
@@ -123,6 +125,23 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
               coverage={`${outputs.confidence_pct.toFixed(0)}% Conformal`}
             />
             <ModelVersionBadge version={model_version} />
+            {outputs.org_calibration && (
+              <Badge
+                variant={outputs.org_calibration.applied ? 'primary' : 'neutral'}
+                size="xs"
+                pill
+                icon={<Shield size={10} />}
+                title={
+                  outputs.org_calibration.applied
+                    ? `Empirical-Bayes calibrated using ${outputs.org_calibration.k_actuals} consented projects (weight: ${outputs.org_calibration.shrinkage_weight}, multiplier: ${outputs.org_calibration.multiplier}x)`
+                    : 'Uncalibrated to organization actuals (using global baseline prior)'
+                }
+              >
+                {outputs.org_calibration.applied
+                  ? `EB Shrinkage: k=${outputs.org_calibration.k_actuals}`
+                  : 'EB Prior: Global'}
+              </Badge>
+            )}
           </div>
           <Heading level={2} className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">
             {project_name}
@@ -271,7 +290,9 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
           {/* Visual Range Bar with median pip */}
           <ConfidenceRangeBar
             p10={p10Hours}
+            p25={p25Hours}
             p50={p50Hours}
+            p75={p75Hours}
             p90={p90Hours}
             unit="hours"
             formatValue={(val) => `${Math.round(val).toLocaleString('en-US')} hrs (${hoursToPersonMonths(val).formatted})`}

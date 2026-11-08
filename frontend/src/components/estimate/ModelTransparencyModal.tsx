@@ -154,7 +154,7 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
               How This Estimate Works: Engine Provenance &amp; Methodology
             </h2>
             <p className="text-xs text-[var(--text-tertiary)]">
-              Full transparency statement for PredictIQ v2 — empirical foundations, mathematical formulation, and calibration guarantees.
+              Full transparency statement for PredictIQ v2 (Monotone Power-Law with Mondrian Split-Conformal Prediction &amp; Empirical Bayes Shrinkage) — empirical foundations, mathematical formulation, and calibration guarantees.
             </p>
           </div>
 
@@ -322,7 +322,36 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
             </div>
           </div>
 
-          {/* Section 5: Standard Labor Unit */}
+          {/* Section 5: Empirical-Bayes Shrinkage Adaptation (R05) */}
+          <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-3">
+            <div className="flex items-center gap-2 text-[var(--text-primary)] font-bold text-sm">
+              <Shield size={16} className="text-blue-600 dark:text-blue-400" />
+              <h3>Empirical-Bayes Shrinkage Adaptation to Organization Actuals</h3>
+            </div>
+            <p className="leading-relaxed">
+              PredictIQ dynamically adapts global power-law predictions to each organization&apos;s delivered project history using Empirical-Bayes shrinkage (w<sub>k</sub> = k / (k + 2.83)):
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+                <span className="font-bold text-xs text-[var(--text-primary)] block">
+                  Conjugate Normal Shrinkage Weight (w<sub>k</sub>)
+                </span>
+                <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
+                  Balances between-organization prior variance (&tau;&sup2; &approx; 0.187) against within-organization project variance (&sigma;&sup2; &approx; 0.529). At k=3 actuals, w<sub>3</sub> = 0.515 (+11.89% relative gain); at k=10, w<sub>10</sub> = 0.779 (+19.52% gain).
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+                <span className="font-bold text-xs text-[var(--text-primary)] block">
+                  Non-Crossing Monotonic Invariant
+                </span>
+                <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
+                  The organization multiplier (&gamma;<sub>org</sub> = exp(w<sub>k</sub> &middot; r&#772;)) scales all effort quantiles simultaneously while strictly preserving 1.0 &le; P<sub>10</sub> &le; P<sub>25</sub> &le; P<sub>50</sub> &le; P<sub>75</sub> &le; P<sub>90</sub>. Multiplier is safely clipped to [0.33, 3.0].
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 6: Standard Labor Unit */}
           <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex-wrap gap-2">
             <div className="space-y-0.5">
               <span className="font-bold text-xs text-[var(--text-primary)]">

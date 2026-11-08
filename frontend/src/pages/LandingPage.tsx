@@ -21,7 +21,7 @@ export default function LandingPage() {
     <div style={{ minHeight: '100vh' }}>
       <SEOHead
         title="Software Project Budget Planning"
-        description="Build transparent project budgets from task hours, rates and contingency. Save your assumptions and compare cost scenarios."
+        description="PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction & Empirical Bayes Shrinkage. Plan transparent project budgets and calibrated effort intervals."
       />
       <Navbar />
 
@@ -57,13 +57,12 @@ export default function LandingPage() {
           style={{
             fontSize: '1.125rem',
             color: 'var(--text-secondary)',
-            maxWidth: 600,
+            maxWidth: 640,
             margin: '0 auto 32px',
             lineHeight: 1.7,
           }}
         >
-          Turn your task hours and rates into a clear, saved project budget.
-          Automatic ML predictions are under validation and are not currently available.
+          PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction &amp; Empirical Bayes Shrinkage. Plan transparent budgets and generate calibrated effort intervals.
         </p>
 
         {/* BUTTONS */}

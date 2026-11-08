@@ -59,8 +59,9 @@
   }
   .workspace-nav-links { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
   .workspace-nav-link, .workspace-nav.is-collapsed .workspace-nav-link {
-    flex-direction: column; gap: 4px; padding: 8px 2px; font-size: 11px;
-    text-align: center; justify-content: center;
+    flex-direction: column; gap: 2px; padding: 6px 1px; font-size: 10px;
+    text-align: center; justify-content: center; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; line-height: 1.15;
   }
   .workspace-nav.is-collapsed .workspace-nav-link span { display: inline; }
   .workspace-nav-link.is-active { box-shadow: inset 0 3px var(--color-primary); }
@@ -236,6 +237,7 @@ html {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 body {
@@ -243,6 +245,9 @@ body {
   color: var(--text-primary);
   line-height: 1.65;
   min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
@@ -512,6 +517,20 @@ a.card:hover, button.card:hover {
 
 .btn-danger:hover {
   background: #DC2626;
+}
+
+@media (max-width: 640px) {
+  .btn-primary, .btn-secondary, .btn-danger {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+}
+
+.table-scroll-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .input-field {

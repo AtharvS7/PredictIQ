@@ -32,3 +32,6 @@
   .budget-task-numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .budget-history li button { flex-direction: column; gap: 4px; }
 }
+@media (max-width: 480px) {
+  .budget-task-numbers { grid-template-columns: 1fr; }
+}

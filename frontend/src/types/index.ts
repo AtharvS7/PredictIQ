@@ -107,4 +107,6 @@ export interface UserProfile {
   timezone: string;
   phone: string | null;
   country_code: string | null;
+  role?: string;
+  organization_id?: string;
 }

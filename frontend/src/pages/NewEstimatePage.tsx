@@ -374,7 +374,7 @@ export default function NewEstimatePage() {
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <SEOHead
         title="New Estimate Wizard"
-        description="Create a calibrated project estimate with Functional Point sizing and high-trust prediction intervals."
+        description="Create a calibrated project estimate with PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction & Empirical Bayes Shrinkage."
       />
       <Navbar />
 
@@ -436,7 +436,7 @@ export default function NewEstimatePage() {
                     </div>
 
                     <span
-                      className={`text-xs mt-2 font-semibold transition-colors ${
+                      className={`text-xs mt-2 font-semibold transition-colors px-1 break-words leading-tight ${
                         isCurrent
                           ? 'text-[var(--text-primary)]'
                           : isDone
@@ -634,7 +634,7 @@ export default function NewEstimatePage() {
 
               <form
                 className="card"
-                style={{ padding: 32 }}
+                style={{ padding: 'clamp(1.25rem, 3.5vw, 2rem)' }}
                 onSubmit={(event) => {
                   event.preventDefault();
                   void handleEstimate();
@@ -904,6 +904,8 @@ export default function NewEstimatePage() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     marginTop: 24,
+                    flexWrap: 'wrap',
+                    gap: 12,
                   }}
                 >
                   <button type="button" onClick={() => setStep(1)} style={secondaryBtnStyle}>

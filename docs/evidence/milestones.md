@@ -124,6 +124,7 @@ This file tracks each milestone achieved on `dev3`, the checkpoints covered, tes
 - **Tracked Files Check:** Clean (0 forbidden files, 0 files > 50MB)
 - **Remote Safety:** `origin/dev2` and `origin/main` remain untouched and match baseline SHAs
 
+
 ---
 
 ## Milestone RC2_M2: Model & Data (`dev3-rc2-m2-model-data`)
@@ -150,3 +151,27 @@ This file tracks each milestone achieved on `dev3`, the checkpoints covered, tes
 - **Remote Safety:** `origin/dev2` and `origin/main` remain untouched and match baseline SHAs
 
 
+
+
+---
+
+## Milestone RC2_M3_final: Product & Documentation (`dev3-rc2-m3-product-docs`, `v2.0.0-rc.2`)
+
+- **Tags:** `dev3-rc2-m3-product-docs`, `v2.0.0-rc.2`
+- **Meaning:** Frontend responsive design and trust UX audited across mobile/tablet/desktop viewports, unified release gate `scripts/release_gate.py` with 1:1 CI workflow parity, startup-grade README and master documentation index, version bumped to `2.0.0-rc.2`, all quality gates 100% verified.
+- **Checkpoints Covered:**
+  - **R10 (Frontend Design & Responsive Quality Audit):** Audited and fixed responsive layouts across 360px (mobile), 768px (tablet), and 1280px+ (desktop). Eliminated horizontal scroll overflows, added fluid clamp spacing, unified the 50% Likely Band (P25–P75) and 80% Plausible Range (P10–P90) displays, integrated Empirical Bayes shrinkage status indicators and consented actuals download actions, and replaced all misleading copy with scientifically validated descriptions. All 24 test files (132 tests) passing. Evidence: `docs/evidence/R10.md`.
+  - **R11 (Release Gate & CI Hardening):** Built unified release gate script `scripts/release_gate.py` executing all 9 quality checks with full ANSI reporting and CLI flags (`--skip-slow`, `--backend-only`, `--frontend-only`, `--fail-fast`, `--allow-uncommitted`, `--json`). Added 25 unit tests in `scripts/tests/test_release_gate.py`. Hardened `.github/workflows/ci.yml` to maintain strict 1:1 parity with local gates. Full suite passed all 9 checks in 357.06s. Evidence: `docs/evidence/R11.md`.
+  - **R13 (Documentation & README Architecture Upgrade):** Completely rewrote root `README.md` into startup-grade public documentation featuring mathematical formulations (KaTeX), architectural data flows (Mermaid), 6-fold LOSO cross-validation tables, quickstart guide, API contracts, and security compliance. Created `docs/README.md` master documentation map. Evidence: `docs/evidence/R13.md`.
+  - **R14 (Final Release Verification & Tagging):** Bumped package versions to `2.0.0-rc.2`, executed the complete Milestone Push Procedure (MPP), verified branch protection invariants (`origin/dev2` and `origin/main` untouched), tagged `dev3-rc2-m3-product-docs` and `v2.0.0-rc.2`, and pushed to `origin/dev3`.
+
+### Full Verification Suite Summary
+- **Backend Test Suite (Pytest):** 661 passed, 6 skipped, 0 failed in 167.0s
+- **Scripts Test Suite (Pytest):** 50 passed, 4 skipped in 7.3s
+- **Frontend Typecheck (TSC):** Clean (0 errors across `tsconfig.json` and `tsconfig.test.json`)
+- **Frontend Vitest Suite:** 132 passed across 24 test files in 110.6s
+- **Frontend Production Build (Vite):** Clean build in 48.8s
+- **Python Linting (Ruff):** Clean (0 errors across `backend/app` and `backend/ml`)
+- **Python Typecheck (Mypy):** Clean (0 errors across 48 source files in `backend/app`)
+- **Hygiene & Security Audit:** Clean (0 secrets, 0 forbidden files, 0 files > 50MB)
+- **Remote Safety:** `origin/dev2` and `origin/main` remain untouched and match baseline SHAs

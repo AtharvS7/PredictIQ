@@ -256,7 +256,7 @@ export default function EstimatesPage() {
 
             <select
               className="input-field"
-              style={{ width: 180 }}
+              style={{ minWidth: 140, flex: '1 1 140px' }}
               aria-label="Filter by project type"
               value={filterType || ''}
               onChange={(e) =>
@@ -276,7 +276,7 @@ export default function EstimatesPage() {
 
             <select
               className="input-field"
-              style={{ width: 180 }}
+              style={{ minWidth: 140, flex: '1 1 140px' }}
               aria-label="Sort estimates"
               value={sort}
               onChange={(e) =>
@@ -393,7 +393,7 @@ export default function EstimatesPage() {
                       'space-between',
                   }}
                 >
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
                         display: 'flex',
@@ -408,6 +408,8 @@ export default function EstimatesPage() {
                           fontSize: '0.9375rem',
                           color:
                             'var(--text-primary)',
+                          overflowWrap: 'anywhere',
+                          wordBreak: 'break-word',
                         }}
                       >
                         {est.project_name}
@@ -418,6 +420,8 @@ export default function EstimatesPage() {
                           fontSize: '0.6875rem',
                           padding: '2px 8px',
                           borderRadius: 6,
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
                           background:
                             'var(--bg-elevated)',
                           color:

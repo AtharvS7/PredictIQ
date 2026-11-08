@@ -208,7 +208,7 @@ export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
 
       {/* Uncertainty Spread Summary Banner */}
       {showDetails && !compact && spreadRatio && (
-        <div className="mt-3 pt-2.5 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs text-[var(--text-secondary)]">
+        <div className="mt-3 pt-2.5 border-t border-[var(--border-subtle)] flex items-center justify-between flex-wrap gap-2 text-xs text-[var(--text-secondary)]">
           <span className="inline-flex items-center gap-1.5">
             <span className="font-medium">Uncertainty Spread:</span>
             <span className="font-mono font-semibold text-[var(--text-primary)]">

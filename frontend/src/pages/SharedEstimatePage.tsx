@@ -50,14 +50,14 @@ export default function SharedEstimatePage() {
   }
 
   const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
-  return <main style={{ maxWidth: 900, margin: 'auto', padding: '2rem', color: 'var(--text-primary)' }}>
-    <Link to="/">Predictify</Link>
-    <p>Shared estimate · Read only</p>
+  return <main style={{ maxWidth: 900, margin: 'auto', padding: 'clamp(1rem, 3vw, 2rem)', minWidth: 0, overflowWrap: 'anywhere', color: 'var(--text-primary)' }}>
+    <Link to="/" style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}>&larr; Predictify</Link>
+    <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: 4 }}>Shared estimate · Read only</p>
     {loading && <p role="status">Loading estimate…</p>}
     {error && <p role="alert">{error}</p>}
-    {needsPassword && <form onSubmit={unlock}>
-      <label htmlFor="share-password">Share password</label>
-      <input id="share-password" type="password" autoComplete="current-password" value={password} maxLength={72} required onChange={event => setPassword(event.target.value)} />
+    {needsPassword && <form onSubmit={unlock} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 360, marginTop: 16 }}>
+      <label htmlFor="share-password" style={{ fontSize: '0.875rem', fontWeight: 600 }}>Share password</label>
+      <input id="share-password" type="password" autoComplete="current-password" className="input-field" value={password} maxLength={72} required onChange={event => setPassword(event.target.value)} />
       <button className="btn-primary" disabled={loading} type="submit">Open estimate</button>
     </form>}
     {estimate && <>

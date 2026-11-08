@@ -6,7 +6,7 @@ import SEOHead from '@/components/shared/SEOHead';
 import { useAuthStore } from '@/store/authStore';
 import { useCurrencyStore } from '@/store/currencyStore';
 import { useTheme, useToast } from '@/App';
-import { User, DollarSign, Save, LogOut } from 'lucide-react';
+import { User, DollarSign, Save, LogOut, Shield } from 'lucide-react';
 
 export default function SettingsPage() {
   const { profile, updateProfile, signOut } = useAuthStore();
@@ -71,7 +71,7 @@ export default function SettingsPage() {
         background: 'var(--bg-primary)',
       }}
     >
-      <SEOHead title="Settings" description="Manage your Predictify account, profile, and application preferences." />
+      <SEOHead title="Settings" description="PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction & Empirical Bayes Shrinkage." />
       <Navbar />
 
       <div style={{ display: 'flex' }}>
@@ -80,9 +80,10 @@ export default function SettingsPage() {
         <main
           style={{
             flex: 1,
-            padding: '2rem',
+            padding: 'clamp(1rem, 3vw, 2rem)',
             maxWidth: 700,
             margin: '0 auto',
+            minWidth: 0,
           }}
         >
           <h1
@@ -184,6 +185,125 @@ export default function SettingsPage() {
                 </select>
               </div>
             </div>
+          </div>
+
+          {/* Empirical-Bayes Calibration & Project Actuals */}
+          <div className="card" style={cardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+              <h3
+                style={{
+                  fontWeight: 600,
+                  display: 'flex',
+                  gap: 8,
+                  alignItems: 'center',
+                  color: 'var(--text-primary)',
+                  margin: 0,
+                }}
+              >
+                <Shield size={18} className="text-blue-600 dark:text-blue-400" /> Empirical-Bayes Calibration &amp; Actuals
+              </h3>
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '3px 8px',
+                  borderRadius: 6,
+                  fontWeight: 600,
+                  backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                  color: 'var(--color-success)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                }}
+              >
+                Active (R05 Pipeline)
+              </span>
+            </div>
+
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 14 }}>
+              PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction &amp; Empirical Bayes Shrinkage. Delivered projects logged with explicit consent calibrate your organization&apos;s productivity velocity via conjugate normal shrinkage (w<sub>k</sub> = k / (k + 2.83)).
+            </p>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+                gap: 12,
+                padding: '12px 14px',
+                borderRadius: 8,
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-subtle, var(--border-color))',
+                marginBottom: 16,
+              }}
+            >
+              <div>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.04em', display: 'block' }}>
+                  Shrinkage Ratio
+                </span>
+                <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'monospace' }}>
+                  &sigma;&sup2; / &tau;&sup2; = 2.83
+                </span>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', display: 'block' }}>
+                  Between-org prior variance
+                </span>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.04em', display: 'block' }}>
+                  Empirical Gain
+                </span>
+                <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-success)', fontFamily: 'monospace' }}>
+                  +19.52% MdAPE
+                </span>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', display: 'block' }}>
+                  Verified at k=10 actuals
+                </span>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.04em', display: 'block' }}>
+                  Safety Guardrail
+                </span>
+                <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'monospace' }}>
+                  [0.33, 3.0]
+                </span>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', display: 'block' }}>
+                  Bounded scaling multiplier
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ color: 'var(--color-success)', fontWeight: 'bold' }}>&bull;</span>
+                <span>Consent for retraining is collected per completed project delivery.</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>&bull;</span>
+                <span>Up to 20 historical actuals are dynamically pooled into future estimate inference.</span>
+              </div>
+            </div>
+
+            {profile?.role === 'admin' && (
+              <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border-color)', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Admin Consented Actuals Export:
+                </span>
+                <a
+                  href="/api/v1/admin/actuals/export?format=csv"
+                  download="consented_actuals.csv"
+                  className="btn-secondary"
+                  style={{ textDecoration: 'none', padding: '6px 12px', fontSize: '0.75rem' }}
+                >
+                  Download CSV
+                </a>
+                <a
+                  href="/api/v1/admin/actuals/export?format=json"
+                  download="consented_actuals.json"
+                  className="btn-secondary"
+                  style={{ textDecoration: 'none', padding: '6px 12px', fontSize: '0.75rem' }}
+                >
+                  Download JSON
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Save Changes — SAME THEME LOGIC AS ESTIMATE PAGE */}

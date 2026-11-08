@@ -29,7 +29,7 @@ export default function SEOHead({ title, description }: SEOHeadProps) {
     // Set Open Graph tags for social sharing
     const ogTags: Record<string, string> = {
       'og:title': `${title} | Predictify`,
-      'og:description': description || 'AI-Powered Software Project Cost & Timeline Estimation',
+      'og:description': description || 'PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction & Empirical Bayes Shrinkage',
       'og:type': 'website',
       'og:site_name': 'Predictify',
     };

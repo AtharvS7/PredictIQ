@@ -68,7 +68,7 @@ export default function Navbar() {
         zIndex: 50,
         background: 'var(--bg-surface)',
         borderBottom: '1px solid var(--border-color)',
-        padding: '0 1.5rem',
+        padding: '0 clamp(1rem, 3vw, 1.5rem)',
         height: 64,
         display: 'flex',
         alignItems: 'center',
@@ -105,12 +105,13 @@ export default function Navbar() {
             fontSize: '1.125rem',
             fontWeight: 700,
             color: 'var(--text-primary)',
+            lineHeight: 1.2,
           }}
         >
           Predictify
           <span
+            className="hidden sm:block"
             style={{
-              display: 'block',
               fontSize: '0.75rem',
               color: 'var(--text-secondary)',
               fontWeight: 400,
@@ -170,13 +171,13 @@ export default function Navbar() {
               width: 44,
               height: 44,
               borderRadius: '50%',
-              background: 'white',              // changed
-              border: '1px solid var(--border-color)', // added
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-color)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'black',                   // changed
+              color: 'var(--text-primary)',
               fontSize: '0.8125rem',
               fontWeight: 600,
             }}
@@ -195,11 +196,11 @@ export default function Navbar() {
                 right: 0,
                 top: 44,
                 background: 'var(--bg-surface)',
-                border: '1px solid #e5e7eb',
+                border: '1px solid var(--border-color)',
                 borderRadius: 12,
                 padding: 8,
                 minWidth: 180,
-                boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                boxShadow: 'var(--shadow-card-elevated)',
               }}
             >
               {user && (

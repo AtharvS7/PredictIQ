@@ -418,6 +418,23 @@ export default function ResultsPage() {
                   coverage={`${outputs.confidence_pct.toFixed(0)}% Conformal`}
                 />
                 <ModelVersionBadge version={model_version} />
+                {outputs.org_calibration && (
+                  <Badge
+                    variant={outputs.org_calibration.applied ? 'primary' : 'neutral'}
+                    size="xs"
+                    pill
+                    icon={<Shield size={10} />}
+                    title={
+                      outputs.org_calibration.applied
+                        ? `Empirical-Bayes calibrated using ${outputs.org_calibration.k_actuals} consented projects (weight: ${outputs.org_calibration.shrinkage_weight}, multiplier: ${outputs.org_calibration.multiplier}x)`
+                        : 'Uncalibrated to organization actuals (using global baseline prior)'
+                    }
+                  >
+                    {outputs.org_calibration.applied
+                      ? `EB Shrinkage: k=${outputs.org_calibration.k_actuals}`
+                      : 'EB Prior: Global'}
+                  </Badge>
+                )}
               </div>
               <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {currentEstimate.project_name}
@@ -631,7 +648,7 @@ export default function ResultsPage() {
             </div>
 
             {/* Phase Table */}
-            <div style={{ marginTop: 16, overflowX: 'auto' }}>
+            <div className="table-scroll-container" style={{ marginTop: 16, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 4px', fontSize: '0.8125rem' }}>
                 <thead>
                   <tr style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.6875rem' }}>

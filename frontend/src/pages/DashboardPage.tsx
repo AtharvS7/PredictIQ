@@ -67,7 +67,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
-      <SEOHead title="Dashboard" description="View your project estimates, track confidence scores, and manage your Predictify workspace." />
+      <SEOHead title="Dashboard" description="PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction & Empirical Bayes Shrinkage." />
       <Navbar />
 
       <div style={{ display: 'flex' }}>
@@ -83,8 +83,8 @@ export default function DashboardPage() {
           aria-label="Dashboard content"
           style={{
             flex: 1,
-            padding: '2rem',
-
+            padding: 'clamp(1rem, 3vw, 2rem)',
+            minWidth: 0,
             display: 'flex',
             justifyContent: 'center', // always center
             transition: 'all 0.25s ease'
@@ -95,7 +95,8 @@ export default function DashboardPage() {
             style={{
               width: '100%',
               maxWidth: 1100,
-              margin: '0 auto'
+              margin: '0 auto',
+              minWidth: 0
             }}
           >
             {/* WELCOME */}
@@ -104,7 +105,7 @@ export default function DashboardPage() {
                 marginBottom: 32,
                 border: '1px solid var(--border-color)',
                 borderRadius: 16,
-                padding: '28px 32px',
+                padding: 'clamp(1.25rem, 3vw, 2rem)',
                 background: 'var(--bg-surface)'
               }}
             >
@@ -127,11 +128,12 @@ export default function DashboardPage() {
 
               <p
                 style={{
-                  color: 'var(--text-primary)',
-                  fontSize: '0.9375rem'
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.9375rem',
+                  lineHeight: 1.5
                 }}
               >
-                Generate ML-powered project cost and effort estimates from your requirements or plan task budgets.
+                PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction &amp; Empirical Bayes Shrinkage. Generate calibrated project cost and effort estimates or plan task budgets.
               </p>
 
               <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
@@ -178,7 +180,7 @@ export default function DashboardPage() {
               style={{
                 display: 'grid',
                 gridTemplateColumns:
-                  'repeat(auto-fit, minmax(220px, 1fr))',
+                  'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
                 gap: 16,
                 marginBottom: 32
               }}
@@ -331,20 +333,21 @@ export default function DashboardPage() {
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          minWidth: 0
                         }}
                       >
-                        <div>
-                          <p style={{ fontWeight: 500 }}>
+                        <div style={{ minWidth: 0, flex: 1, paddingRight: 8 }}>
+                          <p style={{ fontWeight: 500, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                             {est.project_name}
                           </p>
 
-                          <p style={{ fontSize: '0.75rem' }}>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                             {est.project_type} • v{est.version}
                           </p>
                         </div>
 
-                        <div style={{ textAlign: 'right' }}>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
                           <p
                             style={{
                               fontWeight: 600,
@@ -360,11 +363,13 @@ export default function DashboardPage() {
 
                           <span
                             style={{
-                              padding: '4px 8px',
+                              padding: '3px 8px',
                               borderRadius: 6,
                               fontSize: '0.75rem',
                               fontWeight: 600,
                               color: 'white',
+                              display: 'inline-block',
+                              whiteSpace: 'nowrap',
                               backgroundColor: getRiskColor(
                                 est.risk_level
                               )
