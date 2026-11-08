@@ -1,38 +1,40 @@
 # PredictIQ Machine Learning Architecture (v2.0)
 
-**Version:** 2.0.0-rc.2  
-**Status:** PRODUCTION READY  
-**Primary Track:** Track 1 Monotone Power Law + Mondrian Conformal Calibration  
+**Version:** 2.0.0-rc.3  
+**Architecture:** Monotone Power-Law with Mondrian Split-Conformal Prediction & Empirical Bayes Shrinkage  
+**Validation Evidence:** [MODEL_VALIDATION_SUMMARY.md](../../docs/MODEL_VALIDATION_SUMMARY.md)  
+**Model Card:** [docs/ml/model-card.md](../../docs/ml/model-card.md)  
 
 ---
 
 ## 1. Overview & Architecture
 
-PredictIQ v2 replaces all uncalibrated heuristic models and legacy 27-feature pipelines with a mathematically rigorous, transparent, and calibrated effort estimation architecture:
+PredictIQ v2 provides transparent, empirically grounded software project effort and uncertainty estimation. The core prediction engine uses a univariate Monotone Power-Law where effort depends strictly on functional size ($size\_fp$), augmented with Mondrian split-conformal prediction intervals and Empirical Bayes organization calibration.
 
 ```
                     ┌───────────────────────────────┐
-                    │  Input: size_fp (IFPUG/COSMIC)│
+                    │  Input: size_fp (IFPUG FP)    │
                     └───────────────┬───────────────┘
                                     │
                                     ▼
                     ┌───────────────────────────────┐
-                    │ Track 1: Monotone Power Law   │
+                    │ Monotone Power Law            │
                     │       E = a * S^b             │
-                    │   (b > 0 strictly enforced)   │
+                    │   (b = 0.8270 > 0 enforced)   │
                     └───────────────┬───────────────┘
                                     │
                                     ▼
                     ┌───────────────────────────────┐
                     │ Mondrian Conformal Calibrator │
-                    │   80% Interval (P10 - P90)    │
+                    │   80% Plausible (P10 - P90)   │
+                    │   50% Likely    (P25 - P75)   │
                     │  (Stratified by Size Strata)  │
                     └───────────────┬───────────────┘
                                     │
                                     ▼
                     ┌───────────────────────────────┐
-                    │ Serving Result: P10, P50, P90 │
-                    │ Tiering, OOD Flags, Lineage   │
+                    │ Serving Result: P10..P90      │
+                    │ Pure JSON, Zero-Pickle        │
                     └───────────────────────────────┘
 ```
 
@@ -43,38 +45,30 @@ PredictIQ v2 replaces all uncalibrated heuristic models and legacy 27-feature pi
 ```
 backend/ml/
 ├── artifacts/             # Verified production model bundles and manifests
-│   ├── loader.py          # Cryptographically verified, fail-closed artifact loader
-│   ├── production_v2/     # Current production bundle (manifest.json, model.pkl, conformal.pkl)
+│   ├── loader.py          # Cryptographically verified, pure JSON zero-pickle loader
+│   ├── production_v2/     # Active bundle: manifest.json, model_params.json
 │   └── train_production.py# Canonical production training script
 ├── calibration/           # Uncertainty quantification
 │   ├── conformal.py       # MondrianConformalPredictor implementation
-│   └── run_calibration.py # Offline calibration and coverage validation runner
+│   └── run_calibration.py # Calibration and coverage validation runner
 ├── data/                  # Curated empirical dataset
 │   ├── projects_v2.csv    # 915 empirical software projects across 6 historical sources
 │   ├── sources.yaml       # Source metadata, licenses, and provenance
 │   └── LICENSE_SUMMARY.md # Legal and licensing documentation
-├── eval/                  # Evaluation protocol and metrics
-│   ├── baselines.py       # Statistical baselines (COCOMO, mean/median, unconstrained OLS)
-│   ├── metrics.py         # Primary metrics (MdAPE, PRED(25), R², RMSE, MAE)
+├── eval/                  # Evaluation protocol and empirical benchmarks
+│   ├── baselines.py       # Statistical baselines (median dummy, log-linear OLS)
+│   ├── metrics.py         # Primary metrics (MdAPE, PRED(25), MAE)
 │   ├── protocol.py        # Leave-One-Source-Out (LOSO) cross-validation splitter
-│   └── run_r03_ablation.py# Checkpoint R03 duration ablation experiment
-├── track1/                # Primary interpretable models
-│   ├── models.py          # MonotonePowerLaw, MultivariateMonotoneModel, SegmentedMonotoneModel
-│   └── run_eval.py        # Track 1 LOSO evaluation harness
-├── track2/                # Challenger / research models
-│   ├── models.py          # Random Forest, Gradient Boosting, MLP with monotonicity penalties
-│   └── run_eval.py        # Track 2 LOSO evaluation harness
-├── acquire_all.py         # Canonical dataset acquisition pipeline
-├── artifact_safety.py     # Revoked checksum blacklist and validation hooks
-└── __init__.py
+│   ├── run_s02_validation.py # Empirical 6-fold LOSO validation runner
+│   └── run_r07_challengers.py# Challenger model evaluation harness
+└── reports/               # Generated sources of truth
+    └── model_report.json  # Canonical single source of truth for all metrics
 ```
 
 ---
 
-## 3. Core Principles & Guarantees
+## 3. Serving Runtime & Security
 
-1. **Monotonicity Guarantee:** For any functional size $S_1 < S_2$, the model strictly guarantees $\hat{E}(S_1) < \hat{E}(S_2)$ ($\partial \hat{E} / \partial S > 0$ everywhere).
-2. **Strict Non-Crossing Quantiles:** At inference time, interval bounds strictly obey $1.0 \le P_{10} \le P_{50} \le P_{90}$.
-3. **No Fabricated Features:** Fabricated complexity factors (legacy $T01-T15$), unadjusted metrics, and downstream scores are permanently banned.
-4. **Schedule Separation (R03):** Effort point estimation is driven strictly by functional size ($E = a \cdot S^b$). Planned duration is used exclusively for scheduling and timeline feasibility; it does not alter raw effort estimates.
-5. **Fail-Closed Artifact Safety:** Startup verifies SHA-256 checksums of all model files against manifest hashes and rejects revoked hashes.
+- **Pure JSON Artifacts:** Model parameters reside in `artifacts/production_v2/model_params.json` with zero pickle dependencies.
+- **Deterministic Canonical Hashing:** Integrity is verified via UTF-8 canonical JSON SHA-256 (`8066e9cf4c18f5fa45957bad9050cbab6effb68923a787f974640a463ede93d2`) ensuring line-ending invariance across Windows and Linux.
+- **Fail-Closed Runtime:** Missing artifacts, schema drift, or checksum tampering immediately abort startup with descriptive diagnostics.

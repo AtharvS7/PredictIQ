@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: "3.13"
+  PYTHON_VERSION: "3.12"
   NODE_VERSION:   "22"
   VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
   VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
@@ -24,7 +24,7 @@ jobs:
 
   # ── JOB 0: Unified Release Gate (Full Local & CI Parity) ─────────
   release-gate:
-    name: "Release Gate — Unified Validation (R11)"
+    name: "Release Gate — Unified Validation (RC3)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,6 +45,10 @@ jobs:
           pip install ruff mypy types-requests pytest pytest-asyncio pytest-cov httpx
       - name: "Install Node dependencies"
         run: npm --prefix frontend ci
+      - name: "ML Metrics Floor check"
+        run: python scripts/check_metrics_floor.py
+      - name: "Documentation specification audit"
+        run: python scripts/docs_audit.py
       - name: "Execute Unified Release Gate"
         run: python scripts/release_gate.py --skip-slow
 
@@ -107,7 +111,7 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       APP_ENV:                   test
-      APP_VERSION:               "2.0.0-rc.1"
+      APP_VERSION:               "2.0.0-rc.3"
       DATABASE_URL:              postgresql://test:test@127.0.0.1:1/predictiq_test
       DEFAULT_HOURLY_RATE_USD:   "75"
       PREDICTIQ_TEST_DATABASE_URL: postgresql://predictiq_test:test-only-password@127.0.0.1:5432/predictiq_test
@@ -139,6 +143,30 @@ jobs:
         with:
           name: coverage-report
           path: backend/coverage.xml
+
+  # ── JOB 3b: Windows host test suite ─────────────────────────────
+  test-backend-windows:
+    name: "Backend — Windows Host Smoke"
+    runs-on: windows-latest
+    needs: [lint-backend]
+    env:
+      APP_ENV: test
+      APP_VERSION: "2.0.0-rc.3"
+      DATABASE_URL: postgresql://test:test@127.0.0.1:1/predictiq_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: "Install dependencies"
+        run: |
+          pip install -r backend/requirements.lock.txt
+          pip install pytest pytest-asyncio pytest-cov httpx
+      - name: "Run ML serving, model sanity, and calibration tests"
+        run: |
+          cd backend
+          python -m pytest tests/test_model_sanity.py tests/test_model_loader.py tests/test_health_ready.py tests/test_org_calibration.py -v
 
   # ── JOB 4: Frontend build verification ──────────────────────────
   build-frontend:
@@ -235,7 +263,7 @@ jobs:
             -e APP_ENV=test \
             -e DATABASE_URL=postgresql://test:test@127.0.0.1:1/test \
             predictify-backend:ci python -c \
-            "from backend.ml.artifacts.loader import load_production_model; from app.services.ml_service import ml_service; bundle = load_production_model(); assert bundle.model_version == '2.0.0-rc.1'; assert ml_service.is_ready()"
+            "from backend.ml.artifacts.loader import load_production_model; from app.services.ml_service import ml_service; bundle = load_production_model(); assert bundle.model_version == '2.0.0-rc.3'; assert ml_service.is_ready()"
 
   authenticated-e2e:
     name: "Browser — authenticated estimation contract"

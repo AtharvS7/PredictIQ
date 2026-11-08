@@ -102,12 +102,12 @@ export const PlanningCapacityCard: React.FC<PlanningCapacityCardProps> = ({
         <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs text-[var(--text-secondary)] space-y-1">
           <div className="flex items-center gap-1.5 font-semibold text-[var(--text-primary)]">
             <Target size={14} className="text-indigo-600 dark:text-indigo-400" />
-            <span>Target Planning Labeling & Integrity:</span>
+            <span>Target Planning Labeling &amp; Integrity:</span>
           </div>
           <p className="leading-relaxed">
             <strong className="text-[var(--text-primary)]">Planned Target Duration</strong> reflects your scheduled delivery deadline (target planning horizon),
             <em className="text-indigo-600 dark:text-indigo-400 font-medium not-italic"> not</em> the ML model&apos;s predicted effort duration.
-            The model computes independent effort bounds based on functional size and empirical benchmarks.
+            Team Size and Duration are schedule and staffing capacity planning indicators, <em className="text-indigo-600 dark:text-indigo-400 font-medium not-italic">NOT</em> effort predictors. In accordance with Brooks&apos; Law, adding engineers does not linearly compress effort. The model computes independent effort bounds driven strictly by functional size (<code className="font-mono">size_fp</code>).
           </p>
           <p className="text-[11px] text-[var(--text-tertiary)] pt-0.5">
             Zero fabricated complexity factors: No arbitrary multiplier tables or artificial padding are added to these constraints.

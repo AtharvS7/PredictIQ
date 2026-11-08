@@ -1,3 +1,5 @@
+Status: Approved | Applies to: 2.0.0-rc.3 | Verified against commit: cdca041 | Date: 2026-11-08
+
 ﻿# PredictIQ-dev — Complete Project Structure Map
 
 Generated: 2026-09-08 10:07:52
@@ -2273,8 +2275,8 @@ Vendors / ecosystems (class-level): **Claude**, **Gemini / SynthID-Text**, **Ope
 
 **Latest release:** [v0.5.0](https://github.com/guillaumemeyer/watermarks-remover/releases/tag/v0.5.0)
 
-Skill path: [`skills/remove-ai-marks/`](skills/remove-ai-marks/)  
-Service path: [`service/`](service/)  
+Skill path: `skills/remove-ai-marks/`  
+Service path: service/  
 (migration: formerly `remove-claude-marks`; slash alias `/remove-claude-marks` still documented)
 
 ## Install (agent skill)
@@ -2295,7 +2297,7 @@ Invoke with `/remove-ai-marks` or ask to â€œstrip AI watermarks / C2PA / Cla
 
 ### Optional Cursor text-only skill
 
-[`skills/clean-user-facing-text/`](skills/clean-user-facing-text/) is a
+`skills/clean-user-facing-text/` is a
 self-contained Cursor skill for authorized manuscripts, documentation, and web
 copy. It excludes image, C2PA, service, and external-model tooling.
 
@@ -2491,7 +2493,7 @@ set -a; . ./.env; set +a; python3 service/scripts/rewrite_text.py /tmp/x.txt -o 
 
 Layer B is agent-orchestrated in the skill (it rewrites with its own model), so the `WATERMARKS_REWRITE_*` vars are only needed when driving `rewrite_text.py` directly.
 
-Images publish automatically on `v*` tags via [`.github/workflows/release-images.yml`](.github/workflows/release-images.yml).
+Images publish automatically on `v*` tags via `.github/workflows/release-images.yml`.
 
 ## Optional SynthID pixel scoring
 
@@ -2789,7 +2791,7 @@ on the host instead. Model downloads still hit the HF hub on first run.
 | Pixel image marks | Out of scope | Optional SynthID score + CtrlRegen removal (external); optional MarkDiffusion same-scheme detect + DiffusionPurification removal (external) | Out of scope | Optional CtrlRegen / MarkDiffusion removal (external) |
 | Training backdoors | Out of scope | Out of scope | Out of scope | Out of scope |
 
-Details: [`skills/remove-ai-marks/references/vendor-notes.md`](skills/remove-ai-marks/references/vendor-notes.md), [`mark-classes.md`](skills/remove-ai-marks/references/mark-classes.md).
+Details: `skills/remove-ai-marks/references/vendor-notes.md`, `mark-classes.md`.
 
 ---
 
@@ -2892,11 +2894,11 @@ Industry two-layer context (C2PA + imperceptible watermark): [Institute of AI PM
 | DiffusionPurification pixel removal (optional) | Pixel-domain image marks (Tree-Ring-class) | MarkDiffusion backend; blind regeneration (more drift than CtrlRegen); conservative strength default |
 | Open-weight local models | Avoid re-stamping with origin model | Operational alternative |
 
-Matrix: [`skills/remove-ai-marks/references/removal-matrix.md`](skills/remove-ai-marks/references/removal-matrix.md).
+Matrix: `skills/remove-ai-marks/references/removal-matrix.md`.
 
 ## Ethics and disclaimer
 
-See [`skills/remove-ai-marks/references/ethics.md`](skills/remove-ai-marks/references/ethics.md). For privacy and research on **your** content â€” not academic fraud or false â€œhuman-writtenâ€ claims.
+See `skills/remove-ai-marks/references/ethics.md`. For privacy and research on **your** content â€” not academic fraud or false â€œhuman-writtenâ€ claims.
 
 **Responsible use:** This project is for content you own or are authorized to process. Users must adhere to local regulations and use it responsibly. The developers disclaim any liability for potential misuse by users.
 
@@ -3067,7 +3069,7 @@ make smoke                          # quick CLI smoke on fixtures
 
 ## License
 
-MIT â€” see [LICENSE](LICENSE).
+MIT â€” see LICENSE.
 
 ## References
 
@@ -3354,7 +3356,8 @@ Access: http://localhost:3000
 
 ## Environment Variables
 
-See [backend/.env.example](backend/.env.example) and [frontend/.env.example](frontend/.env.example) for full documentation.
+See ackend/.env.example and 
+rontend/.env.example for full documentation.
 
 | Variable | Required | Source |
 |----------|----------|--------|
@@ -3425,4 +3428,4 @@ Albrecht, A.J. & Gaffney, J.E. (1983). Software function, source lines of code, 
 
 ## License
 
-MIT License â€” see [LICENSE](LICENSE) for details.
+MIT License â€” see LICENSE for details.

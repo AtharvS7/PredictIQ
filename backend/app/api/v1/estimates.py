@@ -3,7 +3,10 @@ Predictify API — Estimate Endpoints (Thin Controller)
 Routes delegate to EstimateService for business logic (T3.2).
 All database access via asyncpg (Neon PostgreSQL).
 """
+import csv
 import html
+import io
+import math
 import re
 from typing import Optional
 from uuid import UUID
@@ -25,10 +28,16 @@ from app.models.estimate import (
     ShareLinkRequest,
     ShareLinkResponse,
 )
+from app.schemas.bulk_import import (
+    BulkImportResponse,
+    BulkImportRowError,
+    CalibrationPreviewSummary,
+)
 from app.services.background_tasks import log_estimation_analytics
 from app.services.document_analysis import parse_stored_document
 from app.services.estimate_service import estimate_service
 from app.services.nlp_extractor import nlp_extractor
+from app.services.org_calibration import OrgCalibrationService
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -303,3 +312,178 @@ async def create_share_link(
     except Exception as e:
         logger.error("share_link_error", error_type=type(e).__name__)
         raise HTTPException(status_code=500, detail="Estimate operation failed")
+
+
+@router.post("/estimates/bulk-import", response_model=BulkImportResponse)
+async def bulk_import_projects(
+    request: Request,
+    user: CurrentUser = Depends(require_role("editor")),
+):
+    """Import historical completed projects from CSV or JSON to calibrate organization estimates."""
+    content_type = request.headers.get("content-type", "")
+    items_to_process: list[dict] = []
+
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {exc}") from exc
+
+        if isinstance(body, dict):
+            items_to_process = body.get("projects", [])
+        elif isinstance(body, list):
+            items_to_process = body
+        else:
+            raise HTTPException(status_code=400, detail="JSON payload must be an object with 'projects' key or a list")
+
+    elif "multipart/form-data" in content_type or "text/csv" in content_type:
+        try:
+            form = await request.form()
+            upload = form.get("file")
+            if upload is None or isinstance(upload, str) or not hasattr(upload, "read"):
+                raise HTTPException(status_code=400, detail="Missing or invalid 'file' in multipart form data")
+
+            file_bytes = await upload.read()
+        except HTTPException:
+            raise
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Failed to read file: {exc}") from exc
+
+        if len(file_bytes) == 0:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty (0 bytes)")
+        if len(file_bytes) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Uploaded file exceeds 10MB limit")
+
+        decoded_text = ""
+        for encoding in ("utf-8-sig", "utf-8", "latin-1"):
+            try:
+                decoded_text = file_bytes.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+
+        if not decoded_text:
+            raise HTTPException(status_code=400, detail="Unable to decode file as UTF-8 or Latin-1 text")
+
+        # Determine delimiter
+        first_line = decoded_text.splitlines()[0] if decoded_text.splitlines() else ""
+        delimiter = ","
+        if "\t" in first_line:
+            delimiter = "\t"
+        elif ";" in first_line:
+            delimiter = ";"
+
+        reader = csv.DictReader(io.StringIO(decoded_text), delimiter=delimiter)
+        for row in reader:
+            normalized_row = {k.strip().lower(): v.strip() for k, v in row.items() if k}
+            items_to_process.append(normalized_row)
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported Content-Type. Must be application/json or multipart/form-data")
+
+    if not items_to_process:
+        raise HTTPException(status_code=400, detail="Empty import payload: no records found")
+
+    valid_records: list[dict] = []
+    errors: list[BulkImportRowError] = []
+
+    for idx, item in enumerate(items_to_process, start=1):
+        # Extract project name
+        name = item.get("project_name") or item.get("name") or item.get("project") or f"Project_{idx}"
+        name = str(name).strip()
+
+        # Extract size
+        size_raw = item.get("size_fp") or item.get("size") or item.get("fp") or item.get("functional_size")
+        try:
+            size_val = float(size_raw) if size_raw is not None else 0.0
+        except (ValueError, TypeError):
+            errors.append(BulkImportRowError(row_index=idx, project_name=name, reason="Invalid size_fp: must be a positive number"))
+            continue
+
+        if size_val <= 0.0 or not math.isfinite(size_val):
+            errors.append(BulkImportRowError(row_index=idx, project_name=name, reason="Invalid size_fp: must be > 0.0"))
+            continue
+
+        # Extract actual effort
+        effort_raw = item.get("actual_hours") or item.get("effort_hours") or item.get("effort") or item.get("hours") or item.get("actuals")
+        try:
+            effort_val = float(effort_raw) if effort_raw is not None else 0.0
+        except (ValueError, TypeError):
+            errors.append(BulkImportRowError(row_index=idx, project_name=name, reason="Invalid actual_hours: must be a positive number"))
+            continue
+
+        if effort_val <= 0.0 or not math.isfinite(effort_val):
+            errors.append(BulkImportRowError(row_index=idx, project_name=name, reason="Invalid actual_hours: must be > 0.0"))
+            continue
+
+        valid_records.append({
+            "project_name": name,
+            "size_fp": size_val,
+            "actual_hours": effort_val,
+            "platform": item.get("platform"),
+            "tech_stack": item.get("tech_stack") or item.get("language"),
+            "dev_type": item.get("dev_type"),
+            "completed_at": item.get("completed_at"),
+            "notes": item.get("notes"),
+        })
+
+    # Run Empirical Bayes Calibration
+    cal_service = OrgCalibrationService()
+    cal_preview = cal_service.calibrate(valid_records)
+
+    preview_summary = CalibrationPreviewSummary(
+        k_projects=cal_preview.k_projects,
+        shrinkage_weight=cal_preview.shrinkage_weight,
+        global_a=cal_preview.global_a,
+        calibrated_a=cal_preview.calibrated_a,
+        exponent_b=cal_preview.exponent_b,
+        scaling_ratio=cal_preview.scaling_ratio,
+        mdape_before=cal_preview.mdape_before,
+        mdape_after=cal_preview.mdape_after,
+        relative_gain_pct=cal_preview.relative_gain_pct,
+        pred25_before=cal_preview.pred25_before,
+        pred25_after=cal_preview.pred25_after,
+    )
+
+    return BulkImportResponse(
+        total_submitted=len(items_to_process),
+        valid_count=len(valid_records),
+        error_count=len(errors),
+        errors=errors,
+        calibration_preview=preview_summary,
+    )
+
+
+@router.post("/estimates/calibration-preview", response_model=CalibrationPreviewSummary)
+async def preview_calibration(
+    request: Request,
+    user: CurrentUser = Depends(get_current_user),
+):
+    """Compute Empirical Bayes calibration preview on submitted project records."""
+    try:
+        body = await request.json()
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {exc}") from exc
+
+    projects: list[dict] = []
+    if isinstance(body, dict):
+        projects = body.get("projects", [])
+    elif isinstance(body, list):
+        projects = body
+
+    cal_service = OrgCalibrationService()
+    cal_preview = cal_service.calibrate(projects)
+
+    return CalibrationPreviewSummary(
+        k_projects=cal_preview.k_projects,
+        shrinkage_weight=cal_preview.shrinkage_weight,
+        global_a=cal_preview.global_a,
+        calibrated_a=cal_preview.calibrated_a,
+        exponent_b=cal_preview.exponent_b,
+        scaling_ratio=cal_preview.scaling_ratio,
+        mdape_before=cal_preview.mdape_before,
+        mdape_after=cal_preview.mdape_after,
+        relative_gain_pct=cal_preview.relative_gain_pct,
+        pred25_before=cal_preview.pred25_before,
+        pred25_after=cal_preview.pred25_after,
+    )
+

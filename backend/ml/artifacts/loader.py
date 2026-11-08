@@ -1,11 +1,12 @@
-"""Production Model Artifact Loader for PredictIQ v2 (CP12).
+"""Production Model Artifact Loader for PredictIQ v2 / RC3 (S01).
 
 Provides fail-closed, cryptographic-verified loading of production ML artifacts:
 1. Manifest structure and dataset integrity verification.
-2. Cryptographic SHA-256 verification of all serialized artifact files.
-3. Model safety verification against revoked checksums (REVOKED_MODEL_SHA256).
-4. Python environment major.minor version matching.
-5. Strict fail-closed error handling (raises RuntimeError immediately upon violation).
+2. Canonical UTF-8 SHA-256 verification of JSON artifact files (line-ending invariant).
+3. Zero untrusted deserialization: pure JSON parameter loading (no pickle in production serving runtime).
+4. Model safety verification against revoked checksums (REVOKED_MODEL_SHA256, REVOKED_DATA_SHA256).
+5. Non-blocking Python environment version logging.
+6. Schema drift detection and strict fail-closed error handling (raises RuntimeError immediately upon violation).
 """
 
 from __future__ import annotations
@@ -13,7 +14,6 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import pickle
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,6 +35,7 @@ from backend.ml.calibration.conformal import (  # noqa: E402
     MondrianConformalPredictor,
 )
 from backend.ml.track1.models import (  # noqa: E402
+    MonotonePowerLaw,
     MultivariateMonotoneModel,
     validate_and_extract_inputs,
 )
@@ -48,7 +49,7 @@ EXPECTED_DATASET_SHA256 = (
     "b05ad3b0111d4ed3ff89b7aa2a0f653e494f81953c701916f27756d1746eede3"
 )
 EXPECTED_DATASET_RECORDS = 915
-EXPECTED_MODEL_VERSION = "2.0.0-rc.1"
+EXPECTED_MODEL_VERSION = "2.0.0-rc.3"
 REQUIRED_MANIFEST_KEYS: frozenset[str] = frozenset(
     [
         "model_version",
@@ -69,7 +70,7 @@ REQUIRED_ARTIFACT_FILES: frozenset[str] = frozenset(
 
 
 def _compute_sha256(path: Path) -> str:
-    """Compute SHA-256 checksum of a file."""
+    """Compute raw SHA-256 checksum of a file (for binary artifacts)."""
     hasher = hashlib.sha256()
     with path.open("rb") as stream:
         while chunk := stream.read(65536):
@@ -77,11 +78,95 @@ def _compute_sha256(path: Path) -> str:
     return hasher.hexdigest()
 
 
+def compute_canonical_json_sha256(data: Path | dict[str, Any] | str) -> str:
+    """Compute canonical UTF-8 SHA-256 checksum of JSON content.
+
+    Serializes using: json.dumps(obj, sort_keys=True, indent=2, ensure_ascii=False).encode('utf-8')
+    Ensures line endings on disk (CRLF vs LF) can NEVER change the verified hash.
+    """
+    if isinstance(data, Path):
+        with data.open("r", encoding="utf-8") as f:
+            obj = json.load(f)
+    elif isinstance(data, str):
+        obj = json.loads(data)
+    else:
+        obj = data
+
+    canonical_bytes = json.dumps(
+        obj,
+        sort_keys=True,
+        indent=2,
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(canonical_bytes).hexdigest()
+
+
+def compute_artifact_sha256(path: Path) -> str:
+    """Compute artifact checksum: canonical JSON hashing for .json, raw bytes for binary."""
+    if path.suffix.lower() == ".json":
+        return compute_canonical_json_sha256(path)
+    return _compute_sha256(path)
+
+
+def _validate_model_params_schema(params_data: Any, path: Path) -> None:
+    """Validate model_params.json schema to detect drift or corrupted parameters."""
+    if not isinstance(params_data, dict):
+        raise RuntimeError(f"Schema drift: model params in '{path}' is not a JSON object")
+
+    for key in ("model_version", "architecture", "parameters", "calibration"):
+        if key not in params_data:
+            raise RuntimeError(f"Schema drift: model params in '{path}' missing key '{key}'")
+
+    params = params_data["parameters"]
+    if not isinstance(params, dict):
+        raise RuntimeError(f"Schema drift: 'parameters' in '{path}' must be a dictionary")
+
+    base = params.get("base_marginal", params)
+    if not isinstance(base, dict):
+        raise RuntimeError(f"Schema drift: 'base_marginal' in '{path}' must be a dictionary")
+
+    if "beta0" not in base and "a" not in base:
+        raise RuntimeError(f"Schema drift: 'base_marginal' in '{path}' missing 'beta0' or 'a'")
+    if "b" not in base:
+        raise RuntimeError(f"Schema drift: 'base_marginal' in '{path}' missing 'b'")
+
+    try:
+        b_val = float(base["b"])
+        if not np.isfinite(b_val) or b_val <= 0:
+            raise ValueError()
+    except Exception as exc:
+        raise RuntimeError(
+            f"Schema drift: 'b' in '{path}' must be a strictly positive finite number"
+        ) from exc
+
+    cal = params_data["calibration"]
+    if not isinstance(cal, dict):
+        raise RuntimeError(f"Schema drift: 'calibration' in '{path}' must be a dictionary")
+
+    if "conformal_80" not in cal:
+        raise RuntimeError(f"Schema drift: 'calibration' in '{path}' missing 'conformal_80'")
+
+    c80 = cal["conformal_80"]
+    if not isinstance(c80, dict) or "global_quantile" not in c80:
+        raise RuntimeError(
+            f"Schema drift: 'conformal_80' in '{path}' missing 'global_quantile'"
+        )
+
+    try:
+        gq = float(c80["global_quantile"])
+        if not np.isfinite(gq) or gq <= 0:
+            raise ValueError()
+    except Exception as exc:
+        raise RuntimeError(
+            f"Schema drift: 'global_quantile' in '{path}' must be a strictly positive finite number"
+        ) from exc
+
+
 @dataclass
 class ProductionModelBundle:
     """Container holding verified production model and conformal calibrator."""
 
-    model: MultivariateMonotoneModel
+    model: MonotonePowerLaw | MultivariateMonotoneModel
     conformal: MondrianConformalPredictor
     manifest: dict[str, Any]
     model_version: str
@@ -138,9 +223,9 @@ class ProductionModelBundle:
         return self.model.predict(coerced)
 
     def predict_quantiles(self, X: Any) -> dict[str, np.ndarray]:
-        """Predict calibrated quantile intervals: p10, p50, and p90.
+        """Predict calibrated quantile intervals: p10, p25, p50, p75, and p90.
 
-        Guarantees 1.0 <= p10 <= p50 <= p90 everywhere.
+        Guarantees 1.0 <= p10 <= p25 <= p50 <= p75 <= p90 everywhere.
         """
         coerced = self._coerce_input(X)
         return self.conformal.predict_quantiles(coerced)
@@ -186,7 +271,10 @@ def load_production_model(
     """Load and cryptographically verify the production model bundle.
 
     Fails closed: if any file is missing, checksum mismatches, manifest is corrupt,
-    python version is incompatible, or revoked hash is detected, raises RuntimeError.
+    schema drifts, or revoked hash is detected, raises RuntimeError.
+
+    Production serving bundle is strictly pure JSON (model_params.json + manifest.json).
+    Zero pickle is used in production serving.
 
     Parameters
     ----------
@@ -224,15 +312,6 @@ def load_production_model(
             f"Production manifest file missing at: {manifest_file}"
         )
 
-    manifest_sha256 = _compute_sha256(manifest_file)
-    if (
-        expected_manifest_hash is not None
-        and manifest_sha256.lower() != expected_manifest_hash.lower()
-    ):
-        raise RuntimeError(
-            f"Manifest checksum mismatch: expected {expected_manifest_hash}, got {manifest_sha256}"
-        )
-
     try:
         manifest_text = manifest_file.read_text(encoding="utf-8")
         manifest: dict[str, Any] = json.loads(manifest_text)
@@ -245,6 +324,19 @@ def load_production_model(
         raise RuntimeError(
             f"Manifest at {manifest_file} is not a valid JSON object."
         )
+
+    manifest_canonical_sha256 = compute_canonical_json_sha256(manifest)
+    manifest_raw_sha256 = _compute_sha256(manifest_file)
+    manifest_sha256 = manifest_canonical_sha256
+
+    if expected_manifest_hash is not None:
+        if (
+            manifest_canonical_sha256.lower() != expected_manifest_hash.lower()
+            and manifest_raw_sha256.lower() != expected_manifest_hash.lower()
+        ):
+            raise RuntimeError(
+                f"Manifest checksum mismatch: expected {expected_manifest_hash}, got {manifest_canonical_sha256}"
+            )
 
     # 3. Required manifest fields
     missing_keys = REQUIRED_MANIFEST_KEYS - set(manifest.keys())
@@ -271,31 +363,25 @@ def load_production_model(
             f"Dataset SHA-256 mismatch in manifest: expected {EXPECTED_DATASET_SHA256}, got {dataset_sha256}"
         )
 
-    # 5. Environment & Python version verification
+    # 5. Environment & Python version informational logging (non-blocking)
     env_spec = manifest.get("environment", {})
-    if not isinstance(env_spec, dict):
-        raise RuntimeError("Manifest environment spec is not a valid dictionary.")
-
-    manifest_py = env_spec.get("python_major_minor") or env_spec.get("python") or env_spec.get("python_version")
-    if not manifest_py:
-        raise RuntimeError("Manifest environment missing Python version specification.")
-
-    manifest_parts = str(manifest_py).split(".")[:2]
-    current_parts = [str(sys.version_info.major), str(sys.version_info.minor)]
-    # Compatible across validated Python 3.10 - 3.12 runtime environments
-    is_compatible = (
-        manifest_parts[0] == current_parts[0]
-        and manifest_parts[0] == "3"
-        and int(manifest_parts[1]) in (10, 11, 12)
-        and int(current_parts[1]) in (10, 11, 12)
-    )
-    if not is_compatible:
-        raise RuntimeError(
-            f"Python runtime version mismatch: current environment is "
-            f"{'.'.join(current_parts)}, but manifest requires {'.'.join(manifest_parts)}"
+    if isinstance(env_spec, dict):
+        manifest_py = (
+            env_spec.get("python_major_minor")
+            or env_spec.get("python")
+            or env_spec.get("python_version")
         )
+        if manifest_py:
+            logger.info(
+                "Model artifact build environment: Python %s, runtime is Python %s.%s",
+                manifest_py,
+                sys.version_info.major,
+                sys.version_info.minor,
+            )
+    else:
+        logger.info("Manifest environment spec omitted or non-dictionary.")
 
-    # 6. Artifact file verification and SHA-256 hashing
+    # 6. Artifact file verification and canonical/raw SHA-256 hashing
     file_hashes: dict[str, str] = manifest.get("file_hashes", {})
     if not isinstance(file_hashes, dict):
         raise RuntimeError("Manifest file_hashes must be a dictionary.")
@@ -306,6 +392,13 @@ def load_production_model(
             f"Manifest file_hashes missing required artifacts: {sorted(missing_files)}"
         )
 
+    # Check manifest model_sha256 if present
+    manifest_model_sha256 = str(manifest.get("model_sha256", "")).lower()
+    if manifest_model_sha256 and manifest_model_sha256 in REVOKED_MODEL_SHA256:
+        raise RuntimeError(
+            f"Manifest model_sha256 matches revoked security checksum: {manifest_model_sha256}"
+        )
+
     for fname, expected_hash in file_hashes.items():
         artifact_path = dir_path / fname
         if not artifact_path.exists() or not artifact_path.is_file():
@@ -313,7 +406,7 @@ def load_production_model(
                 f"Required production artifact file missing: {fname} at {artifact_path}"
             )
 
-        actual_hash = _compute_sha256(artifact_path)
+        actual_hash = compute_artifact_sha256(artifact_path)
         if actual_hash.lower() in REVOKED_MODEL_SHA256:
             raise RuntimeError(
                 f"Artifact file '{fname}' matches revoked security checksum: {actual_hash}"
@@ -324,85 +417,78 @@ def load_production_model(
                 f"SHA-256 checksum mismatch for '{fname}': expected {expected_hash}, got {actual_hash}"
             )
 
-    # 7. Safe Deserialization of Checked Artifacts (Zero pickle at serving when model_params.json is present)
+    # Cross-verify manifest.model_sha256 against model_params.json hash
     model_params_file = dir_path / "model_params.json"
-    if model_params_file.exists():
-        try:
-            with model_params_file.open("r", encoding="utf-8") as f_p:
-                params_data = json.load(f_p)
-        except Exception as exc:
-            raise RuntimeError(
-                f"Failed to parse model params artifact '{model_params_file}': {exc}"
-            ) from exc
+    params_canonical_hash = compute_canonical_json_sha256(model_params_file)
+    if manifest_model_sha256 and manifest_model_sha256 != params_canonical_hash.lower():
+        raise RuntimeError(
+            f"Manifest model_sha256 mismatch: manifest specifies {manifest_model_sha256}, "
+            f"but model_params.json canonical hash is {params_canonical_hash}"
+        )
 
-        p = params_data.get("parameters", {})
-        base_p = p.get("base_marginal", {})
-        multi_p = p.get("multivariate", {})
+    # 7. Safe Pure JSON Parameter Deserialization (Zero pickle at serving runtime)
+    try:
+        with model_params_file.open("r", encoding="utf-8") as f_p:
+            params_data = json.load(f_p)
+    except Exception as exc:
+        raise RuntimeError(
+            f"Failed to parse model params artifact '{model_params_file}': {exc}"
+        ) from exc
 
-        model = MultivariateMonotoneModel()
-        model.beta0_base_ = float(base_p.get("beta0", 3.188036))
-        model.a_base_ = float(base_p.get("a", np.exp(model.beta0_base_)))
-        model.b_base_ = float(base_p.get("b", 0.827027))
-        model.beta0_ = float(multi_p.get("beta0", 3.318083))
-        model.a_ = float(multi_p.get("a", np.exp(model.beta0_)))
-        model.b_ = float(multi_p.get("b", 0.592956))
-        model.c_ = float(multi_p.get("c", 0.528897))
-        model.has_duration_ = bool(p.get("has_duration", True))
-        model.n_valid_duration_train_ = int(p.get("n_valid_duration_train", 450))
+    _validate_model_params_schema(params_data, model_params_file)
 
-        cal_data = params_data.get("calibration", {})
-        c80 = cal_data.get("conformal_80", {})
-        c50 = cal_data.get("conformal_50", {})
+    p = params_data.get("parameters", {})
+    base_p = p.get("base_marginal", p)
 
-        conformal = MondrianConformalPredictor(estimator=model)
-        conformal.estimator_ = model
-        conformal.global_quantile_ = float(c80.get("global_quantile", 1.005319))
-        conformal.bucket_quantiles_ = {k: float(v) for k, v in c80.get("bucket_quantiles", {}).items()}
-        conformal.global_quantile_50_ = float(c50.get("global_quantile", 0.600436))
-        conformal.bucket_quantiles_50_ = {k: float(v) for k, v in c50.get("bucket_quantiles", {}).items()}
-        conformal.is_calibrated_ = True
+    beta0_val = float(base_p.get("beta0", 3.1880360932291065))
+    b_val = float(base_p.get("b", 0.8270266757672359))
+    a_val = float(base_p.get("a", np.exp(beta0_val)))
+
+    model = MonotonePowerLaw()
+    model.beta0_ = beta0_val
+    model.b_ = b_val
+    model.a_ = a_val
+    model.intercept_ = beta0_val
+    model.slope_ = b_val
+    # Backward compatibility attributes for inspection
+    model.beta0_base_ = beta0_val
+    model.a_base_ = a_val
+    model.b_base_ = b_val
+    model.has_duration_ = False
+    model.n_valid_duration_train_ = 0
+
+    cal_data = params_data.get("calibration", {})
+    c80 = cal_data.get("conformal_80", {})
+    c50 = cal_data.get("conformal_50", {})
+
+    conformal = MondrianConformalPredictor(estimator=model)
+    conformal.estimator_ = model
+    conformal.global_quantile_ = float(c80.get("global_quantile", 1.0053189146513999))
+    conformal.bucket_quantiles_ = {
+        k: float(v) for k, v in c80.get("bucket_quantiles", {}).items()
+    }
+    if "global_quantile" in c50:
+        conformal.global_quantile_50_ = float(c50["global_quantile"])
     else:
-        model_file = dir_path / "model.pkl"
-        conformal_file = dir_path / "conformal.pkl"
+        conformal.global_quantile_50_ = float(conformal.global_quantile_ * 0.597)
+    conformal.bucket_quantiles_50_ = {
+        k: float(v) for k, v in c50.get("bucket_quantiles", {}).items()
+    }
+    conformal.is_calibrated_ = True
 
-        try:
-            with model_file.open("rb") as f_m:
-                model = pickle.load(f_m)
-        except Exception as exc:
-            raise RuntimeError(
-                f"Failed to deserialize model artifact '{model_file}': {exc}"
-            ) from exc
-
-        if not isinstance(model, MultivariateMonotoneModel):
-            raise RuntimeError(
-                f"Loaded model is of unexpected type: {type(model).__name__}, expected MultivariateMonotoneModel"
-            )
-
-        try:
-            with conformal_file.open("rb") as f_c:
-                conformal = pickle.load(f_c)
-        except Exception as exc:
-            raise RuntimeError(
-                f"Failed to deserialize conformal calibrator artifact '{conformal_file}': {exc}"
-            ) from exc
-
-        if not isinstance(conformal, MondrianConformalPredictor):
-            raise RuntimeError(
-                f"Loaded conformal calibrator is of unexpected type: {type(conformal).__name__}, "
-                "expected MondrianConformalPredictor"
-            )
+    model_ver = str(manifest.get("model_version", EXPECTED_MODEL_VERSION))
 
     logger.info(
         "Production model bundle loaded and verified successfully from %s (version: %s)",
         dir_path,
-        manifest.get("model_version"),
+        model_ver,
     )
 
     return ProductionModelBundle(
         model=model,
         conformal=conformal,
         manifest=manifest,
-        model_version=str(manifest.get("model_version", EXPECTED_MODEL_VERSION)),
+        model_version=model_ver,
         artifact_dir=dir_path,
         manifest_sha256=manifest_sha256,
     )

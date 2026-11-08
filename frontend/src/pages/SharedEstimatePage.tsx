@@ -51,7 +51,7 @@ export default function SharedEstimatePage() {
 
   const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
   return <main style={{ maxWidth: 900, margin: 'auto', padding: 'clamp(1rem, 3vw, 2rem)', minWidth: 0, overflowWrap: 'anywhere', color: 'var(--text-primary)' }}>
-    <Link to="/" style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}>&larr; Predictify</Link>
+    <Link to="/" style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}>&larr; PredictIQ</Link>
     <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: 4 }}>Shared estimate · Read only</p>
     {loading && <p role="status">Loading estimate…</p>}
     {error && <p role="alert">{error}</p>}
@@ -68,8 +68,11 @@ export default function SharedEstimatePage() {
       <p>Effort: {estimate.outputs.effort_likely_hours.toLocaleString()} hours · Timeline: {estimate.outputs.timeline_likely_weeks} weeks</p>
       <p style={{ color: RISK_COLORS[estimate.outputs.risk_level] }}>Risk: {estimate.outputs.risk_level}</p>
       <p>Heuristic confidence: {estimate.outputs.confidence_pct}%. This score and effort range are not calibrated probabilities.</p>
+      <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle, var(--border-color))', fontSize: '0.8125rem' }}>
+        <strong>Statistical Reality:</strong> Effort depends strictly on functional size (<code style={{ fontFamily: 'monospace' }}>size_fp</code>). Team size and duration are staffing and schedule planning indicators (Brooks&apos; Law). Typical estimation error is roughly ±50% on novel projects.
+      </div>
       <h2>Project inputs</h2>
-      <p>{estimate.inputs.project_type} · {estimate.inputs.team_size} people · {estimate.inputs.duration_months} months · {estimate.inputs.complexity} complexity</p>
+      <p>{estimate.inputs.project_type} · {estimate.inputs.team_size} people (staffing capacity) · {estimate.inputs.duration_months} months (schedule horizon) · {estimate.inputs.complexity} complexity</p>
       <p>{estimate.inputs.tech_stack.join(', ')}</p>
       <h2>Risk factors</h2>
       <ul>{estimate.outputs.top_risks.map(risk => <li key={risk.name}><strong>{risk.name} ({risk.severity})</strong>: {risk.description}</li>)}</ul>

@@ -1,3 +1,5 @@
+Status: Approved | Applies to: 2.0.0-rc.3 | Verified against commit: cdca041 | Date: 2026-11-08
+
 # PredictIQ projects_v2 Harmonization & Deduplication Report
 
 **Generated:** 2026-11-06

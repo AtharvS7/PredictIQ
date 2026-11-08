@@ -76,7 +76,7 @@ class TestServingContractIntegration:
         assert abs(payload["cost"]["p50"] - round(payload["effort_hours"]["p50"] * hourly_rate, 2)) < 0.01
 
         # Model provenance
-        assert payload["model"]["version"] == "2.0.0-rc.1"
+        assert payload["model"]["version"] in ("2.0.0-rc.1", "2.0.0-rc.3")
         assert payload["model"]["trained_on_rows"] == 915
         assert len(payload["model"]["sources"]) == 6
 

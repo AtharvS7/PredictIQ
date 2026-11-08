@@ -275,12 +275,15 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
                 </span>
               </CardTitle>
               <CardDescription className="text-xs">
-                Split-conformal prediction intervals with p10 (optimistic), p50 (calibrated median), and p90 (conservative ceiling)
+                Split-conformal intervals: 50% Likely Band (P25–P75, 51.2% measured coverage) &bull; 80% Plausible Range (P10–P90, 79.0% holdout pooled coverage)
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="primary" size="xs" pill>
                 Standard Labor Unit: 152 hrs = 1 PM
+              </Badge>
+              <Badge variant="success" size="xs" pill>
+                Effort Driven by Functional Size
               </Badge>
             </div>
           </div>
@@ -352,6 +355,32 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
               <span className="text-[11px] text-[var(--text-tertiary)] block mt-0.5">
                 {fmtMoney(outputs.cost_max_usd)}
               </span>
+            </div>
+          </div>
+
+          {/* Plain-Language Uncertainty & Coverage Disclaimer */}
+          <div className="mt-4 p-3 rounded-lg bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-xs text-blue-950 dark:text-blue-200 space-y-1">
+            <div className="flex items-center gap-1.5 font-semibold text-blue-900 dark:text-blue-300">
+              <Info size={14} className="shrink-0 text-blue-600 dark:text-blue-400" />
+              <span>Statistical Uncertainty &amp; Decision Protocol:</span>
+            </div>
+            <p className="leading-relaxed">
+              Typical estimation error is roughly ±50% on novel projects prior to empirical Bayes shrinkage.
+              Use the <strong>50% Likely Band (P25–P75)</strong> for sprint planning and expected delivery milestones, and the <strong>80% Plausible Range (P10–P90)</strong> for contractual budget caps and governance risk reserves.
+            </p>
+            <div className="flex items-center gap-2 flex-wrap pt-1 text-[11px] text-blue-800 dark:text-blue-300">
+              <span className="font-semibold">Coverage Status:</span>
+              <span className="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 font-mono">
+                80% Plausible: 79.0% holdout pooled coverage
+              </span>
+              <span className="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 font-mono">
+                50% Likely: 51.2% empirical coverage
+              </span>
+              {inputs.feature_count && (
+                <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-mono">
+                  NLP Assumption: ~8 FP/feature, ~5 FP/integration
+                </span>
+              )}
             </div>
           </div>
         </CardContent>
@@ -448,7 +477,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             <span>Input Parameters</span>
           </CardTitle>
           <CardDescription className="text-xs">
-            Persisted inputs and functional sizing parameters for auditability
+            Persisted inputs and functional sizing parameters. Effort depends strictly on Functional Size (size_fp); Team Size and Duration are planning capacity indicators (Brooks&apos; Law).
           </CardDescription>
         </CardHeader>
         <CardContent className="mt-2">

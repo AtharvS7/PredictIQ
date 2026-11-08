@@ -1,0 +1,46 @@
+{
+  "contract_version": "2.0.0-rc.3",
+  "metadata": {
+    "description": "PredictIQ ML Release Gate Quality Floors (RC3)",
+    "generated_at": "2026-11-08",
+    "model_version": "2.0.0-rc.3",
+    "architecture": "MonotonePowerLaw + MondrianConformal"
+  },
+  "dataset": {
+    "sha256": "b05ad3b0111d4ed3ff89b7aa2a0f653e494f81953c701916f27756d1746eede3",
+    "min_records": 915
+  },
+  "serving_invariants": {
+    "model_version": "2.0.0-rc.3",
+    "canonical_sha256": "8066e9cf4c18f5fa45957bad9050cbab6effb68923a787f974640a463ede93d2",
+    "min_prediction_hours": 1.0
+  },
+  "floors": {
+    "macro_mdape_max": 65.0,
+    "macro_pred25_min": 17.0,
+    "pooled_mdape_max": 68.0,
+    "pooled_pred25_min": 17.0,
+    "conformal_80_coverage_min": 70.0,
+    "conformal_50_coverage_min": 45.0
+  },
+  "loso_cross_validation_floors": {
+    "macro_mdape_max_pct": 56.5,
+    "macro_pred25_min_pct": 17.0
+  },
+  "nlp_srs_regression_floors": {
+    "functional_size_mdape_max_pct": 20.0,
+    "tech_stack_micro_f1_min": 0.85,
+    "feature_recall_min_pct": 90.0,
+    "integration_count_mae_max": 1.0
+  },
+  "actual_measured": {
+    "macro_mdape": 56.31,
+    "macro_pred25": 20.21,
+    "pooled_mdape": 58.35,
+    "pooled_pred25": 21.09,
+    "macro_conformal_80_coverage": 80.04,
+    "macro_conformal_50_coverage": 45.85,
+    "pooled_conformal_80_coverage": 78.25,
+    "pooled_conformal_50_coverage": 48.85
+  }
+}

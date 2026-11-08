@@ -1,0 +1,2520 @@
+> [!WARNING]
+> **Historical - superseded; do not use as guidance.** This document reflects an earlier development phase and is preserved solely for auditability.
+
+Status: Historical | Applies to: Historical (superseded) | Verified against commit: cdca041 | Date: 2026-11-08
+
+# Predictify — Technical Walkthrough
+
+> **Version:** 3.2.0 &nbsp;|&nbsp; **Author:** Atharv Sawane &nbsp;|&nbsp; **Updated:** September 28, 2026
+
+---
+
+## September 28: social sign-in repair
+
+The deployed Vercel domain was absent from Firebase Authentication's authorized domains. Added only `predictiq-preview.vercel.app`, preserving the existing domains. Both Google and GitHub providers were already enabled with configured OAuth clients. Live browser checks now reach each provider's sign-in page; personal-account consent has not been automated or claimed as tested.
+
+Social authentication now prevents concurrent popup requests, releases loading state on failure, and keeps actionable error instructions visible on the sign-in page. If browser settings explicitly block popups, users must allow popups for this site and retry, or use email sign-in. No cross-domain redirect fallback is introduced: Firebase redirects require additional same-origin helper and provider callback configuration to work reliably with modern storage restrictions.
+
+Verification: 10 focused authentication regression tests passed; production build, lint and type checks passed. Vercel deployment `dpl_Ha4oz1qy3hKu85pbVkGSz6Hg2grp` serves application commit `0cc98d5` on the stable alias. Follow-up `4386f83` corrects test-only query typing. On the deployed page, both providers reached their own sign-in pages, and simulated `window.open` blocking showed persistent instructions with retry enabled for both buttons. No provider password or consent was entered.
+
+Final CI run `36438311609` passed for `4386f83`: frontend type checks, lint, regression tests and build; backend lint and tests; security scanning; and authenticated browser contract tests. Docker build was skipped by the workflow. This verifies the application checks, not personal Google/GitHub account consent.
+
+```mermaid
+flowchart LR
+  A[Google or GitHub button] --> B{Browser permits popup?}
+  B -->|Yes| C[Firebase authorized-domain check]
+  C --> D[Provider sign-in and consent]
+  D --> E[Firebase ID token]
+  E --> F[Backend token verification and profile sync]
+  B -->|No| G[Persistent allow-popups instructions]
+  G --> A
+```
+
+## September 28: explicit manual-budget release path
+
+The owner delegated the release-direction decision. A separate manual task-budget workflow is now implemented; it does not replace or validate the ML model. Users supply task names, ordered low/likely/high effort hours, per-task USD rates and optional contingency. The server sums hours × rates, adds contingency to costs only and rounds the total once using decimal arithmetic. These are user-defined scenarios, not confidence intervals or a calendar schedule. Taxes and non-labour expenses are excluded.
+
+Authenticated `/budgets` create/list/read/delete endpoints store immutable planning assumptions separately from estimates. Every query is owner-scoped, including admin requests; viewer accounts can read their own records but cannot write. Inputs reject unknown fields, non-finite or out-of-range numbers, excessive precision, inverted ranges, empty names and more than 100 tasks. Migration `006_manual_budgets` adds only a table and owner/date index. Authorization remains in the trusted API, consistent with the existing Neon deployment; no new database RLS guarantee is claimed.
+
+The React budget planner offers labelled task cards, add/remove controls, bounded numeric inputs, retained-input save errors, paginated history and saved-assumption review. The landing page describes manual planning and explicitly states automatic predictions are unavailable. UI/UX Pro Max's minimal functional style, visible focus, touch targets and responsive layout guidance informed the page.
+
+`RELEASE_MODE=prediction` remains the default and requires a ready model. Explicit `manual_budget` mode requires the budget schema, database and initialized Firebase, while reporting `automatic_prediction: false` and `ml_model: not_loaded` when the model is unavailable. Readiness and operational probes distinguish these contracts; enabling manual mode is not ML approval. Manual-budget deployment and hosted acceptance are verified below; ML acceptance remains open.
+
+Validation so far: 18 budget tests including real PostgreSQL persistence, cross-user/admin denial and viewer restrictions; 16 health tests; four new UI tests; script checks; and a populated recovery rehearsal at migration 006. All five restored tables and the test document matched checksums (`.tools/recovery-manual-budget-20260928`). All 75 frontend tests passed across the initial run and worker-startup retries. The broad backend run passed 592 tests; its six database failures occurred while PostgreSQL was starting and all passed in the 24-test database rerun. Authenticated emulator browser acceptance passed, including budget persistence and a 375px overflow check. The prior live outage email was received and confirmed by the owner; the owner has also confirmed receiving the recovery/up email.
+
+Hosted checkpoint `de86043` passed CI run `36399584660`. Render deployment `dep-dat2mb3mmadc73eqq35g` and Vercel deployment `dpl_DhUp3X5DCBzguk4VhjWunC4JGHK8` serve the manual planner at the existing preview alias. The live browser test passed in 49.4 seconds, including real Firebase sign-in, budget save/reload, extraction, the explicit ML-unavailable response and sign-out. A separate two-identity API probe verified exact $440.00 arithmetic, anonymous denial and cross-user read/delete denial.
+
+Twenty live health probes at concurrency two passed with no failures: readiness p95 436.86 ms and liveness p95 595.76 ms. This is a bounded smoke/load sample, not a high-volume capacity claim. The readiness response is HTTP 200 with `release_mode=manual_budget`, `manual_budget=true`, `automatic_prediction=false` and `ml_model=not_loaded`.
+
+The post-migration live Neon snapshot restored locally with matching checksums for all five tables, including two saved budgets. All five available S3 uploads were backed up/restored and hash-verified. The 20 acknowledged legacy test-file gaps remain explicitly allowlisted; unexpected missing files: zero. Evidence is private in `.tools/live-recovery-budget-20260928`. This verifies local restoration of cloud backups, not regional failover. The owner confirmed outage email delivery earlier; the owner has now also confirmed recovery-email delivery. Backend/model rollback and ML approval are not claimed complete.
+
+Final application checkpoint `d38fe83` passed CI run `36432939384` and is live on Render `dep-dat78j3tqb8s73a24mjg` and Vercel `dpl_CvBajSvHtzhpv7f2gPA6666JXx7r`. The final health check verifies the budget schema in both release modes. Desktop/mobile visual review found and corrected the mobile navigation grid: all five links now share one row with at least 44px touch targets. The added browser assertions passed locally and in CI; the deployed layout was also checked. After the backend replacement, the pre-existing saved budget still returned the exact $440.00 total. Live readiness remained healthy for manual budgeting, with automatic prediction explicitly unavailable. Both outage and recovery emails are confirmed received by the owner.
+
+```mermaid
+flowchart LR
+    User[User-supplied tasks, hours and rates] --> Auth[Firebase authentication and editor authorization]
+    Auth --> Validate[Bounded inputs and ordered scenarios]
+    Validate --> Calc[Decimal task costs plus contingency]
+    Validate --> DB[(Owner-scoped budget assumptions)]
+    DB --> Calc
+    Calc --> UI[Saved manual budget and assumptions]
+    ML[Unvalidated ML model] --> Disabled[Automatic prediction remains unavailable]
+```
+
+## September 27: connected staging and live browser acceptance
+
+The website at https://predictiq-preview.vercel.app is now connected to the free Render staging backend through Vercel's same-origin `/api` proxy. Source commit `a70416f` passed GitHub CI run `36329980342` and Vercel build `dpl_GJJBA8rDRxNCgSHDyY8Z6TML5Phy`. This is the dedicated preview project's default alias, not an accepted production release. Existing deployment protection settings were preserved: the unique deployment URL redirects to authentication, while the stable alias is accessible. A staging banner explicitly states that predictions await model validation.
+
+The opt-in `playwright.live.config.ts` test passed against the hosted website with real Firebase and Neon/S3 services: sign-in, persisted session reload, upload, extraction, model-specific 503 with retained-input error feedback, sign-out and protected-page redirect. No API responses or model outputs are mocked. This verifies the degraded-state user journey, not successful production estimation. Live tests are excluded from ordinary CI discovery, use only explicit synthetic operational identities, and disable traces/screenshots/video to avoid recording credentials.
+
+Vercel rollback to the previous UI deployment was rehearsed and verified at the stable alias, then the connected deployment was promoted back and `/api/v1/live` returned JSON/200 again. This verifies frontend alias rollback/recovery only; backend/model rollback remains a separate gate. The initial browser assertion matched both a toast and an inline error; scoping it to the main page resolved the test ambiguity without changing application behavior.
+
+A follow-up privacy review removed raw exception messages from API, authentication initialization, currency and background-task error logs. They now record exception types. Regression tests inject sensitive exception text and verify it reaches neither API output nor structured logs. The related API/security suite passed 59 tests.
+
+Final source checkpoint `b2fdf2d` passed CI run `36331037738` and is live on Render deployment `dep-dasjmru0tbcc73fnm8ag`. The hosted browser test passed again after this replacement. The broad backend suite passed 564 tests with five database-dependent skips; a separate six-test PostgreSQL run passed and covers those database cases (the counts overlap). A fresh live backup restored matching checksums for 13 profiles, 24 documents, 23 estimates and two shares. All four available uploaded objects were restored and hash-verified; only the 20 acknowledged old test files remain absent, with zero unexpected losses. Private evidence: `.tools/live-recovery-20260927-browser-b`. Cloud failover and backend/model rollback remain unverified.
+
+CI run `36330592736` passed at checkpoint `32a85c3`. Model-serving approval validation was subsequently hardened: all six named gates must exist and have literal JSON boolean `true` values. Strings, numeric truthiness and incomplete gate maps fail before deserialization. All 53 related production-pipeline, inference and ML-service tests passed, including a trusted synthetic bundle serving test. This changes release validation, not model accuracy or approval status.
+
+A free UptimeRobot request was submitted for the connected readiness URL after the owner confirmed their email. The provider returned HTTP 200, but its email-only flow intentionally does not confirm acceptance or delivery. Monitoring is pending the owner's activation link and actual alert verification; no active monitor or delivered outage alert is claimed.
+
+```mermaid
+flowchart LR
+    Browser[Staging website] --> Firebase[Real Firebase sign-in]
+    Browser --> Proxy[Vercel same-origin API proxy]
+    Proxy --> Render[Free Render staging]
+    Render --> Neon[Neon profiles and document metadata]
+    Render --> S3[Durable document storage]
+    S3 --> Parser[Parser and NLP]
+    Parser --> Gate[Prediction unavailable: model acceptance open]
+    Rollback[Previous frontend deployment] --> Restore[Connected frontend restored]
+```
+
+## September 27: recovery, operations and usability checkpoint
+
+A live, read-only Neon snapshot was restored into a fresh local PostgreSQL database. Row checksums matched for 11 profiles, 23 estimates, 20 document records and two share links at migration `005_role_retry`. The live S3 write/read/delete probe passed. The owner confirmed that the 20 missing document objects belong to old tests and no originals remain; their exact IDs are recorded in an ignored, reviewed exception manifest. New missing IDs fail recovery checks. No production records were deleted or replaced. This is a local recovery destination, not a cloud failover rehearsal.
+
+Readiness now has a five-second total database deadline, and uptime uses a monotonic clock. Database startup logs no longer include raw exception text. The bounded operations checker verifies both liveness and readiness, rejects redirects, limits concurrency, records latency and returns a failure exit code on degradation. Its manual GitHub workflow is prepared; hosted checks now run against the free staging backend; recurring monitoring and notification delivery are not yet verified.
+
+UI-UX Pro Max keyboard-navigation guidance informed the estimates-list changes: real result links, pagination, labelled duplication/deletion controls, larger touch targets, page resets on filter/sort changes, and retry feedback that preserves saved records after a failed deletion. Search explicitly identifies its current-page scope. Unused code and unsafe `any` annotations were cleaned up without disabling lint rules.
+
+The previous GitHub CI run failed before backend tests because unhashed lint tools were combined with a hash-locked dependency install; those installs are now separated. The six public Firebase build variables were copied from the existing local configuration into repository Actions variables, without exposing private credentials. Browser contract tests use explicit demo configuration. GitHub CI run `36309615139` passed at commit `2759161`, including backend tests/lint, frontend type/build, security scanning and authenticated browser contract tests.
+
+```mermaid
+flowchart LR
+    Neon[Live Neon read-only snapshot] --> Dump[Private local backup]
+    Dump --> Restore[Fresh isolated PostgreSQL restore]
+    Restore --> Checks[Four table checksums match]
+    S3[Live S3] --> Probe[Write / read / cleanup verified]
+    Legacy[20 acknowledged old test uploads absent] --> Exception[Exact-ID exception manifest]
+    NewLoss[Any newly missing document] --> Fail[Recovery fails]
+    API[Free Render staging live] --> Auth[Live Firebase / Neon / S3 API smoke passed]
+    API --> Health[Liveness 200; readiness 503: no accepted model]
+    Health --> Pending[Model / full estimation / alert delivery pending]
+```
+
+### Live staging acceptance follow-up
+
+Render service `srv-dase5co473hc73ftfm9g` is live at https://predictiq-staging.onrender.com, deployment `dep-dase5d8473hc73ftfos0`, source commit `2759161`. It uses the free plan with automatic deployment disabled. The Vercel UI preview has not been connected or promoted to production.
+
+Two synthetic operational identities completed real Firebase password authentication. Hosted API checks passed verified identity synchronization, profile persistence, anonymous/admin denial, durable document upload and reload, cross-user document denial, actual extraction/NLP and security headers. `scripts/live_auth_smoke.py` retains one reusable fixture and keeps all credentials and evidence private. It confirms the specific prediction-unavailable response and readiness dependencies before classifying a run as partial; a generic 503 is a failed check. Five regression tests passed, and the broader script suite passed 23 tests with three container-only skips.
+
+A follow-up live recovery rehearsal restored matching checksums for 13 profiles, 21 document records, 23 estimates and two shares at migration `005_role_retry`. The newly uploaded S3 object was backed up, restored to an isolated key, read back and hash-verified. The 20 acknowledged legacy objects remain unavailable; no new missing object was found. Private evidence is retained under `.tools/live-recovery-20260927-authenticated-b`; production records and original objects were preserved.
+
+The bounded hosted check sent 20 requests at concurrency two: all ten liveness probes returned 200 (p95 390.69 ms), while all ten readiness probes returned 503 (p95 438.29 ms) because no accepted model is loaded. The monitor therefore correctly failed overall. This is a low-volume operational check, not a capacity benchmark. A Render memory sample was 200,929,280 bytes against a 536,870,900-byte limit; it does not establish peak parsing or inference memory. Full live estimation, rollback acceptance, cloud failover and alert delivery remain open. Staging replacement deployment `dep-dasecg97lnhs738qu7m0` became live at source `d4cd83e`; the subsequent live-provider rerun verified sign-in, persisted profile/document access, ownership denial and extraction across replacement. The check during the rolling update was not accepted; the completed-deployment rerun again confirmed the expected model-specific 503. This verifies application replacement persistence, not rollback or zero-downtime estimation.
+
+## Current engineering status - September 26, 2026
+
+This checkpoint supersedes the dated historical checkpoints below. The ML execution hold has been lifted, research training has run, Neon production is migrated through `005_role_retry`, and backups are pushed only to `dev2`. The project is still **not production-ready**: an independently accepted ML bundle and hosted operational acceptance remain open. Earlier rough completion percentages are historical judgments, not current measurements.
+
+- September 26 backend verification: 552 tests passed in the broad suite; its five database-dependent skips were covered by a subsequent six-test PostgreSQL run, all passing. These runs overlap and must not be added as unique tests.
+- Frontend type check and production build passed. All 67 frontend tests passed in a serial retry after cold-start worker failures. Frontend lint reports zero errors and 19 existing warnings. Python and frontend production dependency audits found no known vulnerabilities.
+- Updated Vitest and coverage tooling to 4.1.11 for the reported mocker path-traversal advisory; CI now audits development dependencies as well as production dependencies.
+- Added CI browser acceptance and authenticated-estimation coverage using the Firebase emulator, actual disposable PostgreSQL, and an explicit prediction fixture. Retired automatic dev/tag Railway deployment triggers and disabled the legacy deployment jobs. The Docker smoke check now expects the revoked model to be rejected.
+- Added `scripts/rehearse_recovery.py`, which creates fresh local databases, applies migration 005, inserts linked fixtures, restores a database dump and document objects, and checks every application table plus document bytes. The populated rehearsal passed; measured restoration took 0.625 seconds for this small synthetic fixture, not a production recovery target.
+- Offline preflight with supplied production configuration reports only the missing reviewed ML manifest and SHA-256. This checks configuration shape, not current live-provider availability. No secrets, research datasets, model artifacts or recovery dumps are included in Git.
+- All nine browser acceptance tests passed. A fresh frontend Docker build passed all three proxy/header/upload/privacy checks. The authenticated browser rerun passed on September 27, including persisted result reload and cross-user denial, after an initial overall-timeout failure under concurrent workload. Assertions and timeouts were unchanged. No claim of live production authentication or approved-model E2E is made.
+
+```mermaid
+flowchart LR
+    Commit[Reviewed dev2 commit] --> CI[Unit / integration / security / build]
+    CI --> Browser[Browser and emulator estimation contract]
+    Recovery[Populated migration-005 local recovery] --> Release[Production release gate]
+    Browser --> Release
+    ML[Independent ML acceptance: open] --> Release
+    Live[Hosted auth / storage / restore / monitoring: open] --> Release
+```
+
+See the [release checklist](RELEASE_CHECKLIST.md) and [deployment runbook](runbooks/production-deployment.md) for current release rules. The detailed ML experiments are in [PRODUCTION_ML.md](runbooks/PRODUCTION_ML.md).
+
+## Historical engineering checkpoints - September 15-17, 2026
+
+### September 17: connected hosting and UI preview
+
+Verified Vercel Hobby access and the owner-confirmed Render workspace. Uploaded frontend source from the local `dev2` checkout to the dedicated `predictiq-preview` Vercel project using the owner's explicit manual-preview authorization. Deployment `dpl_44NFQbjbtqZzb8jC83rUT5xccNmF` is READY. Although the request targeted preview, Vercel reports the first deployment as this separate project's production target. This is a labelled UI preview, not the product's production release; the backend is not connected. Default Vercel authentication protection was preserved. Chromium verified the preview notice and landing heading with no page runtime errors; the `/auth` deep link returned the app. No main-branch push, ML execution or paid resource was requested.
+
+Supabase S3 endpoint paths are now accepted by the offline checker without weakening CORS origin validation. Custom S3 gateways use path-style bucket addressing. Six preflight and two storage tests passed, as did focused Ruff and the frontend build. Render backend creation remains pending private storage credentials, the resource-fit check and a validated model; no empty or knowingly unusable backend service was created. Hosting MCP connections now replace the need to request local Render/Vercel tokens.
+
+### Deployment preparation follow-up
+
+Added Railway configuration for the root Dockerfile, canonical pre-deploy migrations and readiness, plus a provider-port-aware single-worker backend entry point. Added Vercel SPA routing/security headers and an offline production configuration checker that never prints supplied values. Fourteen startup/readiness tests passed; eight script tests passed and three container tests were skipped because no test image was selected. Hosting configuration parsed successfully; no provider deployment or new ML execution was performed. The [deployment input list](runbooks/DEPLOYMENT_INPUTS.md) records required access, settings, model and live acceptance gates. The owner reports credential rotation complete.
+
+### Latest reliability and production ML implementation checkpoint
+
+This checkpoint supersedes the older acceptance summaries below. Rough engineering completion is **about 85%**, a judgment of implementation and validation effort rather than a measured test percentage. The project remains **not production-ready**, chiefly because no model has passed production validation and live operational acceptance remains incomplete.
+
+- Authenticated estimation now passes with real Firebase **emulator** sign-in and SDK token verification, actual PostgreSQL persistence, upload, extraction, result reload, cost conversion, sign-out and cross-user read denial. Prediction alone is a deterministic contract fixture; this is not production-model or live-provider E2E evidence. The fixture checks that all nine proposed planning inputs reach prediction, including the previously omitted integration count.
+- Fixed duplicate auth redirects that interrupted the upload workflow, and concurrent profile creation using conflict-safe insertion. Empty profile updates return the full existing profile.
+- PostgreSQL is authoritative for application-managed roles. Demotions apply to the next API request even with stale Firebase claims. Pending claim updates survive provider failure and restart; delayed retries allow other accounts to proceed. Apply additive migrations through `005_role_retry` before running this code. They have been applied only to the isolated local test database.
+- Document parsing runs in disposable child processes with a 30-second deadline and two active slots per API process. Deadline, invalid-document, overload and recovery tests passed. Container memory limits and hostile-document load testing remain operational gates; this is not a claim of an OS-level memory sandbox.
+- UI-UX Pro Max informed the prior responsive/accessibility work and current restrained button/card styling. Solid primary buttons replace decorative gradients; hover feedback is limited to clickable cards. Future production intervals are labelled as held-out validation coverage, not individual prediction accuracy.
+- Production training, selection, calibration, provenance and hash-pinned serving code is written. **It has not been executed**, per owner instruction. See the [production ML contract and execution runbook](runbooks/PRODUCTION_ML.md). Intake requires at least 1,000 compatible real projects and nine planning inputs; the acquired research collection is still 891 historical projects and cannot be represented as that production dataset.
+
+```mermaid
+sequenceDiagram
+    participant Admin
+    participant API
+    participant DB as PostgreSQL
+    participant Worker as Claim reconciliation
+    participant Firebase
+    Admin->>API: Change role
+    API->>DB: Commit role authority and pending sync
+    API->>Firebase: Best-effort claim update
+    Firebase-->>API: Success or provider failure
+    API-->>Admin: New role and synchronization status
+    Note over API,DB: Subsequent requests resolve managed role from DB
+    Worker->>DB: Lock due pending row; skip locked rows
+    Worker->>Firebase: Preserve other claims and update role
+    Worker->>DB: Clear pending or schedule retry
+```
+
+Current validation includes 48 authorization/request tests, nine focused role/parser/profile tests after retry scheduling, 63 parser/document-flow tests, nine browser acceptance tests, the authenticated estimation E2E, frontend type checking and production build, backend Ruff, and mypy over 42 application files. Runs overlap; these counts must not be added into a claimed unique test total. Frontend lint has zero errors but existing warnings. Deferred new production ML tests are source specifications, not executed evidence.
+
+Final checkpoint checks: all 67 frontend tests have passing evidence (59 in the broad run; the remaining eight passed on focused retry after a worker-start timeout). Eleven health/admin checks passed, including readiness rejecting missing authorization columns. The final authenticated E2E passed against migration `005_role_retry` with the nine-input contract assertion. This checkpoint is retained locally on `dev2`; pushing is deferred because push-triggered CI includes ML execution tests while the owner's execution hold is active.
+
+Remaining release gates: licensed modern project data and verified feature semantics; authorized ML test/training/evaluation and independent promotion; production provider/storage/configuration checks; production restore/rollback rehearsal and measured resource limits; final UI acceptance. The local populated recovery rehearsal is complete, but is not evidence for production S3 recovery. Credential rotation remains owner-managed before deployment.
+
+**September 15 follow-up:** [Authentication and model validation](validation_2026-09-15.md) records the 891-row research collection, frozen-model external evaluation, and real SDK authentication tests. The tuned model failed to improve external accuracy and remains research-only.
+
+The [project mandate](PROJECT_MANDATE.md) records the user's authorization for substantive UI, backend, security, dataset, model, and documentation improvements, including the `dev2`-only backup boundary.
+
+This section supersedes the historical versioned descriptions below. PredictIQ is under active repair and is **not production-ready**. The legacy model's reported R² of 0.8953 is withdrawn: 481 China records used the Resource category as effort hours, and 108 labels were capped. The exact model and dataset hashes are revoked before inference, training, and benchmark use. New prediction requests fail with an unavailable response instead of presenting unreliable estimates. Historical results require revalidation.
+
+### Repaired application flow
+
+```mermaid
+flowchart TD
+    UI[Responsive React workspace] --> Auth[Firebase bearer token and role checks]
+    Auth --> Upload[Bounded upload and owner-scoped UUID storage]
+    Upload --> Read[Read owned stored document]
+    Read --> Parse[PDF / DOCX / TXT extraction]
+    Parse --> Features[Validated NLP and function-point features]
+    Features --> Gate{Approved model available?}
+    Gate -->|No: current legacy artifact revoked| Unavailable[503 with recoverable UI feedback]
+    Gate -->|Yes: future validated replacement| Predict[Inference and risk / benchmark processing]
+    Predict --> Save[PostgreSQL estimate and lineage version]
+    Save --> Result[Results / exports / privacy-filtered sharing]
+```
+
+Storage containment, upload-to-analysis reads, finite input checks, feature contracts, migrations, atomic lineage versions, public-share privacy, export escaping, request limits, dependency locks, and release gates have regression coverage. Firebase role updates preserve unrelated custom claims and run blocking provider work off the event loop; durable cross-provider reconciliation remains unfinished.
+
+### UI and accessibility
+
+UI-UX Pro Max guidance informed the shared navigation, mobile layout, theme synchronization, visible labels, keyboard controls, touch targets, reduced motion, and recoverable form errors. The wizard converts displayed currency back to canonical USD before submission. Settings validate rates without silently substituting defaults. Shared primary, secondary, and tertiary text now meets 4.5:1 contrast on all three workspace surfaces in both themes, checked in Chromium. This is a bounded token check, not a claim that every individual screen meets every accessibility criterion.
+
+### Rebuilt ML research pipeline
+
+```mermaid
+flowchart LR
+    Sources[Named source columns and original effort units] --> Audit[Provenance / finite values / duplicates]
+    Audit --> Data[787 historical project records]
+    Data --> Split[Grouped train 471 / calibration 158 / test 158]
+    Split --> Select[Train-only source-heldout candidate selection]
+    Select --> Model[Huber log-size power-law baseline]
+    Model --> Eval[Untouched test evaluation]
+    Eval --> Review{Rights, feature parity and external validation}
+    Review -->|Pending| Research[Research only; no serving replacement]
+```
+
+The reconstructed sources are China (499), Desharnais (81), Maxwell (62), and Kitchenham (145). The selected research baseline achieved MAE 1740.08 hours, median absolute percentage error 51.285%, and PRED25 24.05%. MAE is 16.17% lower than the held-out median baseline; this is **not** a valid accuracy comparison with the corrupted incumbent. The wide uncertainty intervals and unresolved source compatibility/licensing prevent production promotion. See [ML evidence and reproduction](ml_rebuild_2026-09-09.md).
+
+### Verification and remaining work
+
+The last broad verification recorded 477 backend tests and 67 frontend tests passing, plus browser checks, production build, TypeScript, backend Ruff, and mypy. Browser workspace fixtures use synthetic identity and API responses; they do not prove real Firebase sign-in or prediction accuracy. The latest focused browser check also passed after the contrast repair.
+
+Remaining work, easiest to hardest: finish UI/accessibility acceptance; verify local provider configuration; rehearse release and backup/restore; exercise authenticated E2E; strengthen authorization consistency and parser isolation; validate and integrate a production ML replacement. Credential rotation is user-managed before deployment. Overall completion has no defensible exact percentage while these gates remain open.
+
+The authorized backup branch is `dev2` only. No production deployment or main-branch push is part of this work. Local environments, credentials, downloaded research datasets, experiment binaries, caches, agent installations, and generated reports are excluded from the backup.
+
+Backup preparation verified all 477 backend tests from a separate checkout based on the upstream history. A subsequent cross-platform CSV revocation regression adds coverage for both LF and CRLF; all nine related artifact/research tests and focused Ruff passed. Local PostgreSQL 18 dump/restore to a separate rehearsal database preserved Alembic head `003_estimate_lineage`, five public tables, and 22 constraints. The source test database contained no estimates at that point, so this proves schema restoration only; populated-data and uploaded-object recovery remain release gates.
+
+### Follow-up acceptance evidence
+
+- Configuration: local dotenv inspection found the database setting and all six frontend Firebase fields populated, but the configured backend Admin credential absent. Provider-backed authentication is therefore not verified. No credential values were printed or changed.
+- Recovery: a subsequent populated rehearsal restored synthetic profile, document, estimate and share records into a new isolated PostgreSQL database. Estimate JSON, lineage UUID, document/share references, migration head, and restored local document SHA-256 matched. This does not certify production S3 recovery or establish production RPO/RTO.
+- Parser privacy: library error details are removed from parser messages and structured logs; error type remains available for diagnosis. Seventy focused parser/document-flow tests passed. Process isolation and resource exhaustion controls beyond existing file/archive/page limits remain open.
+- UI: wizard step transitions now move keyboard focus to the active heading, including return from an unavailable prediction request. This extends the earlier UI-UX Pro Max accessibility work.
+- Dataset: `reconstructed-v1` contains 787 projects and five columns (`source`, `project_id`, `size_fp`, `effort_hours`, `duplicate_group`). Only `size_fp` is an input feature; `effort_hours` is the target. The remaining columns support provenance and split integrity. No larger production dataset or serving approval is claimed.
+
+Whole-project completion remains unmeasured. These are acceptance findings, not equally weighted units of implementation effort.
+
+Latest verification: **481 backend tests passed**, the Chromium workspace test passed including step-focus assertions, frontend TypeScript passed, and focused parser Ruff passed.
+
+## Historical walkthrough (version 3.2)
+
+The following sections preserve the original design reference and diagrams. Their model accuracy, version numbers, and readiness statements describe the old implementation and must not be cited as current validation. Use the current status above and the linked reproduction notes for the repaired implementation.
+
+## Table of Contents
+
+- [1. Project Overview](#1-project-overview)
+- [2. System Architecture](#2-system-architecture)
+- [3. Database Architecture](#3-database-architecture)
+- [4. Estimation Pipeline Flow](#4-estimation-pipeline-flow)
+- [5. NLP Extraction Engine v2.4](#5-nlp-extraction-engine-v24)
+  - [5.6 NLP Techniques & Evaluation Metrics](#56-nlp-techniques--evaluation-metrics) *(NEW v3.1)*
+- [5A. Literature Review — Cost Estimation Methods](#5a-literature-review--software-cost-estimation-methods) *(NEW v3.1)*
+- [6. ML Model & Data Pipeline](#6-ml-model--data-pipeline)
+  - [6.3 Model Selection & Justification](#63-model-selection--justification) *(ENHANCED v3.1)*
+  - [6.5 Mathematical Formulation](#65-mathematical-formulation) *(NEW v3.1)*
+- [7. Backend Services](#7-backend-services)
+- [8. API Reference](#8-api-reference)
+- [9. Frontend Application](#9-frontend-application)
+- [10. Cost & Risk Computation](#10-cost--risk-computation)
+- [11. Security Architecture](#11-security-architecture)
+  - [11.4 RBAC (Role-Based Access Control)](#114-rbac-role-based-access-control) *(NEW v3.2)*
+- [11A. Architecture & Code Quality](#11a-architecture--code-quality) *(NEW v3.2)*
+- [12. Deployment & DevOps](#12-deployment--devops)
+- [13. CI/CD Pipeline Architecture](#13-cicd-pipeline-architecture) *(NEW v2.5)*
+- [14. Team Workflow & Branch Strategy](#14-team-workflow--branch-strategy) *(NEW v2.5)*
+- [15. Testing & Quality](#15-testing--quality)
+- [16. Changelog](#16-changelog)
+
+---
+
+## 1. Project Overview
+
+**Predictify** is an AI-powered SaaS platform that predicts software project **cost**, **timeline**, and **effort** from uploaded project documentation. Users upload SRS/PRD/RFP documents which are parsed by a 4-strategy NLP cascade, analyzed through a **RandomForest ML model** (R² = 0.8953) trained on **740 real-world project records** from 4 benchmark datasets, and returned as PERT-style estimates with full risk analysis. The platform features **role-based access control** (admin/editor/viewer) via Firebase Custom Claims, a **service-layer architecture** with pluggable object storage (local/S3), and **Alembic-managed database migrations**.
+
+### 1.1 Core Value Proposition
+
+| Capability | Description |
+|-----------|-------------|
+| **Document Intelligence** | Upload PDF/DOCX/TXT → AI extracts 11 project parameters automatically |
+| **ML-Powered Prediction** | RandomForest model trained on Albrecht + China + Desharnais-Maxwell + NASA93 benchmarks |
+| **PERT Estimation** | Min / Likely / Max effort-hours with confidence percentage |
+| **Risk Analysis** | 10-factor weighted risk scoring with actionable mitigation |
+| **Multi-Currency** | 10 currencies with real-time exchange rates |
+| **Export & Share** | PDF, Excel, CSV exports; share links with optional password |
+
+### 1.2 Technology Stack
+
+| Layer | Technology | Version | Role |
+|-------|-----------|---------|------|
+| **Frontend** | React + TypeScript | 18.x / 5.x | SPA with component architecture |
+| **Build Tool** | Vite | 5.x | HMR dev server + production bundler |
+| **State** | Zustand | 5.x | Lightweight global state management |
+| **Charts** | Chart.js + react-chartjs-2 | 4.x / 5.x | Theme-aware data visualization (bar, doughnut, radar, line) |
+| **SEO** | Custom SEOHead component | — | Document title, meta descriptions, Open Graph tags |
+| **Backend** | FastAPI + Uvicorn | 0.115+ | Async Python REST API |
+| **ML Engine** | RandomForest (scikit-learn) | 1.8 | Best-of-8 regression model for effort prediction (R² = 0.8953) |
+| **NLP** | Custom Cascade Engine | v2.4 | 4-strategy document parameter extraction |
+| **Database** | Neon PostgreSQL (asyncpg) | 17+ | Serverless Postgres with connection pooling |
+| **Auth** | Firebase Auth (Admin SDK) | 6.x | Email/password + Google/GitHub OAuth + RBAC Custom Claims |
+| **Storage** | Object Storage (local/S3) | — | Pluggable: local filesystem (dev) or AWS S3 (prod) via StorageService |
+| **Migrations** | Alembic | 1.x | Versioned, reversible database schema migrations |
+| **Rate Limiting** | slowapi | 0.1.9 | API abuse prevention (200 req/min) |
+
+### 1.3 Repository Structure
+
+```
+Predictify/
+│
+├── backend/                          # Python — FastAPI server
+│   ├── app/
+│   │   ├── api/v1/                  # Route handlers
+│   │   │   ├── estimates.py         # Core estimation endpoints
+│   │   │   ├── documents.py         # Document upload/confirm
+│   │   │   ├── health.py            # Health check & model status
+│   │   │   ├── currencies.py        # Exchange rate endpoints
+│   │   │   └── export.py            # PDF/Excel/CSV export
+│   │   ├── core/                    # Framework config
+│   │   │   ├── config.py            # Pydantic BaseSettings (DB pool, S3, RBAC)
+│   │   │   ├── security.py          # Firebase token verification + RBAC (require_role)
+│   │   │   └── database.py          # Neon PostgreSQL async pool (configurable sizing)
+│   │   ├── middleware/              # Request middleware
+│   │   │   └── audit_log.py         # SOC 2 audit logging (method, path, status, duration, user, IP)
+│   │   ├── models/                  # Pydantic request/response schemas
+│   │   └── services/                # Business logic layer
+│   │       ├── nlp_extractor.py     # 4-strategy NLP cascade (v2.4)
+│   │       ├── ml_service.py        # Feature vector + ML model bridge
+│   │       ├── estimate_service.py  # EstimateService — core estimation logic (NEW v3.2)
+│   │       ├── storage_service.py   # Object storage abstraction: local + S3 (NEW v3.2)
+│   │       ├── background_tasks.py  # Async background tasks (NEW v3.2)
+│   │       ├── cost_calculator.py   # IFPUG FP + cost conversion
+│   │       ├── risk_analyzer.py     # 10-factor risk scoring
+│   │       ├── document_parser.py   # PDF/DOCX/TXT text extraction
+│   │       ├── benchmark.py         # Industry comparison
+│   │       ├── currency_service.py  # Multi-currency via ExchangeRate API
+│   │       └── export_service.py    # Report generation (PDF/Excel/CSV)
+│   ├── ml/                          # ML artifacts & training
+│   │   ├── train.py                 # Multi-model training pipeline (8 algorithms)
+│   │   ├── evaluate.py              # Model evaluation + visualization
+│   │   ├── inference.py             # Runtime prediction engine
+│   │   ├── Predictify_features.json  # 27-feature schema definition
+│   │   ├── Predictify_merged_dataset.csv  # 740-row training data
+│   │   ├── Predictify_best_model.pkl # Trained model (committed to repo)
+│   │   └── Predictify_scaler.pkl     # Fitted scaler (committed to repo)
+│   └── tests/                       # 316 pytest tests
+│       ├── conftest.py              # Shared fixtures
+│       ├── test_nlp_extractor.py    # 35 NLP tests
+│       ├── test_rbac.py             # 29 RBAC tests (NEW v3.2)
+│       ├── test_phase3.py           # 25 architecture tests (NEW v3.2)
+│       ├── test_api_integration.py  # 48 API integration tests (NEW v3.2)
+│       ├── test_cost_calculator.py  # 18 cost/FP tests
+│       ├── test_export_service.py   # 17 export tests
+│       ├── test_sanitize.py         # 16 XSS sanitization tests
+│       ├── test_profile.py          # 15 profile/SQL safety tests
+│       ├── test_audit_log.py        # 15 audit middleware tests
+│       ├── test_config.py           # 14 configuration tests
+│       ├── test_inference.py        # 12 inference tests
+│       ├── test_ml_service.py       # 11 ML pipeline tests
+│       ├── test_risk_analyzer.py    # 10 risk scoring tests
+│       ├── test_database.py         # 10 database retry tests
+│       ├── test_security.py         # 9 auth security tests
+│       ├── test_document_parser.py  # 8 parser tests
+│       ├── test_currencies.py       # 7 currency tests
+│       ├── test_health.py           # 7 health endpoint tests
+│       └── test_benchmark.py        # 5 benchmark tests
+│
+├── frontend/                         # TypeScript — React SPA
+│   └── src/
+│       ├── App.tsx                   # Root component + routing
+│       ├── pages/
+│       │   ├── LandingPage.tsx       # Marketing / hero page
+│       │   ├── AuthPage.tsx          # Login / signup
+│       │   ├── DashboardPage.tsx     # Estimate list + stats
+│       │   ├── NewEstimatePage.tsx   # 3-step estimation wizard
+│       │   ├── ResultsPage.tsx       # Full results dashboard
+│       │   ├── EstimatesPage.tsx     # Estimates history list
+│       │   └── SettingsPage.tsx      # User settings
+│       ├── components/shared/
+│       │   ├── Navbar.tsx            # Top navigation bar (ARIA landmark)
+│       │   ├── Sidebar.tsx           # Side navigation (ARIA landmark)
+│       │   ├── SEOHead.tsx           # SEO meta tags component
+│       │   ├── CurrencySelector.tsx  # Currency dropdown
+│       │   └── LoadingSkeleton.tsx   # Loading states
+│       ├── store/
+│       │   ├── authStore.ts          # Auth state (Zustand)
+│       │   ├── currencyStore.ts      # Currency state (Zustand)
+│       │   └── estimateStore.ts      # Estimate state (Zustand)
+│       └── lib/
+│           ├── api.ts                # Backend API client + extractDocumentParams
+│           └── firebase.ts           # Firebase client initialization
+│
+├── backend/alembic/                  # Alembic migration scripts (NEW v3.2)
+│   ├── env.py                       # Migration environment config
+│   ├── script.py.mako               # Migration template
+│   └── versions/                    # Individual migrations
+│       ├── 001_initial_*.py         # Baseline schema
+│       └── 002_add_role_*.py        # RBAC role column
+│
+├── backend/migrations/               # Legacy raw SQL migrations
+│   ├── 001_initial_schema.sql       # Tables: profiles, documents, estimates, share_links
+│   └── 002_add_role_column.sql      # RBAC role + email column (NEW v3.2)
+│
+├── scripts/
+│   └── pre_push_check.py             # Pre-push security scanner
+│
+├── docs/
+│   ├── walkthrough.md                # This document
+│   ├── audit_report.md               # Industry-grade codebase audit (v3.1.6)
+│   ├── AWS_DEPLOYMENT.md             # Full AWS deployment guide (NEW v3.1.6)
+│   ├── SECRETS_ROTATION.md           # Secrets rotation policy (NEW v3.1.6)
+│   ├── GITHUB_SECRETS_SETUP.md       # CI/CD secrets guide
+│   ├── RELEASE_CHECKLIST.md          # Release verification checklist (NEW v2.5)
+│   └── runbooks/                     # Operational runbooks (NEW v2.5)
+│       ├── credential-rotation.md    # Emergency secret rotation
+│       ├── production-deployment.md  # Step-by-step deploy guide
+│       └── add-team-member.md        # New member onboarding
+│
+├── .github/
+│   ├── CODEOWNERS                    # PR reviewer auto-assignment (NEW v2.5)
+│   ├── dependabot.yml                # Auto dependency updates (NEW v2.5)
+│   └── workflows/
+│       ├── ci.yml                    # CI pipeline — 6 jobs (REWRITTEN v2.5)
+│       ├── cd-staging.yml            # Auto-deploy to staging (NEW v2.5)
+│       ├── cd-production.yml         # Tag-triggered production deploy (NEW v2.5)
+│       ├── security-weekly.yml       # Weekly CVE audit (NEW v2.5)
+│       └── codeql.yml                # GitHub SAST analysis (NEW v2.5)
+│
+├── Dockerfile.backend                # Backend container
+├── Dockerfile.frontend               # Frontend container (Nginx)
+├── docker-compose.yml                # Production compose
+├── docker-compose.dev.yml            # Development compose
+├── nginx.conf                        # Reverse proxy config
+├── run.py                            # One-command launcher
+├── Makefile                          # Developer convenience targets
+├── CHANGELOG.md                      # Versioned changelog (NEW v2.5)
+├── MANUAL_SETUP_TASKS.md             # One-time setup guide (NEW v2.5)
+├── backend/pytest.ini                # Test config + coverage (NEW v2.5)
+└── .gitignore                        # Comprehensive ignore rules
+```
+
+---
+
+## 2. System Architecture
+
+### 2.1 High-Level Architecture
+
+```mermaid
+graph TB
+    subgraph CLIENT["Frontend (React + Vite)"]
+        LP["Landing Page"]
+        AP["Auth Page"]
+        DP["Dashboard"]
+        NE["New Estimate Wizard"]
+        ER["Estimate Results"]
+    end
+
+    subgraph API["Backend (FastAPI)"]
+        RT["Route Handlers"]
+        SEC["JWT Auth Middleware"]
+        SVC["Service Layer"]
+    end
+
+    subgraph SERVICES["Business Logic Services"]
+        NLP["NLP Extractor v2.4"]
+        MLS["ML Service"]
+        CC["Cost Calculator"]
+        RA["Risk Analyzer"]
+        DP2["Document Parser"]
+        BM["Benchmark Service"]
+        CS["Currency Service"]
+        EX["Export Service"]
+    end
+
+    subgraph ML["ML Engine"]
+        XGB["RandomForest Model"]
+        SCL["StandardScaler"]
+        INF["Inference Engine"]
+    end
+
+    subgraph INFRA["Infrastructure"]
+        AUTH["Firebase Auth"]
+        DB["Neon PostgreSQL"]
+    end
+
+    subgraph EXTERNAL["External APIs"]
+        ERA["ExchangeRate API"]
+    end
+
+    CLIENT -->|HTTPS| SEC
+    SEC -->|JWT Verified| RT
+    RT --> SVC
+    SVC --> NLP
+    SVC --> MLS
+    SVC --> CC
+    SVC --> RA
+    SVC --> DP2
+    SVC --> BM
+    SVC --> CS
+    SVC --> EX
+    MLS --> ML
+    CS --> ERA
+    RT -->|asyncpg| DB
+    CLIENT -->|Firebase SDK| AUTH
+```
+
+### 2.2 Request-Response Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User Browser
+    participant F as React Frontend
+    participant FA as Firebase Auth
+    participant B as FastAPI Backend
+    participant NLP as NLP Extractor
+    participant ML as RandomForest Model
+    participant DB as Neon PostgreSQL
+
+    Note over U,DB: Document Upload Flow
+    U->>F: Select & upload document
+    F->>FA: Get ID token
+    FA-->>F: Firebase ID token
+    F->>B: POST /documents/upload-file (multipart)
+    B->>DB: INSERT document_uploads (file as BYTEA)
+    B-->>F: document_id
+    F->>B: POST /documents/{id}/extract
+    B->>B: Parse document + NLP extract
+    B-->>F: Extracted params (auto-fill form)
+
+    Note over U,DB: Estimation Pipeline
+    U->>F: Confirm parameters (Step 2)
+    F->>B: POST /estimates/analyze (document_id, overrides)
+    B->>DB: Fetch document BYTEA data
+    B->>B: Parse document (PDF/DOCX/TXT)
+    B->>NLP: Extract 11 parameters
+    NLP-->>B: Extracted params + confidence
+    B->>B: Apply user overrides
+    B->>B: Calculate IFPUG Function Points
+    B->>ML: predict(27-feature vector)
+    ML-->>B: effort_hours prediction
+    B->>B: Cost conversion + risk analysis
+    B->>DB: INSERT estimates record
+    B-->>F: EstimateResult JSON
+
+    Note over U,DB: Results Display
+    F->>U: Render results dashboard
+    U->>F: Request PDF export
+    F->>B: GET /export/{id}/pdf
+    B->>DB: Fetch estimate data
+    B-->>F: PDF binary
+    F->>U: Download PDF
+```
+
+---
+
+## 3. Database Architecture
+
+### 3.1 Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    AUTH_USERS {
+        uuid id PK
+        text email
+        jsonb raw_user_meta_data
+        timestamptz created_at
+    }
+
+    PROFILES {
+        uuid id PK,FK
+        text full_name
+        text email
+        text role
+        text avatar_url
+        numeric hourly_rate_usd
+        text currency
+        text theme
+        text timezone
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    DOCUMENT_UPLOADS {
+        uuid id PK
+        uuid user_id FK
+        text storage_path
+        text original_filename
+        bigint file_size_bytes
+        text mime_type
+        text status
+        text parsed_text_preview
+        timestamptz created_at
+    }
+
+    ESTIMATES {
+        uuid id PK
+        uuid user_id FK
+        uuid document_id FK
+        text project_name
+        integer version
+        text status
+        jsonb inputs_json
+        jsonb outputs_json
+        numeric effort_likely_hours
+        numeric cost_likely_usd
+        numeric duration_likely_weeks
+        numeric risk_score
+        numeric confidence_pct
+        text model_version
+        text share_token
+        text share_password_hash
+        timestamptz share_expires_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    AUTH_USERS ||--|| PROFILES : "1:1 auto-created"
+    AUTH_USERS ||--o{ DOCUMENT_UPLOADS : "1:many uploads"
+    AUTH_USERS ||--o{ ESTIMATES : "1:many estimates"
+    DOCUMENT_UPLOADS ||--o{ ESTIMATES : "optional source"
+```
+
+### 3.2 Table Details
+
+#### `profiles`
+| Column | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | TEXT (PK) | — | Firebase UID (from Firebase Auth) |
+| `full_name` | TEXT | NULL | Display name |
+| `email` | TEXT | NULL | User email address (NEW v3.2) |
+| `role` | TEXT | 'editor' | RBAC role: admin/editor/viewer (NEW v3.2) |
+| `avatar_url` | TEXT | NULL | Profile image URL |
+| `hourly_rate_usd` | NUMERIC(10,2) | 75.00 | Default billing rate |
+| `currency` | TEXT | 'USD' | Preferred display currency |
+| `theme` | TEXT | 'system' | UI theme preference |
+| `timezone` | TEXT | 'UTC' | User timezone |
+| `created_at` | TIMESTAMPTZ | now() | Auto-set |
+| `updated_at` | TIMESTAMPTZ | now() | Auto-updated via trigger |
+
+#### `document_uploads`
+| Column | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | UUID (PK) | gen_random_uuid() | Document ID |
+| `user_id` | UUID (FK→auth.users) | NOT NULL | Owner |
+| `storage_path` | TEXT | NULL | Legacy field (unused — files stored as BYTEA) |
+| `original_filename` | TEXT | NOT NULL | User's filename |
+| `file_size_bytes` | BIGINT | NULL | File size |
+| `mime_type` | TEXT | NULL | MIME type (pdf/docx/txt) |
+| `status` | TEXT | 'uploaded' | uploaded → parsed → failed |
+| `parsed_text_preview` | TEXT | NULL | First 500 chars of parsed text |
+| `created_at` | TIMESTAMPTZ | now() | Upload timestamp |
+
+#### `estimates`
+| Column | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | UUID (PK) | gen_random_uuid() | Estimate ID |
+| `user_id` | UUID (FK→auth.users) | NOT NULL | Owner |
+| `document_id` | UUID (FK→document_uploads) | NULL | Source document (optional for manual) |
+| `project_name` | TEXT | NOT NULL | Project title |
+| `version` | INTEGER | 1 | Estimate version (for duplicates) |
+| `status` | TEXT | 'complete' | processing / complete / failed / deleted |
+| `inputs_json` | JSONB | {} | Full input parameters snapshot |
+| `outputs_json` | JSONB | {} | Full output results snapshot |
+| `effort_likely_hours` | NUMERIC(12,2) | NULL | Most-likely effort in hours |
+| `cost_likely_usd` | NUMERIC(14,2) | NULL | Most-likely cost in USD |
+| `duration_likely_weeks` | NUMERIC(8,2) | NULL | Most-likely timeline in weeks |
+| `risk_score` | NUMERIC(5,2) | NULL | Risk score (0-100) |
+| `confidence_pct` | NUMERIC(5,2) | NULL | Model confidence (0-100%) |
+| `model_version` | TEXT | '2.0.0' | ML model version used |
+| `share_token` | TEXT (UNIQUE) | NULL | Shareable link token |
+| `share_password_hash` | TEXT | NULL | Optional password for sharing |
+| `share_expires_at` | TIMESTAMPTZ | NULL | Share link expiry |
+
+Documents are stored via the **StorageService** abstraction layer. In development, files are saved to the local filesystem (`./uploads/`). In production, files are stored in **AWS S3** (or any S3-compatible service). The `document_uploads` table stores metadata and a `storage_path` reference key.
+
+### 3.4 Database Functions & Triggers
+
+| Function | Type | Purpose |
+|----------|------|---------|
+| `handle_new_user()` | Trigger (AFTER INSERT on auth.users) | Auto-creates `profiles` row on signup |
+| `update_updated_at_column()` | Trigger (BEFORE UPDATE) | Auto-sets `updated_at` on profiles + estimates |
+| `get_user_stats(user_id)` | RPC Function | Returns dashboard aggregate stats |
+| `cleanup_deleted_estimates()` | Maintenance Function | Hard-deletes soft-deleted estimates older than 90 days |
+
+---
+
+## 4. Estimation Pipeline Flow
+
+### 4.1 Complete Pipeline Architecture
+
+```mermaid
+flowchart LR
+    subgraph INPUT["Input Layer"]
+        DOC["Document Upload<br/>(PDF/DOCX/TXT)"]
+        MAN["Manual Entry<br/>(Form Fields)"]
+    end
+
+    subgraph PARSE["Parsing Layer"]
+        P1["PyPDF2<br/>(PDF)"]
+        P2["python-docx<br/>(DOCX)"]
+        P3["Plain Text<br/>(TXT)"]
+    end
+
+    subgraph NLP["NLP Engine v2.4"]
+        PRE["DocumentStructure<br/>Preprocessor"]
+        S1["Strategy 1<br/>Structural Analysis"]
+        S2["Strategy 2<br/>Section-Aware"]
+        S3["Strategy 3<br/>Global Patterns"]
+        S4["Strategy 4<br/>Cross-Validation"]
+    end
+
+    subgraph COMPUTE["Computation Layer"]
+        IFPUG["IFPUG<br/>Function Points"]
+        FV["Feature Vector<br/>Builder (27 dims)"]
+        XGB["XGBoost<br/>Regression"]
+        PERT["PERT<br/>Estimation"]
+    end
+
+    subgraph OUTPUT["Output Layer"]
+        COST["Cost<br/>Conversion"]
+        RISK["Risk<br/>Analysis"]
+        PHASE["Phase<br/>Breakdown"]
+        BENCH["Industry<br/>Benchmark"]
+    end
+
+    DOC --> P1 & P2 & P3
+    MAN --> IFPUG
+    P1 & P2 & P3 --> PRE
+    PRE --> S1 --> S2 --> S3 --> S4
+    S4 -->|"11 params"| IFPUG
+    IFPUG -->|"size_fp"| FV
+    FV -->|"27 features"| XGB
+    XGB -->|"effort_hours"| PERT
+    PERT --> COST & RISK & PHASE & BENCH
+```
+
+### 4.2 Pipeline Stages (Detail)
+
+| Stage | Input | Output | Service |
+|-------|-------|--------|---------|
+| **1. Upload** | User file | storage_path | `documents.py` |
+| **2. Parse** | storage_path | raw_text | `document_parser.py` |
+| **3. NLP Extract** | raw_text | 11 parameters + confidence | `nlp_extractor.py` |
+| **4. User Override** | NLP params + user edits | confirmed params | `NewEstimatePage.tsx` |
+| **5. IFPUG FP** | features, complexity, integrations | size_fp (float) | `cost_calculator.py` |
+| **6. Feature Build** | all params + size_fp | 27-dim float vector | `ml_service.py` |
+| **7. ML Predict** | feature vector | effort_hours | `inference.py` |
+| **8. PERT Bounds** | effort_likely | min / likely / max | `estimates.py` |
+| **9. Cost Convert** | effort × rate × currency | cost in target currency | `cost_calculator.py` |
+| **10. Risk Score** | all params | risk_score + top_risks | `risk_analyzer.py` |
+| **11. Persist** | full result | estimate record | `estimates.py` → Neon PostgreSQL |
+
+---
+
+## 5. NLP Extraction Engine v2.4
+
+### 5.1 4-Strategy Cascade Architecture
+
+```mermaid
+flowchart TD
+    A["Raw Document Text"] --> B["Preprocessor"]
+    B --> C["DocumentStructure<br/>headers · tables · lists · sections"]
+
+    C --> D1["Strategy 1: Structural<br/>Tables, staffing charts,<br/>tech stack tables"]
+    C --> D2["Strategy 2: Section-Aware<br/>Requirements sections,<br/>numbered items, scope"]
+    C --> D3["Strategy 3: Global Patterns<br/>Regex across full text,<br/>keyword scoring"]
+
+    D1 --> E["ExtractionResult<br/>value + confidence + evidence"]
+    D2 --> E
+    D3 --> E
+
+    E --> F["Strategy 4: Cross-Validation<br/>Confidence weighting,<br/>bounds checking, defaults"]
+
+    F --> G["Final Parameter Dict<br/>11 fields with scores"]
+```
+
+### 5.2 DocumentStructure Preprocessor
+
+Before any extraction runs, raw text is parsed into a structured representation:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `full_text` | str | Original text |
+| `text_lower` | str | Lowercased for regex |
+| `raw_lines` | list[str] | Line-by-line split |
+| `headers` | list[Header] | Detected headers (level, text, line_num) |
+| `tables` | list[TableRow] | Pipe-delimited table rows |
+| `list_items` | list[str] | Bullet/numbered list items |
+| `sections` | dict[str, str] | Header → body text mapping |
+| `word_count` | int | Total words |
+
+**Header detection handles:** Markdown `#` headers, ALL-CAPS lines (3-80 chars), numbered sections (`1.0`, `3.2`, `Section 5`)
+
+### 5.3 Extraction Fields (11 Parameters)
+
+| # | Field | Type | Strategy Priority | Default | Confidence Range |
+|---|-------|------|------------------|---------|:---:|
+| 1 | `project_type` | str (7 types) | Keyword scoring + tech boost | "Web App" | 0.0-0.9 |
+| 2 | `tech_stack` | str[] | Multi-source (tables + text) | [] | 0.3-0.95 |
+| 3 | `team_size` | int | Explicit → Table → Role sum | 5 | 0.0-0.95 |
+| 4 | `duration_months` | float | Months → Weeks → Quarters → Sprints | 6.0 | 0.0-0.9 |
+| 5 | `complexity` | str (4 levels) | 20-point scoring system | "Medium" | 0.3-0.9 |
+| 6 | `methodology` | str (3 types) | Keyword matching | "Agile" | 0.0-0.9 |
+| 7 | `feature_count` | int | Section → Explicit → Lists | 10 | 0.0-0.85 |
+| 8 | `project_name` | str | 6 pattern matchers | "" | 0.0-0.95 |
+| 9 | `integration_count` | int | Known services + phrases | 2 | 0.2-0.85 |
+| 10 | `volatility_score` | int (1-5) | High/low signal counting | 3 | 0.3-0.8 |
+| 11 | `team_experience` | float (1-4) | Seniority signal counting | 2.0 | 0.2-0.8 |
+
+### 5.4 Technology Keyword Library (300+)
+
+| Category | Count | Examples |
+|----------|:-----:|---------|
+| Frontend | 50+ | React, Vue, Angular, Svelte, Next.js, Nuxt, Tailwind, HTMX |
+| Backend | 45+ | FastAPI, Django, Express, Spring Boot, NestJS, Rails, Laravel |
+| Database | 35+ | PostgreSQL, MongoDB, Redis, Supabase, Prisma, DynamoDB |
+| ML/AI | 35+ | TensorFlow, PyTorch, LangChain, OpenAI, scikit-learn, Pandas |
+| DevOps/Cloud | 30+ | Docker, Kubernetes, AWS, GCP, Vercel, Terraform, GitHub Actions |
+| Mobile | 10+ | React Native, Flutter, Swift, Kotlin, Expo |
+| Security/Auth | 15+ | OAuth2, JWT, Auth0, SAML, GDPR, PCI-DSS, SOC2 |
+
+All keywords map to canonical display names (e.g., `"react.js"` → `"React"`, `"k8s"` → `"Kubernetes"`)
+
+### 5.5 Complexity Scoring (20-Point System)
+
+| Signal | Points | Max |
+|--------|:------:|:---:|
+| Feature count > 50 | +3 | 3 |
+| Tech stack size > 12 | +3 | 3 |
+| High-complexity tech (ML, microservices, blockchain) | +1 each | 4 |
+| Scale keywords (millions of users, petabytes) | +1 each | 3 |
+| Integration keywords (API gateway, webhook) | +1 each | 2 |
+| Explicit "complex/advanced/sophisticated" mentions | +1 each | 3 |
+| Word count > 10,000 | +2 | 2 |
+| Low-complexity signals (simple, MVP, basic, prototype) | -1 each | -3 |
+
+**Score→Level:** ≤2 = Low · ≤5 = Medium · ≤9 = High · >9 = Very High
+
+### 5.6 NLP Techniques & Evaluation Metrics
+
+Predictify's NLP pipeline does **not** use heavyweight transformer models (BERT, GPT) for parameter extraction. Instead, it employs a deterministic, rule-based approach optimized for structured technical documents (SRS, PRD, RFP):
+
+#### Techniques Implemented
+
+| Technique | Implementation | Where Used |
+|-----------|---------------|------------|
+| **Regex-Based Named Entity Recognition (NER)** | 200+ compiled regex patterns for numeric entities (team sizes, durations, counts) | `_extract_team_size()`, `_extract_duration()`, `_extract_integration_count()` |
+| **TF-IDF–Inspired Keyword Scoring** | Weighted keyword frequency analysis across 300+ domain-specific terms with category boosting | `_extract_tech_stack()`, `_extract_project_type()` |
+| **Section-Aware Contextual Parsing** | Header detection (Markdown `#`, ALL-CAPS, numbered `1.0`) to build section→body maps, then scoped extraction | `_preprocess()` → `DocumentStructure.sections` |
+| **Structural Table Parsing** | Pipe-delimited table row extraction with cell-level analysis | `_preprocess()` → `DocumentStructure.tables` |
+| **Multi-Signal Complexity Scoring** | 20-point additive/subtractive scoring system combining feature count, tech diversity, scale keywords, and explicit complexity mentions | `_estimate_complexity()` |
+| **Confidence-Weighted Cross-Validation** | Each extractor returns `{value, confidence, evidence, strategy}`. When multiple strategies extract the same field, highest-confidence wins | All `_extract_*()` methods via `ExtractionResult` |
+
+#### NLP Pipeline Flow Diagram
+
+```mermaid
+flowchart LR
+    A["PDF / DOCX / TXT"] --> B["DocumentParser\npdfplumber · python-docx\nmulti-encoding fallback"]
+    B --> C["Raw Text\nclean_text"]
+    C --> D["Preprocessor\nHeader detect · Table parse\nList extract · Section map"]
+    D --> E["DocumentStructure\n7 structured fields"]
+    E --> F1["Regex NER\nteam_size · duration\nintegrations"]
+    E --> F2["Keyword Scoring\ntech_stack · project_type\nmethodology"]
+    E --> F3["Signal Counting\ncomplexity · volatility\nteam_experience"]
+    F1 --> G["Cross-Validation\nConfidence weighting"]
+    F2 --> G
+    F3 --> G
+    G --> H["11 Parameters\nvalue + confidence"]
+```
+
+#### Evaluation Metrics
+
+| Metric | Value | Measurement Method |
+|--------|:-----:|-------------------|
+| **Tech Stack Precision** | 92.3% | Correctly identified techs / total identified (no false positives) |
+| **Tech Stack Recall** | 87.1% | Correctly identified techs / total actual techs in document |
+| **Team Size Accuracy** | ±1 person | Mean absolute error on 50 test SRS documents |
+| **Duration Accuracy** | ±1.5 months | Mean absolute error across month/week/sprint formats |
+| **Complexity Agreement** | 84% | Agreement with manual expert classification (4-level scale) |
+| **Feature Count Correlation** | r = 0.89 | Pearson correlation with manual requirement counting |
+| **Project Type Accuracy** | 91% | Correct classification across 7 project categories |
+
+> **Design Decision:** We chose rule-based NLP over transformer models (BERT, spaCy NER) because: (1) SRS documents follow predictable structural patterns, (2) deterministic extraction gives reproducible results, (3) zero inference latency vs. model loading, (4) no GPU requirement for the NLP layer.
+
+---
+
+## 5A. Literature Review — Software Cost Estimation Methods
+
+### 5A.1 Comparative Analysis: COCOMO vs ML-Based vs Predictify
+
+| Dimension | COCOMO II (Boehm, 2000) | ML-Based (Idri et al., 2022) | Predictify (This Work) |
+|-----------|:---:|:---:|:---:|
+| **Approach** | Parametric (calibrated equations) | Data-driven regression | Hybrid (IFPUG FP + ML + Parametric) |
+| **Input Type** | KSLOC / FP (manually provided) | Historical project features | NLP-extracted from SRS documents |
+| **Automation** | None — manual data entry | Partial — features manually curated | Full — document upload to estimate |
+| **Model** | `Effort = a × (Size)^b × ∏EAF` | Random Forest / SVR / XGBoost | RandomForest on 27 engineered features |
+| **Calibration Data** | 161 projects (COCOMO II.2000) | Varies (50–1000+ projects) | 740 projects (4 international sources) |
+| **Accuracy (MMRE)** | 30–60% (Jørgensen, 2004) | 15–40% (depending on dataset) | 37.2% (test set), 29.2% (ExtraTrees) |
+| **PRED(25)** | 40–55% | 50–70% | 57.4% (RandomForest), 61.5% (GB) |
+| **Adaptability** | Requires manual recalibration | Retrainable on new data | Retrainable + auto-extraction pipeline |
+| **NLP Integration** | None | Rare | Core feature (4-strategy cascade) |
+| **Transparency** | High (equation visible) | Low (black-box models) | Medium (feature importance + IFPUG layer visible) |
+
+### 5A.2 Recent Research Context (2022–2025)
+
+| # | Reference | Key Finding | Relevance to Predictify |
+|---|-----------|-------------|----------------------|
+| [1] | A. Idri, I. Abnane, and A. Abran, "Missing data techniques in analogy-based software development effort estimation," *J. Syst. Softw.*, vol. 117, pp. 595–611, 2022. | Analogy-based methods achieve MMRE of 25–40% but require complete feature vectors | Predictify's NLP auto-fills missing features with confidence-weighted defaults |
+| [2] | S. Bhatia and J. Malhotra, "Software effort estimation using machine learning techniques," *7th Int. Conf. Computing for Sustainable Global Development (INDIACom)*, IEEE, 2023. | Random Forest outperforms SVR and ANN on ISBSG dataset with R² = 0.87 | Validates our model choice; Predictify achieves R² = 0.8953 on heterogeneous 740-project dataset |
+| [3] | M. Azzeh, A. B. Nassif, and L. Minku, "An empirical evaluation of ensemble adjustment factors for software effort estimation," *Inf. Softw. Technol.*, vol. 138, 2022. | Adjustment factors improve ensemble model accuracy by 12–18% | Predictify uses 15 T-factors as adjustment features (T01–T15) |
+| [4] | P. Kumari and R. Sharma, "A systematic review of software cost estimation with deep learning," *ACM Computing Surveys*, vol. 55, no. 3, 2023. | Deep learning models require 2000+ samples; underperform RF/XGBoost on small-medium datasets (<1000) | Justifies Predictify's choice of RandomForest over neural networks for 740-sample dataset |
+| [5] | F. Sarro, A. Petrozziello, and M. Harman, "Multi-objective software effort estimation," *IEEE Trans. Softw. Eng.*, vol. 48, no. 12, pp. 4801–4820, 2022. | Multi-objective optimization balances accuracy and stability in effort estimation | Predictify uses composite R² + PRED25 scoring for model selection |
+| [6] | A. Alhamed and R. Storer, "Function point analysis with NLP: automating software sizing," *Int. Conf. Software Engineering (ICSE-SEIP)*, IEEE, 2024. | NLP-based FP extraction achieves 85% agreement with manual IFPUG counting | Directly validates Predictify's document→FP→effort pipeline architecture |
+| [7] | J. Wen, S. Li, and Z. Lin, "Systematic literature review of ML-based software cost estimation models," *Expert Systems with Applications*, vol. 202, 2024. | Ensemble methods (RF, GB, XGB) consistently outperform single learners across 18 benchmark datasets | Supports Predictify's 8-model tournament approach with ensemble winners |
+
+### 5A.3 Predictify's Novel Contributions
+
+1. **End-to-end automation**: Unlike COCOMO (manual inputs) or standalone ML models (manual feature engineering), Predictify closes the gap from document upload to cost estimate without human intervention.
+2. **Hybrid 3-layer architecture**: Combining IFPUG sizing (Layer 1), ML prediction (Layer 2), and parametric costing (Layer 3) provides both interpretability and accuracy.
+3. **Multi-source training data**: Merging 4 international benchmarks (Albrecht, China, Desharnais-Maxwell, NASA93) creates a more generalizable model than single-source training.
+4. **Confidence scoring**: Each extraction carries a confidence weight, propagated through to the final estimate — giving users transparency into prediction reliability.
+
+---
+
+## 6. ML Model & Data Pipeline
+
+### 6.1 Training Dataset
+
+The model is trained on **740 real-world software project records** merged from 4 established benchmarks:
+
+| Source | Key Features | Origin |
+|--------|-------------|--------|
+| **Albrecht** | Function points, effort, team experience | Albrecht & Gaffney, 1983 |
+| **China** | Function points, effort, methodology, team | CSBSG Chinese dataset |
+| **Desharnais-Maxwell** | FP, effort, language, methodology, duration | Desharnais 1988 / Maxwell 2002 |
+| **NASA93** | LOC, effort multipliers, COCOMO T-factors | NASA Cost model dataset |
+
+**Merged output:** `backend/ml/Predictify_merged_dataset.csv` (740 rows × 30 columns)
+
+### 6.2 Feature Vector (27 Features)
+
+The ML model expects exactly **27 numeric features** as defined in `Predictify_features.json`:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  TeamExp  ManagerExp  duration_months  Transactions  Entities│
+│  PointsNonAdjust  Adjustment  size_fp                        │
+│  T01  T02  T03  T04  T05  T06  T07  T08  T09  T10          │
+│  T11  T12  T13  T14  T15                                     │
+│  log_size_fp  complexity_score  team_skill_avg  risk_score    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Feature construction mapping:**
+
+| User Input | → Model Features | Source |
+|-----------|-----------------|--------|
+| `team_size` / `team_experience` | TeamExp, ManagerExp, T12-T15 | NLP or manual |
+| `duration_months` | duration_months | NLP or manual |
+| `complexity` | T01-T03, T07, T09-T11, complexity_score | NLP or manual |
+| `methodology` | T04, T05 | NLP or manual |
+| `size_fp` (computed) | size_fp, log_size_fp, Transactions, Entities, PointsNonAdjust, Adjustment | IFPUG calc |
+| `volatility_score` | T08 (requirements volatility) | NLP (NEW v2.4) |
+| `team_experience` | TeamExp, ManagerExp | NLP (NEW v2.4) |
+| `integration_count` | Via external_interface_files → size_fp | NLP (NEW v2.4) |
+
+### 6.3 Model Selection & Justification
+
+#### Why 8 Models Were Evaluated
+
+Predictify trains **8 regression algorithms** in a tournament-style evaluation to ensure the best model is selected empirically, not assumed:
+
+| Model | Category | Why Included | Result |
+|-------|----------|-------------|--------|
+| **LinearRegression** | Baseline | Establishes minimum performance benchmark | R²=-44.49 ❌ Failed — effort is non-linear |
+| **Ridge (α=1)** | Regularized Linear | Tests if L2 regularization saves linear models | R²=-32.55 ❌ Still linear — can't capture interactions |
+| **Lasso (α=0.01)** | Sparse Linear | Tests if feature selection via L1 helps | R²=-29.18 ❌ Confirms linear models are unsuitable |
+| **ExtraTrees** | Ensemble (Bagging) | Extremely randomized splits reduce overfitting | R²=0.8638 ✅ Strong, lowest MMRE (29.2%) |
+| **RandomForest** ✅ | Ensemble (Bagging) | Balanced accuracy + interpretability | **R²=0.8953** ✅ **Selected — best R² + stable CV** |
+| **GradientBoosting** | Ensemble (Boosting) | Sequential error correction | R²=0.8850 ✅ Strong PRED25 (61.5%) |
+| **XGBoost** | Ensemble (Boosting) | GPU-accelerated, regularized boosting | R²=0.8443 ✅ Good but overfits on 740 samples |
+| **XGBoost_Deep** | Deep Boosting | Tests deeper trees + stronger regularization | R²=0.8207 ✅ Regularization hurts — dataset too small |
+
+#### Full Performance Comparison
+
+| Model | R² | MAE | RMSE | PRED25% | PRED50% | MMRE% | Train(s) |
+|-------|:--:|:---:|:----:|:------:|:------:|:----:|:-------:|
+| **RandomForest** ✅ | **0.8953** | **555.9** | **1236.9** | 57.4% | 85.8% | 37.2% | 0.4 |
+| GradientBoosting | 0.8850 | 556.3 | 1295.9 | 61.5% | 83.1% | 30.8% | 0.6 |
+| ExtraTrees | 0.8638 | 679.2 | 1329.5 | 56.8% | 88.5% | 29.2% | 0.3 |
+| XGBoost | 0.8443 | 678.4 | 1508.0 | 60.8% | 84.5% | 29.5% | 0.8 |
+| XGBoost_Deep | 0.8207 | 768.1 | 1618.3 | 58.1% | 81.1% | 32.3% | 0.8 |
+| Lasso | -29.18 | 4150.9 | — | 27.7% | — | 104.4% | 0.0 |
+| Ridge | -32.55 | 4407.9 | — | 26.4% | — | 109.5% | 0.0 |
+| LinearRegression | -44.49 | 5358.5 | — | 27.7% | — | 115.7% | 0.0 |
+
+#### Why RandomForest Was Chosen Over Others
+
+| Factor | RandomForest | GradientBoosting | XGBoost | Neural Network |
+|--------|:---:|:---:|:---:|:---:|
+| **R² (test set)** | **0.8953** (best) | 0.8850 | 0.8443 | Not tested* |
+| **10-fold CV R²** | 0.9878 ± 0.009 | 0.9889 ± 0.006 | — | — |
+| **Overfitting Risk** | **Low** (bagging) | Medium (sequential) | High (740 samples) | Very High (<2000 samples) |
+| **Interpretability** | **High** (feature_importances_) | Medium | Medium | None (black box) |
+| **Training Speed** | 0.4s | 0.6s | 0.8s | Minutes+ |
+| **Hyperparameter Sensitivity** | **Low** | High | Very High | Extreme |
+| **Literature Support** | Bhatia 2023 [2], Wen 2024 [7] | — | — | Kumari 2023 [4]: "underperforms RF on <1000 samples" |
+
+> *Neural Networks were excluded because the dataset (740 samples) is below the 2,000-sample threshold recommended for deep learning in software cost estimation [4].
+
+**Decision rationale:** RandomForest achieved the **highest R² (0.8953)** with the most stable cross-validation performance (std=0.0085). While GradientBoosting had slightly better CV mean (0.9889 vs 0.9878), RandomForest's bagging approach is inherently more resistant to overfitting on small datasets, and its `feature_importances_` property provides transparency critical for an estimation tool.
+
+**Cross-validation (10-fold):**
+- RandomForest: mean R² = **0.9878** ± 0.0085
+- GradientBoosting: mean R² = 0.9889 ± 0.0061
+- ExtraTrees: mean R² = 0.9880 ± 0.0042
+
+**Top 5 most important features (RandomForest):**
+1. `Adjustment` — 30.4%
+2. `Transactions` — 29.3%
+3. `duration_months` — 13.9%
+4. `PointsNonAdjust` — 12.4%
+5. `T08` (requirements volatility) — 2.2%
+
+### 6.4 PERT Estimation Bounds
+
+```
+effort_min  = effort_likely × 0.80    (optimistic)
+effort_max  = effort_likely × 1.40    (pessimistic)
+cost        = effort × hourly_rate    (default $75/hr)
+```
+
+Production effort range: min 1 hour, max 9,587 hours (mean 2,544 hours)
+
+### 6.5 Mathematical Formulation
+
+This section provides the complete mathematical pipeline from raw project parameters to final cost estimate.
+
+#### Layer 1: IFPUG Function Point Calculation
+
+**Step 1 — Raw Function Points from Features:**
+
+$$\text{RawFP}_\text{features} = \sum_{t \in \{simple, medium, complex, epic\}} \lfloor N_f \times D_t \rfloor \times W_t$$
+
+Where:
+- $N_f$ = feature count (from NLP or manual input)
+- $D_t$ = distribution ratio for tier $t$ (depends on complexity level)
+- $W_t$ = complexity weight: simple=5, medium=10, complex=20, epic=35
+
+**Tier distributions by complexity level:**
+
+| Complexity | Simple | Medium | Complex | Epic |
+|-----------|:------:|:------:|:-------:|:----:|
+| Low       | 0.60   | 0.30   | 0.10    | 0.00 |
+| Medium    | 0.30   | 0.40   | 0.25    | 0.05 |
+| High      | 0.10   | 0.30   | 0.40    | 0.20 |
+| Very High | 0.05   | 0.20   | 0.40    | 0.35 |
+
+**Step 2 — Add IFPUG Standard Components:**
+
+$$\text{RawFP} = \text{RawFP}_\text{features} + (EI \times 4) + (EO \times 5) + (EQ \times 4) + (ILF \times 7) + (EIF \times 5) + (T_\text{stack} \times 3)$$
+
+Where: EI=External Inputs, EO=External Outputs, EQ=External Inquiries, ILF=Internal Logical Files, EIF=External Interface Files, $T_\text{stack}$=tech stack count.
+
+**Step 3 — Apply Value Adjustment Factor:**
+
+$$\text{size\_fp} = \text{clamp}(\text{RawFP} \times \text{VAF}, 50, 3000)$$
+
+| Complexity | VAF  |
+|-----------|:----:|
+| Low       | 0.75 |
+| Medium    | 0.90 |
+| High      | 1.05 |
+| Very High | 1.20 |
+
+#### Layer 2: ML Prediction (RandomForest)
+
+**Step 4 — Build 27-Feature Vector:**
+
+Key derived features from `size_fp`:
+- $\text{Transactions} = \text{size\_fp} \times 0.85$
+- $\text{Entities} = \text{size\_fp} \times 0.30$
+- $\text{PointsNonAdjust} = \frac{\text{size\_fp}}{0.8 + c_\text{score} \times 0.04}$
+- $\text{log\_size\_fp} = \ln(1 + \text{size\_fp})$
+
+**Step 5 — Predict in Log Space:**
+
+$$\hat{y}_\text{log} = \frac{1}{B} \sum_{b=1}^{B} T_b(\mathbf{x}_\text{scaled})$$
+
+Where $B=500$ decision trees, each $T_b$ predicts log-transformed effort.
+
+**Step 6 — Convert to Effort Hours:**
+
+$$\hat{E}_\text{likely} = e^{\hat{y}_\text{log}} - 1 = \text{expm1}(\hat{y}_\text{log})$$
+
+$$\hat{E}_\text{likely} = \text{clamp}(\hat{E}_\text{likely}, 1, 9587)$$
+
+#### Layer 3: Parametric Cost Conversion
+
+**Step 7 — PERT Bounds & Cost:**
+
+$$\hat{E}_\text{min} = \hat{E}_\text{likely} \times 0.80 \quad \hat{E}_\text{max} = \hat{E}_\text{likely} \times 1.40$$
+
+$$\text{Cost} = \hat{E} \times R_\text{hourly} \quad (R_\text{hourly} = \$75/\text{hr default})$$
+
+**Step 8 — Timeline (Brooks's Law Scaling):**
+
+$$T_\text{weeks} = \max\left(4, \frac{D_\text{months} \times 4.33}{0.5 + \frac{N_\text{team}}{10}}\right)$$
+
+#### Worked Example
+
+**Input:** A Medium-complexity web app, 15 features, team of 5, 6-month duration, 3 technologies (React, FastAPI, PostgreSQL).
+
+| Step | Calculation | Result |
+|------|------------|--------|
+| **1. Feature FP** | ⌊15×0.3⌋×5 + ⌊15×0.4⌋×10 + ⌊15×0.25⌋×20 + ⌊15×0.05⌋×35 | 4×5 + 6×10 + 3×20 + 0×35 = **140** |
+| **2. IFPUG Components** | 140 + (5×4) + (3×5) + (4×4) + (4×7) + (2×5) + (3×3) | 140 + 20 + 15 + 16 + 28 + 10 + 9 = **238** |
+| **3. VAF (Medium=0.90)** | 238 × 0.90 | **size_fp = 214.2** |
+| **4. Key Features** | Transactions=182.1, Entities=64.3, log_size_fp=5.37 | 27-feature vector built |
+| **5. ML Predict (log)** | RandomForest ensemble of 500 trees → scaled vector | ŷ_log = **6.82** |
+| **6. Effort (expm1)** | e^6.82 − 1 | **E_likely = 920.5 hrs** |
+| **7. PERT Bounds** | Min: 920.5×0.80 = 736.4 · Max: 920.5×1.40 = 1288.7 | **736–1289 hrs** |
+| **7b. Cost** | 920.5 × $75/hr | **$69,038** |
+| **8. Timeline** | max(4, 6×4.33 / (0.5 + 5/10)) = 25.98 / 1.0 | **26.0 weeks** |
+
+---
+
+## 7. Backend Services
+
+### 7.1 Service Layer Architecture
+
+```mermaid
+graph LR
+    subgraph ROUTES["API Routes (FastAPI)"]
+        R1["estimates.py"]
+        R2["documents.py"]
+        R3["health.py"]
+        R4["currencies.py"]
+        R5["export.py"]
+        R6["admin.py (NEW)"]
+        R7["profile.py"]
+    end
+
+    subgraph SERVICES["Service Layer"]
+        S1["nlp_extractor"]
+        S2["ml_service"]
+        S3["cost_calculator"]
+        S4["risk_analyzer"]
+        S5["document_parser"]
+        S6["benchmark"]
+        S7["currency_service"]
+        S8["export_service"]
+        S9["estimate_service (NEW)"]
+        S10["storage_service (NEW)"]
+        S11["background_tasks (NEW)"]
+    end
+
+    subgraph INFRA["Infrastructure"]
+        I1["RandomForest Model"]
+        I2["Neon PostgreSQL"]
+        I3["ExchangeRate API"]
+        I4["Object Storage (S3/Local)"]
+    end
+
+    R1 --> S9
+    S9 --> S1 & S2 & S3 & S4 & S5
+    R1 --> S6
+    R2 --> S10
+    R4 --> S7
+    R5 --> S8
+    R6 --> I2
+    S2 --> I1
+    R1 & R2 & R6 --> I2
+    S7 --> I3
+    S10 --> I4
+    R1 --> S11
+```
+
+### 7.2 Service Details
+
+| Service | File | Lines | Purpose |
+|---------|------|:-----:|---------|
+| **NLP Extractor** | `nlp_extractor.py` | 900 | 4-strategy cascade document analyzer |
+| **EstimateService** | `estimate_service.py` | 320 | Core estimation business logic (NEW v3.2) |
+| **ML Service** | `ml_service.py` | 180 | Feature vector builder + RandomForest prediction bridge |
+| **Cost Calculator** | `cost_calculator.py` | 205 | IFPUG function points + cost/timeline conversion |
+| **Risk Analyzer** | `risk_analyzer.py` | 163 | 10-factor weighted risk scoring engine |
+| **Document Parser** | `document_parser.py` | 155 | PDF/DOCX/TXT text extraction (PyPDF2, python-docx) |
+| **Storage Service** | `storage_service.py` | 180 | Dual-backend object storage: local + S3 (NEW v3.2) |
+| **Background Tasks** | `background_tasks.py` | 80 | Async analytics logging + doc preview (NEW v3.2) |
+| **Benchmark** | `benchmark.py` | 125 | Industry comparison + model explainability |
+| **Currency Service** | `currency_service.py` | 140 | Multi-currency conversion via ExchangeRate API |
+| **Export Service** | `export_service.py` | 290 | PDF (ReportLab) / Excel (openpyxl) / CSV generation |
+
+### 7.3 Configuration (`core/config.py`)
+
+Environment variables loaded via Pydantic `BaseSettings` from `backend/.env`:
+
+| Variable | Required | Default | Description |
+|----------|:--------:|---------|-------------|
+| `DATABASE_URL` | ✅ | — | Neon PostgreSQL connection string |
+| `FIREBASE_CREDENTIALS_PATH` | ❌ | `./firebase-service-account.json` | Path to Firebase service account JSON (local dev) |
+| `FIREBASE_CREDENTIALS_JSON` | ❌ | `""` | Raw JSON string for Firebase credentials (production) |
+| `ALLOWED_ORIGINS` | ❌ | `http://localhost:5173,...` | CORS allowed origins |
+| `ML_MODEL_PATH` | ❌ | `./ml/Predictify_best_model.pkl` | Trained ML model path |
+| `DEFAULT_HOURLY_RATE_USD` | ❌ | `75.0` | Default billing rate |
+| `APP_ENV` | ❌ | `development` | Environment (skips validators in `test`/`ci`) |
+| `APP_VERSION` | ❌ | `3.2.0` | Current application version |
+| `DB_POOL_MIN_SIZE` | ❌ | `2` | Minimum async connection pool size (NEW v3.2) |
+| `DB_POOL_MAX_SIZE` | ❌ | `10` | Maximum async connection pool size (NEW v3.2) |
+| `DB_COMMAND_TIMEOUT` | ❌ | `30` | Query timeout in seconds (NEW v3.2) |
+| `STORAGE_BACKEND` | ❌ | `local` | `"local"` or `"s3"` — object storage mode (NEW v3.2) |
+| `S3_BUCKET_NAME` | ❌ | `predictiq-documents` | AWS S3 bucket name (NEW v3.2) |
+| `S3_REGION` | ❌ | `us-east-1` | AWS region for S3 (NEW v3.2) |
+| `S3_ACCESS_KEY_ID` | ❌ | `""` | AWS access key (NEW v3.2) |
+| `S3_SECRET_ACCESS_KEY` | ❌ | `""` | AWS secret key (NEW v3.2) |
+| `LOCAL_STORAGE_PATH` | ❌ | `./uploads` | Local filesystem storage path (NEW v3.2) |
+
+**Startup Validators:** The `Settings` class uses a Pydantic `model_validator` that warns at startup if `DATABASE_URL` is a placeholder value. This prevents accidentally running production with test credentials.
+
+---
+
+## 8. API Reference
+
+### 8.1 Endpoint Inventory
+
+| Method | Path | Auth | Description |
+|--------|------|:----:|-------------|
+| `POST` | `/api/v1/estimates/analyze` | ✅ editor+ | Analyze document → full estimate |
+| `POST` | `/api/v1/estimates/manual` | ✅ editor+ | Manual parameter estimate (no doc) |
+| `GET` | `/api/v1/estimates` | ✅ viewer+ | List user's estimates (paginated) |
+| `GET` | `/api/v1/estimates/{id}` | ✅ viewer+ | Get full estimate details |
+| `POST` | `/api/v1/estimates/{id}/duplicate` | ✅ editor+ | Duplicate as new version |
+| `DELETE` | `/api/v1/estimates/{id}` | ✅ editor+ | Soft-delete estimate |
+| `POST` | `/api/v1/estimates/{id}/share` | ✅ editor+ | Generate share link |
+| `POST` | `/api/v1/documents/upload` | ✅ editor+ | Upload document to storage |
+| `POST` | `/api/v1/documents/confirm` | ✅ editor+ | Confirm upload + save metadata |
+| `GET` | `/api/v1/profile` | ✅ viewer+ | Get user profile |
+| `PATCH` | `/api/v1/profile` | ✅ editor+ | Update profile fields |
+| `GET` | `/api/v1/admin/users` | ✅ **admin** | List all users with roles (NEW v3.2) |
+| `PATCH` | `/api/v1/admin/users/{id}` | ✅ **admin** | Update user role (NEW v3.2) |
+| `GET` | `/api/v1/currencies/rates` | ✅ | Get exchange rates (10 currencies) |
+| `GET` | `/api/v1/export/{id}/pdf` | ✅ | Export estimate as PDF |
+| `GET` | `/api/v1/export/{id}/excel` | ✅ | Export estimate as Excel |
+| `GET` | `/api/v1/export/{id}/csv` | ✅ | Export estimate as CSV |
+| `GET` | `/api/v1/health` | ❌ | Health check (model status, uptime) |
+
+### 8.2 Core Request/Response Example
+
+**`POST /api/v1/estimates/analyze`**
+
+```json
+// ── Request ──────────────────────────
+{
+  "document_id": "550e8400-e29b-41d4-a716-446655440000",
+  "overrides": {
+    "project_name": "FinTech Dashboard",
+    "project_type": "Web App",
+    "team_size": 8,
+    "complexity": "High",
+    "hourly_rate_usd": 95
+  }
+}
+
+// ── Response ─────────────────────────
+{
+  "estimate_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+  "project_name": "FinTech Dashboard",
+  "status": "complete",
+  "model_version": "2.4.0",
+  "inputs": {
+    "project_type": "Web App",
+    "tech_stack": ["React", "FastAPI", "PostgreSQL", "Redis", "Docker"],
+    "team_size": 8,
+    "duration_months": 10.0,
+    "complexity": "High",
+    "methodology": "Agile",
+    "hourly_rate_usd": 95.0,
+    "integration_count": 5,
+    "volatility_score": 3,
+    "team_experience": 2.5
+  },
+  "outputs": {
+    "effort_min_hours": 3640,
+    "effort_likely_hours": 5200,
+    "effort_max_hours": 7540,
+    "cost_min_usd": 345800,
+    "cost_likely_usd": 494000,
+    "cost_max_usd": 716300,
+    "timeline_min_weeks": 18.2,
+    "timeline_likely_weeks": 24.5,
+    "timeline_max_weeks": 33.1,
+    "confidence_pct": 76.3,
+    "function_points": 482,
+    "risk_score": 38.5,
+    "risk_level": "Medium",
+    "top_risks": [
+      { "factor": "Technology Complexity", "score": 12, "description": "High complexity with 5 technologies" },
+      { "factor": "Timeline Constraint", "score": 8, "description": "Moderate timeline pressure" }
+    ],
+    "phase_breakdown": [
+      { "phase": "Discovery & Requirements", "pct": 10, "hours": 520, "cost_usd": 49400 },
+      { "phase": "UI/UX Design", "pct": 12, "hours": 624, "cost_usd": 59280 },
+      { "phase": "Backend Development", "pct": 30, "hours": 1560, "cost_usd": 148200 },
+      { "phase": "Frontend Development", "pct": 22, "hours": 1144, "cost_usd": 108680 },
+      { "phase": "QA & Testing", "pct": 18, "hours": 936, "cost_usd": 88920 },
+      { "phase": "Deployment & DevOps", "pct": 8, "hours": 416, "cost_usd": 39520 }
+    ]
+  }
+}
+```
+
+---
+
+## 9. Frontend Application
+
+### 9.1 Page Architecture
+
+| Page | Route | Key Components |
+|------|-------|---------------|
+| **Landing** | `/` | Hero, features grid, stats counter, CTA |
+| **Auth** | `/auth` | Login / signup tabs, Firebase Auth (email + Google/GitHub OAuth) |
+| **Dashboard** | `/dashboard` | Estimate cards, stat summary, sort/filter |
+| **New Estimate** | `/new-estimate` | 3-step wizard: Upload → Parameters → Generate |
+| **Results** | `/estimate/:id/results` | Charts, risk gauge, phase breakdown, export |
+
+### 9.2 State Management (Zustand)
+
+| Store | Key State | Actions |
+|-------|----------|---------|
+| `authStore` | `user`, `session`, `loading` | `signIn()`, `signUp()`, `signOut()`, `initialize()` |
+| `currencyStore` | `currency`, `rates`, `symbols` | `setCurrency()`, `convert()`, `fetchRates()`, `getRate()` |
+
+### 9.3 New Estimate Wizard — 3 Steps
+
+**Step 1: Document Upload**
+- Drag-and-drop or file picker
+- Accepts: PDF, DOCX, TXT (max 10MB)
+- Real-time upload progress bar
+- Option to skip → manual entry mode
+
+**Step 2: Project Parameters** (pre-filled from NLP)
+| Field | Type | Source |
+|-------|------|--------|
+| Project Name | text input | NLP extracted or user |
+| Project Type | dropdown (7 options) | NLP classified |
+| Complexity | dropdown (4 levels) | NLP scored |
+| Team Size | number input | NLP or user |
+| Duration (months) | number input | NLP or user |
+| Methodology | dropdown (3 options) | NLP detected |
+| Hourly Rate | number + currency selector | User preference |
+| Technology Stack | comma-separated text | NLP detected |
+| **External Integrations** | number input | NLP (NEW v2.4) |
+| **Requirements Volatility** | dropdown (1-5 scale) | NLP (NEW v2.4) |
+| **Team Experience** | dropdown (4 levels) | NLP (NEW v2.4) |
+
+**Step 3: Generate**
+- Animated processing visualization (6 steps)
+- Auto-redirect to results page on completion
+
+### 9.4 Multi-Currency Support
+
+| Code | Symbol | Name |
+|------|:------:|------|
+| USD | $ | US Dollar |
+| EUR | € | Euro |
+| GBP | £ | British Pound |
+| INR | ₹ | Indian Rupee |
+| JPY | ¥ | Japanese Yen |
+| AUD | A$ | Australian Dollar |
+| CAD | C$ | Canadian Dollar |
+| CHF | Fr | Swiss Franc |
+| CNY | ¥ | Chinese Yuan |
+| SGD | S$ | Singapore Dollar |
+
+---
+
+## 10. Cost & Risk Computation
+
+### 10.1 IFPUG Function Points
+
+Function points use a tiered complexity distribution across feature count:
+
+| Complexity | Simple (×5) | Medium (×10) | Complex (×20) | Epic (×35) |
+|-----------|:-----------:|:------------:|:-------------:|:----------:|
+| Low | 60% | 30% | 10% | 0% |
+| Medium | 30% | 40% | 25% | 5% |
+| High | 10% | 30% | 40% | 20% |
+| Very High | 5% | 20% | 40% | 35% |
+
+**Additional IFPUG components:**
+
+| Component | Count Source | Weight |
+|-----------|------------|:------:|
+| External Inputs | feature_count × 0.5 | ×4 |
+| External Outputs | feature_count × 0.3 | ×5 |
+| External Inquiries | feature_count × 0.4 | ×4 |
+| Internal Logical Files | feature_count × 0.4 | ×7 |
+| External Interface Files | `integration_count` (NEW v2.4) | ×5 |
+
+**Value Adjustment Factor (VAF):** Low=0.75, Medium=0.90, High=1.05, Very High=1.20
+
+### 10.2 Phase Breakdown
+
+| Phase | % of Total | Description |
+|-------|:---------:|-------------|
+| Discovery & Requirements | 10% | Stakeholder interviews, SRS review |
+| UI/UX Design | 12% | Wireframes, prototypes, design system |
+| Backend Development | 30% | API, business logic, integrations |
+| Frontend Development | 22% | UI components, state, routing |
+| QA & Testing | 18% | Unit, integration, E2E, UAT |
+| Deployment & DevOps | 8% | CI/CD, infrastructure, monitoring |
+
+### 10.3 Risk Analysis Engine
+
+10 weighted risk factors with configurable triggers:
+
+| # | Risk Factor | Weight | Trigger Condition |
+|---|------------|:------:|-------------------|
+| 1 | Scope Ambiguity | 15 | features < 5 OR complexity = Very High |
+| 2 | Team Experience Gap | 14 | team < 3 AND complexity ∈ {High, Very High} |
+| 3 | Timeline Constraint | 13 | duration < 3 AND complexity ≠ Low |
+| 4 | Technology Complexity | 12 | tech_stack > 6 OR complexity ∈ {High, Very High} |
+| 5 | Requirement Volatility | 10 | methodology = Agile AND complexity ∈ {High, Very High} |
+| 6 | Quality Assurance Gap | 9 | duration < 4 AND team < 4 |
+| 7 | Integration Risk | 8 | tech_stack > 4 |
+| 8 | Resource Availability | 7 | team > 15 |
+| 9 | Technical Debt | 6 | duration > 18 |
+| 10 | Deployment Complexity | 5 | Docker/K8s/microservices in stack |
+
+**Risk levels:** score < 25 = Low · < 45 = Medium · < 70 = High · ≥ 70 = Critical
+
+---
+
+## 11. Security Architecture
+
+### 11.1 Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as React App
+    participant FA as Firebase Auth
+    participant B as FastAPI
+
+    U->>F: Enter email + password
+    F->>FA: signInWithEmailAndPassword()
+    FA-->>F: Firebase ID token
+    F->>F: Store in authStore (Zustand)
+    F->>B: API request + Authorization: Bearer <ID token>
+    B->>B: firebase_admin.auth.verify_id_token()
+    B->>B: Extract user_id (Firebase UID) from decoded token
+    B-->>F: Protected response (user-scoped data)
+```
+
+### 11.2 Security Layers
+
+| Layer | Implementation | Status |
+|-------|---------------|:------:|
+| Authentication | Firebase Auth (email/password + Google/GitHub OAuth) | ✅ |
+| Token Verification | Firebase Admin SDK (`verify_id_token`) on backend | ✅ |
+| API Protection | Bearer token validation on all endpoints | ✅ |
+| **Rate Limiting** | slowapi — 200 req/min default | ✅ |
+| **Audit Logging** | AuditLogMiddleware — method, path, status, duration, user, IP (SOC 2) | ✅ |
+| **Startup Validation** | Pydantic model_validator warns on placeholder DATABASE_URL | ✅ |
+| File Upload | 10MB limit, type whitelist (PDF/DOCX/TXT), stored as BYTEA | ✅ |
+| Secret Management | Environment variables only (no hardcoded keys) | ✅ |
+| CI Security | Pre-push scanner blocks pushes with leaked keys | ✅ |
+| CORS | Configured for frontend origin only | ✅ |
+| Credential Dual-Mode | File path (local dev) OR JSON env var (production) | ✅ |
+
+### 11.3 Pre-Push Security Scanner (`scripts/pre_push_check.py`)
+
+Automated checks run before every push:
+
+| Check | Scans For |
+|-------|----------|
+| **Secret Scanning** | Firebase credentials, database URLs, AWS keys, private keys, hardcoded passwords, connection strings |
+| **Git Tracking** | Verifies no `.env` files are tracked |
+| **.gitignore Audit** | Validates 6 required patterns exist |
+| **Env Templates** | Confirms `.env.example` exists for backend + frontend |
+
+### 11.4 RBAC (Role-Based Access Control)
+
+> **NEW in v3.2.0** — 3-tier role system using Firebase Custom Claims.
+
+#### Role Hierarchy
+
+```
+admin > editor > viewer
+
+┌──────────┬──────────────────────────────────────────────────┐
+│ Role     │ Permissions                                      │
+├──────────┼──────────────────────────────────────────────────┤
+│ viewer   │ View own estimates, view profile (read-only)     │
+│ editor   │ + Create/edit/delete own estimates, upload docs  │
+│ admin    │ + Manage users, view ALL estimates, delete any   │
+└──────────┴──────────────────────────────────────────────────┘
+```
+
+#### Implementation
+
+| Component | Detail |
+|-----------|--------|
+| **Storage** | `profiles.role` column (DB source of truth) + Firebase Custom Claims (JWT) |
+| **Enforcement** | `require_role(minimum_role)` FastAPI dependency factory |
+| **Hierarchy** | `ROLE_HIERARCHY = {"admin": 3, "editor": 2, "viewer": 1}` |
+| **Default** | New signups get `editor` role |
+| **Admin API** | `GET/PATCH /api/v1/admin/users` — admin-only user management |
+| **Self-demotion** | Blocked — admin cannot demote themselves |
+| **Frontend** | `authStore.hasRole(min)` helper + role extraction from Firebase JWT claims |
+
+#### RBAC Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as React App
+    participant FA as Firebase Auth
+    participant B as FastAPI
+    participant DB as Neon PostgreSQL
+
+    U->>F: Login
+    F->>FA: signIn()
+    FA-->>F: ID Token (includes custom claims: {role: "editor"})
+    F->>F: authStore extracts role from claims
+    F->>B: POST /estimates/manual (Bearer token)
+    B->>B: verify_id_token() → extract role
+    B->>B: require_role("editor") → PASS ✅
+    B->>DB: INSERT estimate
+    B-->>F: 201 Created
+
+    Note over U,DB: Viewer tries write operation
+    U->>F: Try create estimate
+    F->>B: POST /estimates/manual (Bearer token, role=viewer)
+    B->>B: require_role("editor") → FAIL ❌
+    B-->>F: 403 Forbidden
+```
+
+---
+
+## 11A. Architecture & Code Quality
+
+> **NEW in v3.2.0** — Service layer refactor, Alembic migrations, object storage, and background tasks.
+
+### 11A.1 Service Layer Architecture
+
+`estimates.py` was refactored from a 641-line monolith into a thin controller (~290 lines) delegating to `EstimateService` (~320 lines):
+
+```
+estimates.py (Controller — HTTP routing, auth, response formatting)
+  └── estimate_service.py (Service — business logic, DB queries, ML pipeline)
+       ├── run_estimation()      — Full ML pipeline orchestration
+       ├── list_estimates()      — Paginated list with filtering
+       ├── get_estimate()        — Single estimate by ID + ownership check
+       ├── duplicate_estimate()  — Version duplication
+       ├── delete_estimate()     — Soft delete with ownership check
+       └── create_share_link()   — Share URL generation with optional password
+```
+
+### 11A.2 Alembic Database Migrations
+
+Versioned, reversible database migrations using raw SQL (compatible with asyncpg):
+
+| Migration | Description |
+|-----------|-------------|
+| `001_initial` | Baseline schema (profiles, documents, estimates, share_links) |
+| `002_add_role` | RBAC: adds `role` and `email` columns to profiles |
+
+```bash
+# Apply all migrations
+alembic upgrade head
+
+# Generate a new migration
+alembic revision -m "add feature"
+
+# Rollback one step
+alembic downgrade -1
+```
+
+### 11A.3 Object Storage (StorageService)
+
+```mermaid
+graph LR
+    A["documents.py"] --> B["StorageService"]
+    B --> C{"STORAGE_BACKEND"}
+    C -->|local| D["LocalStorageBackend\n./uploads/"]
+    C -->|s3| E["S3StorageBackend\nAWS S3 / MinIO"]
+```
+
+| Method | Description |
+|--------|-------------|
+| `upload(key, data, content_type)` | Store file, return storage key |
+| `download(key)` | Retrieve file bytes |
+| `delete(key)` | Remove file from storage |
+| `exists(key)` | Check if file exists |
+
+### 11A.4 Background Tasks
+
+Non-blocking post-request processing using FastAPI `BackgroundTasks`:
+
+| Task | Trigger | Purpose |
+|------|---------|---------|
+| `log_estimation_analytics` | After estimate creation | Analytics data for model retraining |
+| `update_document_preview` | After document upload | Parse text preview asynchronously |
+| `sync_profile_role` | After login | Sync Firebase claims → DB |
+
+### 11A.5 Configurable Connection Pool
+
+Database pool parameters are environment-configurable (no hardcoded values):
+
+| Variable | Default | Production Recommendation |
+|----------|:-------:|:------------------------:|
+| `DB_POOL_MIN_SIZE` | 2 | 5-10 |
+| `DB_POOL_MAX_SIZE` | 10 | 20-50 |
+| `DB_COMMAND_TIMEOUT` | 30 | 60 |
+
+---
+
+## 12. Deployment & DevOps
+
+### 12.1 Quick Start (One Command)
+
+```bash
+python run.py
+```
+
+This automatically: creates venv → installs deps → starts backend (port 8000) → starts frontend (port 5173) → opens browser.
+
+### 12.2 Manual Setup
+
+```bash
+# Backend
+cd backend
+python -m venv venv && venv\Scripts\activate   # Windows
+pip install -r requirements.txt
+cp .env.example .env    # Fill in DATABASE_URL + Firebase config
+uvicorn app.main:app --reload --port 8000
+
+# Frontend
+cd frontend
+npm install
+cp .env.example .env    # Fill in VITE_FIREBASE_* vars
+npm run dev
+```
+
+### 12.3 Docker
+
+```bash
+docker-compose up --build    # Production
+docker-compose -f docker-compose.dev.yml up   # Development
+```
+
+### 12.4 CI/CD Pipeline (Overview)
+
+See [Section 13](#13-cicd-pipeline-architecture) for full pipeline architecture with diagrams.
+
+### 12.5 Makefile Targets
+
+```
+make install          Install all dependencies
+make run              Start backend + frontend
+make test             Run full test suite
+make security-check   Run pre-push security scan
+make clean            Remove caches and build artifacts
+make graph            Rebuild the code-review knowledge graph
+```
+
+---
+
+## 13. CI/CD Pipeline Architecture
+
+> **NEW in v2.5.0** — Complete 7-workflow automated pipeline covering continuous integration, continuous deployment, and security scanning.
+
+### 13.1 Pipeline Overview
+
+Predictify uses **7 GitHub Actions workflows** organized into three categories:
+
+| Category | Workflows | Trigger |
+|----------|:---------:|---------|
+| **CI (Continuous Integration)** | 1 | Every push + PRs |
+| **CD (Continuous Deployment)** | 2 | Push to `dev` (staging) / version tags (production) |
+| **Security** | 3 | PRs + weekly scheduled scans |
+| **Maintenance** | 1 | Weekly (Dependabot auto-PRs) |
+
+### 13.2 CI Pipeline — How It Works
+
+When anyone pushes code or opens a PR, the CI pipeline runs **6 parallel/sequential jobs**:
+
+```mermaid
+flowchart TD
+    PUSH["🔀 Push / PR Event"] --> LINT_BE["Job 1: Backend Lint\n(Ruff + mypy)"]
+    PUSH --> LINT_FE["Job 2: Frontend Lint\n(TypeScript strict check)"]
+    PUSH --> SECURITY["Job 5: Security Scan\n(Secret scan + Bandit SAST)"]
+
+    LINT_BE --> TEST_BE["Job 3: Backend Tests\n(pytest + coverage)\n104 tests"]
+    LINT_FE --> BUILD_FE["Job 4: Frontend Build\n(Vite production build)"]
+
+    TEST_BE --> DOCKER["Job 6: Docker Build\n(Smoke test)\nPRs only"]
+    BUILD_FE --> DOCKER
+
+    style PUSH fill:#4CAF50,color:#fff
+    style SECURITY fill:#FF9800,color:#fff
+    style DOCKER fill:#2196F3,color:#fff
+```
+
+**What each job does:**
+
+| Job | What It Checks | Why It Matters |
+|-----|---------------|----------------|
+| **Backend Lint** | Ruff (style + imports) + mypy (type safety) | Catches style violations and type errors before tests run |
+| **Frontend Lint** | `tsc --noEmit` (strict TypeScript check) | Ensures no type errors in React components |
+| **Backend Tests** | `pytest` with `--cov` (214 tests) | Verifies all business logic, NLP, ML pipeline work correctly |
+| **Frontend Build** | `npm run build` (Vite production bundle) | Ensures the app compiles and bundles without errors |
+| **Security Scan** | Custom secret scanner + Bandit SAST + .env tracking check | Blocks pushes with leaked API keys or security vulnerabilities |
+| **Docker Build** | Builds both Dockerfiles + smoke test (PRs only) | Verifies the app can be containerized and starts cleanly |
+
+### 13.3 CD Pipeline — Staging (Automatic)
+
+When code is merged to the `dev` branch, staging deploys automatically:
+
+```mermaid
+flowchart LR
+    A["Merge to dev"] --> B["Build Frontend\n(Vite + staging env)"]
+    B --> C["Deploy Backend\n(AWS ECS staging)"]
+    B --> D["Deploy Frontend\n(S3 + CloudFront)"]
+    D --> F["Health Check\n/api/v1/health"]
+    E --> F
+    F --> G{"Pass?"}
+    G -->|Yes| H["✅ Staging Live"]
+    G -->|No| I["❌ Alert Team"]
+
+    style A fill:#4CAF50,color:#fff
+    style G fill:#4CAF50,color:#fff
+    style H fill:#f44336,color:#fff
+```
+
+### 13.4 CD Pipeline — Production (Tag-Triggered)
+
+Production deployments are triggered by creating a version tag:
+
+```mermaid
+flowchart LR
+    A["git tag v2.5.0"] --> B["Checkout tag"]
+    B --> C["Build Frontend\n(production env)"]
+    C --> D["Deploy Backend\n(AWS ECS production)"]
+    C --> E["Deploy Frontend\n(S3 + CloudFront)"]
+    D --> F["Smoke Test\n/api/v1/health"]
+    E --> F
+    F --> G{"Pass?"}
+    G -->|Yes| H["Create GitHub\nRelease"]
+    G -->|No| I["❌ CRITICAL\nOld version stays"]
+
+    style A fill:#FF9800,color:#fff
+    style H fill:#4CAF50,color:#fff
+    style I fill:#f44336,color:#fff
+```
+
+**Production has extra safeguards:**
+- GitHub Environment with **required reviewer** (AtharvS7 must approve)
+- **5-minute wait timer** before deployment starts (time to cancel)
+- Old version stays live if the smoke test fails (zero-downtime)
+
+### 13.5 Security Workflows
+
+```mermaid
+flowchart TD
+    subgraph WEEKLY["Every Monday 9 AM"]
+        A1["pip-audit\n(Python CVEs)"] --> B1{"Vulnerabilities?"}
+        A2["npm audit\n(Node CVEs)"] --> B1
+        B1 -->|Yes| C1["Auto-create\nGitHub Issue"]
+        B1 -->|No| D1["✅ Clean"]
+    end
+
+    subgraph CODEQL["Every PR + Weekly"]
+        A3["CodeQL Python\nSAST Analysis"] --> B3["Security\nAlerts Tab"]
+        A4["CodeQL JavaScript\nSAST Analysis"] --> B3
+    end
+
+    subgraph EVERY_PUSH["Every Push"]
+        A5["Secret Pattern\nScanning"] --> B5{"Secrets Found?"}
+        A6["Bandit SAST\n(Python)"] --> B5
+        B5 -->|Yes| C5["❌ CI Fails"]
+        B5 -->|No| D5["✅ Clean"]
+    end
+
+    style C1 fill:#FF9800,color:#fff
+    style C5 fill:#f44336,color:#fff
+```
+
+### 13.6 Complete Workflow Inventory
+
+| # | Workflow File | Trigger | Purpose |
+|---|-------------|---------|---------|
+| 1 | `ci.yml` | Every push + PRs | Lint, test, build, security scan, Docker verify |
+| 2 | `cd-staging.yml` | Push to `dev` | Auto-deploy to staging (AWS ECS + S3/CloudFront) |
+| 3 | `cd-production.yml` | Tag `vX.Y.Z` or manual | Deploy to production with environment protection |
+| 4 | `security-weekly.yml` | Monday 9 AM + push to main | pip-audit + npm audit + auto-issue creation |
+| 5 | `codeql.yml` | PRs + weekly Sunday 2 AM | GitHub CodeQL SAST for Python + JavaScript |
+| 6 | `dependabot.yml` | Weekly Monday | Auto-creates PRs for pip/npm/Actions updates |
+| 7 | `pre_push_check.py` | Local pre-push (manual) | Secret scanner + .gitignore audit |
+
+### 13.7 Required CI Status Checks
+
+GitHub branch protection enforces that these checks pass before merging PRs:
+
+#### For `main` Branch (Production Ready)
+Before any PR can be merged to `main`, these **3 checks must pass**:
+1. ✅ **Backend — Tests** (all 214 pytest tests green)
+2. ✅ **Frontend — Build** (TypeScript compiles + Vite builds for production)
+3. ✅ **Security — Secret + code scan** (no leaked keys, no HIGH Bandit findings)
+
+#### For `dev` Branch (Integration/Staging)
+Since `dev` is for intermediate feature integration, the required checks are faster and focus on code quality and structure:
+1. ✅ **Backend — Lint** (Ruff formatting and mypy type checks)
+2. ✅ **Frontend — Type check** (TypeScript compiler passes)
+
+If any required checks fail on their respective branches, GitHub **blocks the merge button**.
+
+---
+
+## 14. Team Workflow & Branch Strategy
+
+> **NEW in v2.5.0** — Formalized team roles, branch protection, and code ownership.
+
+### 14.1 Team Roles & Code Ownership
+
+```mermaid
+graph TD
+    subgraph TEAM["Predictify Team"]
+        A["@AtharvS7\n(Owner)\nFull access · Direct push\nBackend · ML · CI/CD · DB"]
+        B["@Shravani0605\nFrontend"]
+        C["@Shruti10101-1\nFrontend"]
+        D["@RohiniJanardhanPhad\nBackend · CI/CD · Docs"]
+        E["@Shekhar2006\nML Model"]
+    end
+
+    subgraph FILES["Code Ownership (CODEOWNERS)"]
+        F1["frontend/src/"]
+        F2["backend/app/"]
+        F3["backend/ml/"]
+        F4[".github/ + Docker"]
+        F5["docs/"]
+        F6["backend/migrations/"]
+    end
+
+    B --> F1
+    C --> F1
+    A --> F2
+    D --> F2
+    A --> F3
+    E --> F3
+    A --> F4
+    D --> F4
+    D --> F5
+    A --> F6
+
+    style A fill:#4CAF50,color:#fff
+    style B fill:#2196F3,color:#fff
+    style C fill:#2196F3,color:#fff
+    style D fill:#FF9800,color:#fff
+    style E fill:#9C27B0,color:#fff
+```
+
+### 14.2 Branch Strategy
+
+```mermaid
+gitgraph
+    commit id: "v2.4.0"
+    branch dev
+    checkout dev
+    commit id: "feature work"
+    commit id: "more features"
+    checkout main
+    merge dev id: "v2.5.0 release"
+    checkout dev
+    commit id: "next features"
+    checkout main
+    merge dev id: "v2.6.0 release"
+```
+
+| Branch | Purpose | Who Can Push | Protection |
+|--------|---------|-------------|------------|
+| `main` | Production-ready code | **AtharvS7 only** (direct push) | PR required for others, 1 approval, 3 CI checks |
+| `dev` | Integration branch | **AtharvS7** (direct) + others via PR | CI lint checks required |
+| `feature/*` | Individual features | Anyone | No protection — push freely |
+| `fix/*` | Bug fixes | Anyone | No protection — push freely |
+
+### 14.3 Developer Workflow (For Teammates)
+
+```mermaid
+flowchart TD
+    A["1. Create branch\ngit checkout -b feature/my-feature"] --> B["2. Write code\n+ write tests"]
+    B --> C["3. Push branch\ngit push origin feature/my-feature"]
+    C --> D["4. Open PR on GitHub\nfeature/my-feature → dev"]
+    D --> E["5. CI runs automatically\n(lint + tests + security)"]
+    E --> F{"6. All checks pass?"}
+    F -->|No| G["Fix issues\npush again"]
+    G --> E
+    F -->|Yes| H["7. CODEOWNERS auto-requests\nreview from file owners"]
+    H --> I["8. Reviewer approves"]
+    I --> J["9. Merge to dev\n(squash merge)"]
+    J --> K["10. Staging auto-deploys\n(cd-staging.yml)"]
+
+    style A fill:#4CAF50,color:#fff
+    style J fill:#2196F3,color:#fff
+    style K fill:#FF9800,color:#fff
+```
+
+**Step by step for teammates:**
+
+1. **Never push to `main` directly** — you'll be blocked by branch protection
+2. Create a feature branch: `git checkout -b feature/add-dark-mode`
+3. Write your code + tests
+4. Push: `git push origin feature/add-dark-mode`
+5. Open a **Pull Request** on GitHub: your branch → `dev`
+6. CI pipeline runs automatically — wait for green checks
+7. GitHub auto-requests review from the right people based on CODEOWNERS
+8. Once approved + checks pass → merge (squash merge recommended)
+9. Staging deploys automatically when merged to `dev`
+
+### 14.3.1 Teammate Command Guide (Copy-Paste Ready)
+
+> **This section is for teammates who are new to Git workflows.**
+> Follow these commands exactly. Comments (lines starting with `#`) explain what each command does.
+
+#### 🟢 First Time Setup (Do Once)
+
+```bash
+# Clone the repository to your computer
+git clone https://github.com/AtharvS7/Predictify.git
+
+# Go into the project folder
+cd Predictify
+
+# Switch to the dev branch (this is where all work goes first)
+git checkout dev
+
+# ── Backend Setup ──
+cd backend
+python -m venv venv              # Create a virtual environment
+venv\Scripts\activate            # Activate it (Windows)
+pip install -r requirements.txt  # Install all Python dependencies
+cp .env.example .env             # Create your local environment file
+# ⚠️ Place firebase-service-account.json in backend/ (ask Atharv for the file)
+# ⚠️ Open backend/.env and fill in DATABASE_URL (ask Atharv for it)
+
+# ── Frontend Setup ──
+cd ../frontend
+npm install                      # Install JavaScript dependencies
+cp .env.example .env             # Create your local environment file
+# ⚠️ Open frontend/.env and fill in the VITE_FIREBASE_* values (ask Atharv)
+
+# ── Go back to project root ──
+cd ..
+```
+
+#### 🔵 Starting Work on a New Feature
+
+```bash
+# 1. Make sure you're on the dev branch and have the latest code
+git checkout dev
+git pull origin dev              # Get everyone's latest changes
+
+# 2. Create YOUR OWN branch for the feature
+#    Name it: feature/what-you-are-doing
+git checkout -b feature/add-login-button
+
+# 3. Now write your code! Edit files, create new files, etc.
+#    When you're done, continue to the next section ↓
+```
+
+#### 🟡 Saving and Pushing Your Work
+
+```bash
+# 4. See what files you changed
+git status                       # Shows modified/new files in red
+
+# 5. Add your changes (stage them for commit)
+git add .                        # Adds ALL changed files
+# OR add specific files only:
+git add frontend/src/pages/AuthPage.tsx
+
+# 6. Commit with a clear message describing what you did
+git commit -m "Add login button to auth page"
+
+# 7. Push YOUR branch to GitHub
+git push origin feature/add-login-button
+# First time? Git may ask you to set upstream. Just run:
+# git push --set-upstream origin feature/add-login-button
+```
+
+#### 🟣 Opening a Pull Request (On GitHub Website)
+
+```
+1. Go to: https://github.com/AtharvS7/Predictify
+2. You'll see a yellow banner: "feature/add-login-button had recent pushes"
+3. Click "Compare & pull request"
+4. Set the BASE branch to: dev  (NOT main!)
+5. Write a title like: "Add login button to auth page"
+6. Write a description of what you changed and why
+7. Click "Create pull request"
+8. Wait for CI checks to pass (green ✅)
+9. Wait for Atharv's approval
+10. Once approved → click "Merge pull request" → "Confirm merge"
+```
+
+#### 🔴 If Your PR Has Merge Conflicts
+
+```bash
+# This happens when someone else changed the same files you did.
+
+# 1. Go back to your branch
+git checkout feature/add-login-button
+
+# 2. Pull the latest dev code into your branch
+git pull origin dev
+
+# 3. Git will show conflicts in affected files
+#    Open those files and look for these markers:
+#    <<<<<<< HEAD
+#    (your code)
+#    =======
+#    (their code)
+#    >>>>>>>
+#    Keep the correct code, delete the markers
+
+# 4. After resolving all conflicts:
+git add .
+git commit -m "Resolve merge conflicts with dev"
+git push origin feature/add-login-button
+
+# 5. The PR will auto-update with your fixes
+```
+
+#### 🟤 Common Mistakes to Avoid
+
+| ❌ Don't Do This | ✅ Do This Instead |
+|-----------------|-------------------|
+| `git push origin main` | `git push origin feature/your-branch` |
+| `git push origin dev` | Open a PR from your branch → dev |
+| Commit `.env` files | Only commit `.env.example` files |
+| Commit `node_modules/` or `venv/` | These are in .gitignore, they won't be pushed |
+| Push without pulling first | Always `git pull origin dev` before starting work |
+| Name branches like `my-branch` | Use `feature/what-it-does` or `fix/what-it-fixes` |
+
+#### ⚡ Quick Reference Card
+
+```bash
+# ── Daily workflow (start of day) ──
+git checkout dev && git pull origin dev    # Get latest code
+
+# ── Start working ──
+git checkout -b feature/my-thing          # Create your branch
+
+# ── Save your work ──
+git add . && git commit -m "Description"  # Save locally
+git push origin feature/my-thing          # Push to GitHub
+
+# ── After PR is merged (cleanup) ──
+git checkout dev                          # Go back to dev
+git pull origin dev                       # Get the merged code
+git branch -d feature/my-thing            # Delete your old branch
+```
+
+
+### 14.4 Release Process
+
+```mermaid
+flowchart LR
+    A["All features\nmerged to dev"] --> B["Open PR\ndev → main"]
+    B --> C["CI checks\n+ Review"]
+    C --> D["Merge to main"]
+    D --> E["git tag v2.X.0"]
+    E --> F["Push tag"]
+    F --> G["cd-production.yml\nauto-triggers"]
+    G --> H["Production live"]
+
+    style D fill:#FF9800,color:#fff
+    style H fill:#4CAF50,color:#fff
+```
+
+Only **AtharvS7** creates version tags and triggers production deployments. See `docs/RELEASE_CHECKLIST.md` for the full checklist.
+
+### 14.5 How CODEOWNERS Works
+
+When a PR is opened, GitHub reads `.github/CODEOWNERS` and **automatically requests reviews** from the right people:
+
+| If the PR touches... | These reviewers are auto-requested |
+|----------------------|-----------------------------------|
+| `frontend/src/` files | **@AtharvS7**, @Shravani0605, @Shruti10101-1 |
+| `backend/app/` files | **@AtharvS7**, @RohiniJanardhanPhad |
+| `backend/ml/` files | **@AtharvS7**, @Shekhar2006 |
+| `.github/` or Docker files | **@AtharvS7**, @RohiniJanardhanPhad |
+| `docs/` files | **@AtharvS7**, @RohiniJanardhanPhad |
+| `backend/migrations/` | **@AtharvS7** only |
+| Anything else | **@AtharvS7**, @RohiniJanardhanPhad (global fallback) |
+
+At least **1 owner must approve** before the PR can be merged.
+
+### 14.6 Dependabot (Automatic Dependency Updates)
+
+Dependabot checks for outdated dependencies every Monday and auto-creates PRs:
+
+| Ecosystem | Directory | Frequency | Auto-Reviewer |
+|-----------|-----------|-----------|---------------|
+| Python (pip) | `/backend` | Weekly | @AtharvS7 |
+| Node.js (npm) | `/frontend` | Weekly | @AtharvS7 |
+| GitHub Actions | `/` | Monthly | @AtharvS7 |
+
+---
+
+## 15. Testing & Quality
+
+### 15.1 Test Suite Summary
+
+| Test Module | Tests | Coverage Area |
+|------------|:-----:|--------------|
+| `test_api_integration.py` | 48 | Full API endpoint integration tests (NEW v3.2) |
+| `test_nlp_extractor.py` | 35 | 4-strategy cascade, all 11 fields, edge cases |
+| `test_rbac.py` | 29 | Role hierarchy, require_role, admin API, self-demotion (NEW v3.2) |
+| `test_phase3.py` | 25 | Service layer, storage, background tasks, pool config (NEW v3.2) |
+| `test_cost_calculator.py` | 18 | IFPUG FP, phase breakdown, cost conversion |
+| `test_export_service.py` | 17 | PDF/Excel/CSV export generation |
+| `test_sanitize.py` | 16 | XSS prevention, HTML/script stripping |
+| `test_profile.py` | 15 | SQL injection prevention, allowlist safety |
+| `test_audit_log.py` | 15 | Skip paths, middleware structure, token fingerprinting |
+| `test_config.py` | 14 | Configuration loading, environment validation |
+| `test_inference.py` | 12 | Model loading, prediction, error handling |
+| `test_ml_service.py` | 11 | Feature vector, T-factors, complexity mapping |
+| `test_risk_analyzer.py` | 10 | Risk scoring, levels, factor triggers |
+| `test_database.py` | 10 | Retry logic, backoff sequence, pool state |
+| `test_security.py` | 9 | CurrentUser model, auth, RBAC serialization |
+| `test_document_parser.py` | 8 | PDF/DOCX/TXT parsing, error recovery |
+| `test_currencies.py` | 7 | Currency conversion, fallback rates |
+| `test_health.py` | 7 | Health endpoint, model status, DB/Firebase |
+| `test_benchmark.py` | 5 | Industry comparison data |
+| **Total** | **316** | **19 test files** |
+
+### 15.2 Current Test Results (v3.2.0)
+
+```
+316 passed, 0 failures
+All API integration tests (48/48) ✅
+All NLP tests (35/35) ✅
+All RBAC tests (29/29) ✅
+All Phase 3 tests (25/25) ✅
+All cost tests (18/18) ✅
+All export tests (17/17) ✅
+All sanitize tests (16/16) ✅
+All profile tests (15/15) ✅
+All audit tests (15/15) ✅
+All config tests (14/14) ✅
+All inference tests (12/12) ✅
+All ML tests (11/11) ✅
+All risk tests (10/10) ✅
+All DB tests (10/10) ✅
+All security tests (9/9) ✅
+All parser tests (8/8) ✅
+All currency tests (7/7) ✅
+All health tests (7/7) ✅
+All benchmark tests (5/5) ✅
+TypeScript compilation: 0 errors ✅
+Security scanner: ALL CHECKS PASSED ✅
+```
+
+### 15.3 Test Configuration (`pytest.ini`)
+
+```ini
+[pytest]
+asyncio_mode = auto
+testpaths = tests
+addopts = -v --tb=short --strict-markers --cov=app --cov-report=term-missing
+markers =
+    unit: Unit tests (fast, no I/O)
+    integration: Integration tests (API calls, mocked external)
+    e2e: End-to-end tests (browser, requires full stack)
+    slow: Tests taking > 5 seconds
+```
+
+### 15.4 Running Tests
+
+```bash
+# Run all tests with coverage
+cd backend
+python -m pytest tests/ -v
+
+# Run specific test module
+python -m pytest tests/test_nlp_extractor.py -v
+
+# Run only unit tests
+python -m pytest tests/ -m unit
+
+# Run with coverage report
+python -m pytest tests/ --cov=app --cov-report=html
+```
+
+---
+
+## 16. Changelog
+
+### v3.2.0 — May 11, 2026
+
+**RBAC (Role-Based Access Control)**
+- 3-role hierarchy: `admin` > `editor` > `viewer` using Firebase Custom Claims
+- `require_role(minimum_role)` FastAPI dependency factory for route-level enforcement
+- `profiles.role` column (DB source of truth) + `profiles.email` column
+- Admin user management API: `GET/PATCH /api/v1/admin/users` (admin-only)
+- Self-demotion protection: admins cannot downgrade their own role
+- Frontend `authStore` extracts role from Firebase JWT claims, exposes `hasRole()` helper
+- All write routes now require `editor+`, admin routes require `admin`
+
+**Architecture & Code Quality**
+- **Alembic Migrations**: Versioned, reversible database migrations with raw SQL (asyncpg-compatible)
+  - `001_initial` baseline schema + `002_add_role` RBAC migration
+- **Service Layer Refactor**: `estimates.py` reduced from 641 → ~290 lines; business logic extracted to `EstimateService` (~320 lines)
+- **Object Storage**: `StorageService` with dual backend — local filesystem (dev) and AWS S3 (prod)
+  - Documents no longer stored as PostgreSQL BYTEA; storage path references used instead
+- **Background Tasks**: FastAPI `BackgroundTasks` for analytics logging and document preview parsing
+- **Configurable DB Pool**: `DB_POOL_MIN_SIZE`, `DB_POOL_MAX_SIZE`, `DB_COMMAND_TIMEOUT` environment variables
+
+**New Files**
+- `backend/app/api/v1/admin.py` — Admin user management routes
+- `backend/app/services/estimate_service.py` — EstimateService business logic
+- `backend/app/services/storage_service.py` — Dual-backend object storage
+- `backend/app/services/background_tasks.py` — Async background task definitions
+- `backend/alembic/` — Full Alembic migration infrastructure
+- `backend/migrations/002_add_role_column.sql` — RBAC raw SQL migration
+
+**Testing**
+- 29 new RBAC tests covering role hierarchy, require_role enforcement, admin API, self-demotion
+- 25 new Phase 3 tests covering service layer, storage abstraction, background tasks, pool config
+- 48 new API integration tests
+- Total test suite: **214 → 316 tests** (0 failures, 0 regressions)
+
+**New Environment Variables**: `DB_POOL_MIN_SIZE`, `DB_POOL_MAX_SIZE`, `DB_COMMAND_TIMEOUT`, `STORAGE_BACKEND`, `S3_BUCKET_NAME`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT_URL`, `LOCAL_STORAGE_PATH`
+
+---
+
+### v3.1.1 — April 24, 2026
+
+**Walkthrough Academic Enhancements (Professor Review Feedback)**
+- Added **Section 5.6: NLP Techniques & Evaluation Metrics** — documents regex-based NER, TF-IDF keyword scoring, section-aware parsing, with precision/recall metrics
+- Added **Section 5A: Literature Review** — comparative analysis table (COCOMO II vs ML-Based vs Predictify) with 7 IEEE/ACM citations (2022–2025)
+- Enhanced **Section 6.3: Model Selection & Justification** — added 8-model rationale table, full performance comparison (R², MAE, RMSE, PRED25, PRED50, MMRE), and explicit reasoning for choosing RandomForest over GradientBoosting, XGBoost, and Neural Networks
+- Added **Section 6.5: Mathematical Formulation** — complete 8-step derivation from IFPUG FP calculation through ML prediction to PERT cost bounds, with tier distribution tables, VAF factors, and a fully worked example
+- Added NLP pipeline flow diagram (Mermaid) showing document → extraction → cross-validation path
+- Added Predictify novel contributions subsection summarizing 4 key differentiators
+
+### v3.0.0 — April 23, 2026
+
+**Infrastructure Migration (Supabase → Firebase + Neon)**
+- Replaced Supabase Auth with Firebase Auth (email/password + Google/GitHub OAuth)
+- Replaced Supabase PostgreSQL with Neon serverless PostgreSQL (asyncpg driver)
+- Replaced Supabase Storage with BYTEA column storage (documents stored directly in DB)
+- Dual-mode Firebase credentials: file path (local) or JSON env var (production)
+- Added `backend/app/core/database.py` — async connection pool via asyncpg
+- Rewrote `backend/app/core/security.py` — Firebase Admin SDK token verification
+- Added `backend/migrations/001_initial_schema.sql` — Neon-compatible schema
+
+**NLP Auto-Fill Pipeline**
+- Added `POST /documents/{id}/extract` endpoint — runs NLP extraction immediately after upload
+- Frontend auto-fills ALL 10+ Step 2 form fields from extracted data
+- Fixed project name regex (was greedy, captured multi-line headers)
+- Fixed tech stack false positives ("Less", "Go", etc. filtered in general prose)
+- Added `extractDocumentParams()` named export in `api.ts`
+
+**Bug Fixes**
+- Fixed white screen crash caused by `export default api` Vite ESM collision
+- ML model files (`Predictify_best_model.pkl`, `Predictify_scaler.pkl`) now committed to repo
+- Resolved merge conflicts between integration and dev branches
+
+**Frontend**
+- Added Google and GitHub OAuth sign-in buttons
+- Added `POST /auth/firebase` backend endpoint for OAuth token verification
+- Auth store rewritten for Firebase (`onAuthStateChanged` listener)
+- Removed all Supabase client dependencies
+
+---
+
+### v2.5.0 — April 17, 2026
+
+**CI/CD Pipeline (4 new workflows)**
+- Rewrote `ci.yml`: 6-job pipeline with Ruff lint, mypy, pytest-cov (59% baseline), Bandit SAST, Docker smoke test
+- Added `cd-staging.yml`: auto-deploys to AWS ECS + S3/CloudFront on push to `dev`
+- Added `cd-production.yml`: tag-triggered production deploy with GitHub environment protection and auto-release
+- Added `security-weekly.yml`: pip-audit + npm audit every Monday, auto-creates GitHub issue on CVE findings
+- Added `codeql.yml`: GitHub CodeQL SAST analysis for Python + JavaScript
+
+**Shared Ownership (no single-person dependency)**
+- Added `.github/CODEOWNERS`: auto-assigns PR reviewers by code area (5 team members mapped)
+- Added `.github/dependabot.yml`: auto-creates dependency update PRs for pip, npm, and GitHub Actions
+- Created 3 runbooks: `credential-rotation.md`, `production-deployment.md`, `add-team-member.md`
+
+**Testing & Release Strategy**
+- Added `backend/pytest.ini` with coverage config, strict markers, and test categorization
+- Added `CHANGELOG.md` (Keep a Changelog format, full history v2.0–v2.5)
+- Added `docs/RELEASE_CHECKLIST.md` with pre-release, review, release, and post-release verification
+
+**Security Hardening**
+- Added `slowapi` rate limiting to `backend/main.py` (200 req/min default)
+- Added Pydantic `model_validator` to `config.py` — warns on startup if DATABASE_URL is a placeholder
+- Bumped `APP_VERSION` to 2.5.0
+
+---
+
+### v2.4.0 — April 15, 2026
+
+**NLP Extraction Overhaul**
+- Complete rewrite of `nlp_extractor.py` (539 → 900 lines)
+- 4-strategy cascade: Structural → Section-Aware → Global → Cross-Validation
+- `DocumentStructure` preprocessor (headers, tables, lists, sections)
+- `ExtractionResult` dataclass with confidence scores and evidence trails
+- 300+ technology keywords across 7 categories with canonical normalization
+- 3 new extraction fields: `integration_count`, `volatility_score`, `team_experience`
+- 20-point complexity scoring system replacing simple keyword matching
+
+**Pipeline Integration**
+- `integration_count` feeds IFPUG External Interface Files for accurate FP sizing
+- `volatility_score` feeds T08 (requirements volatility) for better effort prediction
+- `team_experience` feeds TeamExp / ManagerExp for precise team modeling
+- All changes backward-compatible with existing estimate records
+
+**Security Hardening**
+- Created `scripts/pre_push_check.py` — secret detection, .gitignore audit, env template check
+- Removed hardcoded credentials from frontend (migrated to env vars)
+- Hardened `.gitignore` with 15+ new patterns (.ruff_cache, .coverage, *.tsbuildinfo, etc.)
+- Created `docs/GITHUB_SECRETS_SETUP.md` for CI/CD secret configuration
+- Added `security-scan` job to CI pipeline (runs before all tests)
+
+**Architecture**
+- Created cross-platform `Makefile` with developer convenience targets
+- Created `backend/ml/README.md` documenting ML artifacts and regeneration
+- Updated CI pipeline to Python 3.13 (matching development environment)
+
+**Frontend**
+- 3 new fields in Step 2 form: External Integrations, Requirements Volatility, Team Experience
+- TypeScript compiles with 0 errors after all changes
+
+**Testing**
+- NLP test suite expanded: 15 → 35 tests (covering all 4 strategies)
+- Full backend suite: 111 tests total (106 passing, 5 pre-existing currency async failures)
+
+---
+
+### v2.3.0 — April 11, 2026
+
+- Multi-currency support (10 currencies, real-time exchange rates)
+- PDF/Excel/CSV export system with phase breakdown & risk tables
+- Glassmorphism dark-mode UI with micro-animations
+- One-command launcher (`run.py`)
+
+### v2.0.0 — April 9, 2026
+
+- RandomForest model (best of 8 algorithms) trained on 740-record merged dataset
+- IFPUG function point estimation pipeline
+- PERT-style min/likely/max predictions
+- Firebase Auth + Neon PostgreSQL integration
+- React + TypeScript frontend with 3-step estimation wizard
+- 10-factor risk analysis engine
+
+---
+
+> *Built by Atharv Sawane & Team - Predictify v3.2.0*
+
+
+## September 18 deployment verification
+
+- Owner approval lifts the production ML execution hold; it does not replace independent acceptance evidence.
+- Broad backend run: 504/509 passed initially; five database failures were caused by the stopped isolated PostgreSQL server. After restarting it, all six tests in the affected group passed, covering those failures.
+- Five production pipeline regression tests pass, including real fitting/export on a synthetic fixture. This is not production accuracy evidence.
+- The Linux backend image builds. Two isolated text parsers under a 512 MiB / 0.1 CPU container completed in 24.59 seconds with 210.8 MiB peak container memory. No production model was loaded; full-service memory and live readiness remain open.
+- Vercel continues to host the explicitly labelled UI-only preview. No PredictIQ Render backend has been created.
+- Current production training remains blocked by incompatible/incomplete historical source data and the absence of a bundle that passes the independent gates.
+
+```mermaid
+flowchart LR
+    UI[Vercel UI preview] --> API[Render backend: pending]
+    API --> DB[Database connection verification]
+    API --> Storage[Durable S3 storage verification]
+    API --> Model[Independent model acceptance: pending]
+    DB --> Gate[Live authenticated estimation and recovery gates]
+    Storage --> Gate
+    Model --> Gate
+    Gate --> Release[Production release]
+```
+
+Live provider checks: the supplied S3 credentials passed bucket access plus temporary object upload/download/deletion. The configured Neon hostname still failed DNS resolution while neon.tech resolved; no production schema changes were attempted. Database connectivity and model acceptance remain blocking.
+
+
+## Neon migration and research update, September 18
+
+Neon MCP identified the existing PredictIQ project on the free plan. Retrieved the current connection string into ignored production configuration. The endpoint resolves using public DNS; the local system resolver fails. Verified both synchronous TLS certificate/hostname validation and asyncpg access using a process-local DNS diagnostic; no OS resolver, hosts file or application DNS behavior was changed.
+
+Rehearsed the repository Alembic migrations on a temporary Neon branch, obtained the owner confirmation required by the migration tool, then applied through `005_role_retry` to production. Verified 11 profiles, 23 estimates and 20 documents retained; original-content checksums matched for profiles, estimates, documents and share links. Estimate lineage uniqueness exists and no lineage is missing. Temporary rehearsal branch was deleted by the tool. This is migration validation, not a completed independent backup/restore rehearsal.
+
+Trained eight research candidates on 891 historical projects and evaluated the selected model on 24 additional Albrecht projects (915 total research records). External error remains unacceptable for production; no model promotion occurred. See the production ML runbook for metrics and source limitations. Render backend creation and live model-backed estimation remain blocked by model acceptance, rather than missing Neon credentials.
+
+```mermaid
+flowchart LR
+    Neon[Neon production: migration 005 verified] --> API[Render backend: pending model acceptance]
+    S3[Storage round-trip verified] --> API
+    Research[915 historical research projects] --> Gate[External quality gate: failed]
+    Gate --> Review[Acquire compatible data and revise candidate]
+    Review --> Model[Validated production model: pending]
+    Model --> API
+    API --> E2E[Live authenticated estimation: pending]
+```
+
+## ML evidence update, September 22
+
+Implemented reproducible, checksum-verified acquisition and two research pipelines with new feature contracts. SiP supplies 8,175 eligible completed tasks across 18 project codes; JOSSE supplies 23,116 eligible issue/task records across 370 project codes. These are task records, not 31,291 completed software projects, and the two sources are not pooled into a project-cost dataset.
+
+SiP predicts task effort using an existing human estimate plus category/subcategory, with purged chronological splits. Its test MAE was 4.097 hours versus 4.118 for human estimates, but median percentage error and PRED(25) were worse. JOSSE uses description text with project-separated training/calibration/test cohorts; test MAE was 3.010 hours versus 3.029 for the median baseline, with weak percentage accuracy. Project-cluster bootstrap intervals include zero improvement for both. Neither candidate qualifies for production; artifacts remain local and cannot replace the production model.
+
+SEERA source review found that all 120 actual-effort labels exactly equal the authors' duration/staffing/hours formula. The checksum-pinned `ml.audit_seera` command reproduces this finding. SEERA is excluded as evidence of independently logged effort prediction accuracy; actual duration is also unavailable at planning time. Synthetic SMOGN rows are not counted as real projects.
+
+Corrected overlapping boundary dates in SiP's development validation windows and added a regression test. Existing experiment reports remain historical results from their recorded code hashes; no retuning on exposed test cohorts is presented as independent validation.
+
+```mermaid
+flowchart TD
+    Sources[Reviewed primary-source datasets] --> Hash[Bounded downloads and SHA-256 verification]
+    Hash --> Provenance[Target provenance and planning-time feature review]
+    Provenance --> SiP[SiP: human-estimate calibration]
+    Provenance --> JOSSE[JOSSE: task-description model]
+    Provenance --> SEERA[SEERA: derived-target audit / excluded]
+    SiP --> Time[Purged chronological validation]
+    JOSSE --> Groups[Whole-project holdouts]
+    Time --> Compare[Compare baselines and project-cluster uncertainty]
+    Groups --> Compare
+    Compare --> Block[No demonstrated reliable improvement: promotion blocked]
+    Block --> Next[Acquire independent compatible effort observations]
+```
+
+## Larger-data model iteration, September 22
+
+Acquired the full Itemlet research dataset (727,282 issues, 204 projects, 108 columns). This is a raw research inventory, not 727,282 usable project-cost examples. After completed-task, positive-hour, date and duplicate checks, 17,660 tasks across 106 projects qualified for a provisional experiment. Source hour-field documentation conflicts with extraction code; original-label verification remains open.
+
+Trained four text/structured candidates with summaries, story points, issue type and priority. The selected model reduced held-out MAE from 7.52 to 6.99 hours (7.1%) across 4,173 tasks from 22 held-out projects. Project-bootstrap uncertainty supports the relative gain. Absolute error remains too high: MdAPE 76.7%, PRED(25) 14.6%. It is not production-approved and is not directly comparable to the invalid legacy project-cost model. A separate nested JOSSE human-estimate calibration experiment retained the human baseline in every fold.
+
+Added streaming snapshot acquisition, target-integrity auditing, new model pipelines, and regression coverage. 52 related tests and Ruff passed. Model artifacts and source datasets remain local; production serving is unchanged.
+
+```mermaid
+flowchart LR
+    Raw[727282 Itemlet issues] --> Audit[Units and label-provenance audit]
+    Raw --> Filter[Completed tasks / dates / deduplication]
+    Filter --> Eligible[17660 eligible research tasks]
+    Eligible --> Split[Whole-project train / calibration / test]
+    Split --> Candidate[Summary + story points + type + priority]
+    Candidate --> Result[7.1 percent lower MAE vs median baseline]
+    Audit --> Hold[Original-label verification still required]
+    Result --> Hold
+    Hold --> Next[Improve absolute accuracy before production]
+```
+
+## Verified source labels and model refinement, September 22
+
+Implemented deterministic original-record verification against reviewed public Jira hosts. **21 of 21 sampled effort labels matched** across eight projects on the ONAP and Atlassian hosts. The unit concern is resolved for this sample; it is not dataset-wide certification. The checker rejects redirects, mismatched issue IDs, conflicting time fields and invalid durations, and does not collect descriptions or user information.
+
+Trained four nonlinear challengers using the original training partition only. None beat Ridge's development RMSLE (0.9974), so Ridge remains the selected candidate. Calibration and previously observed test cohorts were not reused for tuning. Story points exist in only 28.16% of training rows; planning-time features and team history remain important data gaps. 62 related tests passed and lint was corrected. Production remains blocked by absolute prediction error and incomplete independent evidence.
+
+```mermaid
+flowchart LR
+    Sample[21 deterministic issue samples] --> Jira[Original public Jira time totals]
+    Jira --> Verified[21 matched effort labels]
+    Verified --> Scope[Sample evidence only]
+    Train[11541 training tasks] --> Compare[Ridge plus four nonlinear challengers]
+    Compare --> Retain[Retain Ridge: lowest development RMSLE]
+    Retain --> Next[Acquire verified planning snapshots and team history]
+    Scope --> Next
+```
+
+The smoke-test checkpoint exposed missing `requests`/`python-dotenv` dependencies in the lean CI security job. Commit `b575789` installs the matching pinned versions before regression tests; local regression tests and Ruff pass. CI for that fix must be checked before claiming the new checkpoint fully green.
+
+## Monitoring activation and readiness incident
+
+The owner supplied UptimeRobot screenshots and confirmed receipt of the email. Monitoring is active: multiple probes detected the readiness 503 and an alert was sent. Live verification confirms liveness 200, Neon connected and Firebase initialized, with ML not loaded. This is the known unresolved prediction dependency, not a database or frontend outage. Alert delivery is now verified; successful recovery notification remains to be tested after readiness genuinely recovers.
+
+The screenshots revealed misleading legacy metadata while no model was serving. Unavailable status now returns no model version, confidence method or scores, and zero active training samples/features, instead of advertising the revoked 740-row model. This reporting repair intentionally preserves readiness 503. Loading a validated model remains necessary to resolve the incident.
+
+## September 28: readiness verification and estimate provenance
+
+Deployment `dep-dasju8u0tbcc73fol0s0` is live at source `480ef40`. Readiness now correctly reports no active model version and zero active training samples rather than legacy metrics; liveness remains 200 and readiness remains 503 with database/Firebase healthy. The underlying missing validated model is not resolved by this reporting correction.
+
+CI exposed an incomplete document-flow prediction fixture after unavailable metadata became null. The fixture now supplies its explicit synthetic model version. Estimate creation captures model provenance immediately after prediction, before awaiting database access, and rejects absent provenance with 503 before inserting any result. This also avoids orphaned persisted results followed by response validation errors if model readiness changes while awaiting the database. All 110 related document-flow and API integration tests passed; Ruff passed.
+
+### September 28: investigate the prediction blocker
+
+The training-only Itemlet diagnosis covers 11,541 tasks with whole projects separated across four folds. Calibration/test records remain untouched. Positive story points do not cure poor predictions: their cohort still has roughly 70% median relative error. One suspicious 225,001-hour task contributes 75.43% of development absolute error; original-record verification returned 403, so no unverified correction or score-driven exclusion was made. The diagnosis CLI and ten related tests are now reproducible. Automatic estimates remain unavailable. The owner subsequently delegated the release-direction decision. Manual task/rate budgeting is implemented as a separate workflow; see the September 28 section for validation and deployment status. Automatic ML approval remains blocked.
+
+## October 30: reproducible research-data inventory
+
+Added `python -m ml.dataset_status`, which derives the current research-data counts from named local source files rather than relying on presentation text. It explicitly distinguishes the revoked 740-row legacy CSV from research data and cannot report the research collection as production approved.
+
+- Verified core: **787** completed projects from China (499), Desharnais (81), Maxwell (62), and Kitchenham (145).
+- Expanded development collection: **891** projects after adding **104** AT&T Matson projects, with zero possible size/effort-pair overlaps found against the verified core.
+- Held-out diagnostic: **24** Albrecht projects are kept outside development tuning.
+- Total research inventory: **915** project records across six sources. This is not a 915-row production training dataset: the Albrecht cohort is held out, and the collection lacks the compatible nine planning-time inputs required by production serving.
+
+The script reports task-level research separately and never inflates its project count by treating issues or tasks as completed software projects. Its regression test and the production-pipeline contract suite passed (**11 tests**).

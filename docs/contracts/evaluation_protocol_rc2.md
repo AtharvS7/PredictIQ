@@ -1,3 +1,5 @@
+Status: Approved | Applies to: 2.0.0-rc.3 | Verified against commit: cdca041 | Date: 2026-11-08
+
 # Evaluation Protocol & Frozen Decision Rules (RC2)
 
 **Status:** FROZEN  

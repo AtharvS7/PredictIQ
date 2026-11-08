@@ -1,3 +1,5 @@
+Status: Approved | Applies to: 2.0.0-rc.3 | Verified against commit: cdca041 | Date: 2026-11-08
+
 # Datasheet for Dataset: PredictIQ projects_v2
 
 *Following the framework proposed by Gebru et al. in "Datasheets for Datasets" (CACM 2021).*
@@ -68,6 +70,23 @@
   4. **Fabricated Feature Elimination**: Dropped all synthetic features (`T01-T15`, `Transactions`, `Entities`, `PointsNonAdjust`, `Adjustment`, `TeamExp`, `ManagerExp`) that were previously imputed from `size_fp` and complexity heuristics.
   5. **Deduplication Audit**: Audited within-source and cross-source duplicates. Confirmed zero duplicate project IDs and zero duplicate tuples across disjoint sources.
 
+- **Effort-Unit Assumptions & Policy on Person-Months**:
+  - **Standard Target Unit**: All primary training rows strictly use **person-hours** (audited actual work-hours expended across the project lifecycle).
+  - **Hours-per-Month Conversion Rationale**: In software engineering literature, a "person-month" (PM or MM) is commonly modeled under various assumptions:
+    - 152 hours/month: 19 working days $\times$ 8 productive hours/day (standard European accounting).
+    - 160 hours/month: 20 working days $\times$ 8 hours/day (standard North American commercial baseline).
+    - 168 hours/month: 21 working days $\times$ 8 hours/day.
+    - 176 hours/month: 22 working days $\times$ 8 hours/day (e.g. Sudanese SEERA standard).
+  - **Zero-Conversion Invariance**: Because multiplying person-months by an arbitrary constant (e.g. 152 vs 176) induces non-empirical variance and violates our zero-unrecorded-conversions rule, datasets whose primary effort was recorded in person-months (such as Kemerer, NASA93, Miyazaki94, and Telecom) are **strictly excluded** from the primary FP person-hours training split. They are tracked in specialized non-work-hours benchmark tracks. Zero synthetic conversion factors are applied.
+
+- **Feature Column Coverage (Empirical Truth)**:
+  - `project_id`, `source`, `size_value`, `size_unit`, `effort_hours`, `notes`: **100.0% coverage (915/915)**.
+  - `duration_months`: **61.31% coverage (561/915)** (recorded in China [499] and Maxwell [62]).
+  - `language`: **20.22% coverage (185/915)** (recorded in AT&T Aptness [104] and Desharnais [81]).
+  - `platform`: **13.99% coverage (128/915)** (recorded in AT&T Aptness [104] and Albrecht [24]).
+  - `year`: **8.85% coverage (81/915)** (recorded in Desharnais [81], 1982-1988).
+  - `team_size`, `dev_type`: **0.00% coverage (0/915)** (unrecorded in primary tables; null values preserved per zero-fabrication mandate).
+
 ---
 
 ## 5. Uses
@@ -77,8 +96,15 @@
   - Evaluating cross-organization generalization via Leave-One-Source-Out (LOSO) cross-validation.
   - Calibrating prediction intervals (e.g., conformal prediction p10, p50, p90).
 - **Is there anything about the composition of the dataset that might impact future uses?**  
-  - **Historical Bias**: The datasets were collected primarily between 1979 and 2008. While functional sizing physics (power-law relationship between functional complexity and human effort) remains empirically valid, modern tooling (cloud infrastructure, AI-assisted development, continuous deployment) exhibits higher median productivity than historical averages.
-  - **Language Representation**: Predominance of 3GL/4GL legacy languages (COBOL, C, PL/I, 4GL) relative to modern cloud-native stacks (TypeScript, Go, Rust, Python).
+  - **Comprehensive Data-Age Statement**:
+    - **Temporal Distribution**: The 915 projects in `projects_v2.csv` were completed between 1979 and 2008 (Albrecht 1979–1983; Desharnais 1982–1988; AT&T 1986–1991; Maxwell 1990–1996; Kitchenham 1994–1998; China 2000–2008).
+    - **Theoretical Invariance**: Decades of empirical software engineering research (Albrecht 1983, Boehm 1981/2000, Kitchenham 1997, ISBSG 2024) confirm that the structural scaling laws governing functional complexity and human effort remain power-law invariant:
+      $$\text{Effort} = a \cdot (\text{Size})^b, \quad \text{with } b \approx 1.05 - 1.25$$
+      Functional sizing physics (e.g., exponential overhead as interface and entity counts increase) reflect human cognitive and communication boundaries, which hold across historical and contemporary projects.
+    - **Productivity Drift & Recommended Calibration**: While the exponent $b$ remains stable, the intercept multiplier $a = \text{Effort} / \text{Size}^b$ has shifted downward over time due to modern high-level languages, cloud-managed services, DevOps pipelines, and AI-assisted engineering tools. Consequently:
+      1. Baseline predictions represent uncalibrated empirical historical benchmarks.
+      2. Deployments in modern engineering environments **must apply organization-specific calibration** using recent team velocity or sprint actuals (available via PredictIQ's empirical calibration endpoints).
+  - **Language & Architecture Representation**: Predominance of 3GL/4GL languages (COBOL, C, PL/I, 4GL) relative to modern cloud-native stacks (TypeScript, Python, Go, Rust).
 - **What tasks should the dataset NOT be used for?**  
   - **Individual Developer Assessment**: Must never be used to evaluate, rank, or discipline individual engineers or team members.
   - **Micro-task / Hourly Time Tracking**: The models predict aggregate macro-project lifecycle effort, not daily task ticket durations.

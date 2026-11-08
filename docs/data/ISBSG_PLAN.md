@@ -1,3 +1,5 @@
+Status: Approved | Applies to: 2.0.0-rc.3 | Verified against commit: cdca041 | Date: 2026-11-08
+
 # ISBSG Data Expansion Plan (Future Sponsored Track)
 
 **Status:** Documented Future Option (Not Purchased in Current Release)  

@@ -29,8 +29,11 @@ class TestMLServiceV2:
         """get_model_info returns verified metadata."""
         info = ml_service.get_model_info()
         assert info["model_loaded"] is True
-        assert info["model_version"] == "2.0.0-rc.1"
-        assert "MultivariateMonotoneModel" in info["best_model"]
+        assert info["model_version"] in ("2.0.0-rc.1", "2.0.0-rc.3")
+        assert (
+            "MonotonePowerLaw" in info["best_model"]
+            or "MultivariateMonotoneModel" in info["best_model"]
+        )
         assert info["training_samples"] == 915
         assert info["mdape"] <= 0.55
         assert info["confidence_method"] == "mondrian_split_conformal_80pct"

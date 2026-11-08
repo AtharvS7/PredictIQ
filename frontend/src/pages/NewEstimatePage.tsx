@@ -745,7 +745,7 @@ export default function NewEstimatePage() {
                       value={params.team_size}
                       onChange={(e) => setParams({ ...params, team_size: Number(e.target.value) })}
                     />
-                    <p style={hintStyle}>Full-time equivalent engineers</p>
+                    <p style={hintStyle}>Staffing capacity indicator (Brooks&apos; Law: does not shorten effort)</p>
                   </div>
 
                   {/* Planned Target Duration */}
@@ -768,7 +768,7 @@ export default function NewEstimatePage() {
                         })
                       }
                     />
-                    <p style={hintStyle}>Target planning horizon (not predicted effort duration)</p>
+                    <p style={hintStyle}>Target planning horizon (effort depends strictly on functional size)</p>
                   </div>
 
                   {/* Methodology */}

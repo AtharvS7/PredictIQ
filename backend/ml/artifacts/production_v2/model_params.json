@@ -1,20 +1,12 @@
 {
-  "model_version": "2.0.0-rc.1",
-  "architecture": "MonotonePowerLaw + MondrianConformalPredictor",
+  "model_version": "2.0.0-rc.3",
+  "architecture": "MonotonePowerLaw + MondrianConformal",
   "parameters": {
     "base_marginal": {
       "beta0": 3.1880360932291065,
       "a": 24.24077404471689,
       "b": 0.8270266757672359
-    },
-    "multivariate": {
-      "beta0": 3.318083087164682,
-      "a": 27.60737886478216,
-      "b": 0.592956208655621,
-      "c": 0.528897172194948
-    },
-    "has_duration": true,
-    "n_valid_duration_train": 450
+    }
   },
   "calibration": {
     "conformal_80": {

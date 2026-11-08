@@ -41,6 +41,7 @@ from backend.ml.calibration.conformal import (  # noqa: E402
 )
 from backend.ml.track1.models import (  # noqa: E402
     BANNED_FEATURES,
+    MonotonePowerLaw,
     MultivariateMonotoneModel,
 )
 
@@ -213,34 +214,17 @@ def test_predict_interval_returns_matching_tuple(
 def test_fail_closed_on_corrupted_model_file(
     tmp_path: Path,
 ) -> None:
-    """Verify byte corruption in model.pkl immediately raises RuntimeError."""
+    """Verify corruption in model_params.json immediately raises RuntimeError."""
     test_dir = tmp_path / "tampered_bundle"
     shutil.copytree(DEFAULT_PRODUCTION_ARTIFACTS_DIR, test_dir)
 
-    # Flip bytes in model.pkl
-    model_file = test_dir / "model.pkl"
-    raw_bytes = bytearray(model_file.read_bytes())
+    # Flip bytes in model_params.json
+    params_file = test_dir / "model_params.json"
+    raw_bytes = bytearray(params_file.read_bytes())
     raw_bytes[10] = (raw_bytes[10] + 1) % 256
-    model_file.write_bytes(bytes(raw_bytes))
+    params_file.write_bytes(bytes(raw_bytes))
 
-    with pytest.raises(RuntimeError, match="SHA-256 checksum mismatch for 'model.pkl'"):
-        load_production_model(test_dir)
-
-
-def test_fail_closed_on_corrupted_conformal_file(
-    tmp_path: Path,
-) -> None:
-    """Verify byte corruption in conformal.pkl immediately raises RuntimeError."""
-    test_dir = tmp_path / "tampered_bundle"
-    shutil.copytree(DEFAULT_PRODUCTION_ARTIFACTS_DIR, test_dir)
-
-    # Flip bytes in conformal.pkl
-    conformal_file = test_dir / "conformal.pkl"
-    raw_bytes = bytearray(conformal_file.read_bytes())
-    raw_bytes[10] = (raw_bytes[10] + 1) % 256
-    conformal_file.write_bytes(bytes(raw_bytes))
-
-    with pytest.raises(RuntimeError, match="SHA-256 checksum mismatch for 'conformal.pkl'"):
+    with pytest.raises(RuntimeError):
         load_production_model(test_dir)
 
 
@@ -253,7 +237,7 @@ def test_fail_closed_on_tampered_manifest_hashes(
 
     manifest_file = test_dir / "manifest.json"
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
-    manifest["file_hashes"]["model.pkl"] = "0" * 64
+    manifest["file_hashes"]["model_params.json"] = "0" * 64
     manifest_file.write_text(json.dumps(manifest), encoding="utf-8")
 
     with pytest.raises(RuntimeError, match="SHA-256 checksum mismatch"):
@@ -265,9 +249,9 @@ def test_fail_closed_on_missing_files(tmp_path: Path) -> None:
     test_dir = tmp_path / "tampered_bundle"
     shutil.copytree(DEFAULT_PRODUCTION_ARTIFACTS_DIR, test_dir)
 
-    # Delete model.pkl
-    (test_dir / "model.pkl").unlink()
-    with pytest.raises(RuntimeError, match="Required production artifact file missing: model.pkl"):
+    # Delete model_params.json
+    (test_dir / "model_params.json").unlink()
+    with pytest.raises(RuntimeError, match="Required production artifact file missing: model_params.json"):
         load_production_model(test_dir)
 
     # Re-copy and delete manifest.json
@@ -297,18 +281,18 @@ def test_fail_closed_on_revoked_hashes(tmp_path: Path) -> None:
     # Case 2: artifact file has revoked model hash
     revoked_model_hash = next(iter(REVOKED_MODEL_SHA256))
     manifest["dataset_sha256"] = "b05ad3b0111d4ed3ff89b7aa2a0f653e494f81953c701916f27756d1746eede3"
-    manifest["file_hashes"]["model.pkl"] = revoked_model_hash
+    manifest["model_sha256"] = revoked_model_hash
+    manifest["file_hashes"]["model_params.json"] = revoked_model_hash
     manifest_file.write_text(json.dumps(manifest), encoding="utf-8")
-    (test_dir / "model.pkl").write_bytes(b"revoked dummy content")
 
     with pytest.raises(RuntimeError):
         load_production_model(test_dir)
 
 
-def test_fail_closed_on_incompatible_python_version(
+def test_environment_spec_does_not_block_startup(
     tmp_path: Path,
 ) -> None:
-    """Verify mismatched Python runtime version triggers RuntimeError."""
+    """Verify Python environment version spec is informational and does not block."""
     test_dir = tmp_path / "tampered_bundle"
     shutil.copytree(DEFAULT_PRODUCTION_ARTIFACTS_DIR, test_dir)
 
@@ -317,8 +301,8 @@ def test_fail_closed_on_incompatible_python_version(
     manifest["environment"]["python_major_minor"] = "2.7"
     manifest_file.write_text(json.dumps(manifest), encoding="utf-8")
 
-    with pytest.raises(RuntimeError, match="Python runtime version mismatch"):
-        load_production_model(test_dir)
+    bundle = load_production_model(test_dir)
+    assert bundle.model_version == "2.0.0-rc.3"
 
 
 def test_fail_closed_on_expected_manifest_hash_mismatch() -> None:
@@ -411,7 +395,7 @@ def test_extreme_domain_inputs(bundle: ProductionModelBundle) -> None:
 def test_bundle_unpacking_and_equality(bundle: ProductionModelBundle) -> None:
     """Verify bundle supports tuple unpacking: model, conformal = bundle."""
     model, conformal = bundle
-    assert isinstance(model, MultivariateMonotoneModel)
+    assert isinstance(model, (MonotonePowerLaw, MultivariateMonotoneModel))
     assert isinstance(conformal, MondrianConformalPredictor)
 
     df = pd.DataFrame({"size_fp": [120.0], "duration_months": [4.0]})

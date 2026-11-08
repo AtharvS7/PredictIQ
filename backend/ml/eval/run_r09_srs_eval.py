@@ -1,7 +1,7 @@
 """
-PredictIQ v2 Checkpoint R09 — NLP & Golden SRS Benchmark Evaluation Harness
-===========================================================================
-Feeds gold-standard Software Requirements Specification (SRS) documents into
+PredictIQ v2 Checkpoint R09 — NLP Synthetic SRS Benchmark Evaluation Harness
+=============================================================================
+Feeds synthetic regression Software Requirements Specification (SRS) documents into
 backend.app.services.nlp_extractor.extract_features_from_document, compares
 extracted values to ground truth annotations across 6 software domains, and computes:
   - Functional Size Relative Error (MdAPE, MAPE, PRED25, PRED30)
@@ -11,6 +11,11 @@ extracted values to ground truth annotations across 6 software domains, and comp
   - Complexity Classification Accuracy
   - Domain-Level Performance Breakdown (6 domains)
   - Verification of Quality Gates
+
+NOTE ON ACCURACY:
+The 36 documents evaluated here are synthetic regression fixtures designed to verify
+engine consistency and guard against algorithmic regressions. A 0.00% MdAPE achieved
+on this synthetic corpus does NOT represent real-world document extraction accuracy.
 """
 
 from __future__ import annotations
@@ -37,10 +42,15 @@ from backend.app.services.nlp_extractor import extract_features_from_document
 
 
 def load_gold_srs_suite() -> tuple[Path, dict[str, Any]]:
-    """Locate and load the gold SRS annotations and documents directory."""
-    srs_dir = _REPO_ROOT / "backend" / "tests" / "fixtures" / "srs"
+    """Locate and load the synthetic SRS regression annotations and documents directory."""
+    srs_dir = _REPO_ROOT / "backend" / "tests" / "fixtures" / "srs_synthetic"
     if not srs_dir.exists():
-        raise FileNotFoundError(f"SRS fixtures directory not found at {srs_dir}")
+        # Fallback to legacy path if present
+        legacy_dir = _REPO_ROOT / "backend" / "tests" / "fixtures" / "srs"
+        if legacy_dir.exists():
+            srs_dir = legacy_dir
+        else:
+            raise FileNotFoundError(f"SRS fixtures directory not found at {srs_dir}")
 
     annotations_file = srs_dir / "annotations.json"
     if not annotations_file.exists():

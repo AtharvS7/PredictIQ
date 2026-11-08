@@ -62,7 +62,7 @@ export default function LandingPage() {
             lineHeight: 1.7,
           }}
         >
-          PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction &amp; Empirical Bayes Shrinkage. Plan transparent budgets and generate calibrated effort intervals.
+          PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction &amp; Empirical Bayes Shrinkage. Effort depends strictly on functional size (`size_fp`). Dual conformal ranges: 50% Likely Band (P25–P75) and 80% Plausible Range (P10–P90). Typical novel-project error roughly ±50%.
         </p>
 
         {/* BUTTONS */}
@@ -267,7 +267,7 @@ export default function LandingPage() {
             margin: 0,
           }}
         >
-          © 2026 Predictify. Know Before You Build.
+          © 2026 PredictIQ. Know Before You Build.
         </p>
       </footer>
     </div>

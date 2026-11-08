@@ -139,3 +139,4 @@ Because `backend/ml/artifacts/loader.py` calls `_compute_sha256(artifact_path)` 
 - On Linux: Model loading throws `RuntimeError`, `ml_service.is_ready()` is `False`, `/ready` returns HTTP 503, `/health` returns HTTP 503 degraded, and automatic prediction capabilities are disabled.
 
 This proves the bug and establishes the baseline for Checkpoint S01.
+

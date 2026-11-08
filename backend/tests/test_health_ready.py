@@ -1,7 +1,7 @@
 """
-Unit and integration tests for Health & Ready endpoints (R01).
+Unit and integration tests for Health & Ready endpoints (R01 / S01).
 Tests:
-- /api/v1/health and /api/v1/ready return 200 when v2 bundle is verified and ready.
+- /api/v1/health and /api/v1/ready return 200 when v2/rc3 bundle is verified and ready.
 - capabilities.automatic_prediction is True when ready.
 - /api/v1/ready returns 503 when the model bundle is tampered or unavailable.
 - capabilities.automatic_prediction is False when model bundle is unavailable.
@@ -33,7 +33,7 @@ def test_client_with_mocks():
 
 
 def test_health_and_ready_200_when_bundle_ready(test_client_with_mocks):
-    """When the production v2 bundle is loaded and valid, /health and /ready return 200."""
+    """When the production bundle is loaded and valid, /health and /ready return 200."""
     client = test_client_with_mocks
 
     # Test /health
@@ -44,7 +44,7 @@ def test_health_and_ready_200_when_bundle_ready(test_client_with_mocks):
     assert data_health["capabilities"]["automatic_prediction"] is True
     assert data_health["services"]["ml_model"] == "ready"
     assert data_health["model_loaded"] is True
-    assert data_health["model_version"] == "2.0.0-rc.1"
+    assert data_health["model_version"] == "2.0.0-rc.3"
 
     # Test /ready
     resp_ready = client.get("/api/v1/ready")
@@ -52,6 +52,8 @@ def test_health_and_ready_200_when_bundle_ready(test_client_with_mocks):
     data_ready = resp_ready.json()
     assert data_ready["status"] == "healthy"
     assert data_ready["capabilities"]["automatic_prediction"] is True
+    assert data_ready["model_loaded"] is True
+    assert data_ready["model_version"] == "2.0.0-rc.3"
 
 
 def test_ready_503_when_bundle_tampered_or_unavailable(test_client_with_mocks):
@@ -63,6 +65,7 @@ def test_ready_503_when_bundle_tampered_or_unavailable(test_client_with_mocks):
          patch("app.api.v1.health.ml_service.get_model_info", return_value={
              "model_loaded": False,
              "model_mode": "unavailable",
+             "model_version": None,
              "error": "Tampered manifest checksum",
          }):
 

@@ -1,18 +1,15 @@
 {
-  "model_version": "2.0.0-rc.1",
+  "model_version": "2.0.0-rc.3",
   "dataset_sha256": "b05ad3b0111d4ed3ff89b7aa2a0f653e494f81953c701916f27756d1746eede3",
   "dataset_records": 915,
-  "architecture": "MultivariateMonotoneModel + MondrianConformalPredictor",
+  "architecture": "MonotonePowerLaw + MondrianConformal",
   "training_timestamp": "2026-11-07T17:40:58.041884+00:00",
+  "model_sha256": "8066e9cf4c18f5fa45957bad9050cbab6effb68923a787f974640a463ede93d2",
   "file_hashes": {
-    "model.pkl": "b3af00831805e5655a9a941198b1608efb222f94c3d8a977bef8eb0c15791873",
-    "conformal.pkl": "d02b3f68f5e2e7ad93c1f1f247bae36c7f6cc4cc4bdb3c51b9344c6fa7810535",
-    "model_params.json": "c8f746b8c006028faec9e1dfefab8f17b22b065e8ea45aa77cb971a098dda644"
+    "model_params.json": "8066e9cf4c18f5fa45957bad9050cbab6effb68923a787f974640a463ede93d2"
   },
   "allowed_inputs": [
-    "size_fp",
-    "duration_months",
-    "team_size"
+    "size_fp"
   ],
   "banned_features": [
     "adjustment",
@@ -51,15 +48,7 @@
       "beta0": 3.1880360932291065,
       "a": 24.24077404471689,
       "b": 0.8270266757672359
-    },
-    "multivariate": {
-      "beta0": 3.318083087164682,
-      "a": 27.60737886478216,
-      "b": 0.592956208655621,
-      "c": 0.528897172194948
-    },
-    "has_duration": true,
-    "n_valid_duration_train": 450
+    }
   },
   "calibration_spec": {
     "nominal_coverage": 0.8,

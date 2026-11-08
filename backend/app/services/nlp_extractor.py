@@ -14,6 +14,8 @@ Returns dict[str, {value, confidence}] for each field.
 All values feed into ml_service._build_feature_vector().
 """
 
+from __future__ import annotations
+
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -50,6 +52,50 @@ class DocumentStructure:
     list_items: list[str]      # All bullet/numbered list items
     sections: dict[str, str]   # section_header_lower -> section_body_text
     word_count: int
+
+
+@dataclass(frozen=True)
+class FunctionalSizeSizingConfig:
+    """Documented heuristic assumptions for deriving functional size (FP) from NLP counts.
+
+    METHODOLOGICAL NOTICE & EXPLICIT ASSUMPTION:
+    Inferring IFPUG Functional Size Points (FP) directly from unstructured natural-language
+    feature counts (user stories/requirements) and integration touchpoints is an engineering
+    ASSUMPTION based on agile-to-function-point heuristic analogies.
+    Real-world variance in user story scoping, document granularity, and integration complexity
+    is wide; therefore, these point estimates represent heuristic approximations rather than
+    ground-truth counts.
+
+    Parameters:
+        fp_per_story: Nominal assumption of functional size per user story/feature (nominal = 8.0 FP).
+        fp_per_story_p10: Wide lower bound for minimal story scope (default = 4.0 FP).
+        fp_per_story_p90: Wide upper bound for complex story scope (default = 14.0 FP).
+        fp_per_integration: Nominal assumption of functional size per external integration (nominal = 5.0 FP).
+        fp_per_integration_p10: Wide lower bound for simple integration (default = 2.0 FP).
+        fp_per_integration_p90: Wide upper bound for complex integration (default = 10.0 FP).
+        uncertainty_p10_ratio: Lower bound quantile multiplier (default 0.85).
+        uncertainty_p90_ratio: Upper bound quantile multiplier (default 1.15).
+        min_size_fp: Minimal functional size floor (default 10.0 FP).
+        default_nominal_fp: Baseline size used when text is insufficient (default 90.0 FP).
+        is_assumption: Flag marking derived sizing as a heuristic assumption (True).
+        assumption_rationale: Documented rationale of the heuristic.
+    """
+    fp_per_story: float = 8.0
+    fp_per_story_p10: float = 4.0
+    fp_per_story_p90: float = 14.0
+    fp_per_integration: float = 5.0
+    fp_per_integration_p10: float = 2.0
+    fp_per_integration_p90: float = 10.0
+    uncertainty_p10_ratio: float = 0.85
+    uncertainty_p90_ratio: float = 1.15
+    min_size_fp: float = 10.0
+    default_nominal_fp: float = 90.0
+    is_assumption: bool = True
+    assumption_rationale: str = (
+        "Heuristic conversion assumption: nominal 8.0 FP/user story (uncertainty range [4.0, 14.0]) and "
+        "5.0 FP/integration touchpoint (uncertainty range [2.0, 10.0]) derived from agile sizing guidelines; "
+        "exhibits wide empirical variance."
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -401,6 +447,9 @@ class NLPExtractor:
     4. Cross-validation — pick highest confidence
     """
 
+    def __init__(self, sizing_config: FunctionalSizeSizingConfig | None = None) -> None:
+        self.sizing_config = sizing_config or FunctionalSizeSizingConfig()
+
     def extract(self, text: str) -> dict:
         """
         Analyze document text and extract project parameters.
@@ -430,8 +479,21 @@ class NLPExtractor:
 
         fc_val = float(feature_count.value) if feature_count.value else 10.0
         ic_val = float(integration_count.value) if integration_count.value else 2.0
-        derived_fp = max(10.0, fc_val * 8.0 + ic_val * 5.0)
+        derived_fp = max(
+            self.sizing_config.min_size_fp,
+            fc_val * self.sizing_config.fp_per_story + ic_val * self.sizing_config.fp_per_integration,
+        )
         size_conf = min(0.9, (feature_count.confidence + integration_count.confidence) / 2.0)
+
+        # Explicit assumption: wide uncertainty intervals derived from story/integration ranges
+        wide_p10 = max(
+            self.sizing_config.min_size_fp,
+            fc_val * self.sizing_config.fp_per_story_p10 + ic_val * self.sizing_config.fp_per_integration_p10,
+        )
+        wide_p90 = max(
+            wide_p10 + 1.0,
+            fc_val * self.sizing_config.fp_per_story_p90 + ic_val * self.sizing_config.fp_per_integration_p90,
+        )
 
         extracted = {
             "project_type": project_type.to_dict(),
@@ -449,11 +511,20 @@ class NLPExtractor:
                 "value": round(derived_fp, 1),
                 "confidence": round(size_conf, 2),
                 "uncertainty": {
-                    "p10": round(derived_fp * 0.85, 1),
+                    "p10": round(derived_fp * self.sizing_config.uncertainty_p10_ratio, 1),
                     "p50": round(derived_fp, 1),
-                    "p90": round(derived_fp * 1.15, 1),
+                    "p90": round(derived_fp * self.sizing_config.uncertainty_p90_ratio, 1),
                 },
                 "source": "nlp",
+                "is_assumption": self.sizing_config.is_assumption,
+                "assumption_parameters": {
+                    "fp_per_story_nominal": self.sizing_config.fp_per_story,
+                    "fp_per_story_range": [self.sizing_config.fp_per_story_p10, self.sizing_config.fp_per_story_p90],
+                    "fp_per_integration_nominal": self.sizing_config.fp_per_integration,
+                    "fp_per_integration_range": [self.sizing_config.fp_per_integration_p10, self.sizing_config.fp_per_integration_p90],
+                    "wide_uncertainty_interval": [round(wide_p10, 1), round(wide_p90, 1)],
+                    "rationale": self.sizing_config.assumption_rationale,
+                },
             },
         }
 
@@ -545,11 +616,22 @@ class NLPExtractor:
             "team_experience": ExtractionResult(2.0, 0.1, strategy="default"),
         }
         res = {k: v.to_dict() for k, v in defaults.items()}
+        nom_fp = self.sizing_config.default_nominal_fp
+        p10_fp = round(nom_fp * self.sizing_config.uncertainty_p10_ratio, 1)
+        p90_fp = round(nom_fp * self.sizing_config.uncertainty_p90_ratio, 1)
         res["size_fp"] = {
-            "value": 90.0,
+            "value": nom_fp,
             "confidence": 0.2,
-            "uncertainty": {"p10": 76.5, "p50": 90.0, "p90": 103.5},
+            "uncertainty": {"p10": p10_fp, "p50": nom_fp, "p90": p90_fp},
             "source": "nlp",
+            "is_assumption": self.sizing_config.is_assumption,
+            "assumption_parameters": {
+                "fp_per_story_nominal": self.sizing_config.fp_per_story,
+                "fp_per_story_range": [self.sizing_config.fp_per_story_p10, self.sizing_config.fp_per_story_p90],
+                "fp_per_integration_nominal": self.sizing_config.fp_per_integration,
+                "fp_per_integration_range": [self.sizing_config.fp_per_integration_p10, self.sizing_config.fp_per_integration_p90],
+                "rationale": self.sizing_config.assumption_rationale,
+            },
         }
         return res
 
@@ -676,11 +758,15 @@ class NLPExtractor:
         sorted_keywords = sorted(ALL_TECH_KEYWORDS, key=len, reverse=True)
 
         for tech in sorted_keywords:
+            tech_lower = tech.lower()
+            if tech_lower not in combined_text:
+                continue
+
             pattern = r"\b" + re.escape(tech) + r"\b"
 
             # For ambiguous words, only match in tech-related sections
-            if tech.lower() in AMBIGUOUS_TECHS:
-                if tech_section_text and re.search(pattern, tech_section_text, re.IGNORECASE):
+            if tech_lower in AMBIGUOUS_TECHS:
+                if tech_section_text and (tech_lower in tech_section_text) and re.search(pattern, tech_section_text, re.IGNORECASE):
                     found.append(tech)
                 continue
 
@@ -1122,6 +1208,9 @@ class NLPExtractor:
         found_services: set[str] = set()
 
         for service in EXTERNAL_SERVICES:
+            service_lower = service.lower()
+            if service_lower not in doc.text_lower:
+                continue
             if re.search(r"\b" + re.escape(service) + r"\b", doc.text_lower):
                 found_services.add(service)
 
@@ -1228,7 +1317,8 @@ class NLPExtractor:
 
 
 # ══════════════════════════════════════════════════════════════════════
-# Singleton
+# Singleton & Primary API Entrypoints
 # ══════════════════════════════════════════════════════════════════════
 
 nlp_extractor = NLPExtractor()
+extract_features_from_document = nlp_extractor.extract

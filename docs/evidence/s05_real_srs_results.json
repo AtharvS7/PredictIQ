@@ -1,0 +1,536 @@
+{
+  "benchmark": "PredictIQ Checkpoint S05 \u2014 Real-World Public Requirements (PURE Corpus)",
+  "documents_evaluated": 18,
+  "total_words_processed": 95299,
+  "total_estimated_pages": 272.4,
+  "robustness_invariants": {
+    "zero_crashes": true,
+    "crashes_count": 0,
+    "zero_non_finite": true,
+    "non_finite_issues_count": 0,
+    "all_invariants_pass": true
+  },
+  "performance_profile": {
+    "mean_seconds": 0.1127,
+    "p50_seconds": 0.0653,
+    "p90_seconds": 0.246,
+    "p95_seconds": 0.3297,
+    "max_seconds": 0.5828,
+    "p95_under_3s_target": true,
+    "scaling_50_page_docs_count": 4,
+    "scaling_50_page_p95_seconds": 0.5381,
+    "scaling_50_page_under_3s_gate": true
+  },
+  "unsupervised_feature_distributions": {
+    "size_fp": {
+      "min": 18.0,
+      "p25": 34.0,
+      "median": 42.0,
+      "p75": 136.0,
+      "max": 394.0,
+      "mean": 102.9
+    },
+    "feature_counts": {
+      "min": 1,
+      "median": 4,
+      "max": 48,
+      "mean": 11.6
+    },
+    "integration_counts": {
+      "min": 2,
+      "median": 2,
+      "max": 2,
+      "mean": 2.0
+    }
+  },
+  "human_ground_truth_status": {
+    "labels_present": false,
+    "labeled_documents_count": 0,
+    "mdape_pct": null,
+    "mape_pct": null,
+    "pred25_pct": null,
+    "note": "No human labels filled in template yet. Sizing evaluation reports unsupervised distribution."
+  },
+  "crashes": [],
+  "non_finite_issues": [],
+  "per_document_results": [
+    {
+      "document_id": "real_01_keepass",
+      "filename": "real_01_keepass.md",
+      "formal_title": "KeePass Password Safe 1.10 Software Requirements Specification",
+      "domain": "Desktop Security",
+      "license": "GPL-2.0",
+      "word_count": 3617,
+      "estimated_pages": 10.3,
+      "latency_seconds": 0.0789,
+      "extracted": {
+        "size_fp": 34.0,
+        "confidence": 0.55,
+        "uncertainty_p10": 28.9,
+        "uncertainty_p50": 34.0,
+        "uncertainty_p90": 39.1,
+        "feature_count": 3,
+        "integration_count": 2,
+        "tech_count": 0,
+        "tech_stack": [],
+        "project_type": "Web App",
+        "complexity": "Low",
+        "project_name": "KeePass Password Safe"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_02_gemini",
+      "filename": "real_02_gemini.md",
+      "formal_title": "Gemini 8m Telescopes Control System Software Requirements Specification",
+      "domain": "Scientific Observatory Control",
+      "license": "Open Access (NSF/AURA)",
+      "word_count": 12199,
+      "estimated_pages": 34.9,
+      "latency_seconds": 0.285,
+      "extracted": {
+        "size_fp": 42.0,
+        "confidence": 0.65,
+        "uncertainty_p10": 35.7,
+        "uncertainty_p50": 42.0,
+        "uncertainty_p90": 48.3,
+        "feature_count": 4,
+        "integration_count": 2,
+        "tech_count": 2,
+        "tech_stack": [
+          "Gemini",
+          "Node.js"
+        ],
+        "project_type": "Web App",
+        "complexity": "High",
+        "project_name": "Gemini 8m Telescopes Control"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_03_tcs",
+      "filename": "real_03_tcs.md",
+      "formal_title": "Tactical Control System (TCS) System/Subsystem Specification",
+      "domain": "Aerospace & Defense Command",
+      "license": "Public Domain (US DoD)",
+      "word_count": 14587,
+      "estimated_pages": 41.7,
+      "latency_seconds": 0.1243,
+      "extracted": {
+        "size_fp": 202.0,
+        "confidence": 0.53,
+        "uncertainty_p10": 171.7,
+        "uncertainty_p50": 202.0,
+        "uncertainty_p90": 232.3,
+        "feature_count": 24,
+        "integration_count": 2,
+        "tech_count": 1,
+        "tech_stack": [
+          "Express"
+        ],
+        "project_type": "Data Platform",
+        "complexity": "High",
+        "project_name": "Tactical Control"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_04_phin",
+      "filename": "real_04_phin.md",
+      "formal_title": "Public Health Information Network (PHIN) Outbreak Management Functional Requirements",
+      "domain": "Public Health & Epidemiology",
+      "license": "Public Domain (US CDC)",
+      "word_count": 4829,
+      "estimated_pages": 13.8,
+      "latency_seconds": 0.139,
+      "extracted": {
+        "size_fp": 394.0,
+        "confidence": 0.4,
+        "uncertainty_p10": 334.9,
+        "uncertainty_p50": 394.0,
+        "uncertainty_p90": 453.1,
+        "feature_count": 48,
+        "integration_count": 2,
+        "tech_count": 0,
+        "tech_stack": [],
+        "project_type": "Data Platform",
+        "complexity": "Medium",
+        "project_name": "transporting the data"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_05_themas",
+      "filename": "real_05_themas.md",
+      "formal_title": "THEMAS Energy Management System Software Requirements Specification",
+      "domain": "Energy Management & Utilities",
+      "license": "Open Access (EU Telematics)",
+      "word_count": 4033,
+      "estimated_pages": 11.5,
+      "latency_seconds": 0.1082,
+      "extracted": {
+        "size_fp": 18.0,
+        "confidence": 0.55,
+        "uncertainty_p10": 15.3,
+        "uncertainty_p50": 18.0,
+        "uncertainty_p90": 20.7,
+        "feature_count": 1,
+        "integration_count": 2,
+        "tech_count": 0,
+        "tech_stack": [],
+        "project_type": "Enterprise Software",
+        "complexity": "Low",
+        "project_name": "THEMAS Energy Management"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_06_microcare",
+      "filename": "real_06_microcare.md",
+      "formal_title": "Microcare Voucher Management Health System Software Requirements Specification",
+      "domain": "Healthcare Management",
+      "license": "Open Source",
+      "word_count": 2875,
+      "estimated_pages": 8.2,
+      "latency_seconds": 0.0621,
+      "extracted": {
+        "size_fp": 154.0,
+        "confidence": 0.38,
+        "uncertainty_p10": 130.9,
+        "uncertainty_p50": 154.0,
+        "uncertainty_p90": 177.1,
+        "feature_count": 18,
+        "integration_count": 2,
+        "tech_count": 0,
+        "tech_stack": [],
+        "project_type": "Data Platform",
+        "complexity": "Low",
+        "project_name": "Microcare Voucher Management Health"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_07_peering",
+      "filename": "real_07_peering.md",
+      "formal_title": "Peering Internet Exchange Service Specification",
+      "domain": "Telecommunications & Peering",
+      "license": "Open Standard (IETF)",
+      "word_count": 2510,
+      "estimated_pages": 7.2,
+      "latency_seconds": 0.0684,
+      "extracted": {
+        "size_fp": 66.0,
+        "confidence": 0.55,
+        "uncertainty_p10": 56.1,
+        "uncertainty_p50": 66.0,
+        "uncertainty_p90": 75.9,
+        "feature_count": 7,
+        "integration_count": 2,
+        "tech_count": 2,
+        "tech_stack": [
+          "Apache",
+          "React"
+        ],
+        "project_type": "Web App",
+        "complexity": "Low",
+        "project_name": "internetworking between CDNs"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_08_qheadache",
+      "filename": "real_08_qheadache.md",
+      "formal_title": "QHeadache Clinical Diagnostic Decision Support System SRS",
+      "domain": "Clinical Decision Support",
+      "license": "Open Access (Medical Informatics)",
+      "word_count": 2051,
+      "estimated_pages": 5.9,
+      "latency_seconds": 0.0704,
+      "extracted": {
+        "size_fp": 26.0,
+        "confidence": 0.6,
+        "uncertainty_p10": 22.1,
+        "uncertainty_p50": 26.0,
+        "uncertainty_p90": 29.9,
+        "feature_count": 2,
+        "integration_count": 2,
+        "tech_count": 0,
+        "tech_stack": [],
+        "project_type": "Web App",
+        "complexity": "Low",
+        "project_name": "product named"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_09_gamma_j",
+      "filename": "real_09_gamma_j.md",
+      "formal_title": "Gamma J Radiation Therapy Treatment Planning System Software Requirements",
+      "domain": "Radiation Therapy Planning",
+      "license": "Open Access (Medical Physics)",
+      "word_count": 2156,
+      "estimated_pages": 6.2,
+      "latency_seconds": 0.0572,
+      "extracted": {
+        "size_fp": 34.0,
+        "confidence": 0.55,
+        "uncertainty_p10": 28.9,
+        "uncertainty_p50": 34.0,
+        "uncertainty_p90": 39.1,
+        "feature_count": 3,
+        "integration_count": 2,
+        "tech_count": 0,
+        "tech_stack": [],
+        "project_type": "API/Backend",
+        "complexity": "Low",
+        "project_name": "This is the Software"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_10_get_real",
+      "filename": "real_10_get_real.md",
+      "formal_title": "GetReal Video Streaming and Metadata Engine Specification",
+      "domain": "Multimedia Streaming",
+      "license": "GPL-2.0",
+      "word_count": 2151,
+      "estimated_pages": 6.1,
+      "latency_seconds": 0.0556,
+      "extracted": {
+        "size_fp": 138.0,
+        "confidence": 0.35,
+        "uncertainty_p10": 117.3,
+        "uncertainty_p50": 138.0,
+        "uncertainty_p90": 158.7,
+        "feature_count": 16,
+        "integration_count": 2,
+        "tech_count": 3,
+        "tech_stack": [
+          ".NET",
+          "HTML",
+          "CSS"
+        ],
+        "project_type": "Web App",
+        "complexity": "Low",
+        "project_name": "this"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_11_video_search",
+      "filename": "real_11_video_search.md",
+      "formal_title": "Video Search & Indexing Engine Specification",
+      "domain": "Search & Information Retrieval",
+      "license": "Open Source (MIT/BSD)",
+      "word_count": 1752,
+      "estimated_pages": 5.0,
+      "latency_seconds": 0.0474,
+      "extracted": {
+        "size_fp": 34.0,
+        "confidence": 0.6,
+        "uncertainty_p10": 28.9,
+        "uncertainty_p50": 34.0,
+        "uncertainty_p90": 39.1,
+        "feature_count": 3,
+        "integration_count": 2,
+        "tech_count": 1,
+        "tech_stack": [
+          "PHP"
+        ],
+        "project_type": "Web App",
+        "complexity": "Low",
+        "project_name": "software when"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_12_blitdraft",
+      "filename": "real_12_blitdraft.md",
+      "formal_title": "BlitDraft Collaborative Document Drafting Requirements Specification",
+      "domain": "Collaborative Editing",
+      "license": "Open Source (Apache-2.0)",
+      "word_count": 1597,
+      "estimated_pages": 4.6,
+      "latency_seconds": 0.0392,
+      "extracted": {
+        "size_fp": 26.0,
+        "confidence": 0.6,
+        "uncertainty_p10": 22.1,
+        "uncertainty_p50": 26.0,
+        "uncertainty_p90": 29.9,
+        "feature_count": 2,
+        "integration_count": 2,
+        "tech_count": 3,
+        "tech_stack": [
+          "Active Directory",
+          "Apache",
+          "HIPAA"
+        ],
+        "project_type": "Web App",
+        "complexity": "Medium",
+        "project_name": "This Functional"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_13_dii_coe",
+      "filename": "real_13_dii_coe.md",
+      "formal_title": "Defense Information Infrastructure Common Operating Environment (DII COE) SRS",
+      "domain": "Distributed Infrastructure",
+      "license": "Public Domain (US DoD DISA)",
+      "word_count": 1165,
+      "estimated_pages": 3.3,
+      "latency_seconds": 0.0285,
+      "extracted": {
+        "size_fp": 42.0,
+        "confidence": 0.55,
+        "uncertainty_p10": 35.7,
+        "uncertainty_p50": 42.0,
+        "uncertainty_p90": 48.3,
+        "feature_count": 4,
+        "integration_count": 2,
+        "tech_count": 0,
+        "tech_stack": [],
+        "project_type": "Web App",
+        "complexity": "Medium",
+        "project_name": "This Software"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_14_eirene_sys",
+      "filename": "real_14_eirene_sys.md",
+      "formal_title": "EIRENE System Requirements Specification for European Railway Telecommunications",
+      "domain": "Rail Telecommunications & GSM-R",
+      "license": "Open Standard (UIC / ERA)",
+      "word_count": 13162,
+      "estimated_pages": 37.6,
+      "latency_seconds": 0.2292,
+      "extracted": {
+        "size_fp": 42.0,
+        "confidence": 0.55,
+        "uncertainty_p10": 35.7,
+        "uncertainty_p50": 42.0,
+        "uncertainty_p90": 48.3,
+        "feature_count": 4,
+        "integration_count": 2,
+        "tech_count": 1,
+        "tech_stack": [
+          "Railway"
+        ],
+        "project_type": "Mobile App",
+        "complexity": "Low",
+        "project_name": "EIRENE"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_15_ertms",
+      "filename": "real_15_ertms.md",
+      "formal_title": "ERTMS/ETCS Railway Driver Machine Interface Functional Requirements Specification",
+      "domain": "Railway Signaling & Safety",
+      "license": "Open Standard (European Railway Agency)",
+      "word_count": 520,
+      "estimated_pages": 1.5,
+      "latency_seconds": 0.0095,
+      "extracted": {
+        "size_fp": 66.0,
+        "confidence": 0.35,
+        "uncertainty_p10": 56.1,
+        "uncertainty_p50": 66.0,
+        "uncertainty_p90": 75.9,
+        "feature_count": 7,
+        "integration_count": 2,
+        "tech_count": 1,
+        "tech_stack": [
+          "Railway"
+        ],
+        "project_type": "Web App",
+        "complexity": "Low",
+        "project_name": ""
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_16_peppol",
+      "filename": "real_16_peppol.md",
+      "formal_title": "PEPPOL Pan-European Public Procurement On-Line Functional Requirements",
+      "domain": "E-Procurement & B2G Messaging",
+      "license": "Open PEPPOL AISBL / EU Commission",
+      "word_count": 24088,
+      "estimated_pages": 68.8,
+      "latency_seconds": 0.5828,
+      "extracted": {
+        "size_fp": 378.0,
+        "confidence": 0.55,
+        "uncertainty_p10": 321.3,
+        "uncertainty_p50": 378.0,
+        "uncertainty_p90": 434.7,
+        "feature_count": 46,
+        "integration_count": 2,
+        "tech_count": 1,
+        "tech_stack": [
+          "Express"
+        ],
+        "project_type": "Enterprise Software",
+        "complexity": "High",
+        "project_name": "participation"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_17_cctns",
+      "filename": "real_17_cctns.md",
+      "formal_title": "Crime and Criminal Tracking Network & Systems (CCTNS) Functional Specification",
+      "domain": "Public Safety & Law Enforcement",
+      "license": "Open Government Data",
+      "word_count": 859,
+      "estimated_pages": 2.5,
+      "latency_seconds": 0.0203,
+      "extracted": {
+        "size_fp": 130.0,
+        "confidence": 0.35,
+        "uncertainty_p10": 110.5,
+        "uncertainty_p50": 130.0,
+        "uncertainty_p90": 149.5,
+        "feature_count": 15,
+        "integration_count": 2,
+        "tech_count": 1,
+        "tech_stack": [
+          "IOS"
+        ],
+        "project_type": "Mobile App",
+        "complexity": "Low",
+        "project_name": "The Functional"
+      },
+      "labeled_evaluation": null
+    },
+    {
+      "document_id": "real_18_eirene_fun",
+      "filename": "real_18_eirene_fun.md",
+      "formal_title": "EIRENE Functional Requirements Specification (UIC / ERA)",
+      "domain": "Rail Functional Requirements",
+      "license": "Open Standard (UIC / ERA)",
+      "word_count": 1148,
+      "estimated_pages": 3.3,
+      "latency_seconds": 0.0218,
+      "extracted": {
+        "size_fp": 26.0,
+        "confidence": 0.55,
+        "uncertainty_p10": 22.1,
+        "uncertainty_p50": 26.0,
+        "uncertainty_p90": 29.9,
+        "feature_count": 2,
+        "integration_count": 2,
+        "tech_count": 1,
+        "tech_stack": [
+          "Railway"
+        ],
+        "project_type": "Web App",
+        "complexity": "Low",
+        "project_name": "Interoperability"
+      },
+      "labeled_evaluation": null
+    }
+  ]
+}

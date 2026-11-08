@@ -213,12 +213,12 @@ export default function SettingsPage() {
                   border: '1px solid rgba(16, 185, 129, 0.3)',
                 }}
               >
-                Active (R05 Pipeline)
+                Active (Empirical Bayes)
               </span>
             </div>
 
             <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 14 }}>
-              PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction &amp; Empirical Bayes Shrinkage. Delivered projects logged with explicit consent calibrate your organization&apos;s productivity velocity via conjugate normal shrinkage (w<sub>k</sub> = k / (k + 2.83)).
+              PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction &amp; Empirical Bayes Shrinkage. Delivered projects logged or bulk imported with consent calibrate your organization&apos;s productivity velocity via conjugate normal shrinkage (w<sub>k</sub> = k / (k + 2.57)).
             </p>
 
             <div
@@ -238,7 +238,7 @@ export default function SettingsPage() {
                   Shrinkage Ratio
                 </span>
                 <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'monospace' }}>
-                  &sigma;&sup2; / &tau;&sup2; = 2.83
+                  &sigma;&sup2; / &tau;&sup2; = 2.57
                 </span>
                 <span style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', display: 'block' }}>
                   Between-org prior variance
@@ -250,10 +250,10 @@ export default function SettingsPage() {
                   Empirical Gain
                 </span>
                 <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-success)', fontFamily: 'monospace' }}>
-                  +19.52% MdAPE
+                  +15.79% MdAPE
                 </span>
                 <span style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', display: 'block' }}>
-                  Verified at k=10 actuals
+                  Empirical gain at k=10
                 </span>
               </div>
 

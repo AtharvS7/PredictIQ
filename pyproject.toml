@@ -1,6 +1,6 @@
 [project]
 name = "predictiq"
-version = "2.0.0-rc.2"
+version = "2.0.0-rc.3"
 description = "PredictIQ v2 — Monotone Power-Law software effort estimation with Mondrian Split-Conformal Prediction and Empirical Bayes Shrinkage"
 readme = "README.md"
 requires-python = ">=3.12"

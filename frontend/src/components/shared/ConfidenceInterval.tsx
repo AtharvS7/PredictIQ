@@ -208,16 +208,21 @@ export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
 
       {/* Uncertainty Spread Summary Banner */}
       {showDetails && !compact && spreadRatio && (
-        <div className="mt-3 pt-2.5 border-t border-[var(--border-subtle)] flex items-center justify-between flex-wrap gap-2 text-xs text-[var(--text-secondary)]">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="font-medium">Uncertainty Spread:</span>
-            <span className="font-mono font-semibold text-[var(--text-primary)]">
-              {spreadRatio}x (p90/p10)
+        <div className="mt-3 pt-2.5 border-t border-[var(--border-subtle)] space-y-1.5 text-xs text-[var(--text-secondary)]">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="font-medium">Uncertainty Spread:</span>
+              <span className="font-mono font-semibold text-[var(--text-primary)]">
+                {spreadRatio}x (p90/p10)
+              </span>
             </span>
-          </span>
-          <span className="text-[11px] text-[var(--text-tertiary)]">
-            50% Likely Band (Inner) &bull; 80% Plausible Range (Outer)
-          </span>
+            <span className="text-[11px] text-[var(--text-tertiary)]">
+              50% Likely Band (Inner) [51.2% measured coverage] &bull; 80% Plausible Range (Outer) [79.0% holdout pooled coverage]
+            </span>
+          </div>
+          <p className="text-[11px] text-[var(--text-tertiary)] leading-relaxed">
+            <strong className="text-[var(--text-secondary)]">Uncertainty Guide:</strong> Typical error is roughly ±50% on novel projects. Use the 50% Likely Band (P25–P75) for expected sprint planning and target commitments, and the 80% Plausible Range (P10–P90) as your conservative risk ceiling / budget cap.
+          </p>
         </div>
       )}
     </div>

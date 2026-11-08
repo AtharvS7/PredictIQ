@@ -1,0 +1,67 @@
+PredictIQ
+Copyright 2026 PredictIQ Contributors
+
+This product includes software developed by the PredictIQ Project
+(https://github.com/AtharvS7/PredictIQ).
+
+===============================================================================
+DATASET CITATIONS AND EMPIRICAL RESEARCH ACKNOWLEDGEMENTS
+===============================================================================
+
+PredictIQ incorporates data structures, benchmarks, and statistical models
+evaluated against empirical software engineering research datasets. We gratefully
+acknowledge the original researchers and curators of these benchmark datasets:
+
+1. China Dataset (499 projects)
+   Origin: PROMISE Software Engineering Repository.
+   Citations:
+   - Menzies, T., Krishna, R., & Pryor, D. (2015). The Promise Repository of
+     Empirical Software Engineering Data. West Virginia University.
+   - Public domain empirical software effort data from Chinese software enterprises.
+
+2. Kitchenham Dataset (145 projects)
+   Origin: Commercial banking and retail applications.
+   Citations:
+   - Kitchenham, B. A., & Känsälä, K. (1993). Inter-item consistency in software
+     metrics data: An empirical study. Information and Software Technology.
+   - Kitchenham, B. A., Pfleeger, S. L., McColl, B., & Eagan, S. (2002).
+     Preliminary guidelines for empirical research in software engineering.
+     IEEE Transactions on Software Engineering, 28(8), 721-734.
+
+3. Desharnais Dataset (81 projects)
+   Origin: Canadian business software applications.
+   Citations:
+   - Desharnais, J. M. (1989). Analyse statistique de la productivité des projets
+     informatique à partie de la technique des points de fonction. Master's Thesis,
+     Université du Québec à Montréal.
+   - PROMISE Software Engineering Repository.
+
+4. Maxwell Dataset (62 projects)
+   Origin: European Space Agency / aerospace software applications.
+   Citations:
+   - Maxwell, K. D. (2002). Applied Statistics for Software Managers.
+     Prentice Hall PTR.
+
+5. Albrecht Dataset (24 projects)
+   Origin: IBM corporate data processing applications.
+   Citations:
+   - Albrecht, A. J., & Gaffney, J. E. (1983). Software function, source lines
+     of code, and development effort prediction: A software science validation.
+     IEEE Transactions on Software Engineering, SE-9(6), 639-648.
+
+6. AT&T Aptness Dataset (104 projects)
+   Origin: Telecommunications systems.
+   Citations:
+   - Matson, J. E., Barrett, B. E., & Mellichamp, J. M. (1994). Software
+     development cost estimation using function points. IEEE Transactions on
+     Software Engineering, 20(4), 275-287.
+
+7. Finnish Dataset (38 projects - Reference / Benchmark)
+   Citations:
+   - Kitchenham, B., & Känsälä, K. (1993). Inter-item consistency in software
+     metrics data. Empirical Software Engineering.
+
+8. Huijgens Enterprise Dataset (492 projects - Reference / Benchmark)
+   Citations:
+   - Huijgens, H., van Deursen, A., & Minkman, R. (2020). Huijgens 492
+     Enterprise Software Project Dataset. Empirical Software Engineering.

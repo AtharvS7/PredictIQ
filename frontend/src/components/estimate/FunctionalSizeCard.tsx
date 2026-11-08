@@ -56,6 +56,22 @@ export const FunctionalSizeCard: React.FC<FunctionalSizeCardProps> = ({
             <Badge variant="success" size="xs" pill icon={<CheckCircle2 size={10} />}>
               Zero Fabricated Factors
             </Badge>
+            <Badge variant="neutral" size="xs" pill>
+              Effort Strictly Driven by Size (FP)
+            </Badge>
+            {source === 'upload' && (
+              <>
+                <Badge variant="warning" size="xs" pill>
+                  Assumption: ~8 FP/Story
+                </Badge>
+                <Badge variant="warning" size="xs" pill>
+                  Assumption: ~5 FP/API
+                </Badge>
+                <Badge variant="info" size="xs" pill>
+                  NLP Size Uncertainty: ±15%
+                </Badge>
+              </>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -134,20 +150,25 @@ export const FunctionalSizeCard: React.FC<FunctionalSizeCardProps> = ({
           </div>
         )}
 
-        {/* Transparency note */}
+        {/* Transparency note & Statistical Reality */}
         <div className="flex items-start gap-2 p-2.5 rounded-md bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200">
           <Info size={14} className="shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
-          <div>
-            <span className="font-semibold">Provenance & Transparency: </span>
-            {source === 'upload' ? (
-              <span>
-                Functional scope was automatically extracted from your project specification document and mapped to standardized function points without artificial inflation.
-              </span>
-            ) : (
-              <span>
-                Functional points (FP) provide an objective measure of software deliverables independent of implementation language. ISBSG R2024 calibrated reference baseline.
-              </span>
-            )}
+          <div className="space-y-1">
+            <div>
+              <span className="font-semibold">Provenance &amp; Statistical Reality: </span>
+              {source === 'upload' ? (
+                <span>
+                  Functional scope was extracted via NLP from your specification document and mapped to standardized IFPUG function points. Sizing uncertainty (±15%) is strictly propagated into effort intervals via log-space variance combination.
+                </span>
+              ) : (
+                <span>
+                  Functional points (FP) provide an objective measure of software deliverables independent of implementation language. ISBSG R2024 calibrated reference baseline.
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-blue-800 dark:text-blue-300 leading-normal">
+              <strong>Model Principle:</strong> Effort depends strictly on functional size (<code className="font-mono">size_fp</code>) via the monotone power-law ($E = a \cdot S^b$). Planned duration and team size are schedule / staffing capacity constraints, not effort predictors (Brooks&apos; Law). Typical estimation error is roughly ±50% on novel projects prior to empirical Bayes shrinkage.
+            </p>
           </div>
         </div>
       </CardContent>

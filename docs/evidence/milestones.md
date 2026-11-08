@@ -175,3 +175,40 @@ This file tracks each milestone achieved on `dev3`, the checkpoints covered, tes
 - **Python Typecheck (Mypy):** Clean (0 errors across 48 source files in `backend/app`)
 - **Hygiene & Security Audit:** Clean (0 secrets, 0 forbidden files, 0 files > 50MB)
 - **Remote Safety:** `origin/dev2` and `origin/main` remain untouched and match baseline SHAs
+
+
+---
+
+## Milestone RC3_M1: Portability & Evidence (`dev3-rc3-m1-portability-evidence`)
+
+- **Tag:** `dev3-rc3-m1-portability-evidence`
+- **Meaning:** Cross-platform line-ending hash invariance (`.gitattributes`), zero-pickle runtime serving with canonical UTF-8 JSON digests, and truthful 6-fold LOSO model validation evidence.
+- **Checkpoints Covered:**
+  - **S00 (Orientation & Linux Truth Baseline):** Baseline policy verification, documented Linux hash divergence bug, recorded container vs host baseline counts. Evidence: `docs/evidence/S00_findings.md`.
+  - **S01 (Portability & Artifact Hardening):** Added root `.gitattributes` (`eol=lf`), implemented canonical JSON UTF-8 hashing (`compute_canonical_json_sha256`), deleted `.pkl` files, verified fail-closed runtime in Linux Docker container. Evidence: `docs/evidence/S01.md`.
+  - **S02 (Truthful Model Validation Evidence):** Executed 6-fold LOSO cross-validation across all 915 records. Macro MdAPE = 56.31%, Macro PRED(25) = 20.21%, Macro MAE = 5,875.2 hrs. Measured conformal coverage: 80.04% Macro for 80% Plausible Range, 45.85% Macro for 50% Likely Band. Established single source of truth `model_report.json` and CI metrics floor `metrics_floor.json`. Evidence: `docs/evidence/S02.md`.
+
+---
+
+## Milestone RC3_M2: Data, NLP & Product (`dev3-rc3-m2-data-nlp-product`)
+
+- **Tag:** `dev3-rc3-m2-data-nlp-product`
+- **Meaning:** Software benchmark data expansion audit, challenger model re-evaluation under frozen protocol, authentic PURE corpus requirements document evaluation, Empirical Bayes bulk historical project ingestion, and responsive UI reality review.
+- **Checkpoints Covered:**
+  - **S03 (Data Expansion Round 3):** Evaluated 18 candidate software datasets. Preserved 100% pure IFPUG FP + audited person-hours for primary training pool (`projects_v2.csv`, $N=915$). Documented secondary tracks. Evidence: `docs/evidence/S03.md`.
+  - **S04 (Model Challengers Evaluation):** Re-evaluated Hierarchical mixed-effects, Quantile regression L1, and MonotoneHistGradientBoosting under frozen protocol RC3. Incumbent Model A confirmed and retained. Evidence: `docs/evidence/S04.md`.
+  - **S05 (Real-Document NLP Validation):** Curated 18 authentic public requirements specifications (PURE open corpus, 95,299 words). Relabeled synthetic fixtures to regression sets. Provided user labeling kit `docs/data/nlp_real_labeling_template.csv`. Evidence: `docs/evidence/S05.md`.
+  - **S06 (Bulk Project Import & Org Calibration):** Authored `org_calibration.py` with Empirical Bayes shrinkage factor $w = \frac{k}{k + 2.57}$, shifted intercept, slope preservation, and monotonic quantile scaling. Added `POST /api/v1/estimates/bulk-import` and `POST /api/v1/estimates/calibration-preview`. Evidence: `docs/evidence/S06.md`.
+  - **S07 (Frontend Quality & Responsive Review):** Aligned all UI components to Monotone Power-Law, Brooks' Law capacity planning, and empirical conformal coverage citations. Vitest component suite (132/132 tests) passing. Evidence: `docs/evidence/S07.md`.
+
+---
+
+## Milestone RC3_M3_final: Docs & Release Candidate 3 (`dev3-rc3-m3-docs-release`, `v2.0.0-rc.3`)
+
+- **Tags:** `dev3-rc3-m3-docs-release`, `v2.0.0-rc.3`
+- **Meaning:** Documentation overhaul across `docs/` and root `README.md`, automated documentation specification audit (`scripts/docs_audit.py`), CI matrix upgrade for Ubuntu and Windows, 12-step unified release gate, final multi-platform verification across Windows host and Linux Docker container, and official release candidate 3 tagging.
+- **Checkpoints Covered:**
+  - **S08 (Documentation Overhaul & README Architecture):** Overhauled `docs/product/`, `docs/architecture/`, `docs/api/`, `docs/security/`, `docs/operations/`, and `docs/ml/`. Added root `LICENSE` (Apache-2.0) and `NOTICE`. Rewrote root `README.md` to 221 lines with truthful empirical metrics and zero banned words. Created `scripts/docs_audit.py` passing 100% across 129 files. Evidence: `docs/evidence/S08_structure.md`, `docs/evidence/S08_api_ops.md`.
+  - **S09 (CI Matrix & Unified Release Gate):** Upgraded GitHub Actions workflow with Python 3.12, Windows runner smoke verification, metrics floor check, and docs audit. Expanded `scripts/release_gate.py` to 12 automated checks generating `docs/RELEASE_EVIDENCE.md`. Evidence: `docs/evidence/S09.md`.
+  - **S10 (Final Product Polish & Calibration UX Alignment):** Harmonized Empirical Bayes parameters in frontend settings, resolved all open defects in `REVIEW_RC3.md`, verified strict typecheck and component tests. Evidence: `docs/evidence/S10.md`.
+  - **S11 (Final Multi-Platform Verification & Release Gate):** Bumped version to `2.0.0-rc.3` across all manifests and configuration files. Published `docs/FINAL_REPORT_RC3.md`. Executed full verification suite on Windows and Linux container. Executed Milestone Push Procedure.

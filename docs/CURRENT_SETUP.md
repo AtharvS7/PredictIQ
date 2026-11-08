@@ -1,10 +1,12 @@
+Status: Approved | Applies to: 2.0.0-rc.3 | Verified against commit: cdca041 | Date: 2026-11-08
+
 # Current setup and verification
 
 PredictIQ uses a Python 3.13 FastAPI backend, Firebase Authentication, PostgreSQL through asyncpg, local or S3 document storage, and a React 19/TypeScript/Vite frontend. Supabase migrations are legacy reference material. Alembic under `backend/alembic` is the canonical migration history.
 
 ## Local setup
 
-**Model integrity gate (September 9, 2026):** the bundled legacy model and training CSV are revoked because source effort labels were corrupted. Their presence does not make inference ready. Prediction and readiness remain unavailable until a compatible, independently validated replacement is approved. The rebuilt 787-project baseline is research-only; see [reproduction and metrics](ml_rebuild_2026-09-09.md).
+**Model integrity gate (September 9, 2026):** the bundled legacy model and training CSV are revoked because source effort labels were corrupted. Their presence does not make inference ready. Prediction and readiness remain unavailable until a compatible, independently validated replacement is approved. The rebuilt 787-project baseline is research-only; see [reproduction and metrics](history/ml_rebuild_2026-09-09.md).
 
 1. Install Python 3.13 and Node.js 22 or newer. Create a backend virtual environment and install `backend/requirements.lock.txt` with pip. The lock includes hashes and pins scikit-learn to the version required by the bundled artifacts.
 2. Copy `backend/.env.example` to `backend/.env`. Supply the database URL and either `FIREBASE_CREDENTIALS_PATH` or `FIREBASE_CREDENTIALS_JSON`. Never commit these values or copy them into an image.
@@ -68,4 +70,4 @@ For a locally built frontend image, set `PREDICTIQ_TEST_FRONTEND_IMAGE` to its l
 
 Configure the six public Firebase repository/environment variables before clean CI/CD builds. Production builds fail when these are absent. Backend secrets remain runtime-only. Staging deploys from successful CI; production requires successful CI for the selected commit. Nothing in the local repair session was pushed or deployed.
 
-See [engineering progress](engineering_progress_2026-09-08.md), [credential containment](security_containment_2026-09-08.md), and [model contract](../backend/ml/README.md) for verified changes and outstanding release work, including credential rotation, role reconciliation, calibrated uncertainty, immutable promotion, and restore verification.
+See [engineering progress](history/engineering_progress_2026-09-08.md), [credential containment](history/security_containment_2026-09-08.md), and [model contract](../backend/ml/README.md) for verified changes and outstanding release work, including credential rotation, role reconciliation, calibrated uncertainty, immutable promotion, and restore verification.

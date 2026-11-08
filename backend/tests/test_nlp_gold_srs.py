@@ -1,16 +1,16 @@
 """
-PredictIQ v2 — Test Suite for NLP Extractor on Gold Standard SRS Benchmark (Checkpoint R09)
-==========================================================================================
+PredictIQ v2 — Test Suite for NLP Extractor on Synthetic SRS Regression Fixtures (Checkpoint R09)
+=================================================================================================
 Verifies that:
-1. Gold standard SRS fixtures (>= 30 documents across 6 domains) load reliably.
-2. The NLP extractor runs without crashing on every gold document.
+1. Synthetic regression SRS fixtures (36 documents across 6 domains in fixtures/srs_synthetic/) load reliably.
+2. The NLP extractor runs without crashing on every synthetic document.
 3. Extracted features satisfy mathematical bounds:
    - size_fp is strictly finite, positive, and satisfies non-crossing quantiles (p10 <= p50 <= p90).
    - feature_count and integration_count are bounded integers.
    - tech_stack is a non-empty list of detected strings.
    - complexity is a valid ordinal level.
-4. Benchmark quality gates strictly pass:
-   - Functional size MdAPE <= 20.0%
+4. Synthetic regression benchmark gates pass:
+   - Functional size MdAPE <= 20.0% (Note: evaluates template consistency; does NOT represent real-world accuracy)
    - Tech stack classification Micro-F1 >= 0.8500
    - Feature extraction recall >= 90.0%
    - Integration count MAE <= 1.00

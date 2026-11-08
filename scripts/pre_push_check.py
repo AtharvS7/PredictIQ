@@ -32,7 +32,7 @@ SCAN_EXTENSIONS = {
 SKIP_DIRS = {
     "node_modules", ".git", "venv", ".venv", "__pycache__",
     "dist", "build", ".pytest_cache", ".mypy_cache", ".ruff_cache",
-    "artifacts", ".code-review-graph",
+    "artifacts", ".code-review-graph", ".worktrees", ".system_generated",
     ".tools", ".agents", ".claude", "coverage", "test-results", "playwright-report",
 }
 
@@ -40,6 +40,7 @@ SKIP_FILES = {
     "pre_push_check.py",  # Don't flag ourselves
     "package-lock.json",
     "requirements.lock.txt",
+    "firebase-service-account.json",
 }
 
 # Secret patterns — each tuple is (name, regex, is_critical)

@@ -178,46 +178,46 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
               <h3>Primary Model Architecture (Track 1 Monotone Formulations)</h3>
             </div>
             <p className="leading-relaxed">
-              PredictIQ v2 deploys Track 1 simple, robust power-law formulations selected under the frozen CP10 Decision Rule. These models guarantee scale monotonicity without uncalibrated non-linear swings:
+              PredictIQ v2 deploys Track 1 simple, robust power-law formulations selected under the frozen CP10 and R03 Decision Rules. Effort depends strictly on functional size (<code className="font-mono">size_fp</code>):
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-              {/* Formula A */}
+              {/* Formula A - Production Primary */}
               <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs text-blue-600 dark:text-blue-400">
-                    MultivariateMonotoneModel
-                  </span>
-                  <Badge variant="primary" size="xs">Primary Engine</Badge>
-                </div>
-                <div className="font-mono text-sm font-bold text-[var(--text-primary)] bg-[var(--bg-elevated)] p-2 rounded text-center border border-[var(--border-subtle)]">
-                  E = a · S<sup>b</sup> · D<sup>c</sup>
-                </div>
-                <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
-                  Where <strong className="text-[var(--text-secondary)]">E</strong> is Effort in person-hours, <strong className="text-[var(--text-secondary)]">S</strong> is Functional Size in Function Points (FP), and <strong className="text-[var(--text-secondary)]">D</strong> is Planned Target Duration in months.
-                </p>
-                <div className="text-[10px] text-[var(--text-tertiary)] space-y-0.5">
-                  <div>• Monotonic constraint: b &gt; 0 (positive marginal effort)</div>
-                  <div>• Log-linear formulation with Huber robust loss against outliers</div>
-                </div>
-              </div>
-
-              {/* Formula B */}
-              <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs text-emerald-600 dark:text-emerald-400">
                     MonotonePowerLaw
                   </span>
-                  <Badge variant="success" size="xs">Size-Only Fallback</Badge>
+                  <Badge variant="primary" size="xs">Production Engine (Size-Only)</Badge>
                 </div>
                 <div className="font-mono text-sm font-bold text-[var(--text-primary)] bg-[var(--bg-elevated)] p-2 rounded text-center border border-[var(--border-subtle)]">
                   E = a · S<sup>b</sup>
                 </div>
                 <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
-                  Used for early-stage scoping when duration is unconstrained. Reliably captures classical software engineering diseconomies of scale.
+                  Where <strong className="text-[var(--text-secondary)]">E</strong> is Effort in person-hours and <strong className="text-[var(--text-secondary)]">S</strong> is Functional Size in Function Points (FP).
                 </p>
                 <div className="text-[10px] text-[var(--text-tertiary)] space-y-0.5">
-                  <div>• Standard economic power-law distribution</div>
-                  <div>• Avoids spurious parameter interactions when scope is unrefined</div>
+                  <div>• Monotonic constraint: b &gt; 0 (positive marginal effort with diseconomies of scale)</div>
+                  <div>• Effort depends strictly on functional size; duration and team size are planning capacity indicators, NOT effort predictors</div>
+                </div>
+              </div>
+
+              {/* Formula B - Multivariate Ablated */}
+              <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-600 dark:text-slate-400">
+                    MultivariateMonotoneModel
+                  </span>
+                  <Badge variant="neutral" size="xs">R03 Ablated Candidate</Badge>
+                </div>
+                <div className="font-mono text-sm font-bold text-[var(--text-primary)] bg-[var(--bg-elevated)] p-2 rounded text-center border border-[var(--border-subtle)]">
+                  E = a · S<sup>b</sup> · D<sup>c</sup>
+                </div>
+                <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
+                  Evaluated in Checkpoint R03. Duration elasticity was strongly positive (c = +0.5972), which caused schedule compression to spuriously reduce estimated effort (violating Brooks&apos; Law).
+                </p>
+                <div className="text-[10px] text-[var(--text-tertiary)] space-y-0.5">
+                  <div>• Pre-registered decision rule rejected duration from the effort equation</div>
+                  <div>• Planned duration is retained exclusively for schedule horizon and staffing capacity planning</div>
                 </div>
               </div>
             </div>
@@ -305,10 +305,14 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
               <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
                 <span className="font-bold text-xs text-[var(--text-primary)] block">
-                  80% Nominal Empirical Coverage (p10–p90)
+                  80% Nominal Empirical Coverage (p10–p90) &amp; 50% Likely Band
                 </span>
                 <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
-                  The optimistic lower bound (p10) and conservative cap (p90) are calibrated such that at least 80% of verified future projects fall strictly within the interval under exchangeability.
+                  - <strong>50% Likely Band (P25–P75):</strong> Measured 51.2% empirical coverage. Tight operational target for sprint planning.<br />
+                  - <strong>80% Plausible Range (P10–P90):</strong> Measured 79.0% pooled empirical coverage on 915 holdout projects (82.5% in multi-project simulations). Conservative ceiling for budget caps.
+                </p>
+                <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium pt-0.5">
+                  Uncertainty reality: Typical error is roughly ±50% on novel projects prior to organizational calibration.
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
@@ -316,7 +320,7 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
                   Mondrian Size Partitioning
                 </span>
                 <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
-                  Residual scores are partitioned into scale buckets (Small: &lt; 100 FP, Medium: 100–500 FP, Large: &gt; 500 FP). This ensures small projects are not penalized by high-variance large projects.
+                  Residual non-conformity scores are partitioned into scale strata: Small (&lt; 150 FP), Medium (150–750 FP), and Large (&gt; 750 FP). This ensures small projects are not penalized by high-variance large projects.
                 </p>
               </div>
             </div>

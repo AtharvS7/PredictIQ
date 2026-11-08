@@ -119,6 +119,15 @@
       "minimum": 0,
       "maximum": 100
     },
+    "org_calibration": {
+      "type": "object",
+      "properties": {
+        "applied": { "type": "boolean" },
+        "k_actuals": { "type": "integer", "minimum": 0 },
+        "shrinkage_weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "multiplier": { "type": "number", "minimum": 0 }
+      }
+    },
     "model": {
       "type": "object",
       "required": ["version", "sha256", "trained_on_rows", "sources", "metrics_ref"],
