@@ -1,15 +1,15 @@
 """
-Predictify Cost Calculator Service
-Implements the 3-layer hybrid estimation pipeline:
-Layer 1: IFPUG Function Point Estimation
-Layer 2: XGBoost ML Prediction (via ml_service)
+PredictIQ Cost Calculator Service
+Implements the 3-layer estimation pipeline:
+Layer 1: Function Point Estimation
+Layer 2: Production ML Prediction (via ml_service)
 Layer 3: Parametric Cost Conversion
 """
 import structlog
 
 logger = structlog.get_logger()
 
-# IFPUG complexity weights
+# Standard functional complexity weights
 COMPLEXITY_WEIGHTS = {
     "simple": 5,
     "medium": 10,
@@ -47,7 +47,7 @@ def estimate_function_points(
     tech_stack_count: int = 3,
 ) -> float:
     """
-    Layer 1: Estimate IFPUG Function Points from project parameters.
+    Layer 1: Estimate Function Points from project parameters.
 
     Args:
         feature_count: Number of identified features/requirements.
@@ -78,7 +78,7 @@ def estimate_function_points(
         for tier, pct in tier_dist.items()
     )
 
-    # Add standard IFPUG components
+    # Add standard functional sizing components
     raw_fp += external_inputs * 4
     raw_fp += external_outputs * 5
     raw_fp += external_inquiries * 4
@@ -159,14 +159,14 @@ def calculate_timeline(
 ) -> dict:
     """
     Calculate project timeline in weeks.
-    Applies Brooks's Law simplified scaling.
+    Applies non-linear team coordination scaling.
 
     Returns:
         Dictionary with min, likely, max timeline in weeks.
     """
     base_weeks = duration_months * 4.33
 
-    # Brooks's Law: more people → faster but not linearly
+    # Team scaling: additional personnel increase communication overhead
     team_scaling_factor = 1.0 / (0.5 + (team_size / 10))
     timeline_likely = max(4, base_weeks * team_scaling_factor)
     timeline_min = timeline_likely * 0.80
@@ -212,7 +212,7 @@ def build_feature_vector_params(
 ) -> dict:
     """
     Build the full parameter dict needed for estimation.
-    Combines IFPUG FP calculation with user inputs.
+    Combines functional FP calculation with user inputs.
     """
     # Estimate function points
     size_fp = estimate_function_points(

@@ -38,4 +38,11 @@ This document records the immutable verification snapshots and milestone tags fo
 - **Tests:** 152 vitest tests passed across all 27 test files (100%); typecheck passed; production build passed in 18.89s; live launcher gate verified HTTP 200 on `/` in 0.031s, `/auth` in 0.031s, and `/api/v1/ready` in 0.454s (<2.0s threshold) with 0 prohibited terms in served HTML.
 - **Status:** PASS
 
+### H04: Independent Calculation & Mathematical Verification
+- **Tag:** `dev3-final-04`
+- **Scope:** Independent mathematical recomputation across 48 distinct project functional sizes (1 to 4,500 FP) directly from `model_params.json`; validation of non-crossing quantiles (p10 <= p25 <= p50 <= p75 <= p90) and strict monotonicity; financial cost consistency (Cost = Effort * Rate); multi-currency conversion parity; PDF export generation validation; zero modification of frozen ML artifacts.
+- **Tests:** 61 calculation verification unit tests passed; 18 cost calculator tests passed; full backend suite passed (784 passed, 6 skipped, 83% coverage).
+- **Status:** PASS
+
+
 
