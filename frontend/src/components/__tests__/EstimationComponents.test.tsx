@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import FunctionalSizeCard from '../estimate/FunctionalSizeCard';
 import PlanningCapacityCard from '../estimate/PlanningCapacityCard';
@@ -57,7 +57,7 @@ function createMockEstimate(overrides: Partial<EstimateResult> = {}): EstimateRe
         { phase: 'QA & Deployment', effort_hours: 152, cost_usd: 12160, duration_weeks: 3, pct_of_total: 20 },
       ],
       model_explanation: 'Prediction driven by 135 Function Points and agile methodology.',
-      benchmark_comparison: 'Puts effort at 48th percentile of cross-industry web benchmark.',
+      benchmark_comparison: 'Puts effort at 48th percentile of web benchmark.',
     },
     ...overrides,
   };
@@ -85,15 +85,15 @@ describe('estimateUtils', () => {
 
     const oodTeam = checkIsOOD({ team_size: 45, duration_months: 6 });
     expect(oodTeam.isOOD).toBe(true);
-    expect(oodTeam.reasons[0]).toContain('exceeds the calibrated benchmark envelope');
+    expect(oodTeam.reasons[0]).toContain('exceeds typical team sizes');
 
     const oodDuration = checkIsOOD({ team_size: 5, duration_months: 36 });
     expect(oodDuration.isOOD).toBe(true);
-    expect(oodDuration.reasons[0]).toContain('exceeds single-phase empirical horizons');
+    expect(oodDuration.reasons[0]).toContain('exceeds typical timelines');
 
     const oodFp = checkIsOOD({ size_fp: 3500 });
     expect(oodFp.isOOD).toBe(true);
-    expect(oodFp.reasons[0]).toContain('beyond standard calibrated cluster envelopes');
+    expect(oodFp.reasons[0]).toContain('larger than typical projects');
   });
 
   it('estimates function points with standard heuristic', () => {
@@ -104,7 +104,7 @@ describe('estimateUtils', () => {
 });
 
 describe('FunctionalSizeCard Component', () => {
-  it('renders Function Point sizing feedback and transparency badges', () => {
+  it('renders Function Point sizing feedback and controls', () => {
     const onFeatureChange = vi.fn();
     const onIntegrationChange = vi.fn();
 
@@ -117,26 +117,24 @@ describe('FunctionalSizeCard Component', () => {
       />
     );
 
-    expect(screen.getByText('Functional Size & Scope Calibration')).toBeInTheDocument();
-    expect(screen.getByText('Industry Functional Sizing')).toBeInTheDocument();
-    expect(screen.getByText('Empirically Calibrated')).toBeInTheDocument();
+    expect(screen.getAllByText('Project size').length).toBeGreaterThanOrEqual(1);
 
     // 10 * 8 + 2 * 5 = 90 FP
     expect(screen.getByText('90')).toBeInTheDocument();
 
     // Test input changes
-    const featureInput = screen.getByLabelText(/Estimated User Stories/i);
+    const featureInput = screen.getByLabelText(/Number of features/i);
     fireEvent.change(featureInput, { target: { value: '15' } });
     expect(onFeatureChange).toHaveBeenCalledWith(15);
 
-    const integrationInput = screen.getByLabelText(/External Integrations/i);
+    const integrationInput = screen.getByLabelText(/Number of external integrations/i);
     fireEvent.change(integrationInput, { target: { value: '4' } });
     expect(onIntegrationChange).toHaveBeenCalledWith(4);
   });
 });
 
 describe('PlanningCapacityCard Component', () => {
-  it('reactively computes capacity in hours and person-months at 152 hrs/PM', () => {
+  it('reactively computes capacity in hours and cost', () => {
     render(
       <PlanningCapacityCard
         teamSize={4}
@@ -149,20 +147,13 @@ describe('PlanningCapacityCard Component', () => {
     );
 
     // 4 team * 5 months * 152 hrs = 3,040 hours
-    // 3,040 hrs / 152 = 20.0 PM
     expect(screen.getByText('3,040')).toBeInTheDocument();
-    expect(screen.getByText(/20.0 PM across 5 mo target/i)).toBeInTheDocument();
 
     // 3,040 hrs * $100 = $304,000 baseline cost
     expect(screen.getByText('$304,000')).toBeInTheDocument();
-
-    // Verifies clear labeling that duration is target planning
-    expect(screen.getByText(/Target Planning Labeling & Integrity:/i)).toBeInTheDocument();
-    expect(screen.getByText(/Planned Target Duration/i)).toBeInTheDocument();
-    expect(screen.getByText(/predicted effort duration/i)).toBeInTheDocument();
   });
 
-  it('renders a coordination warning when team size is large (>25)', () => {
+  it('renders a team size warning when team size is large (>25)', () => {
     render(
       <PlanningCapacityCard
         teamSize={30}
@@ -171,30 +162,27 @@ describe('PlanningCapacityCard Component', () => {
       />
     );
 
-    expect(screen.getByText(/Coordination Note:/i)).toBeInTheDocument();
-    expect(screen.getByText(/exceeds typical agile pod sizes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Team size note:/i)).toBeInTheDocument();
   });
 });
 
 describe('EstimationResultView Component', () => {
-  it('renders calibrated prediction ranges in hours and person-months at 152 hrs/PM', () => {
+  it('renders effort ranges in hours and person-months', () => {
     const estimate = createMockEstimate();
     render(<EstimationResultView estimate={estimate} />);
 
     // 608 hrs / 152 = 4.0 PM
-    // 760 hrs / 152 = 5.0 PM
-    // 988 hrs / 152 = 6.5 PM
     expect(screen.getAllByText(/608 hrs/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/4\.0 PM person-months/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/4\.0 PM/i).length).toBeGreaterThanOrEqual(1);
 
     expect(screen.getAllByText(/760 hrs/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/5\.0 PM person-months/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/5\.0 PM/i).length).toBeGreaterThanOrEqual(1);
 
     expect(screen.getAllByText(/988 hrs/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/6\.5 PM person-months/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/6\.5 PM/i).length).toBeGreaterThanOrEqual(1);
 
     // Visual confidence range bar exists
-    expect(screen.getByRole('group', { name: /Calibrated effort range bar/i })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /Effort range bar/i })).toBeInTheDocument();
 
     // Tier badge exists
     expect(screen.getByText('Tier A')).toBeInTheDocument();
@@ -205,8 +193,8 @@ describe('EstimationResultView Component', () => {
       inputs: {
         project_type: 'Web App',
         tech_stack: [],
-        team_size: 50, // exceeds 30
-        duration_months: 30, // exceeds 24
+        team_size: 50,
+        duration_months: 30,
         complexity: 'High',
         methodology: 'Agile',
         hourly_rate_usd: 80,
@@ -215,8 +203,8 @@ describe('EstimationResultView Component', () => {
 
     render(<EstimationResultView estimate={oodEstimate} />);
 
-    expect(screen.getByText(/Out-of-Distribution \(OOD\) Parameter Notice/i)).toBeInTheDocument();
-    expect(screen.getByText(/Planned team size of 50 exceeds the calibrated benchmark envelope/i)).toBeInTheDocument();
+    expect(screen.getByText(/Large project notice/i)).toBeInTheDocument();
+    expect(screen.getByText(/Planned team size of 50 exceeds typical team sizes/i)).toBeInTheDocument();
   });
 
   it('triggers export and share action callbacks', () => {

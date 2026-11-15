@@ -1861,9 +1861,9 @@ The user interface provides structured navigation paths across all key capabilit
 1. **Landing Page (`/`):** View platform overview, review value proposition cards, click **Sign In** or **Get Started**.
 2. **Authentication Modal (`/auth`):** Enter email/password, select Google Sign-In, or use mock demo login.
 3. **New Estimate Wizard (`/estimate/new`):**
-   - **Step 1:** Select "Upload Specification Document" or "Enter Scope Manually". Enter project name, team size, target duration, and hourly rate.
-   - **Step 2:** Review extracted sizing indicators (stories, shall statements, interface integrations). Modify counts as needed.
-   - **Step 3:** Generate estimate. Automatic transition to `/estimate/:id/results`.
+   - **Step 1 (Requirements):** Describe your project by uploading a specification document (`.pdf`, `.docx`, `.txt`) or entering features and integrations directly.
+   - **Step 2 (Planning):** Configure team and schedule parameters (team size, planned duration, hourly rate, tech stack, and volatility).
+   - **Step 3 (Results):** Generate estimate and view effort, likely range, cost, and release plan.
 4. **Results Dashboard (`/estimate/:id/results`):**
    - Review median effort hours ($P_{50}$) and likely band ($P_{25}–P_{75}$).
    - Inspect financial cost projection card with dynamic currency dropdown.

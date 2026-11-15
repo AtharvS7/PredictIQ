@@ -28,30 +28,41 @@ vi.mock('@/components/shared/SEOHead', () => ({
 }));
 
 const FORBIDDEN_WORDS = [
-  'cG93ZXItbGF3',
-  'YnJvb2tz',
-  'bW9uZHJpYW4=',
-  'Y29uZm9ybWFs',
-  'YmF5ZXM=',
-  'c2hyaW5rYWdl',
-  'bWRhcGU=',
-  'aXNic2c=',
-  'aWZwdWc=',
-  'ZmFicmljYXRlZA==',
-  'c3RhdGlzdGljYWwgcmVhbGl0eQ==',
-  'cHJlZGljdGlmeQ==',
-  'ZGV2Mg==',
-  'ZGV2Mw==',
-  'Y2hlY2twb2ludA==',
-  'bWlsZXN0b25l',
-  'YmVmb3JlL2FmdGVy',
-  'aG9uZXN0',
+  'cG93ZXItbGF3', // power-law
+  'YnJvb2tz', // brooks
+  'bW9uZHJpYW4=', // mondrian
+  'Y29uZm9ybWFs', // conformal
+  'YmF5ZXM=', // bayes
+  'c2hyaW5rYWdl', // shrinkage
+  'bWRhcGU=', // mdape
+  'aXNic2c=', // isbsg
+  'aWZwdWc=', // ifpug
+  'ZmFicmljYXRlZA==', // fabricated
+  'c3RhdGlzdGljYWwgcmVhbGl0eQ==', // statistical reality
+  'cHJlZGljdGlmeQ==', // predictify
+  'ZGV2Mg==', // dev2
+  'ZGV2Mw==', // dev3
+  'Y2hlY2twb2ludA==', // checkpoint
+  'bWlsZXN0b25l', // milestone
+  'YmVmb3JlL2FmdGVy', // before/after
+  'aG9uZXN0', // honest
+  'cHJvdmVuYW5jZQ==', // provenance
+  'ZXN0aW1hdGlvbiBwcmluY2lwbGU=', // estimation principle
+  'ZW1waXJpY2FsbHk=', // empirically
+  'Y3Jvc3MtaW5kdXN0cnk=', // cross-industry
+  'cmVhY3RpdmUgcGxhbm5pbmc=', // reactive planning
+  'bGFiZWxpbmcgJiBpbnRlZ3JpdHk=', // labeling & integrity
+  'aXNvL2llZWU=', // iso/ieee
+  'bGFib3IgdW5pdA==', // labor unit
+  'MTUyIGhycw==', // 152 hrs
+  'ZnAgcGVy', // fp per
+  'Y29vcmRpbmF0aW9uIG92ZXJoZWFk', // coordination overhead
 ].map((token) => atob(token));
 
 function assertZeroBannedTerms(container: HTMLElement, label: string) {
   const text = container.textContent || '';
   for (const word of FORBIDDEN_WORDS) {
-    const regex = new RegExp(`\\b${word}\\b`, 'i');
+    const regex = new RegExp(`\\b${word.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
     const match = text.match(regex);
     if (match) {
       throw new Error(`Component "${label}" contains prohibited term "${word}" in DOM: "${match[0]}"`);
@@ -94,7 +105,7 @@ const mockEstimate: EstimateResult = {
     risk_level: 'Low',
     top_risks: [],
     phase_breakdown: [],
-    model_explanation: 'Standard calibrated estimation model.',
+    model_explanation: 'Standard estimation model.',
     benchmark_comparison: 'In line with industry benchmarks.',
     org_calibration: {
       applied: true,

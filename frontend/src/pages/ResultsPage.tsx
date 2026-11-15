@@ -407,14 +407,14 @@ export default function ResultsPage() {
                   type="button"
                   className="cursor-pointer border-0 bg-transparent p-0 inline-flex items-center"
                   onClick={() => setShowTransparencyModal(true)}
-                  title={`${tierInfo.name}: Click for model transparency & data provenance`}
+                  title={`${tierInfo.name}: Click for estimate details`}
                   data-testid="tier-badge-transparency-trigger"
                 >
                   <DataQualityBadge tier={tier} showIcon />
                 </button>
                 <UncertaintyBadge
                   calibrated={isCalibrated}
-                  interval="80% CI (p10–p90)"
+                  interval="80% Range"
                   coverage={`${outputs.confidence_pct.toFixed(0)}% Confidence`}
                 />
                 <ModelVersionBadge version={model_version} />
@@ -426,13 +426,13 @@ export default function ResultsPage() {
                     icon={<Shield size={10} />}
                     title={
                       outputs.org_calibration.applied
-                        ? `Organization-calibrated using ${outputs.org_calibration.k_actuals} consented projects (weight: ${(outputs.org_calibration as any)['shrink' + 'age_weight']}, multiplier: ${outputs.org_calibration.multiplier}x)`
-                        : 'Uncalibrated to organization actuals (using global baseline prior)'
+                        ? `Adjusted using ${outputs.org_calibration.k_actuals} past projects`
+                        : 'Standard model'
                     }
                   >
                     {outputs.org_calibration.applied
-                      ? `Org Calibrated: k=${outputs.org_calibration.k_actuals}`
-                      : 'Prior: Global'}
+                      ? `Team adjusted (${outputs.org_calibration.k_actuals} projects)`
+                      : 'Standard model'}
                   </Badge>
                 )}
               </div>
@@ -449,7 +449,7 @@ export default function ResultsPage() {
                 type="button"
                 className="btn-secondary"
                 onClick={() => setShowTransparencyModal(true)}
-                title="View model architecture, empirical benchmarks, and calibration provenance"
+                title="View details about this estimate"
                 data-testid="how-it-works-button"
               >
                 <HelpCircle size={15} className="text-blue-600 dark:text-blue-400" />
@@ -464,61 +464,22 @@ export default function ResultsPage() {
             </div>
           </div>
 
-          {/* Data Provenance Details Card (collapsible / tooltip) */}
-          {showTierModal && (
-            <Card variant="subtle" padding="sm" className="mb-4 border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/30 text-xs">
-              <div className="flex items-start justify-between gap-2">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-blue-900 dark:text-blue-300">{tierInfo.name}</span>
-                    <Badge variant="primary" size="xs">{tierInfo.coverage}</Badge>
-                  </div>
-                  <p className="text-blue-800 dark:text-blue-200">{tierInfo.description}</p>
-                  <div className="flex items-center gap-1.5 pt-1 text-[11px] text-blue-700 dark:text-blue-300">
-                    <span className="font-semibold">Validated Sources:</span>
-                    {tierInfo.sources.map((s, idx) => (
-                      <span key={idx} className="px-1.5 py-0.5 rounded bg-blue-100/70 dark:bg-blue-900/60 font-mono">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowTierModal(false)}
-                  className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 font-semibold"
-                >
-                  Close
-                </button>
-              </div>
-            </Card>
-          )}
+
 
           {/* Out of Distribution (OOD) Guidance & Explanations */}
           <OODDiagnosticsCard inputs={inputs} reasons={oodStatus.reasons} className="mb-5" />
 
-          {/* Calibrated Confidence Range Bar Card */}
+          {/* Effort Ranges Card */}
           <Card variant="elevated" padding="md" className="mb-5 border-t-4 border-t-[var(--color-primary)]">
             <CardHeader>
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div>
                   <CardTitle as="h3" className="text-lg font-bold flex items-center gap-2">
-                    <span>Calibrated Effort Ranges</span>
-                    <span className="text-xs font-normal text-[var(--text-secondary)]">
-                      (Hours &amp; Person-Months at 152 hrs/PM)
-                    </span>
+                    <span>Effort ranges</span>
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Calibrated intervals: 50% Likely Band (P25–P75, 51.2% measured coverage) &bull; 80% Plausible Range (P10–P90, 79.0% holdout pooled coverage)
+                    Expected effort in hours and person-months
                   </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="primary" size="xs" pill>
-                    152 hrs = 1 Person-Month
-                  </Badge>
-                  <Badge variant="success" size="xs" pill>
-                    Effort Driven by Functional Size
-                  </Badge>
                 </div>
               </div>
             </CardHeader>
@@ -533,33 +494,18 @@ export default function ResultsPage() {
                 formatValue={(val) => `${Math.round(val).toLocaleString()} hrs (${hoursToPersonMonths(val).formatted})`}
                 showLabels
                 showDetails
-                ariaLabel="Calibrated prediction ranges"
+                ariaLabel="Effort ranges"
               />
 
-              {/* Plain-Language Uncertainty & Coverage Protocol */}
+              {/* Plain-Language Uncertainty Note */}
               <div className="mt-4 p-3 rounded-lg bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-xs text-blue-950 dark:text-blue-200 space-y-1">
                 <div className="flex items-center gap-1.5 font-semibold text-blue-900 dark:text-blue-300">
                   <Info size={14} className="shrink-0 text-blue-600 dark:text-blue-400" />
-                  <span>Statistical Uncertainty &amp; Decision Protocol:</span>
+                  <span>Planning with these ranges:</span>
                 </div>
                 <p className="leading-relaxed">
-                  Baseline estimation variance narrows as validated organization history is incorporated.
-                  Use the <strong>50% Likely Band (P25–P75)</strong> for sprint planning and expected delivery milestones, and the <strong>80% Plausible Range (P10–P90)</strong> for contractual budget caps and governance risk reserves.
+                  Use the <strong>likely range</strong> for sprint and release planning, and the <strong>wider range</strong> for budget caps and risk reserves.
                 </p>
-                <div className="flex items-center gap-2 flex-wrap pt-1 text-[11px] text-blue-800 dark:text-blue-300">
-                  <span className="font-semibold">Measured Empirical Coverage:</span>
-                  <span className="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 font-mono">
-                    80% Plausible: 79.0% holdout pooled coverage
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 font-mono">
-                    50% Likely: 51.2% empirical coverage
-                  </span>
-                  {inputs.feature_count && (
-                    <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-mono">
-                      NLP Assumption: ~8 FP/feature, ~5 FP/integration
-                    </span>
-                  )}
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -612,8 +558,8 @@ export default function ResultsPage() {
               <p style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: 4 }}>
                 {outputs.confidence_pct.toFixed(0)}%
               </p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{currentEstimate.model_version.startsWith('production-v3-') ? 'Validation interval coverage' : 'Heuristic confidence'}</p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{currentEstimate.model_version.startsWith('production-v3-') ? 'Observed coverage on held-out projects; not a guarantee for this estimate.' : 'This score and effort range are not calibrated probabilities.'}</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{currentEstimate.model_version.startsWith('production-v3-') ? 'Coverage confidence' : 'Confidence'}</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{currentEstimate.model_version.startsWith('production-v3-') ? 'Estimated coverage on typical projects.' : 'Estimated range based on project data.'}</p>
             </div>
 
             {/* Timeline */}
@@ -757,7 +703,7 @@ export default function ResultsPage() {
                 <div className="card" style={{ padding: 24 }}>
                   <h3 style={{ fontWeight: 600, marginBottom: 12, color: 'var(--text-primary)' }}>
                     <TrendingUp size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-                    Benchmark
+                    Industry Context
                   </h3>
                   <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                     {outputs.benchmark_comparison}
@@ -774,7 +720,7 @@ export default function ResultsPage() {
               Input Parameters
             </h3>
             <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: 14 }}>
-              Persisted project inputs. Effort depends on Functional Scope; Team Size and Duration represent planning capacity indicators.
+              Persisted project inputs.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               {[
@@ -782,7 +728,7 @@ export default function ResultsPage() {
                 { label: 'Team Size', value: inputs.team_size.toString() },
                 { label: 'Duration', value: `${inputs.duration_months} months` },
                 { label: 'Complexity', value: inputs.complexity },
-                { label: 'Methodology', value: inputs.methodology },
+                { label: 'Delivery Process', value: inputs.methodology },
                 { label: 'Hourly Rate', value: `$${inputs.hourly_rate_usd}/hr` },
                 { label: 'Tech Stack', value: inputs.tech_stack.join(', ') || 'Not specified' },
                 { label: 'Features', value: inputs.feature_count ?? 'Not recorded' },

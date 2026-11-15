@@ -114,14 +114,14 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
               type="button"
               className="relative inline-flex items-center cursor-pointer border-0 bg-transparent p-0"
               onClick={() => setShowTransparencyModal(true)}
-              title={`${tierInfo.name}: Click for model transparency & data provenance`}
+              title={`${tierInfo.name}: Click for estimate details`}
               data-testid="tier-badge-transparency-trigger"
             >
               <DataQualityBadge tier={tier} showIcon />
             </button>
             <UncertaintyBadge
               calibrated={isCalibrated}
-              interval="80% CI (p10–p90)"
+              interval="80% Range"
               coverage={`${outputs.confidence_pct.toFixed(0)}% Confidence`}
             />
             <ModelVersionBadge version={model_version} />
@@ -133,13 +133,13 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
                 icon={<Shield size={10} />}
                 title={
                   outputs.org_calibration.applied
-                    ? `Organization-calibrated using ${outputs.org_calibration.k_actuals} consented projects (weight: ${(outputs.org_calibration as any)['shrink' + 'age_weight']}, multiplier: ${outputs.org_calibration.multiplier}x)`
-                    : 'Uncalibrated to organization actuals (using global baseline prior)'
+                    ? `Adjusted using ${outputs.org_calibration.k_actuals} past projects`
+                    : 'Standard model'
                 }
               >
                 {outputs.org_calibration.applied
-                  ? `Org Calibrated: k=${outputs.org_calibration.k_actuals}`
-                  : 'Prior: Global'}
+                  ? `Team adjusted (${outputs.org_calibration.k_actuals} projects)`
+                  : 'Standard model'}
               </Badge>
             )}
           </div>
@@ -157,7 +157,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             type="button"
             onClick={() => setShowTransparencyModal(true)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition shadow-sm cursor-pointer"
-            title="View full model provenance, empirical benchmarks, and calibration architecture"
+            title="View details about this estimate"
             data-testid="how-it-works-button"
           >
             <HelpCircle size={14} className="text-blue-600 dark:text-blue-400" />
@@ -169,7 +169,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
               type="button"
               onClick={onExportPDF}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] text-[var(--text-primary)] border border-[var(--border-color)] transition shadow-sm"
-              title="Download PDF report with executive summary and breakdown"
+              title="Download PDF report"
             >
               <Download size={14} className="text-blue-600 dark:text-blue-400" />
               <span>PDF ({currencyCode})</span>
@@ -181,7 +181,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
               type="button"
               onClick={onExportJSON}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] text-[var(--text-primary)] border border-[var(--border-color)] transition shadow-sm"
-              title="Export complete calibrated predictions & metadata adhering to api_estimate_v2.json"
+              title="Export estimate as JSON"
               data-testid="export-json-button"
             >
               <FileDown size={14} className="text-emerald-600 dark:text-emerald-400" />
@@ -193,7 +193,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             type="button"
             onClick={handleCopyJSON}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] text-[var(--text-primary)] border border-[var(--border-color)] transition shadow-sm cursor-pointer"
-            title="Copy contract-compliant v2 JSON payload to clipboard"
+            title="Copy JSON to clipboard"
             data-testid="copy-json-button"
           >
             {copiedJSON ? (
@@ -230,61 +230,20 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
         </div>
       </div>
 
-      {/* ── Data Provenance Details Accordion / Tooltip Box ── */}
-      {showTierModal && (
-        <Card variant="subtle" padding="sm" className="border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/20 text-xs animate-fade-in">
-          <div className="flex items-start justify-between gap-2">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-blue-900 dark:text-blue-300">{tierInfo.name}</span>
-                <Badge variant="primary" size="xs">{tierInfo.coverage}</Badge>
-              </div>
-              <p className="text-blue-800 dark:text-blue-200">{tierInfo.description}</p>
-              <div className="flex items-center gap-1.5 pt-1 text-[11px] text-blue-700 dark:text-blue-300">
-                <span className="font-semibold">Validated Sources:</span>
-                {tierInfo.sources.map((s, idx) => (
-                  <span key={idx} className="px-1.5 py-0.5 rounded bg-blue-100/70 dark:bg-blue-900/60 font-mono">
-                    {s}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowTierModal(false)}
-              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 font-semibold"
-            >
-              Close
-            </button>
-          </div>
-        </Card>
-      )}
-
       {/* ── Out of Distribution (OOD) Guidance & Explanations ── */}
       <OODDiagnosticsCard inputs={inputs} reasons={oodStatus.reasons} />
 
-      {/* ── Primary Confidence Interval Card (Effort Hours & PM) ── */}
+      {/* ── Primary Effort Ranges Card ── */}
       <Card variant="elevated" padding="md" className="border-t-4 border-t-[var(--color-primary)]">
         <CardHeader>
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <CardTitle as="h3" className="text-lg sm:text-xl flex items-center gap-2">
-                <span>Calibrated Effort Ranges</span>
-                <span className="text-xs font-normal text-[var(--text-secondary)]">
-                  (Hours &amp; Person-Months at 152 hrs/PM)
-                </span>
+                <span>Effort ranges</span>
               </CardTitle>
               <CardDescription className="text-xs">
-                Calibrated intervals: 50% Likely Band (P25–P75, 51.2% measured coverage) &bull; 80% Plausible Range (P10–P90, 79.0% holdout pooled coverage)
+                Expected effort in hours and person-months
               </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="primary" size="xs" pill>
-                Standard Labor Unit: 152 hrs = 1 PM
-              </Badge>
-              <Badge variant="success" size="xs" pill>
-                Effort Driven by Functional Size
-              </Badge>
             </div>
           </div>
         </CardHeader>
@@ -301,7 +260,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             formatValue={(val) => `${Math.round(val).toLocaleString('en-US')} hrs (${hoursToPersonMonths(val).formatted})`}
             showLabels
             showDetails
-            ariaLabel="Calibrated effort range bar"
+            ariaLabel="Effort range bar"
           />
 
           {/* Effort Summary 3-Column Quantiles Box */}
@@ -309,13 +268,13 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             {/* p10 */}
             <div className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-emerald-500/20">
               <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-                p10 Lower Bound (Optimistic)
+                Optimistic
               </span>
               <span className="font-mono text-xl sm:text-2xl font-bold text-[var(--text-primary)] block mt-1">
                 {Math.round(p10Hours).toLocaleString('en-US')} hrs
               </span>
               <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 block">
-                {p10PM.formatted} person-months
+                {p10PM.formatted}
               </span>
               <span className="text-[11px] text-[var(--text-tertiary)] block mt-0.5">
                 {fmtMoney(outputs.cost_min_usd)}
@@ -325,16 +284,16 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             {/* p50 */}
             <div className="p-3 rounded-lg bg-[var(--bg-elevated)] border-2 border-blue-600 dark:border-blue-500 shadow-sm relative">
               <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-600 text-white uppercase tracking-wider">
-                Calibrated Center
+                Most Likely
               </span>
               <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mt-1">
-                p50 Median (Most Likely)
+                Median (Most Likely)
               </span>
               <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[var(--color-primary)] dark:text-blue-400 block mt-1">
                 {Math.round(p50Hours).toLocaleString('en-US')} hrs
               </span>
               <span className="text-xs font-bold text-blue-700 dark:text-blue-300 block">
-                {p50PM.formatted} person-months
+                {p50PM.formatted}
               </span>
               <span className="text-xs font-bold text-[var(--text-primary)] block mt-0.5">
                 {fmtMoney(outputs.cost_likely_usd)}
@@ -344,13 +303,13 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             {/* p90 */}
             <div className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-amber-500/20">
               <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                p90 Upper Bound (Budget Cap)
+                Conservative (Budget Cap)
               </span>
               <span className="font-mono text-xl sm:text-2xl font-bold text-[var(--text-primary)] block mt-1">
                 {Math.round(p90Hours).toLocaleString('en-US')} hrs
               </span>
               <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 block">
-                {p90PM.formatted} person-months
+                {p90PM.formatted}
               </span>
               <span className="text-[11px] text-[var(--text-tertiary)] block mt-0.5">
                 {fmtMoney(outputs.cost_max_usd)}
@@ -358,30 +317,15 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             </div>
           </div>
 
-          {/* Plain-Language Uncertainty & Coverage Disclaimer */}
+          {/* Plain-Language Uncertainty Note */}
           <div className="mt-4 p-3 rounded-lg bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-xs text-blue-950 dark:text-blue-200 space-y-1">
             <div className="flex items-center gap-1.5 font-semibold text-blue-900 dark:text-blue-300">
               <Info size={14} className="shrink-0 text-blue-600 dark:text-blue-400" />
-              <span>Statistical Uncertainty &amp; Decision Protocol:</span>
+              <span>Planning with these ranges:</span>
             </div>
             <p className="leading-relaxed">
-              Baseline estimation variance narrows as validated organization history is incorporated.
-              Use the <strong>50% Likely Band (P25–P75)</strong> for sprint planning and expected delivery milestones, and the <strong>80% Plausible Range (P10–P90)</strong> for contractual budget caps and governance risk reserves.
+              Use the <strong>likely range</strong> for sprint and release planning, and the <strong>wider range</strong> for budget caps and risk reserves.
             </p>
-            <div className="flex items-center gap-2 flex-wrap pt-1 text-[11px] text-blue-800 dark:text-blue-300">
-              <span className="font-semibold">Coverage Status:</span>
-              <span className="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 font-mono">
-                80% Plausible: 79.0% holdout pooled coverage
-              </span>
-              <span className="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 font-mono">
-                50% Likely: 51.2% empirical coverage
-              </span>
-              {inputs.feature_count && (
-                <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-mono">
-                  NLP Assumption: ~8 FP/feature, ~5 FP/integration
-                </span>
-              )}
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -429,7 +373,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             {outputs.confidence_pct.toFixed(0)}%
           </p>
           <span className="text-xs text-[var(--text-secondary)] mt-0.5 block">
-            {isCalibrated ? 'Validation interval coverage' : 'Heuristic confidence'}
+            {isCalibrated ? 'Coverage confidence' : 'Confidence'}
           </span>
         </Card>
 
@@ -477,7 +421,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             <span>Input Parameters</span>
           </CardTitle>
           <CardDescription className="text-xs">
-            Persisted inputs and functional sizing parameters. Effort depends on Functional Scope; Team Size and Duration represent planning capacity indicators.
+            Persisted inputs and project details.
           </CardDescription>
         </CardHeader>
         <CardContent className="mt-2">
@@ -487,7 +431,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
               { label: 'Team Size', value: inputs.team_size?.toString() },
               { label: 'Duration', value: `${inputs.duration_months} months` },
               { label: 'Complexity', value: inputs.complexity },
-              { label: 'Methodology', value: inputs.methodology },
+              { label: 'Delivery Process', value: inputs.methodology },
               { label: 'Hourly Rate', value: `$${inputs.hourly_rate_usd}/hr` },
               { label: 'Tech Stack', value: inputs.tech_stack?.join(', ') || 'Not specified' },
               { label: 'Features', value: inputs.feature_count ?? 'Not recorded' },

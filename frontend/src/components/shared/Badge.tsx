@@ -130,21 +130,21 @@ const tierConfig: Record<
 > = {
   A: {
     name: 'Tier A',
-    subtext: 'Certified Benchmark',
+    subtext: 'Typical size',
     variant: 'success',
     icon: ShieldCheck,
     glowClass: 'shadow-[0_0_12px_rgba(16,185,129,0.25)]',
   },
   B: {
     name: 'Tier B',
-    subtext: 'Validated Standard',
+    subtext: 'From document',
     variant: 'info',
     icon: Database,
     glowClass: 'shadow-[0_0_12px_rgba(59,130,246,0.2)]',
   },
   C: {
     name: 'Tier C',
-    subtext: 'Heuristic',
+    subtext: 'Large scope',
     variant: 'warning',
     icon: AlertCircle,
     glowClass: 'shadow-[0_0_12px_rgba(245,158,11,0.2)]',
@@ -237,7 +237,7 @@ export const UncertaintyBadge: React.FC<UncertaintyBadgeProps> = ({
       dotColor={calibrated ? 'bg-blue-500' : 'bg-amber-500'}
       className={className}
       icon={calibrated ? <CheckCircle2 size={11} /> : <AlertCircle size={11} />}
-      title={calibrated ? 'Statistically calibrated confidence interval' : 'Uncalibrated heuristic estimate'}
+      title={calibrated ? 'Confidence interval' : 'Estimated range'}
       {...props}
     >
       <span>{interval}</span>

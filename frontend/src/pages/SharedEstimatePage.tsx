@@ -67,12 +67,10 @@ export default function SharedEstimatePage() {
       <p>Estimated cost range: {money(estimate.outputs.cost_min_usd)}–{money(estimate.outputs.cost_max_usd)}</p>
       <p>Effort: {estimate.outputs.effort_likely_hours.toLocaleString()} hours · Timeline: {estimate.outputs.timeline_likely_weeks} weeks</p>
       <p style={{ color: RISK_COLORS[estimate.outputs.risk_level] }}>Risk: {estimate.outputs.risk_level}</p>
-      <p>Heuristic confidence: {estimate.outputs.confidence_pct}%. This score and effort range are not calibrated probabilities.</p>
-      <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle, var(--border-color))', fontSize: '0.8125rem' }}>
-        <strong>Estimation Principle:</strong> Effort is calculated directly from functional scope. Team size and duration represent staffing and schedule planning indicators. Typical baseline uncertainty narrows as historical actuals are recorded.
-      </div>
+      <p>Confidence: {estimate.outputs.confidence_pct}%.</p>
+
       <h2>Project inputs</h2>
-      <p>{estimate.inputs.project_type} · {estimate.inputs.team_size} people (staffing capacity) · {estimate.inputs.duration_months} months (schedule horizon) · {estimate.inputs.complexity} complexity</p>
+      <p>{estimate.inputs.project_type} · {estimate.inputs.team_size} team members · {estimate.inputs.duration_months} months · {estimate.inputs.complexity} complexity</p>
       <p>{estimate.inputs.tech_stack.join(', ')}</p>
       <h2>Risk factors</h2>
       <ul>{estimate.outputs.top_risks.map(risk => <li key={risk.name}><strong>{risk.name} ({risk.severity})</strong>: {risk.description}</li>)}</ul>

@@ -13,22 +13,22 @@ describe('Badge Primitives', () => {
     expect(screen.getByText('Active State')).toBeInTheDocument();
   });
 
-  it('renders DataQualityBadge for Tier A with certified subtext', () => {
+  it('renders DataQualityBadge for Tier A with typical size subtext', () => {
     render(<DataQualityBadge tier="A" />);
     expect(screen.getByText('Tier A')).toBeInTheDocument();
-    expect(screen.getByText(/Certified Benchmark/i)).toBeInTheDocument();
+    expect(screen.getByText(/Typical size/i)).toBeInTheDocument();
   });
 
   it('renders DataQualityBadge in compact mode', () => {
     render(<DataQualityBadge tier="B" compact />);
     expect(screen.getByText('Tier B')).toBeInTheDocument();
-    expect(screen.queryByText(/Validated Standard/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/From document/i)).not.toBeInTheDocument();
   });
 
-  it('renders DataQualityBadge for Tier C with heuristic alert', () => {
+  it('renders DataQualityBadge for Tier C with large scope alert', () => {
     render(<DataQualityBadge tier="C" />);
     expect(screen.getByText('Tier C')).toBeInTheDocument();
-    expect(screen.getByText(/Heuristic/i)).toBeInTheDocument();
+    expect(screen.getByText(/Large scope/i)).toBeInTheDocument();
   });
 
   it('renders ModelVersionBadge with version and git/model SHA', () => {
@@ -47,12 +47,12 @@ describe('Badge Primitives', () => {
   it('renders UncertaintyBadge with interval and calibrated state', () => {
     render(
       <UncertaintyBadge
-        interval="80% CI (p10–p90)"
+        interval="80% Range"
         coverage="90% Confidence"
         calibrated
       />
     );
-    expect(screen.getByText('80% CI (p10–p90)')).toBeInTheDocument();
+    expect(screen.getByText('80% Range')).toBeInTheDocument();
     expect(screen.getByText(/90% Confidence/i)).toBeInTheDocument();
   });
 });

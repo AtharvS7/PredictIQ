@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import OODDiagnosticsCard from '../estimate/OODDiagnosticsCard';
 
@@ -17,7 +17,7 @@ describe('OODDiagnosticsCard Component', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('renders OOD warning for Functional Size > 2,000 FP, Team Size > 30, and Duration > 24 mo', () => {
+  it('renders large project notice for large scope factors', () => {
     render(
       <OODDiagnosticsCard
         inputs={{
@@ -31,17 +31,17 @@ describe('OODDiagnosticsCard Component', () => {
     );
 
     // Title and badge
-    expect(screen.getByText(/Out-of-Distribution \(OOD\) Parameter Notice/i)).toBeInTheDocument();
-    expect(screen.getByText(/Statistical Variance Widened/i)).toBeInTheDocument();
+    expect(screen.getByText(/Large project notice/i)).toBeInTheDocument();
+    expect(screen.getByText(/Wider range/i)).toBeInTheDocument();
 
     // Specific triggers
-    expect(screen.getByText(/Planned team size of 45 exceeds the calibrated benchmark envelope/i)).toBeInTheDocument();
-    expect(screen.getByText(/Planned target duration of 36 months exceeds single-phase empirical horizons/i)).toBeInTheDocument();
-    expect(screen.getByText(/Functional size of 3,500 FP is beyond standard calibrated cluster envelopes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Planned team size of 45 exceeds typical team sizes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Planned duration of 36 months exceeds typical timelines/i)).toBeInTheDocument();
+    expect(screen.getByText(/Project size of 3,500 FP is larger than typical projects/i)).toBeInTheDocument();
     expect(screen.getByText(/High external integration density \(14 interfaces\)/i)).toBeInTheDocument();
   });
 
-  it('clearly explains why intervals widen for OOD projects without falsely clamping estimates', () => {
+  it('renders recommendations panel when expanded', () => {
     render(
       <OODDiagnosticsCard
         inputs={{
@@ -51,14 +51,13 @@ describe('OODDiagnosticsCard Component', () => {
       />
     );
 
-    // Statistical mechanics explanation
-    expect(screen.getByText(/Why Intervals Widen Without Arbitrary Clamping/i)).toBeInTheDocument();
-    expect(screen.getByText(/Calibrated Uncertainty Dispersion/i)).toBeInTheDocument();
-    expect(screen.getByText(/Monotonic Scope Scaling/i)).toBeInTheDocument();
-    expect(screen.getByText(/Recommended Engineering Mitigations/i)).toBeInTheDocument();
+    expect(screen.getByText(/Suggestions/i)).toBeInTheDocument();
+    expect(screen.getByText(/Scope phasing/i)).toBeInTheDocument();
+    expect(screen.getByText(/Team squads/i)).toBeInTheDocument();
+    expect(screen.getByText(/Iterative schedule/i)).toBeInTheDocument();
   });
 
-  it('toggles diagnostics visibility when the toggle button is clicked', () => {
+  it('toggles details visibility when the toggle button is clicked', () => {
     render(
       <OODDiagnosticsCard
         inputs={{
@@ -69,18 +68,18 @@ describe('OODDiagnosticsCard Component', () => {
     );
 
     const toggleBtn = screen.getByTestId('ood-toggle-button');
-    expect(toggleBtn).toHaveTextContent(/View Diagnostics & Why Intervals Widen/i);
+    expect(toggleBtn).toHaveTextContent(/View details/i);
     expect(screen.queryByTestId('ood-expanded-panel')).not.toBeInTheDocument();
 
     // Expand
     fireEvent.click(toggleBtn);
-    expect(toggleBtn).toHaveTextContent(/Hide Diagnostics/i);
+    expect(toggleBtn).toHaveTextContent(/Hide details/i);
     expect(screen.getByTestId('ood-expanded-panel')).toBeInTheDocument();
-    expect(screen.getByText(/Functional size of 2,500 FP is beyond standard calibrated cluster envelopes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Project size of 2,500 FP is larger than typical projects/i)).toBeInTheDocument();
 
     // Collapse
     fireEvent.click(toggleBtn);
-    expect(toggleBtn).toHaveTextContent(/View Diagnostics & Why Intervals Widen/i);
+    expect(toggleBtn).toHaveTextContent(/View details/i);
     expect(screen.queryByTestId('ood-expanded-panel')).not.toBeInTheDocument();
   });
 });

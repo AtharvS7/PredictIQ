@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import ModelTransparencyModal from '../estimate/ModelTransparencyModal';
 import type { EstimateResult } from '@/types';
 
@@ -38,7 +38,7 @@ function createMockEstimate(): EstimateResult {
       risk_level: 'Low',
       top_risks: [],
       phase_breakdown: [],
-      model_explanation: 'Calibrated estimation.',
+      model_explanation: 'Estimation based on historical data.',
       benchmark_comparison: 'In line with industry datasets.',
     },
   };
@@ -59,139 +59,53 @@ describe('ModelTransparencyModal Component', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('displays full engine provenance, primary architectures, and mathematical formulations', () => {
+  it('displays clean 3-sentence about modal when isOpen is true', () => {
     render(
       <ModelTransparencyModal
         isOpen={true}
         onClose={vi.fn()}
-        modelVersion="production-v2"
-        tier="A"
+        estimate={createMockEstimate()}
       />
     );
 
-    // Header and titles
-    expect(screen.getByText(/How This Estimate Works: Engine Provenance & Methodology/i)).toBeInTheDocument();
+    // Modal title
+    expect(screen.getByText('About this estimate')).toBeInTheDocument();
 
-    // Primary Architecture formulations
-    expect(screen.getByText(/Parametric Effort Model/i)).toBeInTheDocument();
-    expect(screen.getByText(/Effort = a · Size/i)).toBeInTheDocument();
-    expect(screen.getByText(/Staffing & Schedule Dynamics/i)).toBeInTheDocument();
+    // 3 clean sentences
+    expect(
+      screen.getByText(/This estimate is based on data from 915 real software projects\./i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/The likely range covers most outcomes; the wider range covers almost all\./i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Add your completed projects in Settings to adjust estimates to your team\./i)
+    ).toBeInTheDocument();
   });
 
-  it('displays formal statement on elimination of subjective multipliers and empirical grounding', () => {
+  it('calls onClose when close button is clicked', () => {
+    const onClose = vi.fn();
     render(
       <ModelTransparencyModal
         isOpen={true}
-        onClose={vi.fn()}
+        onClose={onClose}
       />
     );
 
-    // Grounding statement
-    expect(screen.getByText(/Empirically Grounded Features & Rigorous Verification/i)).toBeInTheDocument();
-    expect(screen.getByText(/No Subjective Multipliers/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Cross-Validation/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/Verified Inputs Only/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('modal-close-button'));
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('cites all 6 empirical benchmark repository sources totaling 915 projects', () => {
+  it('calls onClose when Done button is clicked', () => {
+    const onClose = vi.fn();
     render(
       <ModelTransparencyModal
         isOpen={true}
-        onClose={vi.fn()}
+        onClose={onClose}
       />
     );
 
-    // Cited Benchmark Repositories
-    expect(screen.getByText(/Cited Empirical Benchmark Repositories/i)).toBeInTheDocument();
-    expect(screen.getByText(/Industry Cross-Org Benchmarks/i)).toBeInTheDocument();
-    expect(screen.getByText(/400 projects/i)).toBeInTheDocument();
-
-    expect(screen.getByText(/NASA Systems Engineering/i)).toBeInTheDocument();
-    expect(screen.getByText(/244 projects/i)).toBeInTheDocument();
-
-    expect(screen.getByText(/AT&T Telemetry/i)).toBeInTheDocument();
-    expect(screen.getByText(/104 projects/i)).toBeInTheDocument();
-
-    expect(screen.getByText(/Desharnais Benchmark/i)).toBeInTheDocument();
-    expect(screen.getByText(/81 projects/i)).toBeInTheDocument();
-
-    expect(screen.getByText(/Maxwell Aerospace & Commercial/i)).toBeInTheDocument();
-    expect(screen.getByText(/62 projects/i)).toBeInTheDocument();
-
-    expect(screen.getByText(/Albrecht Pioneer Repository/i)).toBeInTheDocument();
-    expect(screen.getByText(/24 projects/i)).toBeInTheDocument();
-  });
-
-  it('explains calibrated prediction intervals and stratified size bucketing', () => {
-    render(
-      <ModelTransparencyModal
-        isOpen={true}
-        onClose={vi.fn()}
-      />
-    );
-
-    expect(screen.getByText(/Calibration Method: Empirically Calibrated Prediction Intervals/i)).toBeInTheDocument();
-    expect(screen.getByText(/80% Nominal Empirical Coverage \(p10–p90\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Stratified Size Partitioning/i)).toBeInTheDocument();
-    expect(screen.getByText(/Labor Conversion Standard: 152 Productive Hours = 1 Person-Month/i)).toBeInTheDocument();
-  });
-
-  it('allows copying contract payload to clipboard and inspecting JSON schema', async () => {
-    const mockEstimate = createMockEstimate();
-    const writeTextMock = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: writeTextMock,
-      },
-    });
-
-    render(
-      <ModelTransparencyModal
-        isOpen={true}
-        onClose={vi.fn()}
-        estimate={mockEstimate}
-      />
-    );
-
-    // Contract preview toggle
-    const inspectButton = screen.getByText(/Inspect JSON Schema/i);
-    expect(inspectButton).toBeInTheDocument();
-    await act(async () => {
-      fireEvent.click(inspectButton);
-    });
-
-    expect(screen.getByTestId('contract-json-preview')).toBeInTheDocument();
-
-    // Copy contract payload
-    const copyButton = screen.getByTestId('copy-contract-button');
-    await act(async () => {
-      fireEvent.click(copyButton);
-    });
-
-    expect(writeTextMock).toHaveBeenCalledTimes(1);
-    const copiedText = writeTextMock.mock.calls[0][0];
-    expect(copiedText).toContain('11111111-2222-3333-4444-555555555555');
-    expect(copiedText).toContain('Quantum Portal Enterprise');
-  });
-
-  it('triggers onClose when close button, done button, or escape key is pressed', () => {
-    const onCloseMock = vi.fn();
-    render(
-      <ModelTransparencyModal
-        isOpen={true}
-        onClose={onCloseMock}
-      />
-    );
-
-    const closeBtn = screen.getByTestId('modal-close-button');
-    fireEvent.click(closeBtn);
-    expect(onCloseMock).toHaveBeenCalledTimes(1);
-
-    const doneBtn = screen.getByText('Done');
-    fireEvent.click(doneBtn);
-    expect(onCloseMock).toHaveBeenCalledTimes(2);
-
-    fireEvent.keyDown(window, { key: 'Escape' });
-    expect(onCloseMock).toHaveBeenCalledTimes(3);
+    fireEvent.click(screen.getByRole('button', { name: /Done/i }));
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

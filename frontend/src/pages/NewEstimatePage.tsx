@@ -132,7 +132,7 @@ export default function NewEstimatePage() {
     size_fp: undefined as number | undefined,
   });
 
-  /* Step 3 — Processing & Calibrated Result View */
+  /* Step 3 — Processing & Result View */
   const [processing, setProcessing] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
   const [generatedResult, setGeneratedResult] = useState<EstimateResult | null>(null);
@@ -220,7 +220,7 @@ export default function NewEstimatePage() {
           size_fp: nlp.size_fp ?? undefined,
         });
 
-        addToast('success', 'Document analyzed — functional parameters extracted!');
+        addToast('success', 'Document analyzed!');
       } catch {
         setDocumentId(null);
         addToast('error', 'Document extraction failed. Try another document or choose manual entry.');
@@ -261,7 +261,7 @@ export default function NewEstimatePage() {
         });
       }
 
-      addToast('success', 'Calibrated estimate generated!');
+      addToast('success', 'Estimate generated!');
       setGeneratedResult(response.data as EstimateResult);
       setStep(3);
     } catch (error: unknown) {
@@ -366,16 +366,16 @@ export default function NewEstimatePage() {
 
   /* ── Step definitions ───────────────────────────────── */
   const wizardSteps = [
-    { title: 'Requirements & Functional Size', desc: 'Scope calibration' },
-    { title: 'Planning Parameters', desc: 'Target constraints' },
-    { title: 'Calibrated Results', desc: 'Prediction ranges' },
+    { title: 'Requirements', desc: 'Describe your project' },
+    { title: 'Planning', desc: 'Team and schedule' },
+    { title: 'Results', desc: 'Effort and cost' },
   ];
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <SEOHead
-        title="New Estimate Wizard"
-        description="Create a calibrated project estimate with PredictIQ Enterprise Software Project Effort and Budget Estimation."
+        title="New Estimate"
+        description="Create a project estimate with PredictIQ."
       />
       <Navbar />
 
@@ -623,7 +623,7 @@ export default function NewEstimatePage() {
              ══════════════════════════════════════════════ */}
           {step === 2 && (
             <div className="space-y-6">
-              {/* Real-time Reactive Planning Capacity Card */}
+              {/* Planning Capacity Card */}
               <PlanningCapacityCard
                 teamSize={params.team_size}
                 durationMonths={params.duration_months}
@@ -735,7 +735,7 @@ export default function NewEstimatePage() {
                   {/* Team Size */}
                   <div>
                     <label style={labelStyle} htmlFor="estimate-team_size">
-                      Team Size
+                      Team size
                     </label>
                     <input
                       type="number"
@@ -746,13 +746,12 @@ export default function NewEstimatePage() {
                       value={params.team_size}
                       onChange={(e) => setParams({ ...params, team_size: Number(e.target.value) })}
                     />
-                    <p style={hintStyle}>Staffing capacity indicator (team scaling: does not shorten effort)</p>
                   </div>
 
-                  {/* Planned Target Duration */}
+                  {/* Planned Duration */}
                   <div>
                     <label style={labelStyle} htmlFor="estimate-duration_months">
-                      Planned Target Duration (months)
+                      Planned duration (months)
                     </label>
                     <input
                       type="number"
@@ -769,13 +768,12 @@ export default function NewEstimatePage() {
                         })
                       }
                     />
-                    <p style={hintStyle}>Target planning horizon (effort depends strictly on functional size)</p>
                   </div>
 
                   {/* Methodology */}
                   <div>
                     <label style={labelStyle} htmlFor="estimate-methodology">
-                      Methodology
+                      Development process
                     </label>
                     <select
                       style={fieldStyle}

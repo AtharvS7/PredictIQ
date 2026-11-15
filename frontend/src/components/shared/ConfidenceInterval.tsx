@@ -185,7 +185,7 @@ export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
               </span>
             ) : (
               <span className="text-[10px] text-[var(--text-tertiary)]">
-                calibrated center
+                expected center
               </span>
             )}
           </div>

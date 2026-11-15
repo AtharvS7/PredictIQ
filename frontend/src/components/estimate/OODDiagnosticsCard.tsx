@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { EstimateInputs } from '@/types';
 import { Card } from '@/components/shared/Card';
 import { Badge } from '@/components/shared/Badge';
-import { AlertTriangle, ChevronDown, ChevronUp, Layers, HelpCircle, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, Layers, CheckCircle2 } from 'lucide-react';
 import { checkIsOOD } from './estimateUtils';
 
 export interface OODDiagnosticsCardProps {
@@ -45,14 +45,14 @@ export const OODDiagnosticsCard: React.FC<OODDiagnosticsCardProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-bold text-sm text-amber-900 dark:text-amber-200">
-                Out-of-Distribution (OOD) Parameter Notice
+                Large project notice
               </span>
               <Badge variant="warning" size="xs" pill>
-                Statistical Variance Widened
+                Wider range
               </Badge>
             </div>
             <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-              One or more project parameters exceed empirical benchmark calibration envelopes. Prediction intervals carry wider variance without false clamping.
+              One or more inputs are larger than most projects in our data, so the estimate range is wider.
             </p>
           </div>
         </div>
@@ -65,7 +65,7 @@ export const OODDiagnosticsCard: React.FC<OODDiagnosticsCardProps> = ({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/50 dark:hover:bg-amber-900/80 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 transition shrink-0 self-start sm:self-center cursor-pointer"
           data-testid="ood-toggle-button"
         >
-          <span>{isExpanded ? 'Hide Diagnostics' : 'View Diagnostics & Why Intervals Widen'}</span>
+          <span>{isExpanded ? 'Hide details' : 'View details'}</span>
           {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
       </div>
@@ -76,11 +76,11 @@ export const OODDiagnosticsCard: React.FC<OODDiagnosticsCardProps> = ({
           className="px-4 pb-4 pt-2 border-t border-amber-200/60 dark:border-amber-900/60 space-y-4 animate-fade-in text-xs"
           data-testid="ood-expanded-panel"
         >
-          {/* Section 1: Detected Parameter Violations */}
+          {/* Section 1: Detected Parameters */}
           <div>
             <h4 className="font-semibold text-amber-900 dark:text-amber-200 flex items-center gap-1.5 mb-1.5">
               <Layers size={14} className="text-amber-600 dark:text-amber-400" />
-              <span>Triggered Parameter Envelope Exceedances</span>
+              <span>Project scope factors</span>
             </h4>
             <ul className="list-disc list-inside space-y-1 text-amber-800 dark:text-amber-300 pl-1">
               {reasons.map((reason, idx) => (
@@ -91,53 +91,24 @@ export const OODDiagnosticsCard: React.FC<OODDiagnosticsCardProps> = ({
             </ul>
           </div>
 
-          {/* Section 2: Mathematical Rationale — Why Intervals Widen Without False Clamping */}
-          <div className="p-3 rounded-lg bg-amber-100/60 dark:bg-amber-900/40 border border-amber-300/50 dark:border-amber-800/50 space-y-2">
-            <h4 className="font-semibold text-amber-950 dark:text-amber-100 flex items-center gap-1.5">
-              <HelpCircle size={14} className="text-amber-700 dark:text-amber-300" />
-              <span>Statistical Mechanics: Why Intervals Widen Without Arbitrary Clamping</span>
-            </h4>
-            <p className="text-amber-900 dark:text-amber-200 leading-relaxed">
-              Unlike conventional heuristic calculators that arbitrarily clamp predictions or project false certainty, PredictIQ adheres to formal empirical estimation principles:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 text-[11px]">
-              <div className="p-2 rounded bg-amber-50/80 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60">
-                <span className="font-bold text-amber-950 dark:text-amber-200 block mb-0.5">
-                  1. Calibrated Uncertainty Dispersion
-                </span>
-                <span className="text-amber-800 dark:text-amber-300">
-                  Under calibrated prediction intervals across project size tiers, uncertainty bands expand realistically with extrapolation distance to preserve reliable coverage.
-                </span>
-              </div>
-              <div className="p-2 rounded bg-amber-50/80 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60">
-                <span className="font-bold text-amber-950 dark:text-amber-200 block mb-0.5">
-                  2. Monotonic Scope Scaling
-                </span>
-                <span className="text-amber-800 dark:text-amber-300">
-                  The calibrated median (p50) preserves monotonic scaling with project scope without sudden cliffs or artificial cutoffs, maintaining economic consistency.
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3: Recommended Risk Mitigations */}
+          {/* Section 2: Recommendations */}
           <div>
             <h4 className="font-semibold text-amber-900 dark:text-amber-200 flex items-center gap-1.5 mb-1.5">
               <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
-              <span>Recommended Engineering Mitigations</span>
+              <span>Suggestions</span>
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-amber-900 dark:text-amber-200">
               <div className="p-2 rounded bg-white/60 dark:bg-slate-900/40 border border-amber-200 dark:border-amber-900/60">
-                <span className="font-bold block text-amber-950 dark:text-amber-100">Scope Decomposition</span>
-                Decompose large systems (&gt; 2,000 FP) into independent microservices or iterative delivery phases.
+                <span className="font-bold block text-amber-950 dark:text-amber-100">Scope phasing</span>
+                Break large deliverables into iterative releases or milestones.
               </div>
               <div className="p-2 rounded bg-white/60 dark:bg-slate-900/40 border border-amber-200 dark:border-amber-900/60">
-                <span className="font-bold block text-amber-950 dark:text-amber-100">Team Decoupling</span>
-                Structure large teams (&gt; 30 members) into autonomous two-pizza pods with bounded context APIs.
+                <span className="font-bold block text-amber-950 dark:text-amber-100">Team squads</span>
+                Organize large teams into smaller, focused delivery squads.
               </div>
               <div className="p-2 rounded bg-white/60 dark:bg-slate-900/40 border border-amber-200 dark:border-amber-900/60">
-                <span className="font-bold block text-amber-950 dark:text-amber-100">Horizon Phasing</span>
-                Segment multi-year schedules (&gt; 24 mo) into quarterly deliverables to re-calibrate with empirical velocity.
+                <span className="font-bold block text-amber-950 dark:text-amber-100">Iterative schedule</span>
+                Plan long timelines in quarterly increments.
               </div>
             </div>
           </div>

@@ -22,7 +22,7 @@ describe('public shared estimate', () => {
     mount();
     expect(await screen.findByRole('heading', { name: 'Shared CRM' })).toBeInTheDocument();
     expect(screen.getByText(/Read only/)).toBeInTheDocument();
-    expect(screen.getByText(/not calibrated probabilities/)).toBeInTheDocument();
+    expect(screen.getByText(/Confidence:/)).toBeInTheDocument();
   });
   it('renders an expired link as an error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }));
