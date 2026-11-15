@@ -1,446 +1,585 @@
 """
-PredictIQ -- Run both backend and frontend with a single command.
+PredictIQ -- Single-Command Production Demonstration Launcher
+============================================================
+
+Starts both the FastAPI backend and Vite frontend with dynamic port allocation,
+system preflight verification, production model validation, and clean lifecycle management.
 
 Usage:
-    python run.py              # Start both servers
-    python run.py --backend    # Backend only
-    python run.py --frontend   # Frontend only
-    python run.py --install    # Install deps only (no server start)
-
-The launcher auto-detects the best available virtual environment:
-  1. backend/.venv (preferred — contains all production packages)
-  2. venv/          (root-level fallback)
-  3. Creates a fresh venv/ and installs if neither is ready.
+    python run.py               # Start both servers (production preview mode)
+    python run.py --dev         # Start frontend with Vite dev server
+    python run.py --backend     # Start backend only
+    python run.py --frontend    # Start frontend only
+    python run.py --no-browser  # Start servers without auto-opening the browser
+    python run.py --help        # Show usage instructions
 """
 
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import math
+import os
+import shutil
+import signal
+import socket
 import subprocess
 import sys
-import os
-import signal
-import shutil
 import time
-import urllib.request
 import urllib.error
+import urllib.parse
+import urllib.request
+import webbrowser
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent
 BACKEND_DIR = ROOT / "backend"
 FRONTEND_DIR = ROOT / "frontend"
+AGENT_DIR = ROOT / ".agent"
+RUN_PID_FILE = AGENT_DIR / "run.pid"
+DEMO_PIDS_FILE = AGENT_DIR / "demo_pids.json"
 
-# ── Virtual Environment Detection ────────────────────────────────────────────
-# Prefer backend/.venv (fully populated), fall back to root venv/
-def _venv_site_packages(venv: Path) -> Path | None:
-    """Return site-packages dir for a venv, or None if not found."""
-    # Windows: Lib/site-packages; Unix: lib/python3.X/site-packages
-    if sys.platform == "win32":
-        sp = venv / "Lib" / "site-packages"
-        return sp if sp.is_dir() else None
-    else:
-        lib = venv / "lib"
-        if lib.is_dir():
-            for d in lib.iterdir():
-                sp = d / "site-packages"
-                if sp.is_dir():
-                    return sp
-    return None
-
-
-def _venv_has_fastapi(python_or_venv: Path) -> bool:
-    """
-    Check whether a venv has fastapi installed WITHOUT spawning a subprocess.
-    Accepts either the venv root or the python executable path.
-    """
-    # Normalise: if given the python path, go two levels up to get venv root
-    venv = python_or_venv
-    if python_or_venv.name in ("python.exe", "python", "python3"):
-        venv = python_or_venv.parent.parent  # Scripts/python.exe -> venv root
-    sp = _venv_site_packages(venv)
-    if sp is None:
-        return False
-    # fastapi package directory or dist-info are both acceptable markers
-    return (sp / "fastapi").is_dir() or any(sp.glob("fastapi-*.dist-info"))
-
-
-def _resolve_venv() -> tuple[Path, Path, Path]:
-    """Return (venv_dir, python, pip) for the best available environment."""
-    candidates = [
-        BACKEND_DIR / ".venv",   # preferred — fully populated by CI/setup
-        ROOT / "venv",            # fallback root venv
-    ]
-    for venv in candidates:
-        if sys.platform == "win32":
-            py  = venv / "Scripts" / "python.exe"
-            pip = venv / "Scripts" / "pip.exe"
-        else:
-            py  = venv / "bin" / "python"
-            pip = venv / "bin" / "pip"
-        if py.exists() and _venv_has_fastapi(venv):
-            return venv, py, pip
-    # Neither has packages — target root venv for creation + install
-    root_venv = ROOT / "venv"
-    if sys.platform == "win32":
-        return root_venv, root_venv / "Scripts" / "python.exe", root_venv / "Scripts" / "pip.exe"
-    else:
-        return root_venv, root_venv / "bin" / "python", root_venv / "bin" / "pip"
-
-VENV_DIR, VENV_PYTHON, VENV_PIP = _resolve_venv()
-
-# ANSI colors (safe on modern Windows 10+ terminals)
-CYAN   = "\033[96m"
-GREEN  = "\033[92m"
+# ANSI styling (supported on modern Windows 10+ and Unix terminals)
+CYAN = "\033[96m"
+GREEN = "\033[92m"
 YELLOW = "\033[93m"
-RED    = "\033[91m"
-BOLD   = "\033[1m"
-DIM    = "\033[2m"
-RESET  = "\033[0m"
+RED = "\033[91m"
+BOLD = "\033[1m"
+DIM = "\033[2m"
+RESET = "\033[0m"
 
-processes: list = []
+# Track child processes for lifecycle management
+_child_processes: list[tuple[str, subprocess.Popen]] = []
 
 
-def safe_print(msg: str):
-    """Print with fallback for terminals that can't handle ANSI escapes."""
+def safe_print(msg: str) -> None:
+    """Print message with graceful fallback for restrictive terminal encodings."""
     try:
         print(msg, flush=True)
     except UnicodeEncodeError:
         import re
-        clean = re.sub(r'\033\[[0-9;]*m', '', msg)
-        print(clean.encode('ascii', errors='replace').decode('ascii'), flush=True)
+
+        clean = re.sub(r"\033\[[0-9;]*m", "", msg)
+        print(clean.encode("ascii", errors="replace").decode("ascii"), flush=True)
 
 
-def banner():
-    safe_print(f"""
+def banner() -> None:
+    """Print the clean application banner."""
+    safe_print(
+        f"""
 {CYAN}{BOLD}+==================================================+
-|           Predictify  --  Dev Launcher            |
-|          v3.0.0  |  FastAPI + Vite + AI          |
+|           PredictIQ -- Production Launcher       |
+|          v2.0.0  |  FastAPI + Vite + AI          |
 +==================================================+{RESET}
-""")
+"""
+    )
 
 
-def create_venv():
-    """Create a virtual environment at ROOT/venv if no ready venv exists."""
-    if VENV_PYTHON.exists() and _venv_has_fastapi(VENV_PYTHON):
-        safe_print(f"{GREEN}[OK] Python venv found at: {VENV_DIR}{RESET}")
-        return True
-
-    safe_print(f"{YELLOW}[..] Creating virtual environment at {VENV_DIR}...{RESET}")
+def resolve_venv() -> tuple[Path, Path]:
+    """Detect the virtual environment containing FastAPI and dependencies."""
+    # Check if current Python interpreter already has the required backend dependencies
     try:
-        subprocess.run(
-            [sys.executable, "-m", "venv", str(VENV_DIR)],
-            check=True, capture_output=True,
-        )
-        safe_print(f"{GREEN}[OK] Virtual environment created{RESET}")
-        return True
-    except subprocess.CalledProcessError as e:
-        safe_print(f"{RED}[X] Failed to create venv: {e}{RESET}")
-        return False
+        import fastapi  # type: ignore
+        import uvicorn  # type: ignore
+        import structlog  # type: ignore
 
+        return ROOT, Path(sys.executable)
+    except ImportError:
+        pass
 
-def check_packages() -> bool:
-    """Return True if the venv already has the required packages (filesystem check)."""
-    return _venv_has_fastapi(VENV_DIR)
-
-
-def install_backend_deps():
-    """Install backend Python dependencies into the venv."""
-    if check_packages():
-        safe_print(f"{GREEN}[OK] Backend Python packages ready{RESET}")
-        return True
-
-    safe_print(f"\n{CYAN}[..] Installing backend dependencies...{RESET}")
-
-    lock_file = BACKEND_DIR / "requirements.lock.txt"
-    req_file  = BACKEND_DIR / "requirements.txt"
-    target = lock_file if lock_file.exists() else req_file
-    label  = "lock file" if target == lock_file else "requirements.txt"
-    safe_print(f"{DIM}     Using {label}{RESET}")
-
-    def _pip_install(req: Path) -> bool:
-        try:
-            result = subprocess.run(
-                [str(VENV_PYTHON), "-m", "pip", "install", "-r", str(req), "--quiet"],
-                capture_output=True, text=True, timeout=600,
-            )
-            if result.returncode == 0:
-                return True
-            safe_print(result.stderr[-800:] if result.stderr else "Unknown pip error")
-            return False
-        except subprocess.TimeoutExpired:
-            safe_print(f"{RED}[X] pip install timed out{RESET}")
-            return False
-
-    if _pip_install(target):
-        safe_print(f"{GREEN}[OK] Backend dependencies installed{RESET}")
-        return True
-
-    if target == lock_file and req_file.exists():
-        safe_print(f"{YELLOW}[!] Lock file install failed, trying requirements.txt...{RESET}")
-        if _pip_install(req_file):
-            safe_print(f"{GREEN}[OK] Backend dependencies installed (requirements.txt){RESET}")
-            return True
-
-    safe_print(f"{RED}[X] Backend dependency installation failed.{RESET}")
-    return False
-
-
-def install_frontend_deps():
-    """Install frontend Node.js dependencies if node_modules is absent."""
-    node_modules = FRONTEND_DIR / "node_modules"
-    if node_modules.exists() and any(node_modules.iterdir()):
-        safe_print(f"{GREEN}[OK] Frontend node_modules ready{RESET}")
-        return True
-
-    safe_print(f"\n{CYAN}[..] Installing frontend dependencies (npm install)...{RESET}")
-
-    def _npm(cmd: list[str]) -> bool:
-        try:
-            result = subprocess.run(
-                cmd, cwd=str(FRONTEND_DIR),
-                shell=(sys.platform == "win32"),
-                capture_output=True, text=True, timeout=300,
-            )
-            if result.returncode == 0:
-                return True
-            safe_print(result.stderr[-800:] if result.stderr else "Unknown npm error")
-            return False
-        except subprocess.TimeoutExpired:
-            safe_print(f"{RED}[X] npm timed out{RESET}")
-            return False
-
-    if _npm(["npm", "ci"]) or _npm(["npm", "install"]):
-        safe_print(f"{GREEN}[OK] Frontend dependencies installed{RESET}")
-        return True
-
-    safe_print(f"{RED}[X] Frontend dependency installation failed.{RESET}")
-    return False
-
-
-def check_env_files():
-    """Ensure backend/.env and frontend/.env exist (copy from .example if not)."""
-    # Backend
-    env_file = BACKEND_DIR / ".env"
-    env_example = BACKEND_DIR / ".env.example"
-    if not env_file.exists():
-        if env_example.exists():
-            shutil.copy2(str(env_example), str(env_file))
-            safe_print(f"{YELLOW}[!] Created backend/.env from .env.example")
-            safe_print(f"     -> Edit backend/.env with your Firebase and PostgreSQL credentials{RESET}")
-        else:
-            safe_print(f"{YELLOW}[!] No backend/.env or .env.example — backend may crash on startup{RESET}")
-    else:
-        safe_print(f"{GREEN}[OK] backend/.env found{RESET}")
-
-    # Frontend
-    fe_env = FRONTEND_DIR / ".env"
-    fe_example = FRONTEND_DIR / ".env.example"
-    if not fe_env.exists():
-        if fe_example.exists():
-            shutil.copy2(str(fe_example), str(fe_env))
-        else:
-            fe_env.write_text("VITE_API_BASE_URL=/api/v1\nVITE_APP_ENV=development\n")
-        safe_print(f"{YELLOW}[!] Created frontend/.env (set VITE_FIREBASE_* keys if needed){RESET}")
-    else:
-        safe_print(f"{GREEN}[OK] frontend/.env found{RESET}")
-
-
-def check_ml_artifacts():
-    """Verify ML artifacts exist; auto-train if missing."""
-    required = [
-        BACKEND_DIR / "ml" / "predictiq_best_model.pkl",
-        BACKEND_DIR / "ml" / "predictiq_scaler.pkl",
-        BACKEND_DIR / "ml" / "predictiq_features.json",
+    candidates = [
+        ROOT / ".venv",
+        BACKEND_DIR / ".venv",
+        ROOT / "venv",
     ]
-    if all(p.exists() for p in required):
-        safe_print(f"{GREEN}[OK] ML artifacts present{RESET}")
-        return True
 
-    missing = [p.name for p in required if not p.exists()]
-    safe_print(f"{YELLOW}[!] ML artifacts missing: {missing}{RESET}")
-    safe_print(f"{CYAN}[..] Running training pipeline (this may take a few minutes)...{RESET}")
-    try:
-        env = {**os.environ, "PYTHONPATH": str(BACKEND_DIR)}
-        result = subprocess.run(
-            [str(VENV_PYTHON), str(BACKEND_DIR / "ml" / "train.py")],
-            cwd=str(BACKEND_DIR), env=env,
-            timeout=1800,
-        )
-        if result.returncode == 0 and all(p.exists() for p in required):
-            safe_print(f"{GREEN}[OK] Training complete — artifacts generated{RESET}")
+    for venv in candidates:
+        if sys.platform == "win32":
+            py = venv / "Scripts" / "python.exe"
+        else:
+            py = venv / "bin" / "python"
+
+        if py.is_file():
+            try:
+                res = subprocess.run(
+                    [str(py), "-c", "import fastapi, uvicorn, structlog"],
+                    capture_output=True,
+                    timeout=20,
+                )
+                if res.returncode == 0:
+                    return venv, py
+            except Exception:
+                pass
+
+    # Fallback to current sys.executable if no candidate matched
+    return ROOT, Path(sys.executable)
+
+
+def is_port_free(port: int, host: str = "127.0.0.1") -> bool:
+    """Check if a local port is free for binding."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        # Do not use SO_REUSEADDR on Windows as it permits port collision
+        if sys.platform != "win32":
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            s.bind((host, port))
             return True
-        safe_print(f"{RED}[X] Training failed (exit {result.returncode}){RESET}")
+        except OSError:
+            return False
+
+
+def find_free_port(start: int, end: int, avoid: set[int] | None = None) -> int:
+    """Find the first available port in [start, end], avoiding specified ports."""
+    avoid = avoid or set()
+    for port in range(start, end + 1):
+        if port in avoid:
+            continue
+        if is_port_free(port):
+            return port
+    raise RuntimeError(f"No available port found in range {start}-{end}")
+
+
+def kill_process(pid: int) -> None:
+    """Kill a process and its child tree safely across operating systems."""
+    if pid <= 0:
+        return
+    if sys.platform == "win32":
+        try:
+            subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(pid)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+        except Exception:
+            pass
+    else:
+        try:
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
+        except Exception:
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except Exception:
+                pass
+
+
+def is_pid_alive(pid: int) -> bool:
+    """Check whether a given PID is currently active."""
+    if pid <= 0:
         return False
-    except subprocess.TimeoutExpired:
-        safe_print(f"{RED}[X] Training timed out (30 min){RESET}")
-        return False
+    if sys.platform == "win32":
+        try:
+            out = subprocess.run(
+                ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            return str(pid) in out.stdout
+        except Exception:
+            return False
+    else:
+        try:
+            os.kill(pid, 0)
+            return True
+        except OSError:
+            return False
 
 
-def start_backend():
-    """Start the FastAPI backend with uvicorn (reload enabled)."""
-    safe_print(f"\n{CYAN}>> Starting Backend (FastAPI)  ->  http://localhost:8000/docs{RESET}")
-    env = {
-        **os.environ,
-        "PYTHONPATH": str(BACKEND_DIR),
-    }
-    # On Windows, Popen with a list directly works fine without shell=True
-    proc = subprocess.Popen(
-        [
-            str(VENV_PYTHON), "-m", "uvicorn",
-            "main:app",
-            "--host", "0.0.0.0",
-            "--port", "8000",
-            "--reload",
-        ],
-        cwd=str(BACKEND_DIR),
-        env=env,
-    )
-    processes.append(("Backend", proc))
-    return proc
+def cleanup_stale_processes() -> None:
+    """Check for previous launcher processes and clean them up."""
+    for pid_file in (RUN_PID_FILE, DEMO_PIDS_FILE):
+        if not pid_file.is_file():
+            continue
+        try:
+            data = json.loads(pid_file.read_text(encoding="utf-8"))
+            for key in ("backend_pid", "frontend_pid"):
+                old_pid = data.get(key)
+                if old_pid and is_pid_alive(int(old_pid)):
+                    safe_print(f"{YELLOW}[!] Stopping stale process (PID {old_pid})...{RESET}")
+                    kill_process(int(old_pid))
+            pid_file.unlink(missing_ok=True)
+            time.sleep(1.0)
+        except Exception:
+            pid_file.unlink(missing_ok=True)
 
 
-def start_frontend():
-    """Start the Vite frontend dev server."""
-    safe_print(f"{CYAN}>> Starting Frontend (Vite)    ->  http://localhost:5173{RESET}\n")
-    proc = subprocess.Popen(
-        ["npm", "run", "dev"],
-        cwd=str(FRONTEND_DIR),
-        shell=(sys.platform == "win32"),
-    )
-    processes.append(("Frontend", proc))
-    return proc
+def compute_canonical_json_sha256(path: Path) -> str:
+    """Compute canonical UTF-8 SHA-256 checksum for consistent hashing."""
+    with path.open("r", encoding="utf-8") as f:
+        obj = json.load(f)
+    canonical = json.dumps(obj, sort_keys=True, indent=2, ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
 
 
-def wait_for_backend(timeout: int = 60) -> bool:
-    """Poll /api/v1/health until it returns 200 or timeout expires."""
-    url = "http://127.0.0.1:8000/api/v1/health"
+def run_preflight_checks(python_exe: Path) -> dict[str, Any]:
+    """Execute preflight checks and report readiness status."""
+    safe_print(f"{CYAN}[1/5] Running system preflight checks...{RESET}")
+
+    # Interpreter
+    ver = sys.version_info
+    safe_print(f"  {GREEN}[OK]{RESET} Python interpreter: {python_exe} ({ver.major}.{ver.minor}.{ver.micro})")
+
+    # Environment files
+    backend_env = BACKEND_DIR / ".env"
+    backend_example = BACKEND_DIR / ".env.example"
+    if not backend_env.is_file() and backend_example.is_file():
+        shutil.copy2(backend_example, backend_env)
+        safe_print(f"  {YELLOW}[!]{RESET} Created backend/.env from template")
+    elif backend_env.is_file():
+        safe_print(f"  {GREEN}[OK]{RESET} backend/.env present")
+    else:
+        safe_print(f"  {RED}[X]{RESET} backend/.env not found")
+
+    frontend_env = FRONTEND_DIR / ".env"
+    frontend_example = FRONTEND_DIR / ".env.example"
+    if not frontend_env.is_file() and frontend_example.is_file():
+        shutil.copy2(frontend_example, frontend_env)
+        safe_print(f"  {YELLOW}[!]{RESET} Created frontend/.env from template")
+    elif frontend_env.is_file():
+        safe_print(f"  {GREEN}[OK]{RESET} frontend/.env present")
+
+    # Firebase credentials check
+    fb_creds = BACKEND_DIR / "firebase-service-account.json"
+    if fb_creds.is_file():
+        safe_print(f"  {GREEN}[OK]{RESET} Firebase credentials present ({fb_creds.name})")
+    else:
+        safe_print(f"  {YELLOW}[!]{RESET} Firebase credentials file not found (checking environment)")
+
+    # Database connectivity check
+    db_online = False
+    if backend_env.is_file():
+        content = backend_env.read_text(encoding="utf-8")
+        db_url = ""
+        for line in content.splitlines():
+            line = line.strip()
+            if line.startswith("DATABASE_URL="):
+                db_url = line.split("=", 1)[1].strip().strip('"').strip("'")
+                break
+        if db_url and "your-" not in db_url:
+            parsed = urllib.parse.urlparse(db_url)
+            host = parsed.hostname or "127.0.0.1"
+            port = parsed.port or 5432
+            try:
+                with socket.create_connection((host, port), timeout=5.0):
+                    db_online = True
+                    safe_print(f"  {GREEN}[OK]{RESET} Cloud database reachable ({host}:{port})")
+            except Exception:
+                safe_print(
+                    f"  {YELLOW}[!]{RESET} Cloud database is unreachable. Offline mode is available via 'python scripts/demo_ml.py'."
+                )
+        else:
+            safe_print(f"  {YELLOW}[!]{RESET} DATABASE_URL not set in backend/.env")
+
+    return {"db_online": db_online}
+
+
+def validate_production_model() -> None:
+    """Validate model parameters and calculate verified baseline estimate."""
+    safe_print(f"\n{CYAN}[2/5] Validating production ML model bundle...{RESET}")
+
+    artifacts_dir = BACKEND_DIR / "ml" / "artifacts" / "production_v2"
+    manifest_file = artifacts_dir / "manifest.json"
+    params_file = artifacts_dir / "model_params.json"
+
+    if not manifest_file.is_file():
+        raise FileNotFoundError(f"Missing production manifest: {manifest_file}")
+    if not params_file.is_file():
+        raise FileNotFoundError(f"Missing production model parameters: {params_file}")
+
+    with manifest_file.open("r", encoding="utf-8") as f:
+        manifest = json.load(f)
+
+    with params_file.open("r", encoding="utf-8") as f:
+        params_data = json.load(f)
+
+    # Verify canonical checksum
+    actual_hash = compute_canonical_json_sha256(params_file)
+    expected_hash = manifest.get("file_hashes", {}).get("model_params.json")
+    if actual_hash.lower() != str(expected_hash).lower():
+        raise ValueError(
+            f"Model parameter hash mismatch: expected {expected_hash}, got {actual_hash}"
+        )
+
+    # Compute baseline prediction for 50 FP
+    p = params_data.get("parameters", {})
+    base = p.get("base_marginal", p)
+    a = float(base.get("a", math.exp(float(base.get("beta0", 3.188036)))))
+    b = float(base.get("b", 0.827027))
+    p50_test = a * math.pow(50.0, b)
+
+    if not (610.0 <= p50_test <= 625.0):
+        raise ValueError(f"Baseline prediction out of range: {p50_test:.2f} hrs (expected ~616 hrs)")
+
+    version = manifest.get("model_version", "2.0.0")
+    safe_print(f"  {GREEN}[OK]{RESET} Model verified: v{version} (50 FP -> {p50_test:.1f} hrs)")
+
+
+def ensure_frontend_build() -> None:
+    """Ensure frontend production build exists and is up to date with sources."""
+    dist_dir = FRONTEND_DIR / "dist"
+    index_html = dist_dir / "index.html"
+
+    needs_build = False
+    if not index_html.is_file():
+        needs_build = True
+    else:
+        dist_mtime = index_html.stat().st_mtime
+        src_dir = FRONTEND_DIR / "src"
+        if src_dir.is_dir():
+            for item in src_dir.rglob("*"):
+                if item.is_file() and item.stat().st_mtime > dist_mtime:
+                    needs_build = True
+                    break
+        for fname in ("index.html", "package.json", "vite.config.ts"):
+            fpath = FRONTEND_DIR / fname
+            if fpath.is_file() and fpath.stat().st_mtime > dist_mtime:
+                needs_build = True
+                break
+
+    if needs_build:
+        safe_print(f"  {CYAN}[..] Building frontend production bundle (npm run build)...{RESET}")
+        cmd = ["npm", "run", "build"]
+        res = subprocess.run(
+            cmd,
+            cwd=str(FRONTEND_DIR),
+            shell=(sys.platform == "win32"),
+            capture_output=True,
+            text=True,
+        )
+        if res.returncode != 0:
+            safe_print(f"  {RED}[X] Frontend build failed:{RESET}\n{res.stderr[-600:]}")
+            raise RuntimeError("Frontend compilation error")
+        safe_print(f"  {GREEN}[OK]{RESET} Frontend build complete")
+    else:
+        safe_print(f"  {GREEN}[OK]{RESET} Frontend production build is current")
+
+
+def wait_for_backend_ready(port: int, timeout: int = 90) -> bool:
+    """Poll the backend readiness probe until healthy."""
+    url = f"http://127.0.0.1:{port}/api/v1/ready"
     deadline = time.time() + timeout
-    safe_print(f"{DIM}[..] Waiting for backend health check ({timeout}s max)...{RESET}")
+    safe_print(f"  {DIM}[..] Awaiting backend readiness at {url}...{RESET}")
     while time.time() < deadline:
         try:
-            with urllib.request.urlopen(url, timeout=3) as resp:
+            req = urllib.request.Request(url, headers={"User-Agent": "PredictIQ-Launcher/2.0"})
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
                 if resp.status == 200:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    if data.get("status") == "healthy":
+                        return True
+        except Exception:
+            pass
+        time.sleep(1.0)
+    return False
+
+
+def wait_for_frontend_ready(port: int, timeout: int = 30) -> bool:
+    """Poll the frontend server until responsive."""
+    url = f"http://localhost:{port}/"
+    deadline = time.time() + timeout
+    safe_print(f"  {DIM}[..] Awaiting frontend readiness at {url}...{RESET}")
+    while time.time() < deadline:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "PredictIQ-Launcher/2.0"})
+            with urllib.request.urlopen(req, timeout=2.0) as resp:
+                if resp.status in (200, 304):
                     return True
         except Exception:
             pass
-        time.sleep(2)
+        time.sleep(0.8)
     return False
 
 
-def print_health(payload: dict):
-    """Print a formatted health summary."""
-    model_loaded = payload.get("model_loaded", False)
-    model_mode   = payload.get("model_mode", "unknown")
-    ml_ok = model_loaded and model_mode == "live"
-    icon = GREEN + "[OK]" if ml_ok else YELLOW + "[!] "
-    safe_print(f"\n{GREEN}{BOLD}╔══════════════════════════════════════════╗")
-    safe_print(f"║   PredictIQ is running!                  ║")
-    safe_print(f"╚══════════════════════════════════════════╝{RESET}")
-    safe_print(f"  {GREEN}Backend API Docs: http://localhost:8000/docs{RESET}")
-    safe_print(f"  {GREEN}Frontend UI:     http://localhost:5173{RESET}")
-    safe_print(f"  {icon} ML Model: loaded={model_loaded}, mode={model_mode}{RESET}")
-    safe_print(f"\n{DIM}  Press Ctrl+C to stop both servers.{RESET}\n")
-
-
-def shutdown(signum=None, frame=None):
-    """Gracefully terminate all child processes."""
-    safe_print(f"\n{YELLOW}[STOP] Shutting down...{RESET}")
-    for name, proc in processes:
+def shutdown(signum: Any = None, frame: Any = None) -> None:
+    """Gracefully terminate all running child processes and clean up PID files."""
+    safe_print(f"\n{YELLOW}[STOP] Shutting down PredictIQ servers...{RESET}")
+    for name, proc in _child_processes:
         try:
-            proc.terminate()
-        except OSError:
+            kill_process(proc.pid)
+            safe_print(f"  {DIM}{name} stopped.{RESET}")
+        except Exception:
             pass
-    for name, proc in processes:
-        try:
-            proc.wait(timeout=6)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-        safe_print(f"{DIM}  {name} stopped.{RESET}")
-    safe_print(f"{GREEN}[OK] All servers stopped.{RESET}")
+
+    RUN_PID_FILE.unlink(missing_ok=True)
+    DEMO_PIDS_FILE.unlink(missing_ok=True)
+    safe_print(f"{GREEN}[OK] All servers cleanly terminated.{RESET}\n")
     sys.exit(0)
 
 
-def main():
-    # Enable ANSI colors on Windows
-    if os.name == 'nt':
-        os.system('')  # Enables ANSI escape processing on Windows 10+
+def main() -> int:
+    """Main launcher entry point."""
+    if os.name == "nt":
+        os.system("")  # Enable ANSI color processing on Windows
 
     banner()
 
-    # Parse flags
-    args = set(sys.argv[1:])
-    install_only = "--install" in args
-    flags_only   = args - {"--install"}
-    run_backend  = "--backend"  in args or not flags_only
-    run_frontend = "--frontend" in args or not flags_only
+    parser = argparse.ArgumentParser(description="PredictIQ Demonstration Launcher")
+    parser.add_argument("--dev", action="store_true", help="Start frontend in Vite development mode")
+    parser.add_argument("--backend", action="store_true", help="Start backend only")
+    parser.add_argument("--frontend", action="store_true", help="Start frontend only")
+    parser.add_argument("--no-browser", action="store_true", help="Do not open browser automatically")
+    args = parser.parse_args()
 
-    # ── Step 1: Ensure venv exists (or detect backend/.venv) ─────────────────
-    if not VENV_PYTHON.exists():
-        if not create_venv():
-            sys.exit(1)
+    run_backend = args.backend or (not args.backend and not args.frontend)
+    run_frontend = args.frontend or (not args.backend and not args.frontend)
 
-    # ── Step 2: Install backend Python deps ──────────────────────────────────
-    if not install_backend_deps():
-        safe_print(f"\n{RED}Backend dependency installation failed.{RESET}")
-        safe_print(f"{YELLOW}Try manually:  {VENV_PYTHON} -m pip install -r backend\\requirements.txt{RESET}")
-        sys.exit(1)
+    AGENT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # ── Step 3: Install frontend Node deps ───────────────────────────────────
-    if run_frontend or install_only:
-        if not install_frontend_deps():
-            safe_print(f"\n{RED}Frontend dependency installation failed.{RESET}")
-            if not run_backend:
-                sys.exit(1)
-            safe_print(f"{YELLOW}Continuing with backend only...{RESET}")
-            run_frontend = False
+    # Clean up any stale processes from previous sessions
+    cleanup_stale_processes()
 
-    # ── Step 4: Ensure .env files exist ──────────────────────────────────────
-    check_env_files()
+    # Step 1: Preflight checks
+    _, python_exe = resolve_venv()
+    run_preflight_checks(python_exe)
 
-    # ── Step 5: Verify ML artifacts (auto-train if missing) ──────────────────
+    # Step 2: Validate ML model
     if run_backend:
-        if not check_ml_artifacts():
-            safe_print(f"{YELLOW}[!] ML artifacts missing — predictions will be unavailable.{RESET}")
+        validate_production_model()
 
-    if install_only:
-        safe_print(f"\n{GREEN}{BOLD}[OK] All dependencies installed.{RESET}")
-        safe_print(f"{DIM}     Run 'python run.py' to start the servers.{RESET}")
-        sys.exit(0)
+    # Step 3: Allocate ports
+    safe_print(f"\n{CYAN}[3/5] Allocating network ports...{RESET}")
+    # Backend: 8010-8019 (NEVER 8000)
+    backend_port = find_free_port(8010, 8019, avoid={8000})
+    # Frontend: 5173-5179
+    frontend_port = find_free_port(5173, 5179)
+    safe_print(f"  {GREEN}[OK]{RESET} Backend port : {backend_port}")
+    safe_print(f"  {GREEN}[OK]{RESET} Frontend port: {frontend_port}")
 
-    # ── Step 6: Register signal handlers and start servers ───────────────────
-    signal.signal(signal.SIGINT,  shutdown)
+    # Register signal handlers for clean exit
+    signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGTERM, shutdown)
 
+    # Step 4: Start Backend
+    backend_proc: subprocess.Popen | None = None
     if run_backend:
-        start_backend()
-        # Give uvicorn a moment to bind before polling
-        time.sleep(3)
+        safe_print(f"\n{CYAN}[4/5] Launching backend service...{RESET}")
+        be_log_out = AGENT_DIR / "backend.log"
+        be_env = os.environ.copy()
+        be_env["PORT"] = str(backend_port)
+        be_env["ALLOWED_ORIGINS"] = f"http://localhost:{frontend_port},http://127.0.0.1:{frontend_port}"
+        be_env["PYTHONPATH"] = f"{ROOT}{os.pathsep}{BACKEND_DIR}"
 
+        be_cmd = [
+            str(python_exe),
+            "-u",
+            "-m",
+            "uvicorn",
+            "main:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(backend_port),
+            "--no-access-log",
+        ]
+        with be_log_out.open("w", encoding="utf-8") as be_file:
+            backend_proc = subprocess.Popen(
+                be_cmd,
+                cwd=str(BACKEND_DIR),
+                env=be_env,
+                stdout=be_file,
+                stderr=subprocess.STDOUT,
+            )
+        _child_processes.append(("Backend", backend_proc))
+
+        if not wait_for_backend_ready(backend_port, timeout=90):
+            safe_print(f"  {RED}[X] Backend did not become ready within 90 seconds.{RESET}")
+            if be_log_out.is_file():
+                safe_print("  Backend log output:")
+                lines = be_log_out.read_text(encoding="utf-8", errors="replace").splitlines()
+                for line in lines[-20:]:
+                    safe_print(f"    {line}")
+            shutdown()
+
+        safe_print(f"  {GREEN}[OK]{RESET} Backend ready at http://127.0.0.1:{backend_port}")
+
+    # Step 5: Start Frontend
+    frontend_proc: subprocess.Popen | None = None
     if run_frontend:
-        start_frontend()
+        safe_print(f"\n{CYAN}[5/5] Launching frontend application...{RESET}")
+        fe_log_out = AGENT_DIR / "frontend.log"
+        fe_env = os.environ.copy()
+        fe_env["VITE_PROXY_TARGET"] = f"http://127.0.0.1:{backend_port}"
 
-    # ── Step 7: Health check ─────────────────────────────────────────────────
-    if run_backend:
-        import json
-        if wait_for_backend(timeout=60):
-            try:
-                with urllib.request.urlopen("http://127.0.0.1:8000/api/v1/health", timeout=5) as r:
-                    payload = json.loads(r.read())
-                    print_health(payload)
-            except Exception:
-                safe_print(f"{GREEN}[OK] Backend is up (health parse failed — continuing){RESET}")
+        if not args.dev:
+            ensure_frontend_build()
+            fe_cmd = f"npx vite preview --port {frontend_port} --strictPort"
         else:
-            safe_print(f"{YELLOW}[!] Backend did not respond within 60s — check logs above.{RESET}")
+            fe_cmd = f"npx vite --port {frontend_port} --strictPort"
 
-    # ── Step 8: Monitor processes ─────────────────────────────────────────────
+        with fe_log_out.open("w", encoding="utf-8") as fe_file:
+            frontend_proc = subprocess.Popen(
+                fe_cmd,
+                cwd=str(FRONTEND_DIR),
+                env=fe_env,
+                shell=(sys.platform == "win32"),
+                stdout=fe_file,
+                stderr=subprocess.STDOUT,
+            )
+        _child_processes.append(("Frontend", frontend_proc))
+
+        if not wait_for_frontend_ready(frontend_port, timeout=30):
+            safe_print(f"  {RED}[X] Frontend did not become responsive within 30 seconds.{RESET}")
+            if fe_log_out.is_file():
+                safe_print("  Frontend log output:")
+                lines = fe_log_out.read_text(encoding="utf-8", errors="replace").splitlines()
+                for line in lines[-20:]:
+                    safe_print(f"    {line}")
+            shutdown()
+
+        safe_print(f"  {GREEN}[OK]{RESET} Frontend ready at http://localhost:{frontend_port}")
+
+    # Persist PID tracking file
+    pid_data = {
+        "backend_pid": backend_proc.pid if backend_proc else None,
+        "frontend_pid": frontend_proc.pid if frontend_proc else None,
+        "backend_port": backend_port if run_backend else None,
+        "frontend_port": frontend_port if run_frontend else None,
+        "mode": "dev" if args.dev else "preview",
+        "started_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    RUN_PID_FILE.write_text(json.dumps(pid_data, indent=2), encoding="utf-8")
+    DEMO_PIDS_FILE.write_text(json.dumps(pid_data, indent=2), encoding="utf-8")
+
+    # Final summary banner
+    app_url = f"http://localhost:{frontend_port}"
+    api_docs = f"http://localhost:{backend_port}/docs"
+    ready_url = f"http://localhost:{backend_port}/api/v1/ready"
+
+    safe_print(
+        f"""
+{GREEN}{BOLD}================================================================================
+                    PREDICTIQ DEMO ENVIRONMENT IS READY!                        
+================================================================================{RESET}
+  {CYAN}Frontend Application :{RESET} {BOLD}{app_url}{RESET}
+  {CYAN}Backend Swagger API  :{RESET} {api_docs}
+  {CYAN}Readiness Probe      :{RESET} {ready_url}
+{GREEN}================================================================================{RESET}
+  {DIM}Press Ctrl+C to cleanly stop all servers.{RESET}
+"""
+    )
+
+    # Launch default browser
+    if run_frontend and not args.no_browser:
+        safe_print(f"{GREEN}[OK] Opening browser to {app_url}...{RESET}")
+        webbrowser.open(app_url)
+
+    # Monitor processes until interrupted
     try:
         while True:
-            for name, proc in list(processes):
-                ret = proc.poll()
-                if ret is not None:
-                    safe_print(f"{RED}[X] {name} exited with code {ret}{RESET}")
+            for name, proc in list(_child_processes):
+                code = proc.poll()
+                if code is not None:
+                    safe_print(f"\n{RED}[X] {name} service exited unexpectedly with code {code}{RESET}")
                     shutdown()
-            time.sleep(1)
+            time.sleep(1.0)
     except KeyboardInterrupt:
         shutdown()
 
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

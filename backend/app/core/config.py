@@ -1,10 +1,10 @@
 """
-Predictify Backend Configuration
+PredictIQ Backend Configuration
 Loads environment variables via pydantic-settings.
 """
 import os
 import warnings
-from typing import List, Literal
+from typing import Literal
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -65,17 +65,24 @@ class Settings(BaseSettings):
                 raise ValueError("S3_BUCKET_NAME is required")
             if bool(self.S3_ACCESS_KEY_ID) != bool(self.S3_SECRET_ACCESS_KEY):
                 raise ValueError("Provide both S3 credentials or use the provider credential chain")
-        if self.APP_ENV not in ("test", "testing", "ci"):
-            if not self.DATABASE_URL or "your-" in self.DATABASE_URL:
-                warnings.warn(
-                    "DATABASE_URL is a placeholder — set a real Neon connection string in .env",
-                    stacklevel=2,
-                )
+        if self.APP_ENV not in ("test", "testing", "ci") and (not self.DATABASE_URL or "your-" in self.DATABASE_URL):
+            warnings.warn(
+                "DATABASE_URL is a placeholder — set a real Neon connection string in .env",
+                stacklevel=2,
+            )
         return self
 
     @property
-    def cors_origins(self) -> List[str]:
-        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
+    def cors_origins(self) -> list[str]:
+        origins = [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+        if self.APP_ENV.lower() not in ("prod", "production"):
+            # Automatically permit dev/preview frontend ports 5173 through 5179
+            for port in range(5173, 5180):
+                for host in ("localhost", "127.0.0.1"):
+                    origin = f"http://{host}:{port}"
+                    if origin not in origins:
+                        origins.append(origin)
+        return origins
 
 
 settings = Settings()

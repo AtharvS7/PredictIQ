@@ -21,7 +21,7 @@ This specification outlines the procedure for running the PredictIQ application 
 
 | Component | Default Working Path | Runtime Port | Protocol / Path |
 |:----------|:---------------------|:------------:|:----------------|
-| **FastAPI Backend** | `backend/` | `8010` (Demo) / `8000` | HTTP / OpenAPI (`/docs`), Readiness (`/api/v1/ready`) |
+| **FastAPI Backend** | `backend/` | `8010` (8010-8019) | HTTP / OpenAPI (`/docs`), Readiness (`/api/v1/ready`) |
 | **Vite Frontend** | `frontend/` | `5173` | HTTP / Single Page Application |
 | **PostgreSQL Database** | External Cloud or Local | `5432` | TCP / Asyncpg Connection Pool |
 
@@ -62,11 +62,15 @@ Preflight check PASSED cleanly. System is ready for demo launch.
 ```
 
 ### Step 3: Launch Demonstration Environment
-Run the one-command demo launcher:
+Run the one-command launcher:
+```powershell
+python run.py
+```
+Alternatively, execute the PowerShell demo script:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/start_demo.ps1
 ```
-The launcher starts the FastAPI service on port 8010, polls the `/api/v1/ready` readiness endpoint until healthy, and launches the Vite frontend on port 5173.
+The launcher starts the FastAPI service on free ports (8010-8019), polls the `/api/v1/ready` readiness endpoint until healthy, launches the Vite frontend (5173-5179), and opens the application in your default browser.
 
 Active endpoints:
 - Application UI: `http://localhost:5173`
@@ -74,7 +78,7 @@ Active endpoints:
 - Health Probe: `http://localhost:8010/api/v1/ready`
 
 ### Step 4: Stop Demonstration Environment
-When finished, stop all demo services cleanly:
+When finished, press **Ctrl+C** in the terminal running `python run.py`, or execute the PowerShell cleanup script:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/stop_demo.ps1
 ```

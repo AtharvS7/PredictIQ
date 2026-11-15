@@ -13,25 +13,36 @@
 
 ---
 
-## 2. Fast Launch (Windows One-Command Demo)
+## 2. One-Command Launch (Recommended)
 
-To launch both the backend API and frontend application with automated health verification:
+To launch both the backend API and frontend application with automatic port allocation, system preflight verification, production model validation, and browser opening:
 
 ```powershell
-# 1. Run environment preflight audit
-powershell -ExecutionPolicy Bypass -File scripts/preflight.ps1
-
-# 2. Start demo environment
-powershell -ExecutionPolicy Bypass -File scripts/start_demo.ps1
+python run.py
 ```
+
+Optional flags:
+- `python run.py --dev`: Starts Vite in development mode instead of production preview
+- `python run.py --no-browser`: Starts servers without automatically launching the browser
+- `python run.py --backend`: Starts the backend service only
+- `python run.py --frontend`: Starts the frontend application only
 
 Once running, access the services:
 - **Frontend Application:** [http://localhost:5173](http://localhost:5173)
 - **Interactive OpenAPI Documentation:** [http://localhost:8010/docs](http://localhost:8010/docs)
 - **Service Readiness Probe:** [http://localhost:8010/api/v1/ready](http://localhost:8010/api/v1/ready)
 
-To shut down demo services cleanly:
+To shut down demo services cleanly, press **Ctrl+C** in the terminal.
+
+### Alternative PowerShell Demo Script
 ```powershell
+# 1. Run environment preflight audit
+powershell -ExecutionPolicy Bypass -File scripts/preflight.ps1
+
+# 2. Start demo environment
+powershell -ExecutionPolicy Bypass -File scripts/start_demo.ps1
+
+# 3. Stop demo environment cleanly
 powershell -ExecutionPolicy Bypass -File scripts/stop_demo.ps1
 ```
 

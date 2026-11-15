@@ -8,7 +8,8 @@
 
 [CmdletBinding()]
 param (
-    [switch]$SkipPreflight
+    [switch]$SkipPreflight,
+    [switch]$Dev
 )
 
 $ErrorActionPreference = "Stop"
@@ -71,13 +72,15 @@ if (-not $ready) {
 Write-Host "Backend is ready! (HTTP 200 - Healthy)" -ForegroundColor Green
 
 Write-Host "[3/3] Launching Vite frontend on port 5173..." -ForegroundColor Cyan
-$env:VITE_API_BASE_URL = "http://localhost:8010/api/v1"
+$env:VITE_API_BASE_URL = "/api/v1"
+$env:VITE_PROXY_TARGET = "http://127.0.0.1:8010"
 $frontendDir = Join-Path $RepoRoot "frontend"
 $frontendOutLog = Join-Path $agentDir "frontend_demo_out.log"
 $frontendErrLog = Join-Path $agentDir "frontend_demo_err.log"
 
+$viteCmd = if ($Dev) { "npx vite --port 5173 --strictPort" } else { "npx vite preview --port 5173 --strictPort" }
 $frontendProc = Start-Process -FilePath "cmd.exe" `
-    -ArgumentList "/c", "npx vite" `
+    -ArgumentList "/c", $viteCmd `
     -WorkingDirectory $frontendDir `
     -RedirectStandardOutput $frontendOutLog `
     -RedirectStandardError $frontendErrLog `

@@ -1,5 +1,5 @@
 """
-Predictify API — Health Check
+PredictIQ API — Health Check
 Exposes model status, training metrics, DB connectivity, and Firebase status.
 """
 import asyncio
