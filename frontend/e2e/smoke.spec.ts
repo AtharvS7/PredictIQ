@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Predictify — E2E Smoke Tests
+ * PredictIQ — E2E Smoke Tests
  * Basic tests to verify the app loads and key pages are accessible.
  * Run with: npx playwright test
  */
@@ -10,7 +10,7 @@ test.describe('Landing Page', () => {
   test('should load and show app name', async ({ page }) => {
     await page.goto('/');
     // Landing page should contain the app name
-    await expect(page.locator('body')).toContainText(/Predictify/i);
+    await expect(page.locator('body')).toContainText(/PredictIQ/i);
   });
 
   test('should have navigation elements', async ({ page }) => {
@@ -45,13 +45,13 @@ test.describe('Auth Page', () => {
 
 test.describe('Security Headers', () => {
   test('API should return security headers', async ({ request }) => {
-    const response = await request.get('http://localhost:8000/');
+    const response = await request.get('http://127.0.0.1:8010/');
     expect(response.headers()['x-frame-options']).toBe('DENY');
     expect(response.headers()['x-content-type-options']).toBe('nosniff');
   });
 
   test('API readiness rejects unavailable dependencies', async ({ request }) => {
-    const response = await request.get('http://localhost:8000/api/v1/health');
+    const response = await request.get('http://127.0.0.1:8010/api/v1/health');
     expect(response.status()).toBe(503);
     const body = await response.json();
     expect(body.status).toBe('degraded');

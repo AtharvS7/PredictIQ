@@ -1,5 +1,5 @@
 """
-Predictify API — Export Endpoints
+PredictIQ API — Export Endpoints
 PDF and JSON export for estimates with multi-currency support.
 """
 import io

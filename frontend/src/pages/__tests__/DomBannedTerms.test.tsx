@@ -142,7 +142,7 @@ describe('DOM Audit: Strict Zero-Prohibited-Terms Enforcement', () => {
 
   it('renders PlanningCapacityCard without any banned terms in DOM', () => {
     const { container } = render(
-      <PlanningCapacityCard teamSize={6} durationMonths={6} />
+      <PlanningCapacityCard teamSize={6} durationMonths={6} hourlyRateUsd={75} />
     );
     assertZeroBannedTerms(container, 'PlanningCapacityCard');
   });

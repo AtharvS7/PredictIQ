@@ -23,8 +23,8 @@ test('Firebase sign-in yields a verified API identity and enforces roles', async
     const { auth } = await import(modulePath);
     const token = await auth.currentUser.getIdToken();
     const headers = { Authorization: `Bearer ${token}` };
-    const identity = await fetch('http://127.0.0.1:8000/api/v1/test/identity', { headers });
-    const admin = await fetch('http://127.0.0.1:8000/api/v1/test/admin', { headers });
+    const identity = await fetch('http://127.0.0.1:8010/api/v1/test/identity', { headers });
+    const admin = await fetch('http://127.0.0.1:8010/api/v1/test/admin', { headers });
     return { status: identity.status, identity: await identity.json(), admin: admin.status };
   });
   expect(result).toEqual({ status: 200, identity: { id: localId, role: 'editor' }, admin: 403 });
@@ -53,7 +53,7 @@ test('Firebase sign-in yields a verified API identity and enforces roles', async
   if (process.env.PREDICTIQ_CAPTURE_UI === '1') {
     await page.screenshot({ path: '../.tools/budget-ui-desktop.png', fullPage: true });
   }
-  expect((await request.get('http://127.0.0.1:8000/api/v1/test/identity', {
+  expect((await request.get('http://127.0.0.1:8010/api/v1/test/identity', {
     headers: { Authorization: 'Bearer invalid-token' },
   })).status()).toBe(401);
   await page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'New Estimate' }).click();
@@ -77,7 +77,7 @@ test('Firebase sign-in yields a verified API identity and enforces roles', async
     data: { email: `other-${Date.now()}@example.invalid`, password, returnSecureToken: true },
   });
   const otherToken = (await other.json()).idToken;
-  expect((await request.get(`http://127.0.0.1:8000/api/v1/estimates/${estimate.estimate_id}`, {
+  expect((await request.get(`http://127.0.0.1:8010/api/v1/estimates/${estimate.estimate_id}`, {
     headers: { Authorization: `Bearer ${otherToken}` },
   })).status()).toBe(404);
   await page.reload();

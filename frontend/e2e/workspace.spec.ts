@@ -80,7 +80,7 @@ test('workspace responsive navigation and keyboard controls', async ({ page }) =
   await expect(account).toBeFocused();
   await expect(account).toHaveAttribute('aria-expanded', 'false');
   await page.getByRole('button', { name: 'Toggle appearance' }).click();
-  expect(await page.evaluate(() => localStorage.getItem('Predictify-theme'))).toMatch(/^(light|dark)$/);
+  expect(await page.evaluate(() => localStorage.getItem('predictiq-theme'))).toMatch(/^(light|dark)$/);
   await page.screenshot({ path: 'test-results/workspace-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 375, height: 812 });
   await page.screenshot({ path: 'test-results/workspace-mobile.png', fullPage: true });

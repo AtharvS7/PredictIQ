@@ -273,6 +273,7 @@ export default function NewEstimatePage() {
       setEstimateError(message);
       addToast('error', message);
       setStep(2);
+      stepHeading.current?.focus();
     } finally {
       setProcessing(false);
     }

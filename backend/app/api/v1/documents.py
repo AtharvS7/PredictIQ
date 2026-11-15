@@ -1,5 +1,5 @@
 """
-Predictify API — Document Endpoints
+PredictIQ API — Document Endpoints
 Handles document upload (direct file + metadata) and retrieval.
 Files are stored in object storage; PostgreSQL holds metadata.
 """
