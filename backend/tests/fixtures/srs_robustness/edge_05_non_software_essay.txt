@@ -1,0 +1,7 @@
+# The Development of the Steam Engine in the Eighteenth Century
+
+The industrial revolution was profoundly shaped by the development of the atmospheric steam engine by Thomas Newcomen in 1712 and its subsequent radical improvements by James Watt in the 1760s. Prior to the adoption of steam power, mining operations across Cornwall and northern England were severely constrained by the rate at which water flooded deep subterranean coal seams. Drainage using water wheels and draft horses was economically unsustainable at depths exceeding one hundred feet.
+
+Watt's critical realization was that the engine's cylinder was alternately heated and cooled in each cycle, dissipating massive quantities of latent thermal energy. By introducing a separate condenser maintained at ambient temperature while insulating the main cylinder with a steam jacket, Watt reduced fuel consumption by more than seventy-five percent compared to the original atmospheric design.
+
+This technological transition enabled manufacturing facilities to untether themselves from rapid river currents and locate closer to natural transport harbors, coal fields, and urban labor markets, ultimately transforming global socioeconomic organization throughout the nineteenth century.

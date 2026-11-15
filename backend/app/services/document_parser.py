@@ -38,7 +38,7 @@ class DocumentParser:
                         raise ValueError("Invalid DOCX archive")
             except zipfile.BadZipFile:
                 raise ValueError("Invalid DOCX archive") from None
-        elif mime_type == "text/plain":
+        elif mime_type in ("text/plain", "text/markdown", "text/x-markdown", "text/plain; charset=utf-8"):
             # NUL bytes indicate binary content except in BOM-marked UTF-16 text.
             if b"\x00" in content and not content.startswith((b"\xff\xfe", b"\xfe\xff")):
                 raise ValueError("Binary content is not plain text")
@@ -70,7 +70,7 @@ class DocumentParser:
                 "application/msword",
             ):
                 return DocumentParser._parse_docx(file_content)
-            elif mime_type == "text/plain":
+            elif mime_type in ("text/plain", "text/markdown", "text/x-markdown", "text/plain; charset=utf-8"):
                 return DocumentParser._parse_txt(file_content)
             else:
                 raise ValueError(f"Unsupported file type: {mime_type}")
@@ -119,16 +119,14 @@ class DocumentParser:
         except Exception as e:
             logger.error("pdf_parse_error", error_type=type(e).__name__)
             raise ValueError(
-                "Could not parse PDF. "
-                "Ensure it's a text-based PDF (not a scanned image)."
+                "No readable text found; paste the text or enter the size"
             ) from None
 
         raw_text = DocumentParser._clean_text("\n\n".join(text_pages))
 
-        if len(raw_text) < 50:
+        if len(raw_text.strip()) < 50:
             raise ValueError(
-                "PDF appears empty or is a scanned image. "
-                "Please upload a text-based PDF."
+                "No readable text found; paste the text or enter the size"
             )
 
         return {
@@ -170,8 +168,8 @@ class DocumentParser:
 
         raw_text = DocumentParser._clean_text("\n\n".join(text_parts))
 
-        if len(raw_text) < 50:
-            raise ValueError("DOCX appears empty or could not be read.")
+        if len(raw_text.strip()) < 20:
+            raise ValueError("No readable text found; paste the text or enter the size")
 
         return {
             "raw_text": raw_text,
@@ -198,6 +196,8 @@ class DocumentParser:
             )
 
         raw_text = DocumentParser._clean_text(raw_text)
+        if not raw_text.strip():
+            raise ValueError("No readable text found; paste the text or enter the size")
         return {
             "raw_text": raw_text,
             "text_preview": raw_text[:500],

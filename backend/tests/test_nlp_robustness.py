@@ -175,7 +175,7 @@ class TestParserEdgeCases:
     def test_corrupt_pdf_truncated_body(self):
         """PDF with valid header but corrupted/truncated binary raises ValueError."""
         truncated_pdf = b"%PDF-1.4\n%%EOF\nTRUNCATED_BINARY_GARBAGE"
-        with pytest.raises(ValueError, match="Could not parse PDF|Ensure it's a text-based PDF"):
+        with pytest.raises(ValueError, match="Could not parse PDF|Ensure it's a text-based PDF|No readable text found"):
             DocumentParser.parse(truncated_pdf, "application/pdf")
 
     def test_empty_content_rejected(self):
@@ -340,3 +340,118 @@ class TestRealSRSBenchmarkCorpus:
         p50 = size_data["uncertainty"]["p50"]
         p90 = size_data["uncertainty"]["p90"]
         assert 0 < p10 <= p50 <= p90
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 6. Comprehensive SRS Robustness Suite (>=40 Diverse Specs)
+# ══════════════════════════════════════════════════════════════════════
+
+class TestSRSRobustnessSuite:
+    """
+    Validates NLP extraction across >= 40 diverse specifications spanning:
+    - IEEE 830, agile user stories, Gherkin acceptance criteria, use cases, tables
+    - Web, Mobile, Data/ML, ERP, IoT, Cloud, and Embedded domains
+    - Real-world specifications and synthetic enterprise benchmarks
+    - Edge cases: empty files, whitespace-only, scanned PDF placeholders, diluted prose
+    Guarantees: Zero crashes, valid finite outputs or friendly notices, p95 latency < 3.0s.
+    """
+
+    @classmethod
+    def _collect_all_fixtures(cls) -> list[Path]:
+        fixtures_root = Path(__file__).parent / "fixtures"
+        all_files: list[Path] = []
+        for sub in ("srs_synthetic", "srs_real", "srs_robustness"):
+            sub_dir = fixtures_root / sub
+            if sub_dir.exists():
+                all_files.extend(
+                    p for p in sub_dir.glob("*")
+                    if p.is_file() and p.suffix in (".md", ".txt") and p.name not in ("README.md",)
+                )
+        return sorted(all_files)
+
+    def test_fixture_corpus_exceeds_40_documents(self):
+        """Verify the test corpus contains >= 40 diverse specifications."""
+        fixtures = self._collect_all_fixtures()
+        assert len(fixtures) >= 40, f"Expected at least 40 SRS fixtures, found {len(fixtures)}"
+
+    def test_all_fixtures_execute_without_unhandled_exceptions(self):
+        """
+        Execute NLP extraction across all fixtures in the corpus.
+        Every single document must yield either:
+        - Valid functional size with evidence and strictly monotonic quantiles, OR
+        - Friendly clean fallback message on empty/unparseable/non-software text.
+        Never an unhandled exception or non-finite float.
+        """
+        fixtures = self._collect_all_fixtures()
+        latencies: list[float] = []
+
+        for p in fixtures:
+            content = p.read_text(encoding="utf-8", errors="replace")
+            t0 = time.perf_counter()
+            result = nlp_extractor.extract(content)
+            elapsed = time.perf_counter() - t0
+            latencies.append(elapsed)
+
+            assert isinstance(result, dict), f"Failed dict contract for {p.name}"
+            size_data = result.get("size_fp", {})
+            assert isinstance(size_data, dict), f"Missing size_fp in {p.name}"
+
+            cov = size_data.get("coverage_flag")
+            assert cov in ("ok", "low_coverage", "no_requirements_found"), f"Invalid coverage flag '{cov}' in {p.name}"
+
+            fp_val = size_data.get("value")
+            if fp_val is not None:
+                assert np.isfinite(fp_val) and fp_val >= 0, f"Non-finite size in {p.name}: {fp_val}"
+                unc = size_data.get("uncertainty", {})
+                p10, p50, p90 = unc.get("p10"), unc.get("p50"), unc.get("p90")
+                if p10 is not None and p50 is not None and p90 is not None:
+                    assert np.isfinite(p10) and np.isfinite(p50) and np.isfinite(p90)
+                    assert 0 <= p10 <= p50 <= p90, f"Monotonicity violated in {p.name}: p10={p10}, p50={p50}, p90={p90}"
+
+            notes = size_data.get("notes", [])
+            assert isinstance(notes, list), f"Notes must be a list in {p.name}"
+
+        # Assert p95 latency across all fixtures
+        p95 = float(np.percentile(latencies, 95))
+        assert p95 < 3.0, f"p95 latency {p95:.3f}s exceeded 3.0s across {len(fixtures)} fixtures"
+
+    def test_diluted_prose_triggers_size_plausibility_warning(self):
+        """Documents with >3000 words and high words-per-FP must emit plausibility notice."""
+        diluted_path = Path(__file__).parent / "fixtures" / "srs_robustness" / "edge_10_diluted_huge_spec.md"
+        assert diluted_path.exists(), "Missing edge_10 fixture"
+        text = diluted_path.read_text(encoding="utf-8")
+
+        result = nlp_extractor.extract(text)
+        size_data = result["size_fp"]
+        notes = size_data.get("notes", [])
+        warning_present = any("document length is substantial relative to the identified requirement count" in n for n in notes)
+        assert warning_present, f"Expected plausibility warning in notes: {notes}"
+
+    def test_non_software_essay_returns_no_requirements_flag(self):
+        """Unstructured text without requirements emits no_requirements_found coverage flag."""
+        essay_path = Path(__file__).parent / "fixtures" / "srs_robustness" / "edge_05_non_software_essay.txt"
+        assert essay_path.exists(), "Missing edge_05 fixture"
+        text = essay_path.read_text(encoding="utf-8")
+
+        result = nlp_extractor.extract(text)
+        assert result["size_fp"]["coverage_flag"] == "no_requirements_found"
+
+    def test_empty_and_whitespace_inputs_return_safe_payloads(self):
+        """Empty or whitespace-only files return friendly payload without crashing."""
+        for name in ("edge_01_empty.txt", "edge_02_whitespace_only.txt"):
+            edge_path = Path(__file__).parent / "fixtures" / "srs_robustness" / name
+            text = edge_path.read_text(encoding="utf-8")
+            result = nlp_extractor.extract(text)
+            assert result["size_fp"]["coverage_flag"] == "no_requirements_found"
+            assert result["size_fp"]["value"] is not None
+
+    def test_markdown_parser_direct_support(self):
+        """DocumentParser directly accepts text/markdown and text/x-markdown bytes."""
+        md_bytes = b"# System Spec\n\n- FR-01: User shall login\n- FR-02: User shall logout\n"
+        DocumentParser.validate_content(md_bytes, "text/markdown")
+        DocumentParser.validate_content(md_bytes, "text/x-markdown")
+
+        parsed = DocumentParser.parse(md_bytes, "text/markdown")
+        assert "raw_text" in parsed
+        assert "FR-01" in parsed["raw_text"]
+

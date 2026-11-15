@@ -469,6 +469,7 @@ class NLPExtractor:
         doc = self._preprocess(text)
 
         # Step 2: Run all extractors (order matters — some depend on others)
+        signals = self._extract_signals(doc)
         tech_stack = self._extract_tech_stack(doc)
         feature_count = self._count_features(doc)
         complexity = self._estimate_complexity(
@@ -477,23 +478,90 @@ class NLPExtractor:
         project_type = self._extract_project_type(doc, tech_stack.value)
         integration_count = self._extract_integration_count(doc)
 
-        fc_val = float(feature_count.value) if feature_count.value else 10.0
-        ic_val = float(integration_count.value) if integration_count.value else 2.0
-        derived_fp = max(
-            self.sizing_config.min_size_fp,
-            fc_val * self.sizing_config.fp_per_story + ic_val * self.sizing_config.fp_per_integration,
-        )
-        size_conf = min(0.9, (feature_count.confidence + integration_count.confidence) / 2.0)
+        stories_n = len(signals["stories"])
+        reqs_n = len(signals["requirements"])
+        modals_n = len(signals["modals"])
+        uc_n = len(signals["use_cases"])
+        modules_n = len(signals["modules"])
+        integrations_n = int(signals["integration_count"])
 
-        # Explicit assumption: wide uncertainty intervals derived from story/integration ranges
-        wide_p10 = max(
-            self.sizing_config.min_size_fp,
-            fc_val * self.sizing_config.fp_per_story_p10 + ic_val * self.sizing_config.fp_per_integration_p10,
+        effective_features = int(feature_count.value) if feature_count.value else 0
+        notes: list[str] = list(feature_count.evidence)
+
+        if integrations_n > 0:
+            integ_names = ", ".join(signals["integrations"][:4]) if signals["integrations"] else f"{integrations_n} services"
+            notes.append(f"Detected {integrations_n} external integration interfaces ({integ_names}).")
+
+        fp_story = self.sizing_config.fp_per_story
+        fp_integ = self.sizing_config.fp_per_integration
+
+        if feature_count.strategy == "default":
+            coverage_flag = "no_requirements_found"
+            derived_fp = self.sizing_config.min_size_fp
+            size_conf = 0.15
+            notes.append("No explicit functional requirements, user stories, or modal specifications detected in the document text. A baseline nominal size has been provided as an assumption.")
+        elif effective_features > 0:
+            derived_fp = max(
+                self.sizing_config.min_size_fp,
+                effective_features * fp_story + integrations_n * fp_integ,
+            )
+            if effective_features >= 3:
+                coverage_flag = "ok"
+                size_conf = min(0.92, (feature_count.confidence + integration_count.confidence) / 2.0)
+            else:
+                coverage_flag = "low_coverage"
+                size_conf = 0.40
+                notes.append("Low requirement coverage detected; functional size confidence is conservative.")
+        else:
+            coverage_flag = "no_requirements_found"
+            derived_fp = self.sizing_config.min_size_fp
+            size_conf = 0.15
+            notes.append("No explicit functional requirements, user stories, or modal specifications detected in the document text. A baseline nominal size has been provided as an assumption.")
+
+        # Size plausibility check: document words > 3000 and words-per-FP > 100
+        words_per_fp = doc.word_count / max(derived_fp, 1.0)
+        is_diluted = (doc.word_count > 3000 and words_per_fp > 100.0)
+
+        if is_diluted:
+            notes.append("Please review the extracted size: document length is substantial relative to the identified requirement count.")
+            p10 = round(max(self.sizing_config.min_size_fp, derived_fp * 0.60), 1)
+            p90 = round(derived_fp * 1.55, 1)
+            wide_p10 = round(max(self.sizing_config.min_size_fp, derived_fp * 0.50), 1)
+            wide_p90 = round(derived_fp * 1.80, 1)
+        else:
+            p10 = round(max(self.sizing_config.min_size_fp, derived_fp * self.sizing_config.uncertainty_p10_ratio), 1)
+            p90 = round(derived_fp * self.sizing_config.uncertainty_p90_ratio, 1)
+            wide_p10 = max(
+                self.sizing_config.min_size_fp,
+                effective_features * self.sizing_config.fp_per_story_p10 + integrations_n * self.sizing_config.fp_per_integration_p10,
+            )
+            wide_p90 = max(
+                wide_p10 + 1.0,
+                effective_features * self.sizing_config.fp_per_story_p90 + integrations_n * self.sizing_config.fp_per_integration_p90,
+            )
+
+        size_basis = {
+            "stories": stories_n,
+            "requirement_statements": reqs_n + modals_n,
+            "use_cases": uc_n,
+            "modules": modules_n,
+            "integrations": integrations_n,
+            "signals_used": signals["signals_used"],
+            "document_words": doc.word_count,
+        }
+
+        feature_count_val = max(effective_features, 1) if effective_features > 0 else 5
+        feature_count = ExtractionResult(
+            value=feature_count_val,
+            confidence=size_conf,
+            strategy="multi_signal",
+            evidence=notes,
         )
-        wide_p90 = max(
-            wide_p10 + 1.0,
-            fc_val * self.sizing_config.fp_per_story_p90 + ic_val * self.sizing_config.fp_per_integration_p90,
+
+        complexity = self._estimate_complexity(
+            doc, tech_stack.value, feature_count.value
         )
+        project_type = self._extract_project_type(doc, tech_stack.value)
 
         extracted = {
             "project_type": project_type.to_dict(),
@@ -511,12 +579,17 @@ class NLPExtractor:
                 "value": round(derived_fp, 1),
                 "confidence": round(size_conf, 2),
                 "uncertainty": {
-                    "p10": round(derived_fp * self.sizing_config.uncertainty_p10_ratio, 1),
+                    "p10": p10,
                     "p50": round(derived_fp, 1),
-                    "p90": round(derived_fp * self.sizing_config.uncertainty_p90_ratio, 1),
+                    "p90": p90,
                 },
                 "source": "nlp",
                 "is_assumption": self.sizing_config.is_assumption,
+                "size_basis": size_basis,
+                "coverage_flag": coverage_flag,
+                "signals": signals,
+                "signals_used": signals["signals_used"],
+                "notes": notes,
                 "assumption_parameters": {
                     "fp_per_story_nominal": self.sizing_config.fp_per_story,
                     "fp_per_story_range": [self.sizing_config.fp_per_story_p10, self.sizing_config.fp_per_story_p90],
@@ -625,6 +698,20 @@ class NLPExtractor:
             "uncertainty": {"p10": p10_fp, "p50": nom_fp, "p90": p90_fp},
             "source": "nlp",
             "is_assumption": self.sizing_config.is_assumption,
+            "signals": {},
+            "signals_used": [],
+            "size_basis": {
+                "stories": 0,
+                "requirement_statements": 0,
+                "modules": 0,
+                "integrations": 0,
+                "signals_used": [],
+                "document_words": 0,
+            },
+            "coverage_flag": "no_requirements_found",
+            "notes": [
+                "No explicit functional requirements, user stories, or modal specifications detected in the document text. A baseline nominal size has been provided as an assumption."
+            ],
             "assumption_parameters": {
                 "fp_per_story_nominal": self.sizing_config.fp_per_story,
                 "fp_per_story_range": [self.sizing_config.fp_per_story_p10, self.sizing_config.fp_per_story_p90],
@@ -1099,14 +1186,176 @@ class NLPExtractor:
 
         return ExtractionResult(value="Agile", confidence=0.3, strategy="default")
 
-    # ── Feature Count ──────────────────────────────────────────────
+    # ── Multi-Signal Extraction & Feature Count ───────────────────
+
+    def _extract_signals(self, doc: DocumentStructure) -> dict[str, Any]:
+        """
+        Multi-signal extraction across:
+        1. User stories ("As a ... I want ... so that ...")
+        2. Numbered / bulleted requirements (FR-01, REQ-01, 1.2.3, etc.)
+        3. Modal statements ("the system shall/must/should/will ...")
+        4. Use-case headings ("Use Case: ...", "UC-01: ...")
+        5. Feature / module headings ("Module: ...", "Feature: ...")
+        6. Table rows under requirement headings
+        7. Acceptance criteria ("Given ... When ... Then ...")
+        8. Integrations (external APIs/services)
+        """
+        def _get_fingerprint(text: str) -> str:
+            clean = re.sub(r"[^\w\s]", "", text.lower())
+            words = [w for w in clean.split() if len(w) > 2 and w not in {
+                "the", "and", "for", "with", "that", "this", "system", "shall", "must", "user", "will", "should", "want", "need", "like"
+            }]
+            return " ".join(words[:6])
+
+        def _dedup(items: list[str]) -> list[str]:
+            seen: set[str] = set()
+            out = []
+            for it in items:
+                fp = _get_fingerprint(it)
+                if fp and fp not in seen:
+                    seen.add(fp)
+                    out.append(it)
+            return out
+
+        # 1. User stories
+        user_stories = []
+        story_pattern = re.compile(
+            r"(?i)\bas\s+(?:a|an)\s+([a-zA-Z0-9_\-\s]+?)\s*,\s*i\s+(?:want|need|would\s+like|can|should|wish)\s+(?:to\s+)?([^.\n]+?)(?:\s+so\s+that\s+([^.\n]+?))?(?:\.|\n|$)"
+        )
+        for m in story_pattern.finditer(doc.full_text):
+            role = m.group(1).strip()
+            goal = m.group(2).strip()
+            if len(goal) > 3 and not goal.lower().startswith("understand"):
+                user_stories.append(f"As a {role}, I want {goal}")
+
+        # 2. Numbered / bulleted / tagged requirements (FR-01, REQ-01, etc.)
+        requirements = []
+        req_pattern = re.compile(
+            r"^\s*(?:[-*•]\s+)?(?:FR[-_]?\d+|REQ[-_]?\d+|NFR[-_]?\d+|BR[-_]?\d+|US[-_]?\d+|UC[-_]?\d+|Requirement\s*#?\s*\d+|Feature\s*#?\s*\d+)\s*[:\-–]?\s*([A-Za-z][^\n]{4,})"
+            r"|^\s*(?:[-*•]|\d+[.)]|\d+\.\d+(?:\.\d+)*[.)]?)\s+([A-Za-z][^\n]{6,})",
+            re.IGNORECASE | re.MULTILINE,
+        )
+        for m in req_pattern.finditer(doc.full_text):
+            stmt = (m.group(1) or m.group(2) or "").strip()
+            if len(stmt) > 5 and not stmt.lower().startswith(("table", "figure", "section", "note")):
+                requirements.append(stmt)
+
+        section_keywords = [
+            "functional requirements", "features", "use cases",
+            "user stories", "user requirements", "system features",
+            "functional specification", "feature list",
+            "core features", "key features", "specific requirements",
+            "system requirements", "requirements specification",
+            "product features", "scope of work",
+        ]
+        for header_key, body in doc.sections.items():
+            if any(kw in header_key for kw in section_keywords):
+                for line in body.splitlines():
+                    line = line.strip()
+                    m_num = re.match(r"^(?:\d+\.\d+|\d+\.)\s+(.+)$", line)
+                    if m_num:
+                        item = m_num.group(1).strip()
+                        if len(item) > 5 and not item.lower().startswith(("table", "figure")):
+                            requirements.append(item)
+                    elif line.startswith(("-", "*", "•")) and len(line) > 6:
+                        item = line.lstrip("-*• ").strip()
+                        if len(item) > 5 and not item.lower().startswith(("table", "figure", "note")):
+                            requirements.append(item)
+
+        # 3. Modal statements
+        modal_statements = []
+        modal_pattern = re.compile(
+            r"(?im)\b(?:the\s+)?([A-Za-z]{3,15})\s+(?:shall|must|should|will)\s+([^\n.]{6,120})(?:\.|\n|$)"
+        )
+        for m in modal_pattern.finditer(doc.full_text):
+            modal_statements.append(m.group(0).strip())
+
+        # 4. Use cases
+        use_cases = []
+        uc_pattern = re.compile(
+            r"(?im)^\s*(?:use\s+case|uc)\s*[:\-–#]?\s*\d*\s*[:\-–]?\s*([^\n]+)"
+        )
+        for m in uc_pattern.finditer(doc.full_text):
+            uc_text = m.group(1).strip()
+            if len(uc_text) > 4:
+                use_cases.append(uc_text)
+
+        # 5. Modules / Epics
+        modules = []
+        mod_pattern = re.compile(
+            r"(?im)^\s*(?:module|epic|component)\s*[:\-–#]?\s*\d*\s*[:\-–]?\s*([^\n]+)"
+        )
+        for m in mod_pattern.finditer(doc.full_text):
+            mod_text = m.group(1).strip()
+            if len(mod_text) > 3:
+                modules.append(mod_text)
+
+        # 6. Table rows
+        table_requirements = []
+        for tbl_str in doc.tables:
+            for cell in tbl_str.split("|"):
+                c = cell.strip()
+                if any(kw in c.lower() for kw in ("fr-", "req-", "shall", "must", "user can", "feature")):
+                    if len(c) > 8:
+                        table_requirements.append(c)
+
+        # 7. Acceptance criteria
+        acceptance_criteria = []
+        gherkin_pattern = re.compile(
+            r"(?im)^\s*given\s+([^\n]+)\s+when\s+([^\n]+)\s+then\s+([^\n]+)"
+        )
+        for m in gherkin_pattern.finditer(doc.full_text):
+            acceptance_criteria.append(m.group(0).strip()[:100])
+
+        # 8. Integrations
+        integration_res = self._extract_integration_count(doc)
+        integrations = [str(x) for x in integration_res.evidence]
+        integration_count_val = int(integration_res.value) if integration_res.value else 0
+
+        dedup_stories = _dedup(user_stories)
+        dedup_requirements = _dedup(requirements)
+        dedup_modals = _dedup(modal_statements)
+        dedup_use_cases = _dedup(use_cases)
+        dedup_modules = _dedup(modules)
+        dedup_tables = _dedup(table_requirements)
+        dedup_gherkin = _dedup(acceptance_criteria)
+
+        signals_used = []
+        if dedup_stories:
+            signals_used.append("user_stories")
+        if dedup_requirements:
+            signals_used.append("numbered_requirements")
+        if dedup_modals:
+            signals_used.append("modal_statements")
+        if dedup_use_cases:
+            signals_used.append("use_cases")
+        if dedup_modules:
+            signals_used.append("modules")
+        if dedup_tables:
+            signals_used.append("table_rows")
+        if dedup_gherkin:
+            signals_used.append("acceptance_criteria")
+        if integrations:
+            signals_used.append("integrations")
+
+        return {
+            "stories": dedup_stories,
+            "requirements": dedup_requirements,
+            "modals": dedup_modals,
+            "use_cases": dedup_use_cases,
+            "modules": dedup_modules,
+            "tables": dedup_tables,
+            "acceptance_criteria": dedup_gherkin,
+            "integrations": integrations,
+            "integration_count": integration_count_val,
+            "signals_used": signals_used,
+        }
 
     def _count_features(self, doc: DocumentStructure) -> ExtractionResult:
         """
         Count distinct user-facing features/requirements.
-        Multi-strategy: section-based > list-based > explicit mention > keyword density.
+        Multi-strategy: section-based > multi-signal extraction > explicit mention > list-based.
         """
-
         # Strategy 1: Section-based counting (HIGHEST PRIORITY)
         section_keywords = [
             "functional requirements", "features", "use cases",
@@ -1131,11 +1380,56 @@ class NLPExtractor:
         if section_count >= 3:
             return ExtractionResult(
                 value=min(section_count, 200), confidence=0.90,
-                evidence=[f"Found in {len(section_keywords)} functional sections"],
+                evidence=[f"Found {section_count} requirements in functional sections"],
                 strategy="section_based",
             )
 
-        # Strategy 2: Explicit count mentions
+        # Strategy 2: Multi-signal extraction across document
+        signals = self._extract_signals(doc)
+        stories_n = len(signals["stories"])
+        reqs_n = len(signals["requirements"])
+        modals_n = len(signals["modals"])
+        uc_n = len(signals["use_cases"])
+        modules_n = len(signals["modules"])
+
+        if stories_n > 0:
+            effective = stories_n + reqs_n
+            return ExtractionResult(
+                value=min(effective, 200),
+                confidence=0.90,
+                evidence=[f"Multi-signal: {stories_n} stories, {reqs_n} requirements"],
+                strategy="multi_signal",
+            )
+        if reqs_n > 0:
+            return ExtractionResult(
+                value=min(reqs_n, 200),
+                confidence=0.88,
+                evidence=[f"Multi-signal: {reqs_n} requirements"],
+                strategy="multi_signal",
+            )
+        if uc_n > 0:
+            return ExtractionResult(
+                value=min(uc_n, 100),
+                confidence=0.85,
+                evidence=[f"Multi-signal: {uc_n} use cases"],
+                strategy="multi_signal",
+            )
+        if modals_n > 0:
+            return ExtractionResult(
+                value=min(modals_n, 80),
+                confidence=0.75,
+                evidence=[f"Multi-signal: {modals_n} modal statements"],
+                strategy="multi_signal",
+            )
+        if modules_n > 0:
+            return ExtractionResult(
+                value=min(modules_n * 3, 60),
+                confidence=0.65,
+                evidence=[f"Multi-signal: {modules_n} modules"],
+                strategy="multi_signal",
+            )
+
+        # Strategy 3: Explicit count mentions
         feature_patterns = [
             r"(\d+)\s+(?:features?|user\s+stories?|requirements?|modules?|"
             r"use\s+cases?|functionalities?|epics?)",

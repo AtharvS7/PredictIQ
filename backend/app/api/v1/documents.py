@@ -59,18 +59,31 @@ async def upload_document_file(
         if not file.filename or len(file.filename) > 255:
             raise HTTPException(status_code=422, detail="Filename must contain 1 to 255 characters")
 
-        # Validate MIME type
+        # Validate MIME type (supports PDF, DOCX, TXT, MD)
         allowed_types = [
             "application/pdf",
             "text/plain",
+            "text/markdown",
+            "text/x-markdown",
+            "text/plain; charset=utf-8",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         ]
         mime = file.content_type or "application/octet-stream"
         if mime not in allowed_types:
-            raise HTTPException(
-                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                detail="Unsupported file type. Allowed: PDF, DOCX, TXT",
-            )
+            lower_name = (file.filename or "").lower()
+            if lower_name.endswith(".md") or lower_name.endswith(".markdown"):
+                mime = "text/markdown"
+            elif lower_name.endswith(".txt"):
+                mime = "text/plain"
+            elif lower_name.endswith(".pdf"):
+                mime = "application/pdf"
+            elif lower_name.endswith(".docx"):
+                mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                    detail="Unsupported file type. Allowed: PDF, DOCX, TXT, MD",
+                )
 
         try:
             document_parser.validate_content(file_content, mime)
@@ -210,15 +223,37 @@ async def extract_document_parameters(
         parse_result = await parse_stored_document(doc, user.id)
         raw_text = parse_result.get("raw_text", "")
         if not raw_text or len(raw_text.strip()) < 20:
-            raise HTTPException(
-                status_code=422,
-                detail="Document contains too little text for extraction",
-            )
+            return {
+                "project_name": "",
+                "project_type": "Web App",
+                "team_size": 5,
+                "duration_months": 6.0,
+                "complexity": "Medium",
+                "methodology": "Agile",
+                "tech_stack": [],
+                "integration_count": 0,
+                "volatility_score": 3,
+                "team_experience": 3.0,
+                "feature_count": 0,
+                "size_fp": None,
+                "size": None,
+                "size_basis": {},
+                "coverage_flag": "no_requirements_found",
+                "notes": ["No readable text found; paste the text or enter the size"],
+                "signals": {},
+                "extracted_text": raw_text or "",
+                "message": "No readable text found; paste the text or enter the size",
+                "size_uncertainty": {},
+                "confidence": {},
+                "word_count": len(raw_text.split()) if raw_text else 0,
+            }
 
         # Run NLP extraction
         extracted = nlp_extractor.extract(raw_text)
 
         # Map to frontend-friendly format
+        size_info = extracted.get("size_fp", {})
+        notes_list = size_info.get("notes", [])
         result = {
             "project_name": extracted.get("project_name", {}).get("value", ""),
             "project_type": extracted.get("project_type", {}).get("value", "Web App"),
@@ -231,10 +266,20 @@ async def extract_document_parameters(
             "volatility_score": extracted.get("volatility_score", {}).get("value", 3),
             "team_experience": extracted.get("team_experience", {}).get("value", 3.0),
             "feature_count": extracted.get("feature_count", {}).get("value", 10),
+            "size_fp": size_info.get("value", 90.0),
+            "size": size_info.get("value", 90.0),
+            "size_basis": size_info.get("size_basis", {}),
+            "coverage_flag": size_info.get("coverage_flag", "ok"),
+            "notes": notes_list,
+            "size_uncertainty": size_info.get("uncertainty", {}),
+            "signals": size_info.get("signals", {}),
+            "extracted_text": raw_text[:2000],
+            "message": notes_list[0] if notes_list else "Requirements extracted successfully.",
             # Include raw confidence scores for transparency
             "confidence": {
                 k: extracted.get(k, {}).get("confidence", 0.0)
                 for k in extracted
+                if isinstance(extracted.get(k), dict) and "confidence" in extracted.get(k, {})
             },
             "word_count": parse_result.get("word_count", 0),
         }
