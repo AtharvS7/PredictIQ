@@ -1,94 +1,113 @@
-# Predictify — Quick Start Guide
+# PredictIQ — Quick Start Guide
 
-> Get Predictify running locally in under 5 minutes.
+> Effort and duration estimation for software engineering projects using empirical calibration.
 
-## Prerequisites
+---
 
-- **Python 3.11+** — [Download](https://www.python.org/downloads/)
-- **Node.js 20+** — [Download](https://nodejs.org/)
-- **Supabase Account** — [Sign up free](https://supabase.com/)
+## 1. Prerequisites
 
-## Step 1: Clone the Repository
+- **Python 3.12** — Installed in local virtual environment at `.venv`
+- **Node.js 22+ & npm** — Required for Vite frontend execution
+- **PostgreSQL Database** — Cloud connection via `DATABASE_URL` or local PostgreSQL instance
+- **Firebase Project** — Configuration for web authentication and service account credentials
 
-```bash
-git clone https://github.com/AtharvS7/Predictify.git
-cd Predictify
+---
+
+## 2. Fast Launch (Windows One-Command Demo)
+
+To launch both the backend API and frontend application with automated health verification:
+
+```powershell
+# 1. Run environment preflight audit
+powershell -ExecutionPolicy Bypass -File scripts/preflight.ps1
+
+# 2. Start demo environment
+powershell -ExecutionPolicy Bypass -File scripts/start_demo.ps1
 ```
 
-## Step 2: Configure Environment Variables
+Once running, access the services:
+- **Frontend Application:** [http://localhost:5173](http://localhost:5173)
+- **Interactive OpenAPI Documentation:** [http://localhost:8010/docs](http://localhost:8010/docs)
+- **Service Readiness Probe:** [http://localhost:8010/api/v1/ready](http://localhost:8010/api/v1/ready)
 
-```bash
-# Windows
-copy backend\.env.example backend\.env
-copy frontend\.env.example frontend\.env
-
-# macOS / Linux
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
+To shut down demo services cleanly:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/stop_demo.ps1
 ```
 
-Open both `.env` files and fill in your Supabase credentials:
+---
+
+## 3. Manual Step-by-Step Setup
+
+### Step 1: Environment Variables Configuration
+
+Copy example environment files to active configuration:
+
+```powershell
+Copy-Item backend\.env.example backend\.env
+Copy-Item frontend\.env.example frontend\.env
+```
+
+Ensure the following settings are defined:
 
 **`backend/.env`**
-```
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```ini
+DATABASE_URL=postgresql://user:password@host:5432/database
+FIREBASE_CREDENTIALS_PATH=firebase-service-account.json
+APP_ENV=development
 ```
 
 **`frontend/.env`**
-```
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-> You can find these in your Supabase Dashboard → Settings → API.
-
-## Step 3: Train the ML Model (One-Time)
-
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-pip install -r backend\requirements.lock.txt
-cd backend
-python -m ml.train
-cd ..
-
-# macOS / Linux
-python3 -m venv venv
-source venv/bin/activate
-pip install -r backend/requirements.lock.txt
-cd backend
-python -m ml.train
-cd ..
+```ini
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
+VITE_API_BASE_URL=http://localhost:8010/api/v1
 ```
 
-This generates the model files (~10 seconds). Only needed once.
+### Step 2: Database Schema Verification
 
-## Step 4: Run the App
-
-```bash
-python run.py
+Verify that database migrations are aligned with application models:
+```powershell
+Set-Location backend
+..\.venv\Scripts\python.exe -m alembic current
+..\.venv\Scripts\python.exe -m alembic heads
+Set-Location ..
 ```
 
-This will:
-1. Create/verify the virtual environment
-2. Install all Python + Node.js dependencies
-3. Start the backend (FastAPI) on **http://localhost:8000**
-4. Start the frontend (Vite) on **http://localhost:5173**
+### Step 3: Start Services Manually
 
-Open **http://localhost:5173** in your browser — you're ready to go!
-
-## Other Commands
-
-```bash
-python run.py --backend     # Backend only
-python run.py --frontend    # Frontend only
-python run.py --install     # Install deps without starting servers
+**Terminal 1 — FastAPI Backend (Port 8010):**
+```powershell
+Set-Location backend
+..\.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8010
 ```
 
-## Need Help?
+**Terminal 2 — Vite Frontend (Port 5173):**
+```powershell
+Set-Location frontend
+npm run dev
+```
 
-- Full technical docs: [docs/walkthrough.md](docs/walkthrough.md)
-- Security & CI setup: [docs/GITHUB_SECRETS_SETUP.md](docs/GITHUB_SECRETS_SETUP.md)
+---
+
+## 4. Verification and Offline Testing
+
+To test model inference without network or database dependencies:
+```powershell
+.\.venv\Scripts\python.exe scripts/demo_ml.py
+```
+
+To run test suites:
+```powershell
+# Backend pytest suite
+.\.venv\Scripts\python.exe -m pytest backend/tests/ -q
+
+# Frontend component suite
+npm --prefix frontend test
+```
+
+For operational details and troubleshooting reference, see [RUN_LOCALLY_WINDOWS.md](docs/operations/RUN_LOCALLY_WINDOWS.md).
