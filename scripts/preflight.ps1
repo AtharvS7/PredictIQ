@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     PredictIQ Environment and System Preflight Verification.
 .DESCRIPTION

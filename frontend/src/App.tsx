@@ -143,7 +143,7 @@ export default function App() {
           borderTopColor: '#1A56DB', borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
         }} />
-        <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>Loading Predictify...</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>Loading PredictIQ...</p>
       </div>
     );
   }

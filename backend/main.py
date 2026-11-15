@@ -1,5 +1,5 @@
 """
-Predictify Backend — FastAPI Application Entry Point
+PredictIQ Backend — FastAPI Application Entry Point
 """
 import asyncio
 from contextlib import asynccontextmanager, suppress
@@ -50,7 +50,7 @@ logger = structlog.get_logger()
 async def lifespan(app: FastAPI):
     """Application startup and shutdown events."""
     # Startup
-    logger.info("starting_Predictify", env=settings.APP_ENV, version=settings.APP_VERSION)
+    logger.info("starting_PredictIQ", env=settings.APP_ENV, version=settings.APP_VERSION)
 
     # Initialize Firebase Admin SDK
     init_firebase()
@@ -86,11 +86,10 @@ async def lifespan(app: FastAPI):
         with suppress(asyncio.CancelledError):
             await role_worker
         await close_db_pool()
-        logger.info("shutting_down_Predictify")
-# Create FastAPI application
+        logger.info("shutting_down_PredictIQ")
 app = FastAPI(
-    title="Predictify API",
-    description="AI-Powered Software Project Cost & Timeline Predictor",
+    title="PredictIQ API",
+    description="Software engineering effort and cost estimation using empirical calibration",
     version=settings.APP_VERSION,
     lifespan=lifespan,
 )
@@ -165,7 +164,7 @@ app.include_router(shared_router, prefix="/api/v1", tags=["Shared estimates"])
 async def root():
     """Root endpoint — API info."""
     return {
-        "name": "Predictify API",
+        "name": "PredictIQ API",
         "version": settings.APP_VERSION,
         "docs": "/docs",
         "health": "/api/v1/health",
