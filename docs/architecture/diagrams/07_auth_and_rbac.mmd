@@ -1,0 +1,32 @@
+sequenceDiagram
+    autonumber
+    actor Client as Web Browser
+    participant Firebase as Firebase Identity Platform
+    participant Middleware as FastAPI Auth Middleware
+    participant PG as PostgreSQL (Users Table)
+    participant Endpoint as Protected Endpoint Handler
+
+    Client->>Firebase: Sign In (Email/Password or Provider)
+    Firebase-->>Client: ID Token (JWT with RS256 Signature)
+    
+    Client->>Middleware: Request with Authorization: Bearer <ID_TOKEN>
+    Middleware->>Firebase: Verify Token Signature & Expiration (Public Keys)
+    Firebase-->>Middleware: Decoded Claims (uid, email, email_verified)
+    
+    Middleware->>PG: Query User by firebase_uid
+    alt User Exists
+        PG-->>Middleware: User Record (id, role, organization_id)
+    else First-Time User
+        Middleware->>PG: Provision Default User & Organization (Role: Editor)
+        PG-->>Middleware: Newly Provisioned User Record
+    end
+
+    Middleware->>Middleware: Evaluate RBAC Matrix
+    Note over Middleware: Viewer: GET endpoints only<br/>Editor: Estimate, Upload, Calibrate<br/>Admin: Organization & User Management
+
+    alt Permission Allowed
+        Middleware->>Endpoint: Forward Request with Authenticated Context
+        Endpoint-->>Client: HTTP 200 Success
+    else Insufficient Privileges
+        Middleware-->>Client: HTTP 403 Forbidden
+    end

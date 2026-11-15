@@ -1,0 +1,87 @@
+erDiagram
+    ORGANIZATIONS ||--o{ USERS : contains
+    ORGANIZATIONS ||--o{ PROJECTS : owns
+    ORGANIZATIONS ||--o{ CALIBRATION_ACTUALS : registers
+    PROJECTS ||--o{ ESTIMATES : produces
+    PROJECTS ||--o{ DOCUMENTS : attaches
+    USERS ||--o{ AUDIT_LOGS : generates
+
+    ORGANIZATIONS {
+        uuid id PK
+        string name
+        string slug UK
+        string plan
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USERS {
+        uuid id PK
+        uuid organization_id FK
+        string firebase_uid UK
+        string email UK
+        string role
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    PROJECTS {
+        uuid id PK
+        uuid organization_id FK
+        string name
+        string description
+        string status
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ESTIMATES {
+        uuid id PK
+        uuid project_id FK
+        float size_fp
+        string sizing_basis
+        float effort_p10
+        float effort_p25
+        float effort_p50
+        float effort_p75
+        float effort_p90
+        float team_size
+        float target_duration_months
+        float hourly_rate
+        jsonb org_calibration_meta
+        string model_version
+        timestamp created_at
+    }
+
+    DOCUMENTS {
+        uuid id PK
+        uuid project_id FK
+        string filename
+        string content_type
+        int file_size_bytes
+        string storage_path
+        jsonb extraction_metadata
+        timestamp uploaded_at
+    }
+
+    CALIBRATION_ACTUALS {
+        uuid id PK
+        uuid organization_id FK
+        string project_name
+        float size_fp
+        float effort_hours
+        float duration_months
+        int team_size
+        string primary_language
+        timestamp created_at
+    }
+
+    AUDIT_LOGS {
+        uuid id PK
+        uuid user_id FK
+        string action
+        string resource_type
+        uuid resource_id
+        jsonb details
+        timestamp created_at
+    }

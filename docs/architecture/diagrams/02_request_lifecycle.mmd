@@ -1,0 +1,31 @@
+sequenceDiagram
+    autonumber
+    actor User as User / Client
+    participant Frontend as React Client
+    participant API as FastAPI Router
+    participant Auth as Firebase Auth Guard
+    participant NLP as NLP Extractor
+    participant ML as ML Service
+    participant DB as PostgreSQL DB
+
+    User->>Frontend: Upload SRS Document / Input Size
+    Frontend->>API: POST /api/v1/estimates/analyze (Bearer Token)
+    API->>Auth: Validate JWT Signature & Permissions
+    Auth-->>API: User Context (Tenant, Role: Editor)
+    
+    alt Document Upload
+        API->>NLP: Parse Text & Extract Signals
+        NLP-->>API: Functional Size (size_fp, signals, confidence)
+    end
+
+    API->>ML: Estimate Effort (size_fp, org_actuals)
+    ML->>ML: Compute Monotone Power-Law (P50)
+    ML->>ML: Apply Mondrian Conformal Quantiles
+    ML->>ML: Apply Empirical Bayes Shrinkage (if actuals exist)
+    ML->>ML: Validate Non-Crossing Quantiles (P10..P90)
+    ML-->>API: Estimation Result Spread (hours, PM, confidence)
+
+    API->>DB: Persist Project & Estimate Record
+    DB-->>API: Saved Record Confirmation
+    API-->>Frontend: HTTP 200 JSON Response
+    Frontend-->>User: Render Interactive Visualizations & Summary Cards

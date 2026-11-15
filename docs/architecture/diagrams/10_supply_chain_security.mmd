@@ -1,0 +1,27 @@
+flowchart TD
+    subgraph ArtifactRepository["Model Artifact Directory (Pure JSON)"]
+        ParamsFile["model_params.json (Parameters & Quantiles)"]
+        ManifestFile["manifest.json (Signatures & Hashes)"]
+    end
+
+    subgraph VerificationEngine["Serving Startup Verification"]
+        ReadParams["1. Read model_params.json as raw bytes"]
+        CanonicalParse["2. Parse JSON & re-serialize to canonical UTF-8 (separators=(',', ':'), sort_keys=True)"]
+        ComputeHash["3. Compute SHA-256 Digest over canonical representation"]
+        ReadManifest["4. Load trusted hash from manifest.json: file_hashes.model_params.json"]
+        MatchHash{"5. Computed Digest == Expected Digest?"}
+        
+        ReadParams --> CanonicalParse
+        CanonicalParse --> ComputeHash
+        ManifestFile --> ReadManifest
+        ComputeHash --> MatchHash
+        ReadManifest --> MatchHash
+    end
+
+    subgraph ExecutionDecision["Runtime Security Decision"]
+        FailClosed["Fail-Closed Security Rejection:<br/>Raise CryptographicIntegrityError<br/>Refuse to Serve Traffic"]
+        PassRuntime["Load Verified In-Memory Struct:<br/>Zero Pickle Deserialization<br/>Ready for Production Serving"]
+        
+        MatchHash -- Mismatch / Tamper --> FailClosed
+        MatchHash -- Match Confirmed --> PassRuntime
+    end

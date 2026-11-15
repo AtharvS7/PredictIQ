@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Release](https://img.shields.io/badge/version-2.0.0--rc.3-blue.svg?style=for-the-badge)](CHANGELOG.md)
+[![Release](https://img.shields.io/badge/version-2.0.0-blue.svg?style=for-the-badge)](CHANGELOG.md)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB.svg?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
@@ -23,13 +23,13 @@
 
 ## 1. Project Overview
 
-Software engineering estimation often suffers from subjective guessing, fabricated complexity multipliers, and black-box regression models that fail when deployed across new organizations.
+Software engineering estimation often suffers from subjective guessing, uncalibrated complexity multipliers, and black-box regression models that lose generalization across new organizations.
 
-**PredictIQ v2** rebuilds software effort, cost, and capacity estimation on verifiable empirical foundations:
-- **No Fabricated Math:** All synthetic adjustment factors and unverified multipliers are eliminated. Effort depends strictly on verified functional scope.
+**PredictIQ v2** establishes software effort, cost, and capacity estimation on verifiable empirical foundations:
+- **Empirical Sizing Foundation:** Subjective adjustment factors and unverified multipliers are eliminated. Effort depends strictly on verified functional scope.
 - **Monotone Economic Reality:** System effort scales monotonically with functional scope ($\frac{\partial \text{Effort}}{\partial \text{Size}} > 0$). Larger projects never predict lower effort.
-- **Finite-Sample Uncertainty:** Replaces unreliable single-point estimates with split-conformal prediction intervals: an **80% Plausible Range ($P_{10}–P_{90}$)** and a **50% Likely Band ($P_{25}–P_{75}$)**.
-- **Organizational Velocity Adaptation:** Adapts to company velocity from completed project actuals via Empirical Bayes shrinkage ($+15.79\%$ error reduction at $k=10$).
+- **Finite-Sample Uncertainty:** Replaces single-point estimates with split-conformal prediction intervals: an **80% Plausible Range ($P_{10}–P_{90}$)** and a **50% Likely Band ($P_{25}–P_{75}$)**.
+- **Organizational Velocity Adaptation:** Adapts to company velocity from completed project actuals via Empirical Bayes shrinkage ($+19.5\%$ error reduction at $k=10$).
 - **Hardened Supply Chain:** Zero `pickle.load` at runtime, pure JSON parameter storage, and fail-closed canonical UTF-8 SHA-256 verification.
 
 ---
@@ -68,26 +68,25 @@ All models are evaluated by holding out an entire empirical software repository 
 
 | Fold (Held-out Source) | Test Set ($N$) | MdAPE (%) | PRED(25) (%) | MAE (Hours) | 80% Coverage |
 |:-----------------------|:--------------:|:---------:|:------------:|:-----------:|:------------:|
-| **China** | 499 | 60.84% | 20.44% | 2,780.2 | 75.35% |
-| **Kitchenham** | 145 | 59.24% | 21.38% | 3,581.4 | 75.86% |
-| **AT&T Aptness** | 104 | 58.66% | 22.12% | 4,120.9 | 80.77% |
-| **Desharnais** | 81 | 52.41% | 16.05% | 2,490.1 | 82.72% |
-| **Maxwell** | 62 | 37.50% | 37.10% | 5,640.8 | 91.94% |
-| **Albrecht** | 24 | 69.19% | 4.17% | 3,922.5 | 73.68% |
+| **China** | 499 | 60.84% | 20.44% | 2,886.1 | 70.94% |
+| **Kitchenham** | 145 | 59.24% | 21.38% | 1,688.2 | 88.97% |
+| **AT&T Aptness** | 104 | 58.66% | 22.12% | 6,465.4 | 87.50% |
+| **Desharnais** | 81 | 52.41% | 16.05% | 2,922.3 | 87.65% |
+| **Maxwell** | 62 | 37.50% | 37.10% | 4,000.8 | 95.16% |
+| **Albrecht** | 24 | 69.19% | 4.17% | 17,288.1 | 50.00% |
 | **Macro Average** | — | **56.31%** | **20.21%** | **5,875.2** | **80.04%** |
+| **Pooled Overall** | **915** | **58.35%** | **21.09%** | **3,559.6** | **78.25%** |
 
 ### 2.4. Organizational Calibration (Empirical Bayes)
 
-Organizations uploading past completed projects adapt the model to their team velocity via Empirical Bayes shrinkage ($w = \frac{k}{k + 2.57}$):
+Organizations uploading past completed projects adapt the model to their team velocity via Empirical Bayes shrinkage ($w(k) = \frac{k}{k + 2.83}$):
 
-| Past Projects ($k$) | Shrinkage Weight ($w$) | MdAPE (%) | Relative Error Reduction | PRED(25) (%) |
-|:-------------------:|:----------------------:|:---------:|:------------------------:|:------------:|
-| 0 (Global Prior) | 0.000 | 52.59% | Baseline | 19.60% |
-| 1 | 0.280 | 49.80% | +5.31% | 21.40% |
-| 3 | 0.538 | 47.92% | +8.88% | 23.20% |
-| 5 | 0.660 | 46.41% | +11.75% | 25.10% |
-| 10 | 0.795 | 44.28% | +15.79% | 28.30% |
-| 20 | 0.886 | 42.80% | +18.62% | 30.10% |
+| Past Projects ($k$) | Shrinkage Weight ($w$) | Relative Error Reduction |
+|:-------------------:|:----------------------:|:------------------------:|
+| 0 (Global Prior) | 0.000 | Baseline ($0.0\%$) |
+| 3 | 0.515 | $+11.9\%$ |
+| 5 | 0.639 | $+14.9\%$ |
+| 10 | 0.779 | $+19.5\%$ |
 
 The scale exponent ($b = 0.8270$) is strictly locked to prevent small-$k$ sample distortions.
 
@@ -95,10 +94,12 @@ The scale exponent ($b = 0.8270$) is strictly locked to prevent small-$k$ sample
 
 ## 3. Core Architecture & Data Flow
 
+Detailed structural specifications are documented across 11 diagrams in [`docs/architecture/diagrams/`](docs/architecture/diagrams/).
+
 ```mermaid
 flowchart TD
     subgraph Ingestion["1. Requirement Ingestion"]
-        Doc["Document Upload (PDF/DOCX/TXT)"] --> NLP["NLP Extractor (~8 FP/Story, ~5 FP/API)"]
+        Doc["Document Upload (PDF/DOCX/TXT/MD)"] --> NLP["NLP Extractor (Multi-Signal Suite)"]
         NLP --> Sizing["Functional Size (size_fp ± 15%)"]
         Manual["User Verified Scope"] --> Sizing
     end
@@ -110,7 +111,7 @@ flowchart TD
     end
 
     subgraph Calibration["3. Organizational Calibration"]
-        Actuals["Historical Projects (CSV/JSON)"] --> EB["Empirical Bayes Shrinkage (w = k / (k + 2.57))"]
+        Actuals["Historical Projects (CSV/TSV/JSON)"] --> EB["Empirical Bayes Shrinkage (w = k / (k + 2.83))"]
         EB --> CalMult["Velocity Multiplier (0.33 to 3.0)"]
         Quantiles --> CalMult
     end
@@ -148,14 +149,13 @@ pip install -r backend/requirements.lock.txt
 cp backend/.env.example backend/.env
 # Set DATABASE_URL in backend/.env
 
-# 4. Run migrations and start backend server
-python -m alembic upgrade head
-uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
+# 4. One-command launcher (runs preflight, migrations, backend, and frontend)
+python run.py
 
-# 5. Start frontend development server
-cd frontend
-npm ci
-npm run dev
+# Alternatively, run services independently:
+python -m alembic upgrade head
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8010 --reload
+cd frontend && npm run dev
 ```
 
 ### Unified Verification Suite

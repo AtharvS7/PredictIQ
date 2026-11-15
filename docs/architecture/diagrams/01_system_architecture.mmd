@@ -1,0 +1,42 @@
+flowchart TB
+    subgraph ClientLayer["Frontend Client Layer (React 19 / TypeScript / Vite)"]
+        UI["Web Application UI"]
+        AuthContext["Firebase Auth Context"]
+        APIClient["REST API Client (Axios)"]
+        UI --> AuthContext
+        UI --> APIClient
+    end
+
+    subgraph GatewayLayer["API & Security Layer (FastAPI 0.115+)"]
+        CORS["CORS & Request Middleware"]
+        JWTAuth["Firebase JWT Authenticator"]
+        RBAC["Role-Based Access Control"]
+        Router["API v1 Router"]
+        APIClient --> CORS
+        CORS --> JWTAuth
+        JWTAuth --> RBAC
+        RBAC --> Router
+    end
+
+    subgraph ServiceLayer["Core Domain Services"]
+        DocService["Document Parsing Service"]
+        NLPService["Multi-Signal NLP Extractor"]
+        MLService["ML Inference Engine"]
+        CalService["Empirical Bayes Calibration"]
+        Router --> DocService
+        Router --> NLPService
+        Router --> MLService
+        Router --> CalService
+        DocService --> NLPService
+        NLPService --> MLService
+        CalService --> MLService
+    end
+
+    subgraph StorageLayer["Persistence & Security Tier"]
+        Postgres[("PostgreSQL 15+ Database")]
+        ModelStore["Pure-JSON Model Artifacts"]
+        DigestVerifier["SHA-256 Integrity Verifier"]
+        MLService --> DigestVerifier
+        DigestVerifier --> ModelStore
+        Router --> Postgres
+    end

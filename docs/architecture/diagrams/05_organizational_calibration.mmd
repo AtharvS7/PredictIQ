@@ -1,0 +1,17 @@
+flowchart TD
+    PastProjects["Historical Project Actuals (k >= 1 Completed Projects)"] --> Ingestion["Bulk CSV / TSV / JSON Ingestion"]
+    Ingestion --> FilterValid["Filter Valid Records (size_fp > 0 and effort_hours > 0)"]
+    
+    FilterValid --> CountK{"Count Valid Actuals (k)"}
+    CountK -- "k = 0" --> GlobalOnly["Global Prior Only: w(k) = 0.0, multiplier = 1.0"]
+    CountK -- "k >= 1" --> ComputeWeights["Empirical Bayes Shrinkage Weight:<br/>w(k) = k / (k + 2.83)"]
+    
+    ComputeWeights --> Residuals["For each record i = 1..k:<br/>pred_i = 24.2408 · (size_i)^0.8270<br/>residual_i = ln(effort_i) - ln(pred_i)"]
+    Residuals --> MeanResidual["Calculate Mean Log Residual: mean_res = (1/k) · sum(residual_i)"]
+    
+    MeanResidual --> Multiplier["Velocity Multiplier:<br/>gamma_raw = exp(w(k) · mean_res)"]
+    Multiplier --> Clip["Safety Boundary Clipping:<br/>gamma_org = clip(gamma_raw, 0.33, 3.00)"]
+    
+    Clip --> Apply["Apply to All 5 Conformal Quantiles:<br/>P_calibrated = P_global · gamma_org"]
+    GlobalOnly --> Apply
+    Apply --> Result["Calibrated Estimation Spread with Calibration Metadata"]

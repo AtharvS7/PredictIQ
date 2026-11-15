@@ -1,0 +1,30 @@
+flowchart LR
+    subgraph DataPartitioning["Mondrian Stratified Bucketing"]
+        B1["Small Projects Strata<br/>size_fp < 150 FP<br/>q80 = 1.1481 | q50 = 0.6073"]
+        B2["Medium Projects Strata<br/>150 <= size_fp <= 750 FP<br/>q80 = 0.9561 | q50 = 0.5999"]
+        B3["Large Projects Strata<br/>size_fp > 750 FP<br/>q80 = 1.1864 | q50 = 0.6565"]
+    end
+
+    subgraph ScoreDerivation["Split-Conformal Calibration"]
+        Scores["Non-Conformity Residuals:<br/>R_i = |ln(E_i) - ln(P50_i)|"]
+        Quantiles["Empirical Quantiles at Coverage Levels:<br/>q_alpha = ceil((n+1)(1-alpha))/n"]
+        Scores --> Quantiles
+    end
+
+    subgraph PredictionIntervals["Interval Bounds Construction"]
+        P50["Point Estimate P50 = 24.2408 · S^0.8270"]
+        P10["P10 = P50 · exp(-q80) (Lower 80% Bound)"]
+        P25["P25 = P50 · exp(-q50) (Lower 50% Bound)"]
+        P75["P75 = P50 · exp(+q50) (Upper 50% Bound)"]
+        P90["P90 = P50 · exp(+q80) (Upper 80% Bound)"]
+        
+        P50 --> P10
+        P50 --> P25
+        P50 --> P75
+        P50 --> P90
+    end
+
+    B1 --> ScoreDerivation
+    B2 --> ScoreDerivation
+    B3 --> ScoreDerivation
+    Quantiles --> PredictionIntervals

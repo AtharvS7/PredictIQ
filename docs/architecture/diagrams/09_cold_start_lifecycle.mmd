@@ -1,0 +1,37 @@
+stateDiagram-v2
+    [*] --> Initializing: run.py / start_demo.ps1
+
+    state Initializing {
+        [*] --> CheckEnvironment
+        CheckEnvironment --> VerifyPython: Python 3.12+
+        VerifyPython --> CheckPorts: Port 8010 & 5173
+        CheckPorts --> CheckStorage: Disk & Memory Free
+    }
+
+    Initializing --> DatabasePreflight: Environment Verified
+
+    state DatabasePreflight {
+        [*] --> ConnectPostgreSQL: TCP Handshake to DATABASE_URL
+        ConnectPostgreSQL --> CheckMigrations: Inspect alembic_version
+        CheckMigrations --> RunMigrations: Upgrade head if pending
+        RunMigrations --> DatabaseReady
+    }
+
+    DatabasePreflight --> SecurityPreflight: Database Online
+
+    state SecurityPreflight {
+        [*] --> VerifyFirebase: Validate Service Account JSON & Project ID
+        VerifyFirebase --> VerifyModelArtifacts: Check SHA-256 Digest against Manifest
+        VerifyModelArtifacts --> SecurityReady
+    }
+
+    SecurityPreflight --> ServicesActive: System Audited
+
+    state ServicesActive {
+        [*] --> StartBackend: Uvicorn on 127.0.0.1:8010
+        StartBackend --> StartFrontend: Vite on 127.0.0.1:5173
+        StartFrontend --> HealthProbe: GET /api/v1/health (200 OK)
+    }
+
+    ServicesActive --> Operational: Cold Start Complete
+    Operational --> [*]

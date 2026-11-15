@@ -1,0 +1,29 @@
+flowchart TD
+    Input["Input: Functional Size (size_fp)"] --> Val["Validation: size_fp > 0"]
+    Val --> OODCheck{"OOD Check: size_fp > 4100?"}
+    
+    OODCheck -- Yes --> TierC["Tier C Advisory (Extreme Scale / Extrapolation)"]
+    OODCheck -- No --> CheckTier{"size_fp Range"}
+    
+    CheckTier -- "< 150 FP" --> SmallTier["Small Strata: q80=1.1481, q50=0.6073"]
+    CheckTier -- "150..750 FP" --> MedTier["Medium Strata: q80=0.9561, q50=0.5999"]
+    CheckTier -- "> 750 FP" --> LargeTier["Large Strata: q80=1.1864, q50=0.6565"]
+
+    TierC --> PowerLaw
+    SmallTier --> PowerLaw["Point Estimation: ln(P50) = 3.1880 + 0.8270 · ln(size_fp)"]
+    MedTier --> PowerLaw
+    LargeTier --> PowerLaw
+
+    PowerLaw --> P50Calc["P50 = 24.2408 · (size_fp)^0.8270"]
+    P50Calc --> ConformalIntervals["Compute Mondrian Intervals:<br/>P10 = P50 · exp(-q80)<br/>P25 = P50 · exp(-q50)<br/>P75 = P50 · exp(+q50)<br/>P90 = P50 · exp(+q80)"]
+
+    ConformalIntervals --> SizingUncert{"Sizing Variance Delta S?"}
+    SizingUncert -- Present --> TaylorExpansion["First-Order Taylor Expansion:<br/>q_comb = sqrt(q^2 + (b · Delta_S / S)^2)"]
+    SizingUncert -- Absent --> ShrinkageCheck
+    TaylorExpansion --> ShrinkageCheck{"Organization Actuals (k >= 1)?"}
+
+    ShrinkageCheck -- Yes --> EBApply["Apply Empirical Bayes Multiplier:<br/>gamma_org in [0.33, 3.0]"]
+    ShrinkageCheck -- No --> NonCrossing
+
+    EBApply --> NonCrossing["Enforce Strict Monotone Invariant:<br/>1.0 <= P10 <= P25 <= P50 <= P75 <= P90"]
+    NonCrossing --> Output["Output: 5 Calibrated Quantiles (Hours & Person-Months)"]

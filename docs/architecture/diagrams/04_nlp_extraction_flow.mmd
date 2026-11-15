@@ -1,0 +1,33 @@
+flowchart TD
+    File["SRS Document (PDF / DOCX / TXT / Markdown)"] --> Parser["DocumentParser Service"]
+    Parser --> CleanText["Normalized UTF-8 Extracted Text"]
+    
+    CleanText --> LenCheck{"Length >= 20 chars?"}
+    LenCheck -- No --> EmptyReturn["Return Default Sizing (Assumed Scope with Informational Notice)"]
+    
+    LenCheck -- Yes --> SectionDetect{"Dedicated Functional Requirements Section?"}
+    
+    SectionDetect -- "Yes (>=3 items in section)" --> Strategy1["Strategy 1: Section-Scoped Item Counting"]
+    SectionDetect -- "No / Dispersed" --> Strategy2["Strategy 2: Multi-Signal Global Extraction"]
+    
+    subgraph MultiSignals["Multi-Signal Detection Suite (8 Signals)"]
+        S1["1. User Stories ('As a... I want... so that...')"]
+        S2["2. Tagged Reqs ('REQ-', 'FR-', 'SR-', numbered items)"]
+        S3["3. Normative Statements ('shall', 'must', 'will', 'should')"]
+        S4["4. Use Case Blocks ('Use Case:', 'Actor:')"]
+        S5["5. Architecture Modules ('Module:', 'Component:')"]
+        S6["6. Specification Tables (Markdown / HTML Tables)"]
+        S7["7. Acceptance Criteria ('Scenario:', 'Given/When/Then')"]
+        S8["8. External Integrations ('REST API', 'Webhook', 'SDK')"]
+    end
+    
+    Strategy2 --> MultiSignals
+    MultiSignals --> Deduplicate["Statement Fingerprinting & Deduplication"]
+    
+    Strategy1 --> Aggregate["Functional Sizing S = (Feature Count · Weight) + (API Count · Weight)"]
+    Deduplicate --> Aggregate
+    
+    Aggregate --> Plausibility{"Document Words > 3000 & Words/FP > 100?"}
+    Plausibility -- Yes --> PlausibilityNotice["Flag Informational Plausibility Notice (Diluted Prose)"]
+    Plausibility -- No --> ReturnResult
+    PlausibilityNotice --> ReturnResult["Return Sizing Payload (size_fp, basis, signals, confidence)"]

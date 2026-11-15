@@ -1,0 +1,18 @@
+flowchart TD
+    File["Upload Batch File (CSV / TSV / JSON)"] --> DetectFormat["Detect Delimiter & Structure"]
+    DetectFormat --> HeaderMap["Map Column Headers (size_fp, effort_hours, duration, team, tech)"]
+    
+    HeaderMap --> RowValidation["Row-by-Row Schema & Range Validation"]
+    RowValidation --> CleanRow{"Is Row Valid?<br/>size_fp > 0 & effort_hours > 0"}
+    
+    CleanRow -- Invalid --> ErrorLog["Record Row Diagnostic & Skip"]
+    CleanRow -- Valid --> DeduplicateCheck["Tenant Scope Deduplication Check"]
+    
+    DeduplicateCheck --> BatchBuffer["Aggregate Valid Project Records"]
+    ErrorLog --> BatchBuffer
+    
+    BatchBuffer --> AtomicInsert["Atomic PostgreSQL Batch Insertion (CALIBRATION_ACTUALS)"]
+    AtomicInsert --> TriggerRecal["Trigger Organization Empirical Bayes Update"]
+    
+    TriggerRecal --> ComputeNewEB["Compute New k, w(k), and Velocity Multiplier"]
+    ComputeNewEB --> Response["Return Import Summary (imported_count, skipped_count, updated_multiplier)"]
