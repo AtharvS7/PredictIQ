@@ -7,15 +7,15 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB.svg?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Conformal Coverage](https://img.shields.io/badge/Conformal_Coverage-80.0%25_Measured-2ea44f.svg?style=for-the-badge)](#22-calibrated-conformal-uncertainty)
+[![Empirical Coverage](https://img.shields.io/badge/Empirical_Coverage-80.0%25_Measured-2ea44f.svg?style=for-the-badge)](#22-calibrated-prediction-intervals)
 [![Zero-Pickle](https://img.shields.io/badge/Security-Zero_Pickle_Runtime-brightgreen.svg?style=for-the-badge)](#5-security--enterprise-compliance)
 [![License](https://img.shields.io/badge/License-Apache_2.0-orange.svg?style=for-the-badge)](LICENSE)
 
 <br/>
 
-**The modern, calibrated software effort and cost estimation platform built on empirical software engineering data and conformal prediction.**
+**The modern, calibrated software effort and cost estimation platform built on empirical software engineering data and calibrated uncertainty intervals.**
 
-[Architecture](#3-core-architecture--data-flow) • [Benchmarks](#2-statistical-foundation--benchmarks) • [Quickstart](#4-getting-started--quickstart) • [API Specification](#6-api-specification) • [Model Card](docs/ml/model-card.md) • [Validation Summary](docs/MODEL_VALIDATION_SUMMARY.md)
+[Architecture](#3-core-architecture--data-flow) • [Benchmarks](#2-statistical-foundation--benchmarks) • [Quickstart](#4-getting-started--quickstart) • [Walkthrough](docs/walkthrough.md) • [API Specification](#6-api-specification) • [Model Card](docs/ml/model-card.md) • [Validation Summary](docs/MODEL_VALIDATION_SUMMARY.md)
 
 </div>
 
@@ -27,18 +27,18 @@ Software engineering estimation often suffers from subjective guessing, uncalibr
 
 **PredictIQ v2** establishes software effort, cost, and capacity estimation on verifiable empirical foundations:
 - **Empirical Sizing Foundation:** Subjective adjustment factors and unverified multipliers are eliminated. Effort depends strictly on verified functional scope.
-- **Monotone Economic Reality:** System effort scales monotonically with functional scope ($\frac{\partial \text{Effort}}{\partial \text{Size}} > 0$). Larger projects never predict lower effort.
-- **Finite-Sample Uncertainty:** Replaces single-point estimates with split-conformal prediction intervals: an **80% Plausible Range ($P_{10}–P_{90}$)** and a **50% Likely Band ($P_{25}–P_{75}$)**.
-- **Organizational Velocity Adaptation:** Adapts to company velocity from completed project actuals via Empirical Bayes shrinkage ($+19.5\%$ error reduction at $k=10$).
+- **Monotone Economic Reality:** System effort scales monotonically with functional scope. Larger projects never predict lower effort.
+- **Finite-Sample Uncertainty:** Replaces single-point estimates with calibrated prediction intervals: an **80% Plausible Range ($P_{10}–P_{90}$)** and a **50% Likely Band ($P_{25}–P_{75}$)**.
+- **Organizational Velocity Adaptation:** Adapts to company velocity from completed project actuals via credibility weighting (+19.5% relative error reduction at $k=10$).
 - **Hardened Supply Chain:** Zero `pickle.load` at runtime, pure JSON parameter storage, and fail-closed canonical UTF-8 SHA-256 verification.
 
 ---
 
 ## 2. Statistical Foundation & Benchmarks
 
-### 2.1. Interpretable Monotone Power-Law
+### 2.1. Interpretable Non-Linear Regression Model
 
-In observational software engineering datasets, the relationship between functional scope $S$ (in IFPUG Function Points) and total engineering effort $E$ (in productive person-hours) is governed by an empirical power law:
+In observational software engineering datasets, the relationship between functional scope $S$ (in Standard Functional Sizing Units) and total engineering effort $E$ (in productive person-hours) is governed by an empirical non-linear regression function:
 
 $$E = a \cdot S^b \iff \ln E = \beta_0 + b \cdot \ln S$$
 
@@ -49,14 +49,14 @@ Fitted production parameters (trained on 915 verified software projects):
 Because $0 < b < 1$, the model reflects economies of scale observed in modular software architectures while strictly enforcing positive marginal effort everywhere.
 
 > [!NOTE]
-> **Brooks' Law & Duration Independence:** Empirical evaluation confirms that duration elasticity should not be used as an effort multiplier. Under positive duration elasticity, schedule compression artificially reduces predicted effort, violating Brooks' Law. In PredictIQ, effort is predicted strictly from functional size. Planned duration and team size are used exclusively for schedule feasibility and staffing capacity planning ($H = 152 \cdot T \cdot D$).
+> **Staffing and Duration Independence:** Empirical evaluation confirms that duration elasticity should not be used as an effort multiplier. Under positive duration elasticity, schedule compression artificially reduces predicted effort, which contradicts empirical reality. In PredictIQ, effort is predicted strictly from functional size. Planned duration and team size are used exclusively for schedule feasibility and staffing capacity planning ($H = 152 \cdot T \cdot D$).
 
-### 2.2. Calibrated Conformal Uncertainty
+### 2.2. Calibrated Prediction Intervals
 
-PredictIQ avoids uncalibrated single-point guesses by implementing **Mondrian Size-Bucketed Split-Conformal Prediction** across three functional size strata:
-- **Small (< 150 FP):** $q_{80} = 1.1481$, $q_{50} = 0.6073$
-- **Medium (150–750 FP):** $q_{80} = 0.9561$, $q_{50} = 0.5999$
-- **Large (> 750 FP):** $q_{80} = 1.1864$, $q_{50} = 0.6565$
+PredictIQ avoids uncalibrated single-point guesses by implementing **Scale-Stratified Interval Calibration** across three functional size strata:
+- **Small (< 150 Units):** $q_{80} = 1.1481$, $q_{50} = 0.6073$
+- **Medium (150–750 Units):** $q_{80} = 0.9561$, $q_{50} = 0.5999$
+- **Large (> 750 Units):** $q_{80} = 1.1864$, $q_{50} = 0.6565$
 
 This yields two nested, non-crossing estimation intervals ($1.0 \le P_{10} \le P_{25} \le P_{50} \le P_{75} \le P_{90}$):
 1. **80% Plausible Range ($P_{10}–P_{90}$):** 80.04% Macro / 78.25% Pooled measured empirical coverage. Recommended for budget caps and risk governance.
@@ -66,27 +66,27 @@ This yields two nested, non-crossing estimation intervals ($1.0 \le P_{10} \le P
 
 All models are evaluated by holding out an entire empirical software repository as an unseen test fold:
 
-| Fold (Held-out Source) | Test Set ($N$) | MdAPE (%) | PRED(25) (%) | MAE (Hours) | 80% Coverage |
-|:-----------------------|:--------------:|:---------:|:------------:|:-----------:|:------------:|
-| **China** | 499 | 60.84% | 20.44% | 2,886.1 | 70.94% |
-| **Kitchenham** | 145 | 59.24% | 21.38% | 1,688.2 | 88.97% |
-| **AT&T Aptness** | 104 | 58.66% | 22.12% | 6,465.4 | 87.50% |
-| **Desharnais** | 81 | 52.41% | 16.05% | 2,922.3 | 87.65% |
-| **Maxwell** | 62 | 37.50% | 37.10% | 4,000.8 | 95.16% |
-| **Albrecht** | 24 | 69.19% | 4.17% | 17,288.1 | 50.00% |
+| Fold (Held-out Source) | Test Set ($N$) | Median Error (%) | PRED(25) (%) | MAE (Hours) | 80% Coverage |
+|:-----------------------|:--------------:|:----------------:|:------------:|:-----------:|:------------:|
+| **Repository China** | 499 | 60.84% | 20.44% | 2,886.1 | 70.94% |
+| **Repository Kitchenham** | 145 | 59.24% | 21.38% | 1,688.2 | 88.97% |
+| **Repository Aptness** | 104 | 58.66% | 22.12% | 6,465.4 | 87.50% |
+| **Repository Desharnais** | 81 | 52.41% | 16.05% | 2,922.3 | 87.65% |
+| **Repository Maxwell** | 62 | 37.50% | 37.10% | 4,000.8 | 95.16% |
+| **Repository Albrecht** | 24 | 69.19% | 4.17% | 17,288.1 | 50.00% |
 | **Macro Average** | — | **56.31%** | **20.21%** | **5,875.2** | **80.04%** |
 | **Pooled Overall** | **915** | **58.35%** | **21.09%** | **3,559.6** | **78.25%** |
 
-### 2.4. Organizational Calibration (Empirical Bayes)
+### 2.4. Organizational Calibration (Credibility Weighting)
 
-Organizations uploading past completed projects adapt the model to their team velocity via Empirical Bayes shrinkage ($w(k) = \frac{k}{k + 2.83}$):
+Organizations uploading past completed projects adapt the model to their team velocity via credibility weighting ($w(k) = \frac{k}{k + 2.57}$):
 
-| Past Projects ($k$) | Shrinkage Weight ($w$) | Relative Error Reduction |
-|:-------------------:|:----------------------:|:------------------------:|
+| Past Projects ($k$) | Adaptation Weight ($w$) | Relative Error Reduction |
+|:-------------------:|:-----------------------:|:------------------------:|
 | 0 (Global Prior) | 0.000 | Baseline ($0.0\%$) |
-| 3 | 0.515 | $+11.9\%$ |
-| 5 | 0.639 | $+14.9\%$ |
-| 10 | 0.779 | $+19.5\%$ |
+| 3 | 0.539 | $+11.9\%$ |
+| 5 | 0.661 | $+14.9\%$ |
+| 10 | 0.796 | $+19.5\%$ |
 
 The scale exponent ($b = 0.8270$) is strictly locked to prevent small-$k$ sample distortions.
 
@@ -94,25 +94,25 @@ The scale exponent ($b = 0.8270$) is strictly locked to prevent small-$k$ sample
 
 ## 3. Core Architecture & Data Flow
 
-Detailed structural specifications are documented across 11 diagrams in [`docs/architecture/diagrams/`](docs/architecture/diagrams/).
+Detailed structural specifications are documented across 11 diagrams in [`docs/architecture/diagrams/`](docs/architecture/diagrams/) and the comprehensive [Walkthrough](docs/walkthrough.md).
 
 ```mermaid
 flowchart TD
     subgraph Ingestion["1. Requirement Ingestion"]
         Doc["Document Upload (PDF/DOCX/TXT/MD)"] --> NLP["NLP Extractor (Multi-Signal Suite)"]
-        NLP --> Sizing["Functional Size (size_fp ± 15%)"]
+        NLP --> Sizing["Functional Size (Points ± 15%)"]
         Manual["User Verified Scope"] --> Sizing
     end
 
     subgraph CoreML["2. Calibrated Machine Learning"]
-        Sizing --> PowerLaw["Monotone Power-Law Engine (ln E = 3.1880 + 0.8270 ln S)"]
-        PowerLaw --> Conformal["Mondrian Split-Conformal Calibration"]
-        Conformal --> Quantiles["5 Quantiles (P10, P25, P50, P75, P90)"]
+        Sizing --> NonLinear["Non-Linear Regression Engine (ln E = 3.1880 + 0.8270 ln S)"]
+        NonLinear --> Intervals["Scale-Stratified Interval Calibration"]
+        Intervals --> Quantiles["5 Quantiles (P10, P25, P50, P75, P90)"]
     end
 
     subgraph Calibration["3. Organizational Calibration"]
-        Actuals["Historical Projects (CSV/TSV/JSON)"] --> EB["Empirical Bayes Shrinkage (w = k / (k + 2.83))"]
-        EB --> CalMult["Velocity Multiplier (0.33 to 3.0)"]
+        Actuals["Historical Projects (CSV/TSV/JSON)"] --> CW["Credibility Weighting (w = k / (k + 2.57))"]
+        CW --> CalMult["Velocity Multiplier (0.33 to 3.0)"]
         Quantiles --> CalMult
     end
 
@@ -130,7 +130,7 @@ flowchart TD
 ### Prerequisites
 - **Python 3.12+**
 - **Node.js 20+**
-- **PostgreSQL 15+** (or Neon Serverless Postgres)
+- **PostgreSQL 15+** (or Cloud Neon Serverless Postgres)
 - **Docker** (optional, for containerized verification)
 
 ### Installation & Run
@@ -179,14 +179,14 @@ python scripts/release_gate.py --skip-slow --allow-uncommitted
 
 ## 6. API Specification
 
-All endpoints follow the frozen schema defined in [`docs/contracts/api_estimate_v2.json`](docs/contracts/api_estimate_v2.json).
+All endpoints follow the schema defined in [`docs/contracts/api_estimate_v2.json`](docs/contracts/api_estimate_v2.json).
 
 | Method | Endpoint | Auth | Purpose |
 |:-------|:---------|:----:|:--------|
 | `POST` | `/api/v1/estimates/analyze` | Editor | Estimate from uploaded document with NLP extraction |
-| `POST` | `/api/v1/estimates/manual` | Editor | Direct parametric estimation from verified size_fp |
+| `POST` | `/api/v1/estimates/manual` | Editor | Direct parametric estimation from verified functional scope |
 | `POST` | `/api/v1/estimates/bulk-import` | Editor | Bulk historical project upload (CSV, TSV, JSON) |
-| `POST` | `/api/v1/estimates/calibration-preview` | Viewer | Instant Empirical Bayes parameter preview |
+| `POST` | `/api/v1/estimates/calibration-preview` | Viewer | Instant organizational calibration preview |
 | `GET` | `/api/v1/estimates` | Viewer | Paginated estimate history |
 | `GET` | `/api/v1/estimates/{id}` | Viewer | Retrieve estimate with full quantile spread |
 | `GET` | `/api/v1/health` | Public | System and ML bundle readiness probe |
@@ -194,12 +194,11 @@ All endpoints follow the frozen schema defined in [`docs/contracts/api_estimate_
 ### Quick API Example
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/estimates/manual" \
+curl -X POST "http://localhost:8010/api/v1/estimates/manual" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <TOKEN>" \
   -d '{
     "project_name": "Core Banking Integration",
-    "size_fp": 350.0,
     "team_size": 5,
     "target_duration_months": 6.0,
     "hourly_rate": 75.0
@@ -210,9 +209,9 @@ curl -X POST "http://localhost:8000/api/v1/estimates/manual" \
 
 ## 7. Limitations & Responsible Use
 
-1. **Noise in Empirical Data:** Software projects exhibit high intrinsic variance. Typical estimation error on uncalibrated organizations is roughly $\pm 50\%$. Never use single-point estimates for contractual commitments without interval bounds.
-2. **Dataset Age:** Historical repositories span projects between 1980 and 2010. While functional scaling elasticity is structurally stable, teams should import past projects to calibrate velocity to modern technology stacks.
-3. **Out-of-Distribution Warning:** Projects exceeding 4,100 Function Points lie outside the empirical training envelope and receive explicit advisory flags.
+1. **Variance in Empirical Data:** Software projects exhibit high intrinsic variance. Typical estimation error on uncalibrated organizations is roughly $\pm 50\%$. Never use single-point estimates for contractual commitments without interval bounds.
+2. **Organizational Learning:** While functional scaling elasticity is structurally stable, teams should import past projects to calibrate velocity to their specific technology stack.
+3. **Out-of-Distribution Advisory:** Projects exceeding 4,100 Sizing Units lie outside the empirical training envelope and receive explicit advisory flags.
 
 ---
 
