@@ -289,6 +289,20 @@ def audit_narrative_hygiene(docs_dir: Path) -> tuple[int, list[str]]:
     return inspected_count, violations
 
 
+def audit_private_tracking(repo_root: Path) -> list[str]:
+    """Verify that the private/ directory contains zero tracked files in git."""
+    violations: list[str] = []
+    try:
+        import subprocess
+        res = subprocess.run(["git", "ls-files", "private"], cwd=repo_root, capture_output=True, text=True, check=False)
+        tracked = [line.strip() for line in res.stdout.splitlines() if line.strip()]
+        if tracked:
+            violations.append(f"Forbidden tracked files detected in private/: {tracked}")
+    except Exception as e:
+        violations.append(f"Failed to inspect git index for private files: {e}")
+    return violations
+
+
 # ── CLI & Report Formatter ──────────────────────────────────────────────────
 
 
@@ -345,7 +359,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  PASSED: All {links_checked} internal links verified against filesystem targets.")
 
     # 4. Active Spec Narrative Hygiene
-    print("\n[4/4] Auditing Active Spec Hygiene (No CPxx/Rxx/Sxx narratives in product/architecture/design)...")
+    print("\n[4/5] Auditing Active Spec Hygiene (No CPxx/Rxx/Sxx narratives in product/architecture/design)...")
     specs_checked, narrative_violations = audit_narrative_hygiene(docs_dir)
     if narrative_violations:
         print(f"  FAILED: {len(narrative_violations)} checkpoint narrative violation(s) detected:")
@@ -354,6 +368,17 @@ def main(argv: list[str] | None = None) -> int:
         total_failures += len(narrative_violations)
     else:
         print(f"  PASSED: All {specs_checked} active specifications adhere strictly to present-tense system descriptions.")
+
+    # 5. Private Directory Git Isolation
+    print("\n[5/5] Auditing Private Directory Isolation (git ls-files private)...")
+    private_violations = audit_private_tracking(docs_dir.parent)
+    if private_violations:
+        print(f"  FAILED: {len(private_violations)} private isolation violation(s) detected:")
+        for v in private_violations:
+            print(f"    - {v}")
+        total_failures += len(private_violations)
+    else:
+        print("  PASSED: Zero tracked files in private/ directory (isolated).")
 
     print("\n" + "=" * 80)
     if total_failures == 0:
