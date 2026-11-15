@@ -32,6 +32,7 @@ from typing import Any, Sequence
 
 import numpy as np
 
+
 SIGMA2_WITHIN: float = 0.441
 TAU2_BETWEEN: float = 0.171
 VARIANCE_RATIO: float = SIGMA2_WITHIN / TAU2_BETWEEN  # ~2.5789
@@ -171,34 +172,20 @@ class OrgCalibrationService:
         if scaling_ratio <= 0.0:
             scaling_ratio = 1.0
 
-        calibrated: dict[str, Any] = {}
+        calibrated = {}
         for k, v in base_quantiles.items():
             if isinstance(v, np.ndarray):
                 calibrated[k] = np.maximum(v * scaling_ratio, 1.0)
             else:
-                val = float(v) * scaling_ratio
-                calibrated[k] = val if val > 1.0 else 1.0
+                calibrated[k] = max(float(v) * scaling_ratio, 1.0)
 
         # Ensure monotonicity: p10 <= p25 <= p50 <= p75 <= p90
-        if all(q in calibrated for q in ("p10", "p25", "p50", "p75", "p90")):
-            if isinstance(calibrated["p10"], np.ndarray):
-                calibrated["p10"] = np.maximum(calibrated["p10"], 1.0)
-                calibrated["p25"] = np.maximum(calibrated["p25"], calibrated["p10"])
-                calibrated["p50"] = np.maximum(calibrated["p50"], calibrated["p25"])
-                calibrated["p75"] = np.maximum(calibrated["p75"], calibrated["p50"])
-                calibrated["p90"] = np.maximum(calibrated["p90"], calibrated["p75"])
-            else:
-                p10_f = max(float(calibrated["p10"]), 1.0)
-                p25_f = max(float(calibrated["p25"]), p10_f)
-                p50_f = max(float(calibrated["p50"]), p25_f)
-                p75_f = max(float(calibrated["p75"]), p50_f)
-                p90_f = max(float(calibrated["p90"]), p75_f)
-                calibrated["p10"], calibrated["p25"], calibrated["p50"], calibrated["p75"], calibrated["p90"] = (
-                    p10_f,
-                    p25_f,
-                    p50_f,
-                    p75_f,
-                    p90_f,
-                )
+        if "p10" in calibrated and "p25" in calibrated and "p50" in calibrated and "p75" in calibrated and "p90" in calibrated:
+            calibrated["p10"] = np.maximum(calibrated["p10"], 1.0) if isinstance(calibrated["p10"], np.ndarray) else max(calibrated["p10"], 1.0)
+            calibrated["p25"] = np.maximum(calibrated["p25"], calibrated["p10"])
+            calibrated["p50"] = np.maximum(calibrated["p50"], calibrated["p25"])
+            calibrated["p75"] = np.maximum(calibrated["p75"], calibrated["p50"])
+            calibrated["p90"] = np.maximum(calibrated["p90"], calibrated["p75"])
 
         return calibrated
+

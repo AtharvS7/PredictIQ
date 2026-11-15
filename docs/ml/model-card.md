@@ -71,3 +71,4 @@ The scale elasticity exponent ($b = 0.8270$) is strictly locked to prevent small
 1. **Empirical Variance:** Software development is inherently noisy. Typical prediction error on uncalibrated novel organizations is roughly $\pm 50\%$. Single-point estimates should never be used without uncertainty intervals.
 2. **Dataset Age:** Historical repositories span projects developed between 1980 and 2010. While functional scaling laws remain stable, organizational calibration is strongly recommended to adapt to modern cloud-native architectures.
 3. **Out-of-Distribution Domains:** Projects exceeding 4,100 Function Points lie outside the densest empirical training envelope and trigger advisory OOD warnings.
+

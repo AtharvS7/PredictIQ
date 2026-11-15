@@ -135,3 +135,4 @@ $$w = \\frac{k}{k + \\sigma^2 / \\tau^2}$$
 
 if __name__ == "__main__":
     main()
+

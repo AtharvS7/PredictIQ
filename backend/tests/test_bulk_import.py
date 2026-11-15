@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import os
+import io
 from unittest.mock import AsyncMock
-
-os.environ.setdefault("DATABASE_URL", "postgresql://test:test@localhost:5432/test")
-os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-that-is-at-least-32-bytes-long!")
+import pytest
+from fastapi.testclient import TestClient
 
 from app.core.security import CurrentUser, get_current_user
-from fastapi.testclient import TestClient
 
 
 def _make_client(role: str = "editor"):
@@ -166,3 +164,4 @@ def test_calibration_preview_endpoint():
     assert data["global_a"] > 0.0
     assert data["calibrated_a"] > 0.0
     assert data["scaling_ratio"] > 0.0
+

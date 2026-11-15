@@ -45,3 +45,4 @@ d7a66b4095b8ae84f818900c2199c243f9d46b5f	refs/heads/dev2
 4. **Frontend Vitest Suite:** `npx --prefix frontend vitest run --root frontend --pool=forks` &rarr; **132 passed across 24 test files**.
 5. **Frontend Production Build:** `npm --prefix frontend run build` &rarr; **dist/ built cleanly**.
 6. **NLP Robustness Suite:** `pytest backend/tests/test_nlp_robustness.py` &rarr; **19 passed**.
+
