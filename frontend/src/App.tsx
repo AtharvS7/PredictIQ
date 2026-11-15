@@ -1,5 +1,5 @@
 import { useEffect, useState, createContext, useContext, lazy, Suspense, type ReactNode } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useCurrencyStore } from '@/store/currencyStore';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -93,6 +93,7 @@ function ToastProvider({ children }: { children: ReactNode }) {
 function RequireAuth({ children }: { children: ReactNode }) {
   // Firebase auth user session
   const { user, initialized } = useAuthStore();
+  const location = useLocation();
 
   // Pre-fetch exchange rates only for authenticated users
   useEffect(() => {
@@ -117,7 +118,8 @@ function RequireAuth({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    const returnUrl = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/auth?redirect=${returnUrl}`} replace />;
   }
 
   return <>{children}</>;

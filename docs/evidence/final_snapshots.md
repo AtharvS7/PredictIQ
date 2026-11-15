@@ -25,3 +25,10 @@ This document records the immutable verification snapshots and milestone tags fo
 - **Scope:** Production demonstration launcher (`run.py`), dynamic port allocation (backend 8010-8019, frontend 5173-5179), CORS dynamic dev origin allowance, Vite preview proxy, preflight audits, canonical model validation, and clean process lifecycle management.
 - **Tests:** 6 launcher unit tests passed; 3-run cold start verification gate passed in 35.4s, 19.3s, 25.1s (<45s threshold).
 - **Status:** PASS
+
+### H02: Landing Page and Authentication Experience
+- **Tag:** `dev3-final-02`
+- **Scope:** Executive landing page overhaul, 3-step workflow guidance, enterprise capability highlights, unauthenticated navigation with Sign In / Sign Up buttons, route-level redirect preservation, and automated prohibited terminology checks.
+- **Tests:** 11 vitest tests passed; typecheck passed; production build passed in 10.54s; live launcher gate verified HTTP 200 on `/` in 0.078s and `/auth` in 0.016s (<2.0s threshold).
+- **Status:** PASS
+

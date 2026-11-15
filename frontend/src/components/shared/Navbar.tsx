@@ -88,7 +88,7 @@ export default function Navbar() {
       >
         <img
           src={logoImg}
-          alt="Predictify Logo"
+          alt="PredictIQ Logo"
           width={32}
           height={32}
           fetchPriority="high"
@@ -108,7 +108,7 @@ export default function Navbar() {
             lineHeight: 1.2,
           }}
         >
-          Predictify
+          PredictIQ
           <span
             className="hidden sm:block"
             style={{
@@ -117,7 +117,7 @@ export default function Navbar() {
               fontWeight: 400,
             }}
           >
-            Smart Project Estimation
+            Software Effort & Cost Estimation
           </span>
         </span>
       </Link>
@@ -150,97 +150,132 @@ export default function Navbar() {
           }
         </button>
 
-        {/* User Menu */}
-        <div ref={menuRef} style={{ position: 'relative' }}
-          onKeyDown={(event) => {
-            if (event.key === 'Escape' && showMenu) {
-              setShowMenu(false);
-              menuButtonRef.current?.focus();
-            }
-          }}
-          onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget)) setShowMenu(false);
-          }}>
-          <button
-            ref={menuButtonRef}
-            aria-label="Account options"
-            aria-expanded={showMenu}
-            aria-controls={showMenu ? menuId : undefined}
-            onClick={() => setShowMenu(!showMenu)}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border-color)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--text-primary)',
-              fontSize: '0.8125rem',
-              fontWeight: 600,
+        {/* User Menu or Auth Buttons */}
+        {user ? (
+          <div
+            ref={menuRef}
+            style={{ position: 'relative' }}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape' && showMenu) {
+                setShowMenu(false);
+                menuButtonRef.current?.focus();
+              }
+            }}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) setShowMenu(false);
             }}
           >
-            {user
-              ? (profile?.full_name || user.email || '?')[0].toUpperCase()
-              : <User size={18} />}
-          </button>
-
-          {/* Dropdown */}
-          {showMenu && (
-            <div
-              id={menuId}
+            <button
+              ref={menuButtonRef}
+              aria-label="Account options"
+              aria-expanded={showMenu}
+              aria-controls={showMenu ? menuId : undefined}
+              onClick={() => setShowMenu(!showMenu)}
               style={{
-                position: 'absolute',
-                right: 0,
-                top: 44,
-                background: 'var(--bg-surface)',
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: 'var(--bg-elevated)',
                 border: '1px solid var(--border-color)',
-                borderRadius: 12,
-                padding: 8,
-                minWidth: 180,
-                boxShadow: 'var(--shadow-card-elevated)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-primary)',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
               }}
             >
-              {user && (
-                <>
-                  <button
-                    onClick={() => {
-                      setShowMenu(false);
-                      navigate('/settings');
-                    }}
-                    style={menuItemStyle}
-                  >
-                    <User size={15} />
-                    Settings
-                  </button>
+              {(profile?.full_name || user.email || '?')[0].toUpperCase()}
+            </button>
 
-                  <button
-                    onClick={handleSignOut}
-                    style={{
-                      ...menuItemStyle,
-                      color: '#EF4444',
-                    }}
-                  >
-                    <LogOut size={15} />
-                    Sign Out
-                  </button>
-                </>
-              )}
-
-              {!user && (
+            {/* Dropdown */}
+            {showMenu && (
+              <div
+                id={menuId}
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 50,
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 12,
+                  padding: 8,
+                  minWidth: 180,
+                  boxShadow: 'var(--shadow-card-elevated)',
+                }}
+              >
                 <button
-                  onClick={handleSignIn}
+                  onClick={() => {
+                    setShowMenu(false);
+                    navigate('/dashboard');
+                  }}
                   style={menuItemStyle}
                 >
-                  <LogIn size={15} />
-                  Sign In
+                  <User size={15} />
+                  Dashboard
                 </button>
-              )}
-            </div>
-          )}
-        </div>
+
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    navigate('/settings');
+                  }}
+                  style={menuItemStyle}
+                >
+                  <User size={15} />
+                  Settings
+                </button>
+
+                <button
+                  onClick={handleSignOut}
+                  style={{
+                    ...menuItemStyle,
+                    color: '#EF4444',
+                  }}
+                >
+                  <LogOut size={15} />
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Link
+              to="/auth?mode=login"
+              style={{
+                padding: '8px 14px',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                textDecoration: 'none',
+                borderRadius: 8,
+                border: '1px solid transparent',
+              }}
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/auth?mode=register"
+              style={{
+                padding: '8px 16px',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: 'white',
+                background: 'var(--color-primary)',
+                border: 'none',
+                borderRadius: 8,
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              Sign Up
+            </Link>
+          </div>
+        )}
 
       </div>
     </nav>

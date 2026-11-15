@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/App';
 import Navbar from '@/components/shared/Navbar';
@@ -13,7 +13,14 @@ export default function AuthPage() {
   const { session, signIn, signUp, signInWithOAuth, loading, resetPassword } = useAuthStore();
   const { addToast } = useToast();
 
-  const [mode, setMode] = useState<AuthMode>('login');
+  const [searchParams] = useSearchParams();
+
+  const redirectUrl = searchParams.get('redirect') || '/dashboard';
+  const initialMode: AuthMode = (searchParams.get('mode') === 'register' || searchParams.get('mode') === 'signup')
+    ? 'register'
+    : 'login';
+
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,7 +29,7 @@ export default function AuthPage() {
   const [oauthError, setOAuthError] = useState('');
 
   if (session) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={redirectUrl} replace />;
   }
 
   // SEO head is rendered below in the return
@@ -84,7 +91,7 @@ export default function AuthPage() {
     }}>
 
       {/* SEO */}
-      <SEOHead title="Sign In" description="Sign in or create an account to start estimating your software project costs with Predictify." />
+      <SEOHead title="Sign In" description="Sign in or create an account to start estimating your software project costs with PredictIQ." />
 
       {/* Navigation Bar */}
       <Navbar />
@@ -110,7 +117,7 @@ export default function AuthPage() {
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <img
               src={logoImg}
-              alt="Predictify Logo"
+              alt="PredictIQ Logo"
               width={56}
               height={56}
               loading="eager"
