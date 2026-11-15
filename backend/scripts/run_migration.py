@@ -19,7 +19,7 @@ async def main():
         print(f"ERROR: Migration file not found at {sql_path}")
         sys.exit(1)
 
-    with open(sql_path, "r") as f:
+    with open(sql_path, "r", encoding="utf-8") as f:
         sql = f.read()
 
     print("Connecting to Neon PostgreSQL...")

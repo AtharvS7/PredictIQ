@@ -67,3 +67,10 @@ This document records the immutable verification snapshots and milestone tags fo
 - **Tests:** 800 backend tests passed (84% coverage); 63 scripts tests passed; frontend strict typecheck passed; 152 vitest tests passed; production build passed (21.42s); live launcher verified (landing: 0.047s, auth: 0.031s, ready: 0.484s); 0 banned terms.
 - **Status:** PASS
 
+### H09: UTF-8 Launch Hardening and Rate Limiter Isolation
+- **Tag:** `dev3-final-08`
+- **Scope:** Launcher environment UTF-8 variables (`PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8`) enforced for backend, frontend, and model verification subprocesses; non-ASCII byte scanner added to launcher preflight; slowapi Limiter initialized without file I/O to isolate from working directory encoding; ASCII normalization applied to environment template comments; launcher regression test added.
+- **Tests:** 801 backend tests passed (84% coverage); 63 scripts tests passed; frontend strict typecheck passed; 152 vitest tests passed; 7 launcher tests passed; 3 repeated cold starts without PYTHONUTF8 verified; documentation audit passed; 0 banned terms.
+- **Status:** PASS
+
+

@@ -97,3 +97,46 @@ def test_pid_lifecycle_safety():
     # Should not raise exception
     kill_process(-999)
     kill_process(0)
+
+
+def test_backend_import_without_pythonutf8_with_non_ascii_env(tmp_path):
+    """Verify backend app imports cleanly in a subprocess when PYTHONUTF8 is unset
+    and a temporary .env in the working directory contains non-ASCII characters.
+    """
+    import os
+    import subprocess
+    import sys
+
+    # Create temporary directory with a .env containing a non-ASCII comment containing byte 0x90
+    test_env = tmp_path / ".env"
+    test_env.write_bytes(
+        b"# \xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\n"
+        b"# PredictIQ Backend \xe2\x80\x94 Template\n"
+        b"DATABASE_URL=postgresql://user:pass@localhost:5432/test_db\n"
+        b"APP_ENV=development\n"
+    )
+    assert 0x90 in test_env.read_bytes()
+
+    # Set up child environment with PYTHONUTF8 and PYTHONIOENCODING removed
+    child_env = os.environ.copy()
+    child_env.pop("PYTHONUTF8", None)
+    child_env.pop("PYTHONIOENCODING", None)
+    child_env["PYTHONPATH"] = str(ROOT / "backend")
+
+    cmd = [
+        sys.executable,
+        "-c",
+        "from main import app; assert app is not None; print('IMPORT_SUCCESS')",
+    ]
+    res = subprocess.run(
+        cmd,
+        cwd=str(tmp_path),
+        env=child_env,
+        capture_output=True,
+        text=True,
+        timeout=90,
+    )
+
+    assert res.returncode == 0, f"Backend import failed:\nSTDOUT:\n{res.stdout}\nSTDERR:\n{res.stderr}"
+    assert "IMPORT_SUCCESS" in res.stdout
+

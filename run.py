@@ -103,10 +103,14 @@ def resolve_venv() -> tuple[Path, Path]:
 
         if py.is_file():
             try:
+                check_env = os.environ.copy()
+                check_env["PYTHONUTF8"] = "1"
+                check_env["PYTHONIOENCODING"] = "utf-8"
                 res = subprocess.run(
                     [str(py), "-c", "import fastapi, uvicorn, structlog"],
                     capture_output=True,
                     timeout=20,
+                    env=check_env,
                 )
                 if res.returncode == 0:
                     return venv, py
@@ -214,6 +218,26 @@ def compute_canonical_json_sha256(path: Path) -> str:
     return hashlib.sha256(canonical).hexdigest()
 
 
+def check_env_ascii(env_path: Path, label: str) -> None:
+    """Scan an environment file as raw bytes for non-ASCII bytes and report line numbers without exposing values."""
+    if not env_path.is_file():
+        return
+    try:
+        data = env_path.read_bytes()
+        lines = data.split(b"\n")
+        non_ascii_lines = [
+            i for i, line in enumerate(lines, 1)
+            if any(b > 127 for b in line)
+        ]
+        if non_ascii_lines:
+            lines_str = ", ".join(str(n) for n in non_ascii_lines)
+            safe_print(
+                f"  {YELLOW}[!]{RESET} Notice: {label} contains non-ASCII characters on line(s): {lines_str}"
+            )
+    except Exception:
+        pass
+
+
 def run_preflight_checks(python_exe: Path) -> dict[str, Any]:
     """Execute preflight checks and report readiness status."""
     safe_print(f"{CYAN}[1/5] Running system preflight checks...{RESET}")
@@ -232,6 +256,7 @@ def run_preflight_checks(python_exe: Path) -> dict[str, Any]:
         safe_print(f"  {GREEN}[OK]{RESET} backend/.env present")
     else:
         safe_print(f"  {RED}[X]{RESET} backend/.env not found")
+    check_env_ascii(backend_env, "backend/.env")
 
     frontend_env = FRONTEND_DIR / ".env"
     frontend_example = FRONTEND_DIR / ".env.example"
@@ -240,6 +265,7 @@ def run_preflight_checks(python_exe: Path) -> dict[str, Any]:
         safe_print(f"  {YELLOW}[!]{RESET} Created frontend/.env from template")
     elif frontend_env.is_file():
         safe_print(f"  {GREEN}[OK]{RESET} frontend/.env present")
+    check_env_ascii(frontend_env, "frontend/.env")
 
     # Firebase credentials check
     fb_creds = BACKEND_DIR / "firebase-service-account.json"
@@ -251,7 +277,7 @@ def run_preflight_checks(python_exe: Path) -> dict[str, Any]:
     # Database connectivity check
     db_online = False
     if backend_env.is_file():
-        content = backend_env.read_text(encoding="utf-8")
+        content = backend_env.read_text(encoding="utf-8", errors="replace")
         db_url = ""
         for line in content.splitlines():
             line = line.strip()
@@ -278,6 +304,8 @@ def run_preflight_checks(python_exe: Path) -> dict[str, Any]:
 
 def validate_production_model() -> None:
     """Validate model parameters and calculate verified baseline estimate."""
+    os.environ["PYTHONUTF8"] = "1"
+    os.environ["PYTHONIOENCODING"] = "utf-8"
     safe_print(f"\n{CYAN}[2/5] Validating production ML model bundle...{RESET}")
 
     artifacts_dir = BACKEND_DIR / "ml" / "artifacts" / "production_v2"
@@ -342,12 +370,16 @@ def ensure_frontend_build() -> None:
     if needs_build:
         safe_print(f"  {CYAN}[..] Building frontend production bundle (npm run build)...{RESET}")
         cmd = ["npm", "run", "build"]
+        build_env = os.environ.copy()
+        build_env["PYTHONUTF8"] = "1"
+        build_env["PYTHONIOENCODING"] = "utf-8"
         res = subprocess.run(
             cmd,
             cwd=str(FRONTEND_DIR),
             shell=(sys.platform == "win32"),
             capture_output=True,
             text=True,
+            env=build_env,
         )
         if res.returncode != 0:
             safe_print(f"  {RED}[X] Frontend build failed:{RESET}\n{res.stderr[-600:]}")
@@ -376,20 +408,21 @@ def wait_for_backend_ready(port: int, timeout: int = 90) -> bool:
     return False
 
 
-def wait_for_frontend_ready(port: int, timeout: int = 30) -> bool:
+def wait_for_frontend_ready(port: int, timeout: int = 60) -> bool:
     """Poll the frontend server until responsive."""
-    url = f"http://localhost:{port}/"
+    urls = [f"http://127.0.0.1:{port}/", f"http://localhost:{port}/"]
     deadline = time.time() + timeout
-    safe_print(f"  {DIM}[..] Awaiting frontend readiness at {url}...{RESET}")
+    safe_print(f"  {DIM}[..] Awaiting frontend readiness at http://localhost:{port}/...{RESET}")
     while time.time() < deadline:
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "PredictIQ-Launcher/2.0"})
-            with urllib.request.urlopen(req, timeout=2.0) as resp:
-                if resp.status in (200, 304):
-                    return True
-        except Exception:
-            pass
-        time.sleep(0.8)
+        for url in urls:
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "PredictIQ-Launcher/2.0"})
+                with urllib.request.urlopen(req, timeout=1.5) as resp:
+                    if resp.status in (200, 304):
+                        return True
+            except Exception:
+                pass
+        time.sleep(0.5)
     return False
 
 
@@ -411,6 +444,8 @@ def shutdown(signum: Any = None, frame: Any = None) -> None:
 
 def main() -> int:
     """Main launcher entry point."""
+    os.environ["PYTHONUTF8"] = "1"
+    os.environ["PYTHONIOENCODING"] = "utf-8"
     if os.name == "nt":
         os.system("")  # Enable ANSI color processing on Windows
 
@@ -458,6 +493,8 @@ def main() -> int:
         safe_print(f"\n{CYAN}[4/5] Launching backend service...{RESET}")
         be_log_out = AGENT_DIR / "backend.log"
         be_env = os.environ.copy()
+        be_env["PYTHONUTF8"] = "1"
+        be_env["PYTHONIOENCODING"] = "utf-8"
         be_env["PORT"] = str(backend_port)
         be_env["ALLOWED_ORIGINS"] = f"http://localhost:{frontend_port},http://127.0.0.1:{frontend_port}"
         be_env["PYTHONPATH"] = f"{ROOT}{os.pathsep}{BACKEND_DIR}"
@@ -501,13 +538,15 @@ def main() -> int:
         safe_print(f"\n{CYAN}[5/5] Launching frontend application...{RESET}")
         fe_log_out = AGENT_DIR / "frontend.log"
         fe_env = os.environ.copy()
+        fe_env["PYTHONUTF8"] = "1"
+        fe_env["PYTHONIOENCODING"] = "utf-8"
         fe_env["VITE_PROXY_TARGET"] = f"http://127.0.0.1:{backend_port}"
 
         if not args.dev:
             ensure_frontend_build()
-            fe_cmd = f"npx vite preview --port {frontend_port} --strictPort"
+            fe_cmd = f"npx vite preview --host 127.0.0.1 --port {frontend_port} --strictPort"
         else:
-            fe_cmd = f"npx vite --port {frontend_port} --strictPort"
+            fe_cmd = f"npx vite --host 127.0.0.1 --port {frontend_port} --strictPort"
 
         with fe_log_out.open("w", encoding="utf-8") as fe_file:
             frontend_proc = subprocess.Popen(
@@ -520,8 +559,8 @@ def main() -> int:
             )
         _child_processes.append(("Frontend", frontend_proc))
 
-        if not wait_for_frontend_ready(frontend_port, timeout=30):
-            safe_print(f"  {RED}[X] Frontend did not become responsive within 30 seconds.{RESET}")
+        if not wait_for_frontend_ready(frontend_port, timeout=60):
+            safe_print(f"  {RED}[X] Frontend did not become responsive within 60 seconds.{RESET}")
             if fe_log_out.is_file():
                 safe_print("  Frontend log output:")
                 lines = fe_log_out.read_text(encoding="utf-8", errors="replace").splitlines()
