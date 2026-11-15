@@ -17,7 +17,7 @@ backend/app/              @AtharvS7 @Shekhar2006
 frontend/src/             @AtharvS7 @Shravani0605 @Shruti10101-1
 
 # ── Database migrations — must always have owner review ───────────
-supabase/migrations/      @AtharvS7
+backend/alembic/          @AtharvS7
 
 # ── CI/CD and deployment ─────────────────────────────────────────
 .github/                  @AtharvS7 @RohiniJanardhanPhad

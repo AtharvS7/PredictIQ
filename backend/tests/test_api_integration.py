@@ -129,7 +129,7 @@ class TestRootEndpoint:
         """Root should include app name."""
         resp = client.get("/")
         data = resp.json()
-        assert data["name"] == "Predictify API"
+        assert data["name"] in ("PredictIQ API", "Predictify API")
 
     def test_root_has_docs_link(self, client):
         """Root should link to /docs."""

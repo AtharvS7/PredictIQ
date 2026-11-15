@@ -1,6 +1,5 @@
 -- ============================================================
--- Predictify — Neon PostgreSQL Initial Schema
--- Migrated from Supabase
+-- PredictIQ — PostgreSQL Initial Schema
 -- ============================================================
 
 -- Enable UUID generation

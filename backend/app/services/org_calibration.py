@@ -32,7 +32,6 @@ from typing import Any, Sequence
 
 import numpy as np
 
-
 SIGMA2_WITHIN: float = 0.441
 TAU2_BETWEEN: float = 0.171
 VARIANCE_RATIO: float = SIGMA2_WITHIN / TAU2_BETWEEN  # ~2.5789
@@ -172,20 +171,29 @@ class OrgCalibrationService:
         if scaling_ratio <= 0.0:
             scaling_ratio = 1.0
 
-        calibrated = {}
+        calibrated: dict[str, Any] = {}
         for k, v in base_quantiles.items():
             if isinstance(v, np.ndarray):
                 calibrated[k] = np.maximum(v * scaling_ratio, 1.0)
             else:
-                calibrated[k] = max(float(v) * scaling_ratio, 1.0)
+                val = float(v) * scaling_ratio
+                calibrated[k] = val if val > 1.0 else 1.0
 
         # Ensure monotonicity: p10 <= p25 <= p50 <= p75 <= p90
         if "p10" in calibrated and "p25" in calibrated and "p50" in calibrated and "p75" in calibrated and "p90" in calibrated:
-            calibrated["p10"] = np.maximum(calibrated["p10"], 1.0) if isinstance(calibrated["p10"], np.ndarray) else max(calibrated["p10"], 1.0)
-            calibrated["p25"] = np.maximum(calibrated["p25"], calibrated["p10"])
-            calibrated["p50"] = np.maximum(calibrated["p50"], calibrated["p25"])
-            calibrated["p75"] = np.maximum(calibrated["p75"], calibrated["p50"])
-            calibrated["p90"] = np.maximum(calibrated["p90"], calibrated["p75"])
+            if isinstance(calibrated["p10"], np.ndarray):
+                calibrated["p10"] = np.maximum(calibrated["p10"], 1.0)
+                calibrated["p25"] = np.maximum(calibrated["p25"], calibrated["p10"])
+                calibrated["p50"] = np.maximum(calibrated["p50"], calibrated["p25"])
+                calibrated["p75"] = np.maximum(calibrated["p75"], calibrated["p50"])
+                calibrated["p90"] = np.maximum(calibrated["p90"], calibrated["p75"])
+            else:
+                p10_val = float(calibrated["p10"])
+                calibrated["p10"] = p10_val if p10_val > 1.0 else 1.0
+                calibrated["p25"] = float(calibrated["p25"]) if float(calibrated["p25"]) > calibrated["p10"] else calibrated["p10"]
+                calibrated["p50"] = float(calibrated["p50"]) if float(calibrated["p50"]) > calibrated["p25"] else calibrated["p25"]
+                calibrated["p75"] = float(calibrated["p75"]) if float(calibrated["p75"]) > calibrated["p50"] else calibrated["p50"]
+                calibrated["p90"] = float(calibrated["p90"]) if float(calibrated["p90"]) > calibrated["p75"] else calibrated["p75"]
 
         return calibrated
 

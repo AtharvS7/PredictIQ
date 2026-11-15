@@ -105,7 +105,7 @@ flowchart TD
 - Produces stratified prediction intervals using Mondrian split-conformal prediction across Small, Medium, and Large size buckets.
 - Dynamically applies empirical Bayes shrinkage to blend organization actuals with global empirical priors.
 
-### 2.5. Persistence Layer (`supabase/migrations/`)
+### 2.5. Persistence Layer (`backend/alembic/`)
 - **Neon PostgreSQL** accessed via an asynchronous connection pool managed by **asyncpg**.
 - Features automated connection retries with exponential backoff to handle transient network hiccups and cold-start database delays.
 - Stores user profiles, uploaded document metadata, estimation inputs/outputs, logged project actuals, and task budgets.

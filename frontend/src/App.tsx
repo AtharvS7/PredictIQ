@@ -91,7 +91,7 @@ function ToastProvider({ children }: { children: ReactNode }) {
 
 // ── Auth Guard ───────────────────────────────────────────
 function RequireAuth({ children }: { children: ReactNode }) {
-  // Firebase auth uses `user` instead of Supabase `session`
+  // Firebase auth user session
   const { user, initialized } = useAuthStore();
 
   // Pre-fetch exchange rates only for authenticated users

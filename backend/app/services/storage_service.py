@@ -137,7 +137,7 @@ class S3StorageBackend(StorageBackend):
             client_kwargs.update(aws_access_key_id=access_key, aws_secret_access_key=secret_key)
         if endpoint_url:
             client_kwargs["endpoint_url"] = endpoint_url
-            # S3-compatible gateways can include a path prefix (e.g. Supabase).
+            # S3-compatible gateways can include a path prefix.
             # Keep the bucket in the path rather than rewriting the endpoint host.
             client_kwargs["config"] = Config(s3={"addressing_style": "path"})
 

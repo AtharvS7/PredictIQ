@@ -21,7 +21,6 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
@@ -127,7 +126,7 @@ def run_loso_evaluation(
         rng_cal.shuffle(train_idx)
         n_cal = max(10, int(len(train_df) * 0.20))
         cal_idx = train_idx[:n_cal]
-        
+
         cal_s = train_df["size_value"].to_numpy(dtype=float)[cal_idx]
         cal_y = y_train[cal_idx]
         cal_preds = train_preds[cal_idx]
@@ -247,7 +246,6 @@ def run_loso_evaluation(
     arr_pred = np.array(all_y_pred)
     arr_p10 = np.array(all_p10)
     arr_p25 = np.array(all_p25)
-    arr_p50 = np.array(all_p50)
     arr_p75 = np.array(all_p75)
     arr_p90 = np.array(all_p90)
     arr_sizes = np.array(all_sizes)

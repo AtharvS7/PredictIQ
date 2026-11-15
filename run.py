@@ -1,5 +1,5 @@
 """
-Predictify -- Run both backend and frontend with a single command.
+PredictIQ -- Run both backend and frontend with a single command.
 
 Usage:
     python run.py              # Start both servers
@@ -223,7 +223,7 @@ def check_env_files():
         if env_example.exists():
             shutil.copy2(str(env_example), str(env_file))
             safe_print(f"{YELLOW}[!] Created backend/.env from .env.example")
-            safe_print(f"     -> Edit backend/.env with your Supabase / Firebase credentials{RESET}")
+            safe_print(f"     -> Edit backend/.env with your Firebase and PostgreSQL credentials{RESET}")
         else:
             safe_print(f"{YELLOW}[!] No backend/.env or .env.example — backend may crash on startup{RESET}")
     else:

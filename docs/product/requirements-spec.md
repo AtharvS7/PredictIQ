@@ -29,7 +29,7 @@ Traceability Key:
 |---|---|---|---|---|---|
 | `REQ-AUTH-01` | Firebase Token Verification | The system must verify Firebase ID tokens via the Firebase Admin SDK on all protected API routes, checking cryptographic signatures, audience, issuer, and expiration. | Automated Integration Tests (`test_auth.py`) | P0 | `backend/app/core/security.py` |
 | `REQ-AUTH-02` | Role-Based Access Control | The platform must enforce hierarchical access levels: `viewer` (read-only), `editor` (estimate generation and modification), and `admin` (system configuration and org settings). | Role Matrix Dependency Tests | P0 | `backend/app/core/security.py:require_role` |
-| `REQ-AUTH-03` | User Profile Synchronization | The database must maintain a synchronized user profile for each authenticated user, persisting default currency, hourly rate, and timezone. | PostgreSQL Trigger & Profile Endpoint Tests | P1 | `backend/app/api/v1/profile.py`, `supabase/migrations/001_initial_schema.sql` |
+| `REQ-AUTH-03` | User Profile Synchronization | The database must maintain a synchronized user profile for each authenticated user, persisting default currency, hourly rate, and timezone. | PostgreSQL Trigger & Profile Endpoint Tests | P1 | `backend/app/api/v1/profile.py`, `backend/alembic/versions/001_initial_schema.py` |
 | `REQ-AUTH-04` | Token Revocation Handling | The platform must reject revoked ID tokens and terminated sessions, returning HTTP 401 Unauthorized with descriptive challenge headers. | Negative Token Security Tests | P1 | `backend/app/core/security.py:get_current_user` |
 
 ---

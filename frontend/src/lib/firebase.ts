@@ -1,6 +1,5 @@
 /**
- * Predictify — Firebase Client Initialization
- * Replaces the former Supabase client.
+ * PredictIQ — Firebase Client Initialization
  */
 import { initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';

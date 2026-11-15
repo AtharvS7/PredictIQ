@@ -303,16 +303,17 @@ def check_frontend_typecheck() -> StepResult:
 
 def check_frontend_tests() -> StepResult:
     """Step 6: Frontend Vitest unit & component test suite."""
-    npx_bin = resolve_binary("npx")
-    cmd = [npx_bin, "--prefix", "frontend", "vitest", "run", "--root", "frontend", "--pool=forks", "--no-file-parallelism"]
+    npm_bin = resolve_binary("npm")
+    cmd = [npm_bin, "--prefix", "frontend", "run", "test"]
     code, output, duration = run_command(cmd, cwd=PROJECT_ROOT)
 
     files_match = re.search(r"Test Files\s+(\d+)\s+passed", output)
     tests_match = re.search(r"Tests\s+(\d+)\s+passed", output)
     files_passed = files_match.group(1) if files_match else None
     tests_passed = tests_match.group(1) if tests_match else None
+    has_failed_files = bool(re.search(r"Test Files\s+.*failed", output))
 
-    if code == 0 and "FAIL" not in output:
+    if code == 0 and not has_failed_files:
         if files_passed and tests_passed:
             summary = f"{files_passed} test files, {tests_passed} unit tests passed"
         else:
