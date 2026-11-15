@@ -33,9 +33,9 @@ export const TIER_PROVENANCE: Record<'A' | 'B' | 'C', TierProvenanceDetails> = {
     badgeLabel: 'Tier A',
     subtext: 'Certified Benchmark',
     description:
-      'Gold-standard dataset validated against ISBSG cross-organization repositories with split-conformal calibration.',
-    coverage: '90% conformal empirical coverage guarantee on in-distribution scope',
-    sources: ['ISBSG Repository R2024', 'Certified Project Audits', 'IFPUG 4.3.1 Sizing'],
+      'Gold-standard dataset validated against industry empirical software repositories with statistically calibrated prediction bounds.',
+    coverage: '90% empirical coverage guarantee on in-distribution scope',
+    sources: ['Enterprise Benchmark Repository', 'Certified Project Audits', 'Standard Functional Sizing'],
   },
   B: {
     tier: 'B',
@@ -43,7 +43,7 @@ export const TIER_PROVENANCE: Record<'A' | 'B' | 'C', TierProvenanceDetails> = {
     badgeLabel: 'Tier B',
     subtext: 'Validated Standard',
     description:
-      'Empirical project history with statistically validated regression bounds and conformal uncertainty intervals.',
+      'Empirical project history with statistically validated regression bounds and calibrated uncertainty intervals.',
     coverage: '80% confidence interval (p10–p90) with residual variance modeling',
     sources: ['Cross-Industry Engineering Benchmarks', 'Verified Delivery Telemetry'],
   },
@@ -53,7 +53,7 @@ export const TIER_PROVENANCE: Record<'A' | 'B' | 'C', TierProvenanceDetails> = {
     badgeLabel: 'Tier C',
     subtext: 'Heuristic',
     description:
-      'Algorithmic baseline approximation using parametric heuristics. Not calibrated with formal conformal bounds.',
+      'Algorithmic baseline approximation using parametric heuristics. Not calibrated with formal empirical bounds.',
     coverage: 'Uncalibrated baseline — wide uncertainty buffers advised',
     sources: ['Parametric Heuristic Estimator', 'Reference Guidelines'],
   },
@@ -94,7 +94,7 @@ export function checkIsOOD(inputs?: Partial<EstimateInputs>): OODCheckResult {
 
   if (typeof inputs.team_size === 'number' && inputs.team_size > 30) {
     reasons.push(
-      `Planned team size of ${inputs.team_size} exceeds the calibrated benchmark envelope (max 30 engineers). Non-linear Brooks' Law communication overhead applies.`
+      `Planned team size of ${inputs.team_size} exceeds the calibrated benchmark envelope (max 30 engineers). Non-linear team communication overhead applies.`
     );
   }
   if (typeof inputs.duration_months === 'number' && inputs.duration_months > 24) {
@@ -121,7 +121,7 @@ export function checkIsOOD(inputs?: Partial<EstimateInputs>): OODCheckResult {
 
 /**
  * Derives approximate Function Points from feature and integration counts.
- * Uses IFPUG standard heuristic: ~8 FP per feature user story + 5 FP per external integration.
+ * Uses standard sizing heuristic: ~8 FP per feature user story + 5 FP per external integration.
  */
 export function estimateFunctionPoints(featureCount: number, integrationCount: number): number {
   const safeFeatures = Math.max(0, featureCount || 0);

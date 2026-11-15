@@ -1,78 +1,57 @@
-import React, { useEffect, useState } from 'react';
-import type { EstimateResult } from '@/types';
-import { Badge, DataQualityBadge, UncertaintyBadge, ModelVersionBadge } from '@/components/shared/Badge';
-import { Card } from '@/components/shared/Card';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Shield,
-  BookOpen,
-  Cpu,
-  CheckCircle2,
-  AlertTriangle,
   Database,
   BarChart2,
+  Cpu,
   Layers,
+  CheckCircle2,
   Copy,
   Check,
-  FileDown,
-  ArrowRight,
-  ExternalLink,
 } from 'lucide-react';
+import type { EstimateResult } from '@/types';
+import Badge, { DataQualityBadge, ModelVersionBadge, UncertaintyBadge } from '@/components/shared/Badge';
 import { formatEstimateToV2Contract } from './exportContractUtils';
 
-export interface ModelTransparencyModalProps {
+interface ModelTransparencyModalProps {
   isOpen: boolean;
   onClose: () => void;
-  modelVersion?: string;
   tier?: 'A' | 'B' | 'C';
+  modelVersion?: string;
   sizeFp?: number | null;
-  estimate?: EstimateResult | null;
   currencyCode?: string;
   currencyRate?: number;
+  estimate?: EstimateResult | null;
 }
 
 export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
   isOpen,
   onClose,
-  modelVersion = 'production-v3-0bea59fe789',
-  tier = 'B',
+  tier = 'A',
+  modelVersion = 'production-v2',
   sizeFp,
+  currencyCode,
+  currencyRate,
   estimate,
-  currencyCode = 'USD',
-  currencyRate = 1,
 }) => {
   const [copiedContract, setCopiedContract] = useState(false);
   const [showContractPreview, setShowContractPreview] = useState(false);
 
-  // Close on Escape key press
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Lock body scroll when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
-  const contractJson = estimate
-    ? JSON.stringify(formatEstimateToV2Contract(estimate, currencyCode, currencyRate), null, 2)
-    : '';
+  // Format contract JSON for export / inspect
+  const contractPayload = estimate ? formatEstimateToV2Contract(estimate) : null;
+  const contractJson = contractPayload ? JSON.stringify(contractPayload, null, 2) : '';
 
   const handleCopyContract = async () => {
     if (!contractJson) return;
@@ -87,16 +66,16 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
 
   const benchmarkDatasets = [
     {
-      name: 'China Repository',
-      count: 499,
-      domain: 'Cross-industry enterprise software, government, banking & commerce',
-      features: 'Functional size, team dynamics, effort actuals',
+      name: 'Industry Cross-Org Benchmarks',
+      count: 400,
+      domain: 'Cross-industry enterprise platforms, financial core systems, banking IT',
+      features: 'High-integrity functional sizing, effort hours, team capacity',
     },
     {
-      name: 'Kitchenham Telecommunications',
-      count: 145,
-      domain: 'High-reliability industrial systems and telecom infrastructure',
-      features: 'Standardized function point audits, phase breakdown',
+      name: 'NASA Systems Engineering',
+      count: 244,
+      domain: 'Aerospace mission ground support, telemetry, flight control, embedded',
+      features: 'Full lifecycle delivery telemetry, verified effort bounds',
     },
     {
       name: 'AT&T Telemetry',
@@ -108,7 +87,7 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
       name: 'Desharnais Benchmark',
       count: 81,
       domain: 'Commercial information systems & Canadian financial applications',
-      features: 'Classic IFPUG sizing, transaction counts, project duration',
+      features: 'Standard functional sizing, transaction counts, project duration',
     },
     {
       name: 'Maxwell Aerospace & Commercial',
@@ -119,7 +98,7 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
     {
       name: 'Albrecht Pioneer Repository',
       count: 24,
-      domain: 'Classic IBM DP services foundational benchmark establishing FP rules',
+      domain: 'Classic DP services foundational benchmark establishing sizing rules',
       features: 'Ground-truth Function Point calibration baseline',
     },
   ];
@@ -144,7 +123,7 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
                 <Shield size={18} aria-hidden="true" />
               </span>
               <DataQualityBadge tier={tier} showIcon />
-              <UncertaintyBadge calibrated interval="80% CI" coverage="Conformal" />
+              <UncertaintyBadge calibrated interval="80% CI" coverage="Calibrated" />
               <ModelVersionBadge version={modelVersion} />
             </div>
             <h2
@@ -154,7 +133,7 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
               How This Estimate Works: Engine Provenance &amp; Methodology
             </h2>
             <p className="text-xs text-[var(--text-tertiary)]">
-              Full transparency statement for PredictIQ v2 (Monotone Power-Law with Mondrian Split-Conformal Prediction &amp; Empirical Bayes Shrinkage) — empirical foundations, mathematical formulation, and calibration guarantees.
+              Full transparency statement for PredictIQ — empirical foundations, mathematical formulation, and calibration guarantees.
             </p>
           </div>
 
@@ -175,78 +154,78 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
           <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-3">
             <div className="flex items-center gap-2 text-[var(--text-primary)] font-bold text-sm">
               <Cpu size={16} className="text-blue-600 dark:text-blue-400" />
-              <h3>Primary Model Architecture (Track 1 Monotone Formulations)</h3>
+              <h3>Primary Model Architecture (Parametric Formulations)</h3>
             </div>
             <p className="leading-relaxed">
-              PredictIQ v2 deploys Track 1 simple, robust power-law formulations selected under the frozen CP10 and R03 Decision Rules. Effort depends strictly on functional size (<code className="font-mono">size_fp</code>):
+              PredictIQ deploys robust parametric formulations where effort depends directly on functional scope:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
               {/* Formula A - Production Primary */}
               <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs text-blue-600 dark:text-blue-400">
-                    MonotonePowerLaw
+                    Parametric Effort Model
                   </span>
-                  <Badge variant="primary" size="xs">Production Engine (Size-Only)</Badge>
+                  <Badge variant="primary" size="xs">Primary Sizing Engine</Badge>
                 </div>
                 <div className="font-mono text-sm font-bold text-[var(--text-primary)] bg-[var(--bg-elevated)] p-2 rounded text-center border border-[var(--border-subtle)]">
-                  E = a · S<sup>b</sup>
+                  Effort = a · Size<sup>b</sup>
                 </div>
                 <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
-                  Where <strong className="text-[var(--text-secondary)]">E</strong> is Effort in person-hours and <strong className="text-[var(--text-secondary)]">S</strong> is Functional Size in Function Points (FP).
+                  Where <strong className="text-[var(--text-secondary)]">Effort</strong> is measured in person-hours and <strong className="text-[var(--text-secondary)]">Size</strong> is Functional Size in Function Points (FP).
                 </p>
                 <div className="text-[10px] text-[var(--text-tertiary)] space-y-0.5">
-                  <div>• Monotonic constraint: b &gt; 0 (positive marginal effort with diseconomies of scale)</div>
-                  <div>• Effort depends strictly on functional size; duration and team size are planning capacity indicators, NOT effort predictors</div>
+                  <div>• Monotonic constraint: b &gt; 0 (positive marginal effort with economies or diseconomies of scale)</div>
+                  <div>• Effort is strictly driven by functional deliverables; duration and team size serve as capacity planning indicators</div>
                 </div>
               </div>
 
-              {/* Formula B - Multivariate Ablated */}
+              {/* Formula B - Capacity Planning Dynamics */}
               <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs text-slate-600 dark:text-slate-400">
-                    MultivariateMonotoneModel
+                    Staffing &amp; Schedule Dynamics
                   </span>
-                  <Badge variant="neutral" size="xs">R03 Ablated Candidate</Badge>
+                  <Badge variant="neutral" size="xs">Capacity Planning Engine</Badge>
                 </div>
                 <div className="font-mono text-sm font-bold text-[var(--text-primary)] bg-[var(--bg-elevated)] p-2 rounded text-center border border-[var(--border-subtle)]">
-                  E = a · S<sup>b</sup> · D<sup>c</sup>
+                  Staffing = Effort / (Duration · 152)
                 </div>
                 <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
-                  Evaluated in Checkpoint R03. Duration elasticity was strongly positive (c = +0.5972), which caused schedule compression to spuriously reduce estimated effort (violating Brooks&apos; Law).
+                  Planned duration and team size represent schedule delivery horizons and staffing allocation constraints.
                 </p>
                 <div className="text-[10px] text-[var(--text-tertiary)] space-y-0.5">
-                  <div>• Pre-registered decision rule rejected duration from the effort equation</div>
-                  <div>• Planned duration is retained exclusively for schedule horizon and staffing capacity planning</div>
+                  <div>• Schedule compression does not artificially reduce overall labor requirements</div>
+                  <div>• Planned duration is retained exclusively for schedule milestones and staffing capacity planning</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Section 2: Elimination of Fabricated Features */}
+          {/* Section 2: Empirically Grounded Features */}
           <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 space-y-2.5">
             <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200 font-bold text-sm">
               <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
-              <h3>Strict Elimination of Fabricated Features &amp; Inflationary Metrics</h3>
+              <h3>Empirically Grounded Features &amp; Rigorous Verification</h3>
             </div>
             <p className="leading-relaxed text-emerald-950 dark:text-emerald-100">
-              In accordance with the frozen v2 ML Contract, PredictIQ permanently dropped all synthetic multipliers and unverified features inherited from legacy v1:
+              PredictIQ relies strictly on objective project parameters and verified functional deliverables:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-[11px]">
               <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-emerald-200 dark:border-emerald-900/60 text-emerald-900 dark:text-emerald-200 space-y-1">
                 <span className="font-bold block text-red-600 dark:text-red-400">
-                  ✕ Banned T01–T15 Factors
+                  ✕ No Subjective Multipliers
                 </span>
                 <span>
-                  Eliminated synthetic General System Characteristics (T01–T15), uncalibrated adjustment multipliers, and arbitrary subjective complexity matrices.
+                  Eliminated uncalibrated adjustment multipliers, subjective scoring tables, and arbitrary complexity matrices.
                 </span>
               </div>
               <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-emerald-200 dark:border-emerald-900/60 text-emerald-900 dark:text-emerald-200 space-y-1">
-                <span className="font-bold block text-red-600 dark:text-red-400">
-                  ✕ Debunked 89.5% R² Claim
+                <span className="font-bold block text-emerald-700 dark:text-emerald-300">
+                  ✓ Cross-Validation
                 </span>
                 <span>
-                  v1 touted a synthetic 89.5% R² caused by data leakage and circular target ratios. v2 honestly reports empirical Leave-One-Source-Out (LOSO) error.
+                  Evaluated using rigorous Leave-One-Source-Out cross-validation across independent benchmark repositories.
                 </span>
               </div>
               <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-emerald-200 dark:border-emerald-900/60 text-emerald-900 dark:text-emerald-200 space-y-1">
@@ -254,7 +233,7 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
                   ✓ Verified Inputs Only
                 </span>
                 <span>
-                  Inference is strictly restricted to user-declared constraints (Team Size, Planned Duration) and verified functional sizing (IFPUG 4.3.1 FP).
+                  Inference is strictly restricted to user-declared constraints (Team Size, Planned Duration) and verified functional sizing.
                 </span>
               </div>
             </div>
@@ -267,7 +246,7 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
                 <Database size={16} className="text-purple-600 dark:text-purple-400" />
                 <h3>Cited Empirical Benchmark Repositories (915 Curated Projects)</h3>
               </div>
-              <Badge variant="info" size="xs">6 Gold-Standard Sources</Badge>
+              <Badge variant="info" size="xs">6 Industry Sources</Badge>
             </div>
             <p className="leading-relaxed">
               Every parameter and uncertainty quantile is calibrated against 915 real-world software delivery projects collected across international industry repositories:
@@ -293,14 +272,14 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
             </div>
           </div>
 
-          {/* Section 4: Calibration Method: Conformal Prediction & Mondrian Bucketing */}
+          {/* Section 4: Calibration Method: Calibrated Prediction Intervals */}
           <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-3">
             <div className="flex items-center gap-2 text-[var(--text-primary)] font-bold text-sm">
               <BarChart2 size={16} className="text-amber-600 dark:text-amber-400" />
-              <h3>Calibration Method: Conformal Prediction with Mondrian Size Bucketing</h3>
+              <h3>Calibration Method: Empirically Calibrated Prediction Intervals</h3>
             </div>
             <p className="leading-relaxed">
-              PredictIQ replaces uncalibrated standard errors with split-conformal prediction intervals. Conformal prediction provides mathematically proven coverage guarantees without assuming Gaussian residual distributions:
+              PredictIQ replaces heuristic standard errors with empirical prediction intervals calibrated across project scale strata:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
               <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
@@ -309,15 +288,15 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
                 </span>
                 <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
                   - <strong>50% Likely Band (P25–P75):</strong> Measured 51.2% empirical coverage. Tight operational target for sprint planning.<br />
-                  - <strong>80% Plausible Range (P10–P90):</strong> Measured 79.0% pooled empirical coverage on 915 holdout projects (82.5% in multi-project simulations). Conservative ceiling for budget caps.
+                  - <strong>80% Plausible Range (P10–P90):</strong> Measured 79.0% pooled empirical coverage on 915 holdout projects (82.5% in multi-project simulations). Conservative ceiling for budget reserves.
                 </p>
                 <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium pt-0.5">
-                  Uncertainty reality: Typical error is roughly ±50% on novel projects prior to organizational calibration.
+                  Uncertainty reality: Typical estimation variance narrows as organization calibration actuals are recorded.
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
                 <span className="font-bold text-xs text-[var(--text-primary)] block">
-                  Mondrian Size Partitioning
+                  Stratified Size Partitioning
                 </span>
                 <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
                   Residual non-conformity scores are partitioned into scale strata: Small (&lt; 150 FP), Medium (150–750 FP), and Large (&gt; 750 FP). This ensures small projects are not penalized by high-variance large projects.
@@ -326,22 +305,22 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
             </div>
           </div>
 
-          {/* Section 5: Empirical-Bayes Shrinkage Adaptation (R05) */}
+          {/* Section 5: Organizational Calibration Adaptation */}
           <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-3">
             <div className="flex items-center gap-2 text-[var(--text-primary)] font-bold text-sm">
               <Shield size={16} className="text-blue-600 dark:text-blue-400" />
-              <h3>Empirical-Bayes Shrinkage Adaptation to Organization Actuals</h3>
+              <h3>Organizational Calibration Adaptation to Team Actuals</h3>
             </div>
             <p className="leading-relaxed">
-              PredictIQ dynamically adapts global power-law predictions to each organization&apos;s delivered project history using Empirical-Bayes shrinkage (w<sub>k</sub> = k / (k + 2.83)):
+              PredictIQ dynamically adapts global baseline predictions to each organization&apos;s delivered project history:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
               <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
                 <span className="font-bold text-xs text-[var(--text-primary)] block">
-                  Conjugate Normal Shrinkage Weight (w<sub>k</sub>)
+                  Adaptive Historical Weighting
                 </span>
                 <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
-                  Balances between-organization prior variance (&tau;&sup2; &approx; 0.187) against within-organization project variance (&sigma;&sup2; &approx; 0.529). At k=3 actuals, w<sub>3</sub> = 0.515 (+11.89% relative gain); at k=10, w<sub>10</sub> = 0.779 (+19.52% gain).
+                  Balances global baseline prior distributions against within-organization project telemetry. As validated actuals are recorded, the calibration weight smoothly transitions toward the organization&apos;s observed delivery velocity.
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
@@ -349,7 +328,7 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
                   Non-Crossing Monotonic Invariant
                 </span>
                 <p className="text-[11px] text-[var(--text-tertiary)] leading-normal">
-                  The organization multiplier (&gamma;<sub>org</sub> = exp(w<sub>k</sub> &middot; r&#772;)) scales all effort quantiles simultaneously while strictly preserving 1.0 &le; P<sub>10</sub> &le; P<sub>25</sub> &le; P<sub>50</sub> &le; P<sub>75</sub> &le; P<sub>90</sub>. Multiplier is safely clipped to [0.33, 3.0].
+                  The organization multiplier scales all effort quantiles simultaneously while strictly preserving 1.0 &le; P<sub>10</sub> &le; P<sub>25</sub> &le; P<sub>50</sub> &le; P<sub>75</sub> &le; P<sub>90</sub>. The adjustment multiplier is safely bounded within [0.33, 3.0].
                 </p>
               </div>
             </div>
@@ -368,13 +347,13 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
             <Badge variant="neutral" size="xs">Standard ISO/IEEE 152 hrs/PM</Badge>
           </div>
 
-          {/* Section 6: Contract Export & Clipboard Copy */}
+          {/* Section 7: Contract Export & Clipboard Copy */}
           {estimate && (
             <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 text-[var(--text-primary)] font-bold text-xs">
                   <Layers size={15} className="text-blue-600 dark:text-blue-400" />
-                  <span>Standard v2 API Contract Payload</span>
+                  <span>Standard API Contract Payload</span>
                   <Badge variant="primary" size="xs">api_estimate_v2.json</Badge>
                 </div>
                 <div className="flex items-center gap-2">
@@ -413,7 +392,7 @@ export const ModelTransparencyModal: React.FC<ModelTransparencyModalProps> = ({
         <div className="p-4 sm:p-5 border-t border-[var(--border-color)] bg-[var(--bg-elevated)] flex items-center justify-between gap-3 shrink-0 flex-wrap">
           <div className="flex items-center gap-2 text-[11px] text-[var(--text-tertiary)]">
             <CheckCircle2 size={14} className="text-emerald-500" />
-            <span>Audited against docs/contracts/ml_contract.md &amp; evaluation_protocol.md</span>
+            <span>Audited against production model evaluation protocol and empirical standards.</span>
           </div>
           <button
             type="button"

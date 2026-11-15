@@ -1,5 +1,5 @@
 /**
- * Predictify — Currency Store Unit Tests
+ * PredictIQ — Currency Store Unit Tests
  * Tests for the Zustand currency store: conversion, formatting, symbols.
  */
 import { describe, it, expect, beforeEach } from 'vitest';

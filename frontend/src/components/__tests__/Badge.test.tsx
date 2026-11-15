@@ -48,11 +48,11 @@ describe('Badge Primitives', () => {
     render(
       <UncertaintyBadge
         interval="80% CI (p10–p90)"
-        coverage="90% Conformal"
+        coverage="90% Confidence"
         calibrated
       />
     );
     expect(screen.getByText('80% CI (p10–p90)')).toBeInTheDocument();
-    expect(screen.getByText(/90% Conformal/i)).toBeInTheDocument();
+    expect(screen.getByText(/90% Confidence/i)).toBeInTheDocument();
   });
 });

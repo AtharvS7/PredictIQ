@@ -29,10 +29,10 @@ describe('Shared appearance preference', () => {
   });
 
   it('persists an explicit choice in the application setting', () => {
-    localStorage.setItem('Predictify-theme', 'dark');
+    localStorage.setItem('predictiq-theme', 'dark');
     render(<ThemeProvider><Control /></ThemeProvider>);
     fireEvent.click(screen.getByRole('button', { name: 'Light' }));
-    expect(localStorage.getItem('Predictify-theme')).toBe('light');
+    expect(localStorage.getItem('predictiq-theme')).toBe('light');
     expect(document.documentElement.dataset.theme).toBe('light');
   });
 });

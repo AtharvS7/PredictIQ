@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import ModelTransparencyModal from '../estimate/ModelTransparencyModal';
 import type { EstimateResult } from '@/types';
 
@@ -12,7 +12,7 @@ function createMockEstimate(): EstimateResult {
     created_at: '2026-11-06T10:00:00Z',
     version: 1,
     status: 'complete',
-    model_version: 'production-v3-0bea59fe789',
+    model_version: 'production-v2',
     inputs: {
       project_type: 'Web Application',
       tech_stack: ['React', 'FastAPI'],
@@ -38,8 +38,8 @@ function createMockEstimate(): EstimateResult {
       risk_level: 'Low',
       top_risks: [],
       phase_breakdown: [],
-      model_explanation: 'Calibrated power-law estimate.',
-      benchmark_comparison: 'In line with ISBSG and China datasets.',
+      model_explanation: 'Calibrated estimation.',
+      benchmark_comparison: 'In line with industry datasets.',
     },
   };
 }
@@ -59,12 +59,12 @@ describe('ModelTransparencyModal Component', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('displays full engine provenance, Track 1 primary architectures, and mathematical formulations', () => {
+  it('displays full engine provenance, primary architectures, and mathematical formulations', () => {
     render(
       <ModelTransparencyModal
         isOpen={true}
         onClose={vi.fn()}
-        modelVersion="production-v3-0bea59fe789"
+        modelVersion="production-v2"
         tier="A"
       />
     );
@@ -72,13 +72,13 @@ describe('ModelTransparencyModal Component', () => {
     // Header and titles
     expect(screen.getByText(/How This Estimate Works: Engine Provenance & Methodology/i)).toBeInTheDocument();
 
-    // Primary Architecture Track 1 formulations
-    expect(screen.getByText(/MultivariateMonotoneModel/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/E = a · S/i).length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText(/MonotonePowerLaw/i)).toBeInTheDocument();
+    // Primary Architecture formulations
+    expect(screen.getByText(/Parametric Effort Model/i)).toBeInTheDocument();
+    expect(screen.getByText(/Effort = a · Size/i)).toBeInTheDocument();
+    expect(screen.getByText(/Staffing & Schedule Dynamics/i)).toBeInTheDocument();
   });
 
-  it('displays formal statement on elimination of fabricated features and fake 89.5% R2 claim', () => {
+  it('displays formal statement on elimination of subjective multipliers and empirical grounding', () => {
     render(
       <ModelTransparencyModal
         isOpen={true}
@@ -86,10 +86,10 @@ describe('ModelTransparencyModal Component', () => {
       />
     );
 
-    // Elimination statement
-    expect(screen.getByText(/Strict Elimination of Fabricated Features & Inflationary Metrics/i)).toBeInTheDocument();
-    expect(screen.getByText(/Banned T01–T15 Factors/i)).toBeInTheDocument();
-    expect(screen.getByText(/Debunked 89\.5% R² Claim/i)).toBeInTheDocument();
+    // Grounding statement
+    expect(screen.getByText(/Empirically Grounded Features & Rigorous Verification/i)).toBeInTheDocument();
+    expect(screen.getByText(/No Subjective Multipliers/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Cross-Validation/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Verified Inputs Only/i)).toBeInTheDocument();
   });
 
@@ -103,11 +103,11 @@ describe('ModelTransparencyModal Component', () => {
 
     // Cited Benchmark Repositories
     expect(screen.getByText(/Cited Empirical Benchmark Repositories/i)).toBeInTheDocument();
-    expect(screen.getByText(/China Repository/i)).toBeInTheDocument();
-    expect(screen.getByText(/499 projects/i)).toBeInTheDocument();
+    expect(screen.getByText(/Industry Cross-Org Benchmarks/i)).toBeInTheDocument();
+    expect(screen.getByText(/400 projects/i)).toBeInTheDocument();
 
-    expect(screen.getByText(/Kitchenham Telecommunications/i)).toBeInTheDocument();
-    expect(screen.getByText(/145 projects/i)).toBeInTheDocument();
+    expect(screen.getByText(/NASA Systems Engineering/i)).toBeInTheDocument();
+    expect(screen.getByText(/244 projects/i)).toBeInTheDocument();
 
     expect(screen.getByText(/AT&T Telemetry/i)).toBeInTheDocument();
     expect(screen.getByText(/104 projects/i)).toBeInTheDocument();
@@ -122,7 +122,7 @@ describe('ModelTransparencyModal Component', () => {
     expect(screen.getByText(/24 projects/i)).toBeInTheDocument();
   });
 
-  it('explains split-conformal prediction intervals and Mondrian size bucketing', () => {
+  it('explains calibrated prediction intervals and stratified size bucketing', () => {
     render(
       <ModelTransparencyModal
         isOpen={true}
@@ -130,9 +130,9 @@ describe('ModelTransparencyModal Component', () => {
       />
     );
 
-    expect(screen.getByText(/Calibration Method: Conformal Prediction with Mondrian Size Bucketing/i)).toBeInTheDocument();
+    expect(screen.getByText(/Calibration Method: Empirically Calibrated Prediction Intervals/i)).toBeInTheDocument();
     expect(screen.getByText(/80% Nominal Empirical Coverage \(p10–p90\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Mondrian Size Partitioning/i)).toBeInTheDocument();
+    expect(screen.getByText(/Stratified Size Partitioning/i)).toBeInTheDocument();
     expect(screen.getByText(/Labor Conversion Standard: 152 Productive Hours = 1 Person-Month/i)).toBeInTheDocument();
   });
 

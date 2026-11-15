@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 /**
- * Predictify — SEO Head Component (F6)
+ * PredictIQ — SEO Head Component
  * Sets document title and meta description for each page.
  * Lightweight alternative to react-helmet — no extra dependency needed.
  */
@@ -13,7 +13,7 @@ interface SEOHeadProps {
 export default function SEOHead({ title, description }: SEOHeadProps) {
   useEffect(() => {
     // Set page title
-    document.title = `${title} | Predictify`;
+    document.title = `${title} | PredictIQ`;
 
     // Set meta description
     if (description) {
@@ -28,10 +28,10 @@ export default function SEOHead({ title, description }: SEOHeadProps) {
 
     // Set Open Graph tags for social sharing
     const ogTags: Record<string, string> = {
-      'og:title': `${title} | Predictify`,
-      'og:description': description || 'PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction & Empirical Bayes Shrinkage',
+      'og:title': `${title} | PredictIQ`,
+      'og:description': description || 'PredictIQ Enterprise Software Project Effort and Budget Estimation',
       'og:type': 'website',
-      'og:site_name': 'Predictify',
+      'og:site_name': 'PredictIQ',
     };
 
     Object.entries(ogTags).forEach(([property, content]) => {
@@ -46,7 +46,7 @@ export default function SEOHead({ title, description }: SEOHeadProps) {
 
     return () => {
       // Reset to default on unmount
-      document.title = 'Predictify — Smart Project Estimation';
+      document.title = 'PredictIQ — Software Project Estimation';
     };
   }, [title, description]);
 

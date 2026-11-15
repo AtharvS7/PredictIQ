@@ -216,7 +216,7 @@ export const ModelVersionBadge: React.FC<ModelVersionBadgeProps> = ({
 
 export interface UncertaintyBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   interval?: string; // e.g. "80% CI [p10–p90]"
-  coverage?: string; // e.g. "90% Conformal"
+  coverage?: string; // e.g. "90% Confidence"
   calibrated?: boolean;
   className?: string;
 }

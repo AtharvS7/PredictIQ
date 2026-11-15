@@ -6,7 +6,7 @@ export const useTheme = () => useContext(ThemeContext);
 
 export default function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState(() => {
-    const saved = localStorage.getItem('Predictify-theme');
+    const saved = localStorage.getItem('predictiq-theme');
     return saved === 'dark' || saved === 'light' ? saved : 'system';
   });
   const [resolvedTheme, setResolvedTheme] = useState(() => theme === 'system'
@@ -23,7 +23,7 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
       setResolvedTheme(resolved);
     };
     apply();
-    localStorage.setItem('Predictify-theme', theme);
+    localStorage.setItem('predictiq-theme', theme);
     preference.addEventListener('change', apply);
     return () => preference.removeEventListener('change', apply);
   }, [theme]);

@@ -151,7 +151,7 @@ export function deriveEstimateAssumptions(
     },
     {
       category: 'Uncertainty Calibration',
-      description: 'Split-conformal prediction intervals with Mondrian size bucketing (80% nominal coverage).',
+      description: 'Calibrated prediction intervals across project size tiers (80% nominal coverage).',
       editable: false,
     },
   ];

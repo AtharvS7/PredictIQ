@@ -45,7 +45,7 @@ function createMockEstimate(overrides: Partial<EstimateResult> = {}): EstimateRe
       risk_level: 'Low',
       top_risks: [],
       phase_breakdown: [],
-      model_explanation: 'Standard calibrated power-law model.',
+      model_explanation: 'Standard calibrated parametric model.',
       benchmark_comparison: 'Consistent with cross-organization empirical databases.',
     },
     ...overrides,
@@ -53,12 +53,12 @@ function createMockEstimate(overrides: Partial<EstimateResult> = {}): EstimateRe
 }
 
 describe('Export Flows & Contract Integrity (api_estimate_v2.json)', () => {
-  it('normalizes legacy IDs to valid RFC 4122 UUID strings', () => {
+  it('normalizes non-standard IDs to valid RFC 4122 UUID strings', () => {
     const valid = '11111111-2222-3333-4444-555555555555';
     expect(ensureValidUUID(valid)).toBe(valid);
 
-    const legacy = 'est-12345678-abcd';
-    const normalized = ensureValidUUID(legacy);
+    const nonStandard = 'est-12345678-abcd';
+    const normalized = ensureValidUUID(nonStandard);
     expect(normalized).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
   });
 

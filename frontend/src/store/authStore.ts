@@ -1,5 +1,5 @@
 /**
- * Predictify — Auth Store (Firebase Auth + RBAC)
+ * PredictIQ — Auth Store (Firebase Auth + RBAC)
  * Zustand store managing authentication state via Firebase.
  * Extracts role from Firebase custom claims for RBAC enforcement.
  */

@@ -107,10 +107,10 @@ export const PlanningCapacityCard: React.FC<PlanningCapacityCardProps> = ({
           <p className="leading-relaxed">
             <strong className="text-[var(--text-primary)]">Planned Target Duration</strong> reflects your scheduled delivery deadline (target planning horizon),
             <em className="text-indigo-600 dark:text-indigo-400 font-medium not-italic"> not</em> the ML model&apos;s predicted effort duration.
-            Team Size and Duration are schedule and staffing capacity planning indicators, <em className="text-indigo-600 dark:text-indigo-400 font-medium not-italic">NOT</em> effort predictors. In accordance with Brooks&apos; Law, adding engineers does not linearly compress effort. The model computes independent effort bounds driven strictly by functional size (<code className="font-mono">size_fp</code>).
+            Team Size and Duration are schedule and staffing capacity planning indicators, <em className="text-indigo-600 dark:text-indigo-400 font-medium not-italic">NOT</em> effort predictors. In software engineering, adding team members does not linearly compress delivery effort due to coordination overhead. The model computes independent effort bounds driven strictly by functional scope.
           </p>
           <p className="text-[11px] text-[var(--text-tertiary)] pt-0.5">
-            Zero fabricated complexity factors: No arbitrary multiplier tables or artificial padding are added to these constraints.
+            Empirically calibrated parameters: Estimates are grounded in empirical industry datasets without subjective multiplier tables or artificial padding.
           </p>
         </div>
 
@@ -120,7 +120,7 @@ export const PlanningCapacityCard: React.FC<PlanningCapacityCardProps> = ({
             <AlertCircle size={14} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
             <div>
               <span className="font-semibold">Coordination Note: </span>
-              A team of {safeTeam} members exceeds typical agile pod sizes (3–12). Larger teams involve non-linear communication overhead (Brooks&apos; Law).
+              A team of {safeTeam} members exceeds typical agile pod sizes (3–12). Larger teams involve non-linear coordination overhead.
             </div>
           </div>
         )}

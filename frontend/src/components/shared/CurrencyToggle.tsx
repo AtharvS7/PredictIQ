@@ -1,5 +1,5 @@
-// Legacy CurrencyToggle — re-exports CurrencySelector for backwards compatibility.
-// New code should import CurrencySelector directly.
+// Compatibility re-export of CurrencySelector for components.
+// Standard code imports CurrencySelector directly.
 import CurrencySelector from './CurrencySelector';
 
 export default function CurrencyToggle() {

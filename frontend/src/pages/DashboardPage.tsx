@@ -67,7 +67,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
-      <SEOHead title="Dashboard" description="PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction & Empirical Bayes Shrinkage." />
+      <SEOHead title="Dashboard" description="PredictIQ Enterprise Software Project Effort and Budget Estimation." />
       <Navbar />
 
       <div style={{ display: 'flex' }}>
@@ -133,7 +133,7 @@ export default function DashboardPage() {
                   lineHeight: 1.5
                 }}
               >
-                PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction &amp; Empirical Bayes Shrinkage. Generate calibrated project cost and effort estimates or plan task budgets.
+                PredictIQ provides calibrated software project cost and effort estimation based on empirical industry benchmarks. Generate project estimates or plan detailed budgets.
               </p>
 
               <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>

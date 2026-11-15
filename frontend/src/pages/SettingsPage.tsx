@@ -71,7 +71,7 @@ export default function SettingsPage() {
         background: 'var(--bg-primary)',
       }}
     >
-      <SEOHead title="Settings" description="PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction & Empirical Bayes Shrinkage." />
+      <SEOHead title="Settings" description="PredictIQ Enterprise Software Project Effort and Budget Estimation." />
       <Navbar />
 
       <div style={{ display: 'flex' }}>
@@ -187,7 +187,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Empirical-Bayes Calibration & Project Actuals */}
+          {/* Organizational Calibration & Project Actuals */}
           <div className="card" style={cardStyle}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
               <h3
@@ -200,7 +200,7 @@ export default function SettingsPage() {
                   margin: 0,
                 }}
               >
-                <Shield size={18} className="text-blue-600 dark:text-blue-400" /> Empirical-Bayes Calibration &amp; Actuals
+                <Shield size={18} className="text-blue-600 dark:text-blue-400" /> Organizational Calibration &amp; Actuals
               </h3>
               <span
                 style={{
@@ -213,12 +213,12 @@ export default function SettingsPage() {
                   border: '1px solid rgba(16, 185, 129, 0.3)',
                 }}
               >
-                Active (Empirical Bayes)
+                Active (Calibrated Engine)
               </span>
             </div>
 
             <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 14 }}>
-              PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction &amp; Empirical Bayes Shrinkage. Delivered projects logged or bulk imported with consent calibrate your organization&apos;s productivity velocity via conjugate normal shrinkage (w<sub>k</sub> = k / (k + 2.57)).
+              PredictIQ calibrated estimation engine. Delivered projects logged or bulk imported with consent calibrate your organization&apos;s productivity velocity via empirical historical weighting.
             </p>
 
             <div
@@ -235,13 +235,13 @@ export default function SettingsPage() {
             >
               <div>
                 <span style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.04em', display: 'block' }}>
-                  Shrinkage Ratio
+                  Calibration Ratio
                 </span>
                 <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'monospace' }}>
-                  &sigma;&sup2; / &tau;&sup2; = 2.57
+                  Variance Ratio = 2.57
                 </span>
                 <span style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', display: 'block' }}>
-                  Between-org prior variance
+                  Between-org baseline variance
                 </span>
               </div>
 
@@ -250,10 +250,10 @@ export default function SettingsPage() {
                   Empirical Gain
                 </span>
                 <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-success)', fontFamily: 'monospace' }}>
-                  +15.79% MdAPE
+                  +15.79% Accuracy
                 </span>
                 <span style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', display: 'block' }}>
-                  Empirical gain at k=10
+                  Accuracy gain at k=10
                 </span>
               </div>
 
@@ -384,7 +384,7 @@ export default function SettingsPage() {
                   margin: 0,
                 }}
               >
-                Sign out of your Predictify account
+                Sign out of your PredictIQ account
               </p>
             </div>
 

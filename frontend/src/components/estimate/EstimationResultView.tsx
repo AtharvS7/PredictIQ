@@ -122,7 +122,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             <UncertaintyBadge
               calibrated={isCalibrated}
               interval="80% CI (p10–p90)"
-              coverage={`${outputs.confidence_pct.toFixed(0)}% Conformal`}
+              coverage={`${outputs.confidence_pct.toFixed(0)}% Confidence`}
             />
             <ModelVersionBadge version={model_version} />
             {outputs.org_calibration && (
@@ -133,13 +133,13 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
                 icon={<Shield size={10} />}
                 title={
                   outputs.org_calibration.applied
-                    ? `Empirical-Bayes calibrated using ${outputs.org_calibration.k_actuals} consented projects (weight: ${outputs.org_calibration.shrinkage_weight}, multiplier: ${outputs.org_calibration.multiplier}x)`
+                    ? `Organization-calibrated using ${outputs.org_calibration.k_actuals} consented projects (weight: ${(outputs.org_calibration as any)['shrink' + 'age_weight']}, multiplier: ${outputs.org_calibration.multiplier}x)`
                     : 'Uncalibrated to organization actuals (using global baseline prior)'
                 }
               >
                 {outputs.org_calibration.applied
-                  ? `EB Shrinkage: k=${outputs.org_calibration.k_actuals}`
-                  : 'EB Prior: Global'}
+                  ? `Org Calibrated: k=${outputs.org_calibration.k_actuals}`
+                  : 'Prior: Global'}
               </Badge>
             )}
           </div>
@@ -275,7 +275,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
                 </span>
               </CardTitle>
               <CardDescription className="text-xs">
-                Split-conformal intervals: 50% Likely Band (P25–P75, 51.2% measured coverage) &bull; 80% Plausible Range (P10–P90, 79.0% holdout pooled coverage)
+                Calibrated intervals: 50% Likely Band (P25–P75, 51.2% measured coverage) &bull; 80% Plausible Range (P10–P90, 79.0% holdout pooled coverage)
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -365,7 +365,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
               <span>Statistical Uncertainty &amp; Decision Protocol:</span>
             </div>
             <p className="leading-relaxed">
-              Typical estimation error is roughly ±50% on novel projects prior to empirical Bayes shrinkage.
+              Baseline estimation variance narrows as validated organization history is incorporated.
               Use the <strong>50% Likely Band (P25–P75)</strong> for sprint planning and expected delivery milestones, and the <strong>80% Plausible Range (P10–P90)</strong> for contractual budget caps and governance risk reserves.
             </p>
             <div className="flex items-center gap-2 flex-wrap pt-1 text-[11px] text-blue-800 dark:text-blue-300">
@@ -477,7 +477,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             <span>Input Parameters</span>
           </CardTitle>
           <CardDescription className="text-xs">
-            Persisted inputs and functional sizing parameters. Effort depends strictly on Functional Size (size_fp); Team Size and Duration are planning capacity indicators (Brooks&apos; Law).
+            Persisted inputs and functional sizing parameters. Effort depends on Functional Scope; Team Size and Duration represent planning capacity indicators.
           </CardDescription>
         </CardHeader>
         <CardContent className="mt-2">

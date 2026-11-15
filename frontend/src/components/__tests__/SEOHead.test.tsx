@@ -1,5 +1,5 @@
 /**
- * Predictify — SEOHead Component Tests
+ * PredictIQ — SEOHead Component Tests
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
@@ -15,9 +15,9 @@ describe('SEOHead', () => {
     document.querySelector('meta[name="description"]')?.remove();
   });
 
-  it('sets document title with Predictify suffix', () => {
+  it('sets document title with PredictIQ suffix', () => {
     render(<SEOHead title="Dashboard" />);
-    expect(document.title).toBe('Dashboard | Predictify');
+    expect(document.title).toBe('Dashboard | PredictIQ');
   });
 
   it('sets meta description when provided', () => {
@@ -31,20 +31,20 @@ describe('SEOHead', () => {
     render(<SEOHead title="Estimates" />);
     const ogTitle = document.querySelector('meta[property="og:title"]');
     expect(ogTitle).not.toBeNull();
-    expect(ogTitle?.getAttribute('content')).toBe('Estimates | Predictify');
+    expect(ogTitle?.getAttribute('content')).toBe('Estimates | PredictIQ');
   });
 
-  it('sets og:site_name to Predictify', () => {
+  it('sets og:site_name to PredictIQ', () => {
     render(<SEOHead title="Test" />);
     const ogSiteName = document.querySelector('meta[property="og:site_name"]');
-    expect(ogSiteName?.getAttribute('content')).toBe('Predictify');
+    expect(ogSiteName?.getAttribute('content')).toBe('PredictIQ');
   });
 
   it('resets title on unmount', () => {
     const { unmount } = render(<SEOHead title="Custom" />);
-    expect(document.title).toBe('Custom | Predictify');
+    expect(document.title).toBe('Custom | PredictIQ');
     unmount();
-    expect(document.title).toBe('Predictify — Smart Project Estimation');
+    expect(document.title).toBe('PredictIQ — Software Project Estimation');
   });
 
   it('renders null (no visible UI)', () => {

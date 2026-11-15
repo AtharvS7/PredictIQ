@@ -367,14 +367,14 @@ export default function NewEstimatePage() {
   const wizardSteps = [
     { title: 'Requirements & Functional Size', desc: 'Scope calibration' },
     { title: 'Planning Parameters', desc: 'Target constraints' },
-    { title: 'Calibrated Results', desc: 'Conformal ranges' },
+    { title: 'Calibrated Results', desc: 'Prediction ranges' },
   ];
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <SEOHead
         title="New Estimate Wizard"
-        description="Create a calibrated project estimate with PredictIQ v2.0 Monotone Power-Law with Mondrian Split-Conformal Prediction & Empirical Bayes Shrinkage."
+        description="Create a calibrated project estimate with PredictIQ Enterprise Software Project Effort and Budget Estimation."
       />
       <Navbar />
 
@@ -745,7 +745,7 @@ export default function NewEstimatePage() {
                       value={params.team_size}
                       onChange={(e) => setParams({ ...params, team_size: Number(e.target.value) })}
                     />
-                    <p style={hintStyle}>Staffing capacity indicator (Brooks&apos; Law: does not shorten effort)</p>
+                    <p style={hintStyle}>Staffing capacity indicator (team scaling: does not shorten effort)</p>
                   </div>
 
                   {/* Planned Target Duration */}
@@ -869,7 +869,7 @@ export default function NewEstimatePage() {
                         })
                       }
                     >
-                      <option value={1}>1 — Locked / Fixed Scope</option>
+                      <option value={1}>1 — Locked / Static Scope</option>
                       <option value={2}>2 — Mostly Stable</option>
                       <option value={3}>3 — Moderate Changes</option>
                       <option value={4}>4 — Evolving / Iterative</option>

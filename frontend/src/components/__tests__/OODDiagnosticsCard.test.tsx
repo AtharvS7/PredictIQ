@@ -53,8 +53,8 @@ describe('OODDiagnosticsCard Component', () => {
 
     // Statistical mechanics explanation
     expect(screen.getByText(/Why Intervals Widen Without Arbitrary Clamping/i)).toBeInTheDocument();
-    expect(screen.getByText(/Conformal Residual Dispersion/i)).toBeInTheDocument();
-    expect(screen.getByText(/Monotonic Power-Law Scaling/i)).toBeInTheDocument();
+    expect(screen.getByText(/Calibrated Uncertainty Dispersion/i)).toBeInTheDocument();
+    expect(screen.getByText(/Monotonic Scope Scaling/i)).toBeInTheDocument();
     expect(screen.getByText(/Recommended Engineering Mitigations/i)).toBeInTheDocument();
   });
 

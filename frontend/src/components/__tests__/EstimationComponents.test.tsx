@@ -57,7 +57,7 @@ function createMockEstimate(overrides: Partial<EstimateResult> = {}): EstimateRe
         { phase: 'QA & Deployment', effort_hours: 152, cost_usd: 12160, duration_weeks: 3, pct_of_total: 20 },
       ],
       model_explanation: 'Prediction driven by 135 Function Points and agile methodology.',
-      benchmark_comparison: 'Puts effort at 48th percentile of ISBSG web benchmark.',
+      benchmark_comparison: 'Puts effort at 48th percentile of cross-industry web benchmark.',
     },
     ...overrides,
   };
@@ -96,7 +96,7 @@ describe('estimateUtils', () => {
     expect(oodFp.reasons[0]).toContain('beyond standard calibrated cluster envelopes');
   });
 
-  it('estimates function points with IFPUG heuristic', () => {
+  it('estimates function points with standard heuristic', () => {
     // 10 features * 8 + 2 integrations * 5 = 90 FP
     expect(estimateFunctionPoints(10, 2)).toBe(90);
     expect(estimateFunctionPoints(0, 0)).toBe(0);
@@ -118,8 +118,8 @@ describe('FunctionalSizeCard Component', () => {
     );
 
     expect(screen.getByText('Functional Size & Scope Calibration')).toBeInTheDocument();
-    expect(screen.getByText('IFPUG 4.3.1 Standard')).toBeInTheDocument();
-    expect(screen.getByText('Zero Fabricated Factors')).toBeInTheDocument();
+    expect(screen.getByText('Industry Functional Sizing')).toBeInTheDocument();
+    expect(screen.getByText('Empirically Calibrated')).toBeInTheDocument();
 
     // 10 * 8 + 2 * 5 = 90 FP
     expect(screen.getByText('90')).toBeInTheDocument();

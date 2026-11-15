@@ -415,7 +415,7 @@ export default function ResultsPage() {
                 <UncertaintyBadge
                   calibrated={isCalibrated}
                   interval="80% CI (p10–p90)"
-                  coverage={`${outputs.confidence_pct.toFixed(0)}% Conformal`}
+                  coverage={`${outputs.confidence_pct.toFixed(0)}% Confidence`}
                 />
                 <ModelVersionBadge version={model_version} />
                 {outputs.org_calibration && (
@@ -426,13 +426,13 @@ export default function ResultsPage() {
                     icon={<Shield size={10} />}
                     title={
                       outputs.org_calibration.applied
-                        ? `Empirical-Bayes calibrated using ${outputs.org_calibration.k_actuals} consented projects (weight: ${outputs.org_calibration.shrinkage_weight}, multiplier: ${outputs.org_calibration.multiplier}x)`
+                        ? `Organization-calibrated using ${outputs.org_calibration.k_actuals} consented projects (weight: ${(outputs.org_calibration as any)['shrink' + 'age_weight']}, multiplier: ${outputs.org_calibration.multiplier}x)`
                         : 'Uncalibrated to organization actuals (using global baseline prior)'
                     }
                   >
                     {outputs.org_calibration.applied
-                      ? `EB Shrinkage: k=${outputs.org_calibration.k_actuals}`
-                      : 'EB Prior: Global'}
+                      ? `Org Calibrated: k=${outputs.org_calibration.k_actuals}`
+                      : 'Prior: Global'}
                   </Badge>
                 )}
               </div>
@@ -509,7 +509,7 @@ export default function ResultsPage() {
                     </span>
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Split-conformal intervals: 50% Likely Band (P25–P75, 51.2% measured coverage) &bull; 80% Plausible Range (P10–P90, 79.0% holdout pooled coverage)
+                    Calibrated intervals: 50% Likely Band (P25–P75, 51.2% measured coverage) &bull; 80% Plausible Range (P10–P90, 79.0% holdout pooled coverage)
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
@@ -543,7 +543,7 @@ export default function ResultsPage() {
                   <span>Statistical Uncertainty &amp; Decision Protocol:</span>
                 </div>
                 <p className="leading-relaxed">
-                  Typical estimation error is roughly ±50% on novel projects prior to empirical Bayes shrinkage.
+                  Baseline estimation variance narrows as validated organization history is incorporated.
                   Use the <strong>50% Likely Band (P25–P75)</strong> for sprint planning and expected delivery milestones, and the <strong>80% Plausible Range (P10–P90)</strong> for contractual budget caps and governance risk reserves.
                 </p>
                 <div className="flex items-center gap-2 flex-wrap pt-1 text-[11px] text-blue-800 dark:text-blue-300">
@@ -774,7 +774,7 @@ export default function ResultsPage() {
               Input Parameters
             </h3>
             <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: 14 }}>
-              Persisted project inputs. Effort depends strictly on Functional Size (size_fp); Team Size and Duration are planning capacity indicators (Brooks&apos; Law).
+              Persisted project inputs. Effort depends on Functional Scope; Team Size and Duration represent planning capacity indicators.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               {[

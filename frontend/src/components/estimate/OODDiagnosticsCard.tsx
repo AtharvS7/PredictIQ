@@ -98,23 +98,23 @@ export const OODDiagnosticsCard: React.FC<OODDiagnosticsCardProps> = ({
               <span>Statistical Mechanics: Why Intervals Widen Without Arbitrary Clamping</span>
             </h4>
             <p className="text-amber-900 dark:text-amber-200 leading-relaxed">
-              Unlike legacy heuristic calculators that arbitrarily clamp predictions or project false certainty, PredictIQ v2 adheres to formal mathematical principles:
+              Unlike conventional heuristic calculators that arbitrarily clamp predictions or project false certainty, PredictIQ adheres to formal empirical estimation principles:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 text-[11px]">
               <div className="p-2 rounded bg-amber-50/80 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60">
                 <span className="font-bold text-amber-950 dark:text-amber-200 block mb-0.5">
-                  1. Conformal Residual Dispersion
+                  1. Calibrated Uncertainty Dispersion
                 </span>
                 <span className="text-amber-800 dark:text-amber-300">
-                  Under split-conformal calibration with Mondrian size bucketing, residual variance grows with extrapolation distance. The p10–p90 band expands to preserve honest 80% empirical coverage.
+                  Under calibrated prediction intervals across project size tiers, uncertainty bands expand realistically with extrapolation distance to preserve reliable coverage.
                 </span>
               </div>
               <div className="p-2 rounded bg-amber-50/80 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60">
                 <span className="font-bold text-amber-950 dark:text-amber-200 block mb-0.5">
-                  2. Monotonic Power-Law Scaling
+                  2. Monotonic Scope Scaling
                 </span>
                 <span className="text-amber-800 dark:text-amber-300">
-                  The calibrated center (p50) preserves monotonic power-law dynamics (E = a · S<sup>b</sup> · D<sup>c</sup>) without sudden cliffs or artificial ceiling cutoffs, maintaining economic consistency.
+                  The calibrated median (p50) preserves monotonic scaling with project scope without sudden cliffs or artificial cutoffs, maintaining economic consistency.
                 </span>
               </div>
             </div>
@@ -129,7 +129,7 @@ export const OODDiagnosticsCard: React.FC<OODDiagnosticsCardProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-amber-900 dark:text-amber-200">
               <div className="p-2 rounded bg-white/60 dark:bg-slate-900/40 border border-amber-200 dark:border-amber-900/60">
                 <span className="font-bold block text-amber-950 dark:text-amber-100">Scope Decomposition</span>
-                Decompose large systems (&gt; 2,000 FP) into independent microservices or iterative milestone releases.
+                Decompose large systems (&gt; 2,000 FP) into independent microservices or iterative delivery phases.
               </div>
               <div className="p-2 rounded bg-white/60 dark:bg-slate-900/40 border border-amber-200 dark:border-amber-900/60">
                 <span className="font-bold block text-amber-950 dark:text-amber-100">Team Decoupling</span>
