@@ -57,6 +57,14 @@ const FORBIDDEN_WORDS = [
   'MTUyIGhycw==', // 152 hrs
   'ZnAgcGVy', // fp per
   'Y29vcmRpbmF0aW9uIG92ZXJoZWFk', // coordination overhead
+  'ODAlIENvbmZpZGVuY2U=', // 80% Confidence
+  'Q292ZXJhZ2UgY29uZmlkZW5jZQ==', // Coverage confidence
+  'VW5jZXJ0YWludHkgU3ByZWFk', // Uncertainty Spread
+  'NTEuMiUgbWVhc3VyZWQgY292ZXJhZ2U=', // 51.2% measured coverage
+  'NzkuMCUgaG9sZG91dCBwb29sZWQgY292ZXJhZ2U=', // 79.0% holdout pooled coverage
+  'VW5jZXJ0YWludHkgR3VpZGU=', // Uncertainty Guide
+  'U3RhbmRhcmQgbW9kZWw=', // Standard model
+  'cDkwL3AxMA==', // p90/p10
 ].map((token) => atob(token));
 
 function assertZeroBannedTerms(container: HTMLElement, label: string) {

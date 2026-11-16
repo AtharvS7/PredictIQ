@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
 import type { EstimateResult } from '@/types';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/shared/Card';
-import { Badge, DataQualityBadge, UncertaintyBadge, ModelVersionBadge } from '@/components/shared/Badge';
-import { ConfidenceRangeBar, ConfidenceIntervalCard } from '@/components/shared/ConfidenceInterval';
-import { Heading, Text, MetricValue, CodeChip } from '@/components/shared/Typography';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/shared/Card';
+import { Badge, DataQualityBadge } from '@/components/shared/Badge';
+import { ConfidenceRangeBar } from '@/components/shared/ConfidenceInterval';
+import { Heading, Text } from '@/components/shared/Typography';
 import {
   Download,
   FileDown,
   Share2,
   Copy,
-  AlertTriangle,
   Clock,
   Shield,
   TrendingUp,
-  Info,
   Layers,
-  ArrowRight,
   CheckCircle,
   HelpCircle,
 } from 'lucide-react';
@@ -58,17 +55,20 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
   currencyCode = 'USD',
   formatCurrency,
   showExtendedBreakdown = true,
-  activeChartType = 'bar',
-  onChartTypeChange,
+  activeChartType: _activeChartType = 'bar',
+  onChartTypeChange: _onChartTypeChange,
   renderChartContent,
   className = '',
 }) => {
-  const [showTierModal, setShowTierModal] = useState(false);
   const [showTransparencyModal, setShowTransparencyModal] = useState(false);
   const [copiedJSON, setCopiedJSON] = useState(false);
-  const { inputs, outputs, model_version, project_name, estimate_id } = estimate;
+  const [showMoreActions, setShowMoreActions] = useState(false);
+  const { inputs, outputs, model_version, project_name } = estimate;
 
-  // Format currency helper
+  const hourlyRateConverted = Math.round((inputs.hourly_rate_usd || 75) * currencyRate);
+  const rateLabel = `at ${currencySymbol}${hourlyRateConverted.toLocaleString('en-US')}/hour`;
+
+  // Format currency helper with USD tooltip value
   const fmtMoney = (val: number): string => {
     if (formatCurrency) return formatCurrency(val);
     const converted = val * currencyRate;
@@ -102,45 +102,36 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
   const p50PM = hoursToPersonMonths(p50Hours);
   const p90PM = hoursToPersonMonths(p90Hours);
 
-  const isCalibrated = model_version.startsWith('production-v3-') || tier !== 'C';
+  const displayFp = estimate.size?.value ?? inputs.size_fp ?? 'Not recorded';
 
   return (
     <div className={`estimation-result-view space-y-6 ${className}`.trim()}>
       {/* ── Top Header & Metadata Badges ────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
         <div>
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <button
-              type="button"
-              className="relative inline-flex items-center cursor-pointer border-0 bg-transparent p-0"
-              onClick={() => setShowTransparencyModal(true)}
-              title={`${tierInfo.name}: Click for estimate details`}
-              data-testid="tier-badge-transparency-trigger"
-            >
-              <DataQualityBadge tier={tier} showIcon />
-            </button>
-            <UncertaintyBadge
-              calibrated={isCalibrated}
-              interval="80% Range"
-              coverage={`${outputs.confidence_pct.toFixed(0)}% Confidence`}
-            />
-            <ModelVersionBadge version={model_version} />
-            {outputs.org_calibration && (
+          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+            {tier === 'B' ? (
               <Badge
-                variant={outputs.org_calibration.applied ? 'primary' : 'neutral'}
-                size="xs"
+                variant="neutral"
+                size="sm"
                 pill
-                icon={<Shield size={10} />}
-                title={
-                  outputs.org_calibration.applied
-                    ? `Adjusted using ${outputs.org_calibration.k_actuals} past projects`
-                    : 'Standard model'
-                }
+                className="cursor-pointer font-medium"
+                onClick={() => setShowTransparencyModal(true)}
+                title="Size taken from your document - please review"
+                data-testid="tier-badge-transparency-trigger"
               >
-                {outputs.org_calibration.applied
-                  ? `Team adjusted (${outputs.org_calibration.k_actuals} projects)`
-                  : 'Standard model'}
+                Size from your document - please review
               </Badge>
+            ) : (
+              <button
+                type="button"
+                className="relative inline-flex items-center cursor-pointer border-0 bg-transparent p-0"
+                onClick={() => setShowTransparencyModal(true)}
+                title={`${tierInfo.name}: Click for estimate details`}
+                data-testid="tier-badge-transparency-trigger"
+              >
+                <DataQualityBadge tier={tier} showIcon />
+              </button>
             )}
           </div>
           <Heading level={2} className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">
@@ -152,7 +143,7 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
         </div>
 
         {/* Action Buttons Toolbar */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap relative">
           <button
             type="button"
             onClick={() => setShowTransparencyModal(true)}
@@ -189,21 +180,6 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={handleCopyJSON}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] text-[var(--text-primary)] border border-[var(--border-color)] transition shadow-sm cursor-pointer"
-            title="Copy JSON to clipboard"
-            data-testid="copy-json-button"
-          >
-            {copiedJSON ? (
-              <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
-            ) : (
-              <Copy size={14} className="text-blue-600 dark:text-blue-400" />
-            )}
-            <span>{copiedJSON ? 'Copied JSON!' : 'Copy JSON'}</span>
-          </button>
-
           {onShare && (
             <button
               type="button"
@@ -227,29 +203,146 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
               <span>Duplicate</span>
             </button>
           )}
+
+          {/* More options menu hiding Copy JSON */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowMoreActions((prev) => !prev)}
+              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-semibold bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-color)] transition shadow-sm"
+              title="More actions"
+              aria-label="More actions"
+            >
+              &bull;&bull;&bull;
+            </button>
+            {showMoreActions && (
+              <div
+                className="absolute right-0 mt-1 w-44 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] shadow-lg py-1 z-20"
+                onMouseLeave={() => setShowMoreActions(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleCopyJSON();
+                    setShowMoreActions(false);
+                  }}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] flex items-center gap-2"
+                  data-testid="copy-json-button"
+                >
+                  {copiedJSON ? (
+                    <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
+                  ) : (
+                    <Copy size={14} className="text-blue-600 dark:text-blue-400" />
+                  )}
+                  <span>{copiedJSON ? 'Copied JSON!' : 'Copy JSON'}</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* ── Out of Distribution (OOD) Guidance & Explanations ── */}
       <OODDiagnosticsCard inputs={inputs} reasons={oodStatus.reasons} />
 
-      {/* ── Primary Effort Ranges Card ── */}
-      <Card variant="elevated" padding="md" className="border-t-4 border-t-[var(--color-primary)]">
-        <CardHeader>
+      {/* ── Hero Card: Likely Effort, Person-Months & Cost ── */}
+      <Card variant="elevated" padding="lg" className="border-t-4 border-t-blue-600 dark:border-t-blue-500 shadow-sm">
+        <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
-              <CardTitle as="h3" className="text-lg sm:text-xl flex items-center gap-2">
-                <span>Effort ranges</span>
+              <CardTitle as="h3" className="text-lg sm:text-xl font-bold flex items-center gap-2">
+                <span>Likely effort</span>
               </CardTitle>
-              <CardDescription className="text-xs">
-                Expected effort in hours and person-months
+              <CardDescription className="text-sm text-[var(--text-secondary)]">
+                Most likely delivery effort based on your functional scope
               </CardDescription>
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="pt-2">
-          {/* Visual Range Bar with median pip */}
+          {/* Hero 3-Column Effort & Cost Breakdown */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+            {/* p10 */}
+            <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-emerald-500/20">
+              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                Optimistic (P10)
+              </span>
+              <span className="font-mono text-xl sm:text-2xl font-bold text-[var(--text-primary)] block mt-1">
+                {Math.round(p10Hours).toLocaleString('en-US')} hrs
+              </span>
+              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 block mt-0.5">
+                {p10PM.formatted}
+              </span>
+              <span
+                className="text-xs text-[var(--text-secondary)] block mt-1 cursor-help"
+                title={`$${Math.round(outputs.cost_min_usd).toLocaleString('en-US')} USD`}
+              >
+                {fmtMoney(outputs.cost_min_usd)}
+              </span>
+            </div>
+
+            {/* p50 */}
+            <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border-2 border-blue-600 dark:border-blue-500 shadow-sm">
+              <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">
+                Most Likely (P50)
+              </span>
+              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[var(--color-primary)] dark:text-blue-400 block mt-1">
+                {Math.round(p50Hours).toLocaleString('en-US')} hrs
+              </span>
+              <span className="text-xs font-bold text-blue-700 dark:text-blue-300 block mt-0.5">
+                {p50PM.formatted}
+              </span>
+              <span
+                className="text-sm font-bold text-[var(--text-primary)] block mt-1 cursor-help"
+                title={`$${Math.round(outputs.cost_likely_usd).toLocaleString('en-US')} USD`}
+              >
+                {fmtMoney(outputs.cost_likely_usd)}
+                <span className="text-xs font-normal text-[var(--text-secondary)] ml-1.5">
+                  ({rateLabel})
+                </span>
+              </span>
+            </div>
+
+            {/* p90 */}
+            <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-amber-500/20">
+              <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
+                Conservative (P90)
+              </span>
+              <span className="font-mono text-xl sm:text-2xl font-bold text-[var(--text-primary)] block mt-1">
+                {Math.round(p90Hours).toLocaleString('en-US')} hrs
+              </span>
+              <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 block mt-0.5">
+                {p90PM.formatted}
+              </span>
+              <span
+                className="text-xs text-[var(--text-secondary)] block mt-1 cursor-help"
+                title={`$${Math.round(outputs.cost_max_usd).toLocaleString('en-US')} USD`}
+              >
+                {fmtMoney(outputs.cost_max_usd)}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Range Card: Clean Range Bar ── */}
+      <Card variant="elevated" padding="lg">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <CardTitle as="h3" className="text-lg sm:text-xl font-bold flex items-center gap-2">
+                <span>Effort ranges</span>
+              </CardTitle>
+              <CardDescription className="text-sm text-[var(--text-secondary)]">
+                Likely range (middle half of outcomes) and plausible range (almost all outcomes)
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="pt-2">
+          {/* Visual Range Bar with clean stacked labels */}
           <ConfidenceRangeBar
             p10={p10Hours}
             p25={p25Hours}
@@ -262,94 +355,16 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
             showDetails
             ariaLabel="Effort range bar"
           />
-
-          {/* Effort Summary 3-Column Quantiles Box */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-3 border-t border-[var(--border-subtle)] text-center">
-            {/* p10 */}
-            <div className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-emerald-500/20">
-              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-                Optimistic
-              </span>
-              <span className="font-mono text-xl sm:text-2xl font-bold text-[var(--text-primary)] block mt-1">
-                {Math.round(p10Hours).toLocaleString('en-US')} hrs
-              </span>
-              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 block">
-                {p10PM.formatted}
-              </span>
-              <span className="text-[11px] text-[var(--text-tertiary)] block mt-0.5">
-                {fmtMoney(outputs.cost_min_usd)}
-              </span>
-            </div>
-
-            {/* p50 */}
-            <div className="p-3 rounded-lg bg-[var(--bg-elevated)] border-2 border-blue-600 dark:border-blue-500 shadow-sm relative">
-              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-600 text-white uppercase tracking-wider">
-                Most Likely
-              </span>
-              <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mt-1">
-                Median (Most Likely)
-              </span>
-              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[var(--color-primary)] dark:text-blue-400 block mt-1">
-                {Math.round(p50Hours).toLocaleString('en-US')} hrs
-              </span>
-              <span className="text-xs font-bold text-blue-700 dark:text-blue-300 block">
-                {p50PM.formatted}
-              </span>
-              <span className="text-xs font-bold text-[var(--text-primary)] block mt-0.5">
-                {fmtMoney(outputs.cost_likely_usd)}
-              </span>
-            </div>
-
-            {/* p90 */}
-            <div className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-amber-500/20">
-              <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                Conservative (Budget Cap)
-              </span>
-              <span className="font-mono text-xl sm:text-2xl font-bold text-[var(--text-primary)] block mt-1">
-                {Math.round(p90Hours).toLocaleString('en-US')} hrs
-              </span>
-              <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 block">
-                {p90PM.formatted}
-              </span>
-              <span className="text-[11px] text-[var(--text-tertiary)] block mt-0.5">
-                {fmtMoney(outputs.cost_max_usd)}
-              </span>
-            </div>
-          </div>
-
-          {/* Plain-Language Uncertainty Note */}
-          <div className="mt-4 p-3 rounded-lg bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-xs text-blue-950 dark:text-blue-200 space-y-1">
-            <div className="flex items-center gap-1.5 font-semibold text-blue-900 dark:text-blue-300">
-              <Info size={14} className="shrink-0 text-blue-600 dark:text-blue-400" />
-              <span>Planning with these ranges:</span>
-            </div>
-            <p className="leading-relaxed">
-              Use the <strong>likely range</strong> for sprint and release planning, and the <strong>wider range</strong> for budget caps and risk reserves.
-            </p>
-          </div>
         </CardContent>
       </Card>
 
-      {/* ── Cost, Confidence, Timeline, and Risk Summary ──── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Most Likely Cost */}
-        <Card variant="default" padding="sm" className="text-center">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Most Likely Cost
-          </span>
-          <p className="font-mono text-2xl font-bold text-[var(--color-primary)] mt-1">
-            {fmtMoney(outputs.cost_likely_usd)}
-          </p>
-          <span className="text-xs text-[var(--text-secondary)] mt-0.5 block">
-            {fmtMoney(outputs.cost_min_usd)} – {fmtMoney(outputs.cost_max_usd)} range
-          </span>
-        </Card>
-
-        {/* Timeline */}
-        <Card variant="default" padding="sm" className="text-center">
-          <div className="flex items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400">
-            <Clock size={16} />
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+      {/* ── Three Summary Tiles: Timeline, Cost Range, Risk ──── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Project Timeline */}
+        <Card variant="elevated" padding="md" className="text-center">
+          <div className="flex items-center justify-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+            <Clock size={18} />
+            <span className="text-xs font-bold uppercase tracking-wider">
               Project Timeline
             </span>
           </div>
@@ -361,27 +376,27 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
           </span>
         </Card>
 
-        {/* Validation Coverage / Confidence */}
-        <Card variant="default" padding="sm" className="text-center">
-          <div className="flex items-center justify-center gap-1 text-blue-600 dark:text-blue-400">
-            <TrendingUp size={16} />
-            <span className="text-[11px] font-bold uppercase tracking-wider">
-              Interval Coverage
+        {/* Cost Range */}
+        <Card variant="elevated" padding="md" className="text-center">
+          <div className="flex items-center justify-center gap-1.5 text-blue-600 dark:text-blue-400">
+            <TrendingUp size={18} />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Cost Range
             </span>
           </div>
-          <p className="font-mono text-2xl font-bold text-[var(--color-primary)] mt-1">
-            {outputs.confidence_pct.toFixed(0)}%
+          <p className="font-mono text-xl sm:text-2xl font-bold text-[var(--color-primary)] mt-1">
+            {fmtMoney(outputs.cost_min_usd)} – {fmtMoney(outputs.cost_max_usd)}
           </p>
           <span className="text-xs text-[var(--text-secondary)] mt-0.5 block">
-            {isCalibrated ? 'Coverage confidence' : 'Confidence'}
+            {rateLabel}
           </span>
         </Card>
 
-        {/* Risk Score */}
-        <Card variant="default" padding="sm" className="text-center">
-          <div className="flex items-center justify-center gap-1" style={{ color: riskColor }}>
-            <Shield size={16} />
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+        {/* Risk Profile */}
+        <Card variant="elevated" padding="md" className="text-center">
+          <div className="flex items-center justify-center gap-1.5" style={{ color: riskColor }}>
+            <Shield size={18} />
+            <span className="text-xs font-bold uppercase tracking-wider">
               Risk Profile
             </span>
           </div>
@@ -398,10 +413,10 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
 
       {/* ── Extended Breakdown (Charts & Phases) ──────────── */}
       {showExtendedBreakdown && renderChartContent && (
-        <Card variant="default" padding="md">
+        <Card variant="elevated" padding="lg">
           <CardHeader>
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <CardTitle as="h3" className="text-base sm:text-lg flex items-center gap-2">
+              <CardTitle as="h3" className="text-lg font-bold flex items-center gap-2">
                 <TrendingUp size={18} className="text-blue-600 dark:text-blue-400" />
                 <span>Phase Breakdown &amp; Resource Distribution</span>
               </CardTitle>
@@ -414,18 +429,18 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
       )}
 
       {/* ── Input Parameters Audit Card ───────────────────── */}
-      <Card variant="subtle" padding="md">
-        <CardHeader>
-          <CardTitle as="h3" className="text-sm sm:text-base font-semibold flex items-center gap-2">
-            <Layers size={16} className="text-[var(--text-secondary)]" />
+      <Card variant="elevated" padding="lg">
+        <CardHeader className="pb-3">
+          <CardTitle as="h3" className="text-base sm:text-lg font-bold flex items-center gap-2">
+            <Layers size={18} className="text-[var(--text-secondary)]" />
             <span>Input Parameters</span>
           </CardTitle>
-          <CardDescription className="text-xs">
+          <CardDescription className="text-xs text-[var(--text-secondary)]">
             Persisted inputs and project details.
           </CardDescription>
         </CardHeader>
-        <CardContent className="mt-2">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 text-xs">
+        <CardContent className="mt-2 space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
             {[
               { label: 'Project Type', value: inputs.project_type },
               { label: 'Team Size', value: inputs.team_size?.toString() },
@@ -433,22 +448,42 @@ export const EstimationResultView: React.FC<EstimationResultViewProps> = ({
               { label: 'Complexity', value: inputs.complexity },
               { label: 'Delivery Process', value: inputs.methodology },
               { label: 'Hourly Rate', value: `$${inputs.hourly_rate_usd}/hr` },
-              { label: 'Tech Stack', value: inputs.tech_stack?.join(', ') || 'Not specified' },
               { label: 'Features', value: inputs.feature_count ?? 'Not recorded' },
               { label: 'Integrations', value: inputs.integration_count ?? 'Not recorded' },
               { label: 'Requirements Volatility (1–5)', value: inputs.volatility_score ?? 'Not recorded' },
               { label: 'Team Experience (1–4)', value: inputs.team_experience ?? 'Not recorded' },
-              { label: 'Function Points', value: inputs.size_fp ?? 'Not recorded' },
+              { label: 'Function Points', value: displayFp },
             ].map((item, i) => (
-              <div key={i} className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+              <div key={i} className="p-2.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
                 <span className="text-[10px] uppercase font-bold text-[var(--text-tertiary)] block tracking-wider">
                   {item.label}
                 </span>
-                <span className="font-semibold text-[var(--text-primary)] text-xs mt-0.5 block truncate">
+                <span className="font-semibold text-[var(--text-primary)] text-xs mt-1 block">
                   {item.value}
                 </span>
               </div>
             ))}
+          </div>
+
+          {/* Tech Stack Chip Wrap Container (Never cut off) */}
+          <div className="p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
+            <span className="text-[10px] uppercase font-bold text-[var(--text-tertiary)] block tracking-wider mb-2">
+              Technology Stack
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {inputs.tech_stack && inputs.tech_stack.length > 0 ? (
+                inputs.tech_stack.map((tech, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2.5 py-1 rounded-md text-xs font-medium bg-[var(--bg-surface)] text-[var(--text-primary)] border border-[var(--border-subtle)]"
+                  >
+                    {tech}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-[var(--text-tertiary)]">Not specified</span>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

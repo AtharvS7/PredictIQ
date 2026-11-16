@@ -77,6 +77,15 @@ export interface EstimateResult {
   status: string;
   inputs: EstimateInputs;
   outputs: EstimateOutputs;
+  size?: {
+    value: number;
+    source: string;
+    uncertainty?: {
+      p10: number;
+      p50: number;
+      p90: number;
+    };
+  } | null;
   model_version: string;
 }
 

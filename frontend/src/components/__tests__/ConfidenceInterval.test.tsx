@@ -17,15 +17,15 @@ describe('Confidence Interval Primitives', () => {
       />
     );
 
-    expect(screen.getByText(/p10 \(Best Case\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Optimistic \(P10\)/i)).toBeInTheDocument();
     expect(screen.getByText('1,150 hrs')).toBeInTheDocument();
-    expect(screen.getByText(/p50 \(Median\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Median \(P50\)/i)).toBeInTheDocument();
     expect(screen.getByText('1,820 hrs')).toBeInTheDocument();
-    expect(screen.getByText(/p90 \(Budget Cap\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Conservative \(P90\)/i)).toBeInTheDocument();
     expect(screen.getByText('2,940 hrs')).toBeInTheDocument();
   });
 
-  it('calculates and displays spread ratio', () => {
+  it('displays plausible range and planning guidance', () => {
     render(
       <ConfidenceRangeBar
         p10={1000}
@@ -36,8 +36,11 @@ describe('Confidence Interval Primitives', () => {
       />
     );
 
-    // 2500 / 1000 = 2.5x
-    expect(screen.getByText(/2.5x \(p90\/p10\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Plausible range:/i)).toBeInTheDocument();
+    expect(screen.getByText('1,000 hrs – 2,500 hrs')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Use the likely range for planning and the plausible range for budget reserves/i)
+    ).toBeInTheDocument();
   });
 
   it('renders currency format correctly', () => {
@@ -88,7 +91,8 @@ describe('Confidence Interval Primitives', () => {
       />
     );
 
-    expect(screen.getByText(/Likely: 1,300 hrs – 2,100 hrs/i)).toBeInTheDocument();
-    expect(screen.getByText(/50% Likely Band \(Inner\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Likely range:/i)).toBeInTheDocument();
+    expect(screen.getByText('1,300 hrs – 2,100 hrs')).toBeInTheDocument();
+    expect(screen.getByText('(middle half of outcomes)')).toBeInTheDocument();
   });
 });

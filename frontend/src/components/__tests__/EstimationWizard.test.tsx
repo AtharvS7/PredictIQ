@@ -156,4 +156,42 @@ describe('Estimation Wizard Flow', () => {
     expect(screen.getByRole('button', { name: /PDF/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Share/i })).toBeInTheDocument();
   });
+
+  it('verifies that the size shown on step 1 equals the size on the results page', async () => {
+    vi.mocked(createManualEstimate).mockResolvedValue({
+      data: {
+        ...mockGeneratedEstimate,
+        inputs: { ...mockGeneratedEstimate.inputs, size_fp: 106 },
+        size: { value: 106, source: 'user' },
+      },
+    } as Awaited<ReturnType<typeof createManualEstimate>>);
+
+    render(
+      <MemoryRouter>
+        <NewEstimatePage />
+      </MemoryRouter>
+    );
+
+    // Step 1: Verify the calculated functional size shown is 106 FP
+    // (12 features * 8 + 2 integrations * 5 = 106)
+    expect(screen.getByText('106')).toBeInTheDocument();
+
+    // Advance to Step 2
+    fireEvent.click(screen.getByRole('button', { name: /enter parameters manually/i }));
+
+    // Fill project name and generate
+    fireEvent.change(screen.getByLabelText('Project Name'), { target: { value: 'Fintech Mobile Core' } });
+    fireEvent.click(screen.getByRole('button', { name: /generate estimate/i }));
+
+    await waitFor(() => {
+      expect(createManualEstimate).toHaveBeenCalledWith(
+        expect.objectContaining({ size_fp: 106 })
+      );
+    });
+
+    // Step 3: Verify results page shows the exact same 106 FP in input parameters
+    expect(await screen.findByText('Function Points')).toBeInTheDocument();
+    const fpLabel = screen.getByText('Function Points');
+    expect(fpLabel.parentElement).toHaveTextContent('106');
+  });
 });

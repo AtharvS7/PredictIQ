@@ -37,20 +37,20 @@ export const PlanningCapacityCard: React.FC<PlanningCapacityCardProps> = ({
   return (
     <Card
       variant="elevated"
-      padding="md"
+      padding="lg"
       className={`planning-capacity-card border-t-4 border-t-indigo-600 dark:border-t-indigo-500 ${className}`.trim()}
     >
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400">
-              <Users size={18} />
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400">
+              <Users size={20} />
             </div>
             <div>
-              <CardTitle as="h3" className="text-base sm:text-lg">
+              <CardTitle as="h3" className="text-lg sm:text-xl font-bold">
                 Team and schedule
               </CardTitle>
-              <CardDescription className="text-xs">
+              <CardDescription className="text-sm text-[var(--text-secondary)] mt-0.5">
                 Used to show staffing and cost over time.
               </CardDescription>
             </div>
@@ -60,33 +60,40 @@ export const PlanningCapacityCard: React.FC<PlanningCapacityCardProps> = ({
 
       <CardContent className="mt-2 space-y-4">
         {/* Real-time Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
-          <MetricValue
-            label="Team capacity (hours)"
-            value={totalCapacityHours.toLocaleString('en-US')}
-            size="md"
-            highlightColor="var(--color-primary)"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 sm:p-5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
+          <div className="p-3.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col justify-center">
+            <MetricValue
+              label="Team capacity"
+              value={totalCapacityHours.toLocaleString('en-US')}
+              unit="hours"
+              size="md"
+              highlightColor="var(--color-primary)"
+            />
+          </div>
 
-          <MetricValue
-            label="Cost at your rate"
-            value={`${currencySymbol}${Math.round(baselineCostConverted).toLocaleString('en-US')}`}
-            unit={currencyCode}
-            size="md"
-          />
+          <div className="p-3.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col justify-center">
+            <MetricValue
+              label="Cost at your rate"
+              value={`${currencySymbol}${Math.round(baselineCostConverted).toLocaleString('en-US')}`}
+              unit={currencyCode}
+              size="md"
+            />
+          </div>
 
-          <MetricValue
-            label="Cost per month"
-            value={`${currencySymbol}${Math.round(monthlyRunRateConverted).toLocaleString('en-US')}`}
-            unit={`/mo`}
-            size="md"
-          />
+          <div className="p-3.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col justify-center">
+            <MetricValue
+              label="Cost per month"
+              value={`${currencySymbol}${Math.round(monthlyRunRateConverted).toLocaleString('en-US')}`}
+              unit="/mo"
+              size="md"
+            />
+          </div>
         </div>
 
         {/* High team size notice if applicable */}
         {isHighTeamSize && (
-          <div className="flex items-start gap-2 p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200">
-            <AlertCircle size={14} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200">
+            <AlertCircle size={15} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
             <div>
               <span className="font-semibold">Team size note: </span>
               A team of {safeTeam} is larger than typical teams (3–12).

@@ -8,7 +8,7 @@ import { useEstimateStore } from '@/store/estimateStore';
 import { useCurrencyStore } from '@/store/currencyStore';
 import { useToast } from '@/App';
 import { useTheme } from '@/components/ThemeProvider';
-import { exportPDF, exportJSON, duplicateEstimate, createShareLink } from '@/lib/api';
+import { exportPDF, duplicateEstimate, createShareLink } from '@/lib/api';
 import { RISK_COLORS } from '@/lib/risk';
 import { Bar, PolarArea, Pie, Line } from 'react-chartjs-2';
 import {
@@ -19,11 +19,11 @@ import {
 import {
   Download, FileDown, Copy, Share2, ArrowLeft, Clock,
   Shield, TrendingUp, AlertTriangle, Info, FileText,
-  BarChart3, PieChart, CircleDot, LineChart, CheckCircle2,
+  BarChart3, PieChart, CircleDot, LineChart,
   HelpCircle,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/shared/Card';
-import { Badge, DataQualityBadge, UncertaintyBadge, ModelVersionBadge } from '@/components/shared/Badge';
+import { Badge, DataQualityBadge } from '@/components/shared/Badge';
 import { ConfidenceRangeBar } from '@/components/shared/ConfidenceInterval';
 import {
   hoursToPersonMonths,
@@ -62,8 +62,8 @@ export default function ResultsPage() {
   const sym = symbol();
   const { addToast } = useToast();
   const [chartType, setChartType] = useState<ChartType>('bar');
-  const [showTierModal, setShowTierModal] = useState(false);
   const [showTransparencyModal, setShowTransparencyModal] = useState(false);
+  const [showMoreActions, setShowMoreActions] = useState(false);
 
   useEffect(() => {
     if (id) fetchEstimate(id);
@@ -191,7 +191,6 @@ export default function ResultsPage() {
   const tier = determineDataQualityTier(model_version, inputs);
   const tierInfo = TIER_PROVENANCE[tier];
   const oodStatus = checkIsOOD(inputs);
-  const isCalibrated = model_version.startsWith('production-v3-') || tier !== 'C';
 
   const p10Hours = outputs.effort_min_hours;
   const p50Hours = outputs.effort_likely_hours;
@@ -402,49 +401,39 @@ export default function ResultsPage() {
               }}>
                 <ArrowLeft size={14} /> Back to estimates
               </Link>
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <button
-                  type="button"
-                  className="cursor-pointer border-0 bg-transparent p-0 inline-flex items-center"
-                  onClick={() => setShowTransparencyModal(true)}
-                  title={`${tierInfo.name}: Click for estimate details`}
-                  data-testid="tier-badge-transparency-trigger"
-                >
-                  <DataQualityBadge tier={tier} showIcon />
-                </button>
-                <UncertaintyBadge
-                  calibrated={isCalibrated}
-                  interval="80% Range"
-                  coverage={`${outputs.confidence_pct.toFixed(0)}% Confidence`}
-                />
-                <ModelVersionBadge version={model_version} />
-                {outputs.org_calibration && (
+              <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                {tier === 'B' ? (
                   <Badge
-                    variant={outputs.org_calibration.applied ? 'primary' : 'neutral'}
-                    size="xs"
+                    variant="neutral"
+                    size="sm"
                     pill
-                    icon={<Shield size={10} />}
-                    title={
-                      outputs.org_calibration.applied
-                        ? `Adjusted using ${outputs.org_calibration.k_actuals} past projects`
-                        : 'Standard model'
-                    }
+                    className="cursor-pointer font-medium"
+                    onClick={() => setShowTransparencyModal(true)}
+                    title="Size taken from your document - please review"
+                    data-testid="tier-badge-transparency-trigger"
                   >
-                    {outputs.org_calibration.applied
-                      ? `Team adjusted (${outputs.org_calibration.k_actuals} projects)`
-                      : 'Standard model'}
+                    Size from your document - please review
                   </Badge>
+                ) : (
+                  <button
+                    type="button"
+                    className="cursor-pointer border-0 bg-transparent p-0 inline-flex items-center"
+                    onClick={() => setShowTransparencyModal(true)}
+                    title={`${tierInfo.name}: Click for estimate details`}
+                    data-testid="tier-badge-transparency-trigger"
+                  >
+                    <DataQualityBadge tier={tier} showIcon />
+                  </button>
                 )}
               </div>
               <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {currentEstimate.project_name}
               </h1>
               <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                {inputs.project_type} • v{currentEstimate.version} •
-                {new Date(currentEstimate.created_at).toLocaleDateString()}
+                {inputs.project_type} • Version {currentEstimate.version} • {new Date(currentEstimate.created_at).toLocaleDateString()}
               </p>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', position: 'relative' }}>
               <button
                 type="button"
                 className="btn-secondary"
@@ -458,30 +447,152 @@ export default function ResultsPage() {
               <CurrencySelector />
               <button className="btn-secondary" onClick={handleExportPDF}><Download size={15} /> PDF ({sym})</button>
               <button className="btn-secondary" onClick={handleExportJSON} data-testid="export-json-button"><FileDown size={15} /> JSON</button>
-              <button className="btn-secondary" onClick={handleCopyJSON} data-testid="copy-json-button"><Copy size={15} /> Copy JSON</button>
               <button className="btn-secondary" onClick={handleShare}><Share2 size={15} /> Share</button>
               <button className="btn-secondary" onClick={handleDuplicate}><Copy size={15} /> Duplicate</button>
+
+              {/* More actions menu containing Copy JSON */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowMoreActions((prev) => !prev)}
+                  title="More actions"
+                  aria-label="More actions"
+                  style={{ minWidth: 36, padding: '6px 10px' }}
+                >
+                  &bull;&bull;&bull;
+                </button>
+                {showMoreActions && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: '100%',
+                      marginTop: 4,
+                      zIndex: 30,
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 8,
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      padding: '4px 0',
+                      minWidth: 140,
+                    }}
+                    onMouseLeave={() => setShowMoreActions(false)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleCopyJSON();
+                        setShowMoreActions(false);
+                      }}
+                      className="btn-secondary"
+                      data-testid="copy-json-button"
+                      style={{
+                        width: '100%',
+                        border: 'none',
+                        borderRadius: 0,
+                        justifyContent: 'flex-start',
+                        padding: '8px 12px',
+                        background: 'transparent',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      <Copy size={14} className="text-blue-600 dark:text-blue-400" />
+                      <span>Copy JSON</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-
-
 
           {/* Out of Distribution (OOD) Guidance & Explanations */}
           <OODDiagnosticsCard inputs={inputs} reasons={oodStatus.reasons} className="mb-5" />
 
-          {/* Effort Ranges Card */}
-          <Card variant="elevated" padding="md" className="mb-5 border-t-4 border-t-[var(--color-primary)]">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div>
-                  <CardTitle as="h3" className="text-lg font-bold flex items-center gap-2">
-                    <span>Effort ranges</span>
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Expected effort in hours and person-months
-                  </CardDescription>
+          {/* Hero Card: Likely Effort, Person-Months & Cost */}
+          <Card variant="elevated" padding="lg" className="mb-5 border-t-4 border-t-blue-600 dark:border-t-blue-500 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle as="h3" className="text-lg font-bold flex items-center gap-2">
+                <span>Likely effort</span>
+              </CardTitle>
+              <CardDescription className="text-sm text-[var(--text-secondary)]">
+                Most likely delivery effort based on your functional scope
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 16 }}>
+                {/* Optimistic */}
+                <div className="card" style={{ padding: 20, textAlign: 'center', background: 'var(--bg-elevated)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                  <p style={{ fontSize: '0.6875rem', color: '#10B981', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Optimistic (P10)
+                  </p>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: 4 }}>
+                    {outputs.effort_min_hours.toLocaleString()} hrs
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600, marginTop: 2 }}>
+                    {p10PM.formatted}
+                  </p>
+                  <p
+                    style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 4, cursor: 'help' }}
+                    title={`$${Math.round(outputs.cost_min_usd).toLocaleString('en-US')} USD`}
+                  >
+                    {format(outputs.cost_min_usd)}
+                  </p>
+                </div>
+
+                {/* Most Likely (P50) */}
+                <div className="card" style={{ padding: 20, textAlign: 'center', background: 'var(--bg-elevated)', border: '2px solid #2563EB', boxShadow: '0 2px 8px rgba(37,99,235,0.15)' }}>
+                  <p style={{ fontSize: '0.6875rem', color: '#2563EB', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Most Likely (P50)
+                  </p>
+                  <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-primary)', marginTop: 4 }}>
+                    {outputs.effort_likely_hours.toLocaleString()} hrs
+                  </p>
+                  <p style={{ fontSize: '0.8125rem', color: '#2563EB', fontWeight: 700, marginTop: 2 }}>
+                    {p50PM.formatted}
+                  </p>
+                  <p
+                    style={{ fontSize: '0.875rem', color: 'var(--text-primary)', fontWeight: 700, marginTop: 4, cursor: 'help' }}
+                    title={`$${Math.round(outputs.cost_likely_usd).toLocaleString('en-US')} USD`}
+                  >
+                    {format(outputs.cost_likely_usd)}
+                    <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 6 }}>
+                      (at {sym}{Math.round(inputs.hourly_rate_usd * convert(1)).toLocaleString()}/hour)
+                    </span>
+                  </p>
+                </div>
+
+                {/* Conservative */}
+                <div className="card" style={{ padding: 20, textAlign: 'center', background: 'var(--bg-elevated)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                  <p style={{ fontSize: '0.6875rem', color: '#F59E0B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Conservative (P90)
+                  </p>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: 4 }}>
+                    {outputs.effort_max_hours.toLocaleString()} hrs
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: '#F59E0B', fontWeight: 600, marginTop: 2 }}>
+                    {p90PM.formatted}
+                  </p>
+                  <p
+                    style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 4, cursor: 'help' }}
+                    title={`$${Math.round(outputs.cost_max_usd).toLocaleString('en-US')} USD`}
+                  >
+                    {format(outputs.cost_max_usd)}
+                  </p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Effort Ranges Card */}
+          <Card variant="elevated" padding="lg" className="mb-5 border-t-4 border-t-[var(--color-primary)]">
+            <CardHeader className="pb-2">
+              <CardTitle as="h3" className="text-lg font-bold flex items-center gap-2">
+                <span>Effort ranges</span>
+              </CardTitle>
+              <CardDescription className="text-xs text-[var(--text-secondary)]">
+                Likely range (middle half of outcomes) and plausible range (almost all outcomes)
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-2">
               <ConfidenceRangeBar
@@ -496,86 +607,45 @@ export default function ResultsPage() {
                 showDetails
                 ariaLabel="Effort ranges"
               />
-
-              {/* Plain-Language Uncertainty Note */}
-              <div className="mt-4 p-3 rounded-lg bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-xs text-blue-950 dark:text-blue-200 space-y-1">
-                <div className="flex items-center gap-1.5 font-semibold text-blue-900 dark:text-blue-300">
-                  <Info size={14} className="shrink-0 text-blue-600 dark:text-blue-400" />
-                  <span>Planning with these ranges:</span>
-                </div>
-                <p className="leading-relaxed">
-                  Use the <strong>likely range</strong> for sprint and release planning, and the <strong>wider range</strong> for budget caps and risk reserves.
-                </p>
-              </div>
             </CardContent>
           </Card>
 
-          {/* Cost Summary (with person-months) */}
+          {/* Three Summary Tiles: Timeline, Cost Range, Risk */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 16, marginBottom: 20 }}>
-            {[
-              {
-                label: 'Optimistic (p10)',
-                value: outputs.cost_min_usd,
-                color: '#10B981',
-                sub: `${outputs.effort_min_hours.toLocaleString()} hrs (${p10PM.formatted})`,
-              },
-              {
-                label: 'Most Likely (p50)',
-                value: outputs.cost_likely_usd,
-                color: '#1A56DB',
-                sub: `${outputs.effort_likely_hours.toLocaleString()} hrs (${p50PM.formatted})`,
-                primary: true,
-              },
-              {
-                label: 'Conservative (p90)',
-                value: outputs.cost_max_usd,
-                color: '#F59E0B',
-                sub: `${outputs.effort_max_hours.toLocaleString()} hrs (${p90PM.formatted})`,
-              },
-            ].map((card, i) => (
-              <div key={i} className="card" style={{
-                padding: 24, textAlign: 'center',
-                border: card.primary ? `2px solid ${card.color}` : undefined,
-              }}>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {card.label}
-                </p>
-                <p style={{ fontSize: card.primary ? '2rem' : '1.5rem', fontWeight: 700, color: card.color, marginTop: 4 }}>
-                  {format(card.value)}
-                </p>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 2 }}>
-                  {card.sub}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Confidence + Timeline + Risk row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 16, marginBottom: 20 }}>
-            {/* Confidence */}
-            <div className="card" style={{ padding: 20, textAlign: 'center' }}>
-              <TrendingUp size={20} color="var(--color-primary)" />
-              <p style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: 4 }}>
-                {outputs.confidence_pct.toFixed(0)}%
-              </p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{currentEstimate.model_version.startsWith('production-v3-') ? 'Coverage confidence' : 'Confidence'}</p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{currentEstimate.model_version.startsWith('production-v3-') ? 'Estimated coverage on typical projects.' : 'Estimated range based on project data.'}</p>
-            </div>
-
             {/* Timeline */}
             <div className="card" style={{ padding: 20, textAlign: 'center' }}>
               <Clock size={20} color="#10B981" />
+              <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginTop: 6 }}>
+                Project Timeline
+              </p>
               <p style={{ fontSize: '1.75rem', fontWeight: 700, color: '#10B981', marginTop: 4 }}>
                 {outputs.timeline_likely_weeks.toFixed(0)} wks
               </p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                {outputs.timeline_min_weeks.toFixed(0)}–{outputs.timeline_max_weeks.toFixed(0)} range
+                {outputs.timeline_min_weeks.toFixed(0)}–{outputs.timeline_max_weeks.toFixed(0)} wks range
+              </p>
+            </div>
+
+            {/* Cost Range */}
+            <div className="card" style={{ padding: 20, textAlign: 'center' }}>
+              <TrendingUp size={20} color="var(--color-primary)" />
+              <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginTop: 6 }}>
+                Cost Range
+              </p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: 4 }}>
+                {format(outputs.cost_min_usd)} – {format(outputs.cost_max_usd)}
+              </p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                at {sym}{Math.round(inputs.hourly_rate_usd * convert(1)).toLocaleString()}/hour
               </p>
             </div>
 
             {/* Risk Score */}
             <div className="card" style={{ padding: 20, textAlign: 'center' }}>
               <Shield size={20} color={riskColor} />
+              <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginTop: 6 }}>
+                Risk Profile
+              </p>
               <p style={{ fontSize: '1.75rem', fontWeight: 700, color: riskColor, marginTop: 4 }}>
                 {outputs.risk_score.toFixed(0)}/100
               </p>
@@ -714,7 +784,7 @@ export default function ResultsPage() {
           </div>
 
           {/* Input Summary */}
-          <div className="card" style={{ padding: 24 }}>
+          <div className="card" style={{ padding: 24, marginBottom: 20 }}>
             <h3 style={{ fontWeight: 600, marginBottom: 4, color: 'var(--text-primary)' }}>
               <FileText size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
               Input Parameters
@@ -722,7 +792,7 @@ export default function ResultsPage() {
             <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: 14 }}>
               Persisted project inputs.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 16 }}>
               {[
                 { label: 'Project Type', value: inputs.project_type },
                 { label: 'Team Size', value: inputs.team_size.toString() },
@@ -730,18 +800,46 @@ export default function ResultsPage() {
                 { label: 'Complexity', value: inputs.complexity },
                 { label: 'Delivery Process', value: inputs.methodology },
                 { label: 'Hourly Rate', value: `$${inputs.hourly_rate_usd}/hr` },
-                { label: 'Tech Stack', value: inputs.tech_stack.join(', ') || 'Not specified' },
                 { label: 'Features', value: inputs.feature_count ?? 'Not recorded' },
                 { label: 'Integrations', value: inputs.integration_count ?? 'Not recorded' },
                 { label: 'Requirements Volatility (1–5)', value: inputs.volatility_score ?? 'Not recorded' },
                 { label: 'Team Experience (1–4)', value: inputs.team_experience ?? 'Not recorded' },
-                { label: 'Function Points', value: inputs.size_fp ?? 'Not recorded' },
+                { label: 'Function Points', value: currentEstimate.size?.value ?? inputs.size_fp ?? 'Not recorded' },
               ].map((item, i) => (
-                <div key={i} style={{ padding: '8px 0' }}>
+                <div key={i} style={{ padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
                   <p style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</p>
                   <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)', fontWeight: 500 }}>{item.value}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Tech Stack Chips Container */}
+            <div style={{ padding: '12px 14px', background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
+              <p style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                Technology Stack
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {inputs.tech_stack && inputs.tech_stack.length > 0 ? (
+                  inputs.tech_stack.map((tech, idx) => (
+                    <span
+                      key={idx}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: 6,
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                        background: 'var(--bg-surface)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-subtle)',
+                      }}
+                    >
+                      {tech}
+                    </span>
+                  ))
+                ) : (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>Not specified</span>
+                )}
+              </div>
             </div>
           </div>
 

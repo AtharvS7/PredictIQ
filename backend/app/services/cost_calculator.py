@@ -36,6 +36,16 @@ PHASE_RATIOS = {
 }
 
 
+def compute_functional_size(feature_count: int, integration_count: int = 2) -> float:
+    """Single source of truth for functional size calculation:
+    size_fp = round(feature_count * 8 + integration_count * 5)
+    Shared with the frontend rule in estimateUtils.ts and NLP sizing config.
+    """
+    safe_features = max(0, int(feature_count or 0))
+    safe_integrations = max(0, int(integration_count or 0))
+    return float(round(safe_features * 8 + safe_integrations * 5))
+
+
 def estimate_function_points(
     feature_count: int = 10,
     complexity: str = "Medium",
@@ -46,21 +56,10 @@ def estimate_function_points(
     external_interface_files: int = 2,
     tech_stack_count: int = 3,
 ) -> float:
-    """
-    Layer 1: Estimate Function Points from project parameters.
-
-    Args:
-        feature_count: Number of identified features/requirements.
-        complexity: Overall complexity level.
-        external_inputs: Count of distinct user input forms.
-        external_outputs: Count of distinct report/export types.
-        external_inquiries: Count of read-only queries.
-        internal_logical_files: Count of main data entities.
-        external_interface_files: Count of third-party integrations.
-        tech_stack_count: Number of technologies in the stack.
-
-    Returns:
-        Adjusted Function Points (size_fp).
+    """[DEPRECATED / UNUSED in estimation pipeline]
+    Legacy IFPUG Function Point approximation with phantom component additions.
+    Kept only for backwards compatibility with legacy tests. Primary estimation path
+    now uses compute_functional_size(feature_count, integration_count) or user-provided size_fp.
     """
     # Assign complexity tiers to features
     if complexity in ("Low",):

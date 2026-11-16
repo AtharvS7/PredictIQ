@@ -125,10 +125,42 @@ async def analyze_estimate(
             overrides.tech_stack if overrides.tech_stack is not None
             else extracted.get("tech_stack", {}).get("value", [])
         )
-        feature_count = extracted.get("feature_count", {}).get("value", 10)
-        integration_count = overrides.integration_count if overrides.integration_count is not None else extracted.get("integration_count", {}).get("value", 2)
-        volatility_score = overrides.volatility_score if overrides.volatility_score is not None else extracted.get("volatility_score", {}).get("value", 3)
-        team_experience = overrides.team_experience if overrides.team_experience is not None else extracted.get("team_experience", {}).get("value", 2.0)
+        feature_count = (
+            getattr(overrides, "feature_count", None)
+            or extracted.get("feature_count", {}).get("value", 10)
+        )
+        integration_count = (
+            overrides.integration_count
+            if overrides.integration_count is not None
+            else extracted.get("integration_count", {}).get("value", 2)
+        )
+        volatility_score = (
+            overrides.volatility_score
+            if overrides.volatility_score is not None
+            else extracted.get("volatility_score", {}).get("value", 3)
+        )
+        team_experience = (
+            overrides.team_experience
+            if overrides.team_experience is not None
+            else extracted.get("team_experience", {}).get("value", 2.0)
+        )
+
+        size_fp = getattr(overrides, "size_fp", None) or getattr(request, "size_fp", None)
+        size_source = getattr(overrides, "size_source", None) or getattr(request, "size_source", None)
+        size_uncertainty = getattr(overrides, "size_uncertainty", None) or getattr(request, "size_uncertainty", None)
+
+        if size_fp is None and "size_fp" in extracted:
+            size_data = extracted["size_fp"]
+            if isinstance(size_data, dict):
+                size_fp = size_data.get("value")
+                if size_source is None:
+                    size_source = size_data.get("source", "nlp")
+                if size_uncertainty is None and "uncertainty" in size_data:
+                    size_uncertainty = size_data["uncertainty"]
+            elif isinstance(size_data, (int, float)):
+                size_fp = float(size_data)
+                if size_source is None:
+                    size_source = "nlp"
 
         # Step 5: Delegate to service
         result = await estimate_service.run_estimation(
@@ -146,6 +178,9 @@ async def analyze_estimate(
             integration_count=integration_count,
             volatility_score=volatility_score,
             team_experience=team_experience,
+            size_fp=size_fp,
+            size_source=size_source or "user",
+            size_uncertainty=size_uncertainty,
         )
 
         # Background: log analytics (runs after response is sent)
@@ -187,10 +222,13 @@ async def manual_estimate(
             methodology=request.methodology,
             hourly_rate=request.hourly_rate_usd,
             tech_stack=request.tech_stack,
-            feature_count=10,
+            feature_count=request.feature_count,
             integration_count=request.integration_count,
             volatility_score=request.volatility_score,
             team_experience=request.team_experience,
+            size_fp=request.size_fp,
+            size_source=request.size_source or "user",
+            size_uncertainty=request.size_uncertainty,
         )
 
         # Background: log analytics

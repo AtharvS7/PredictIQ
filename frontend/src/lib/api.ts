@@ -103,6 +103,9 @@ export const getDocument = (id: string) => api.get(`/documents/${id}`);
 export const analyzeEstimate = (data: {
   document_id: string;
   overrides?: Record<string, unknown>;
+  size_fp?: number;
+  size_source?: 'user' | 'nlp';
+  size_uncertainty?: { p10: number; p50: number; p90: number };
 }) => api.post('/estimates/analyze', data);
 
 export const createManualEstimate = (data: {
@@ -114,9 +117,13 @@ export const createManualEstimate = (data: {
   methodology: string;
   hourly_rate_usd: number;
   tech_stack: string[];
+  feature_count?: number;
   integration_count?: number;
   volatility_score?: number;
   team_experience?: number;
+  size_fp?: number;
+  size_source?: 'user' | 'nlp';
+  size_uncertainty?: { p10: number; p50: number; p90: number };
 }) => api.post('/estimates/manual', data);
 
 export const listEstimates = (params?: {

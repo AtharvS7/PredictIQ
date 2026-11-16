@@ -155,6 +155,7 @@ def generate_pdf_report(
         ["Generated:", datetime.now().strftime("%B %d, %Y at %I:%M %p")],
         ["Currency:", f"{cc} ({symbol.strip()})"],
         ["Project Type:", inputs.get("project_type", "N/A")],
+        ["Project Size:", f"{inputs.get('size_fp', 'N/A')} FP"],
         ["Complexity:", inputs.get("complexity", "N/A")],
         ["Methodology:", inputs.get("methodology", "N/A")],
         ["Team Size:", str(inputs.get("team_size", "N/A"))],

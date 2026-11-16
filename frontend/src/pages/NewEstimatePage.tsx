@@ -25,21 +25,15 @@ import {
   ArrowLeft,
   Loader2,
   X,
-  Sparkles,
-  Layers,
-  Target,
   Zap,
   ArrowRight,
-  Shield,
-  HelpCircle,
 } from 'lucide-react';
 import type { EstimateResult } from '@/types';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/shared/Card';
-import { Badge } from '@/components/shared/Badge';
-import { Heading, Text } from '@/components/shared/Typography';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/shared/Card';
 import { FunctionalSizeCard } from '@/components/estimate/FunctionalSizeCard';
 import { PlanningCapacityCard } from '@/components/estimate/PlanningCapacityCard';
 import { EstimationResultView } from '@/components/estimate/EstimationResultView';
+import { estimateFunctionPoints } from '@/components/estimate/estimateUtils';
 
 const PROJECT_TYPES = [
   'Web App',
@@ -115,6 +109,8 @@ export default function NewEstimatePage() {
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [featureCount, setFeatureCount] = useState<number>(12);
+  const [sizeSource, setSizeSource] = useState<'user' | 'nlp'>('user');
+  const [sizeUncertainty, setSizeUncertainty] = useState<{ p10: number; p50: number; p90: number } | undefined>(undefined);
 
   /* Step 2 — Parameters */
   const [params, setParams] = useState({
@@ -129,7 +125,7 @@ export default function NewEstimatePage() {
     integration_count: 2,
     volatility_score: 3,
     team_experience: 2,
-    size_fp: undefined as number | undefined,
+    size_fp: estimateFunctionPoints(12, 2) as number | undefined,
   });
 
   /* Step 3 — Processing & Result View */
@@ -203,8 +199,26 @@ export default function NewEstimatePage() {
         const expValue = nlp.team_experience;
         const extractedFeatures = nlp.feature_count ?? 15;
         const extractedIntegrations = nlp.integration_count ?? 2;
+        let nlpFpValue: number | undefined;
+        let nlpSource: 'user' | 'nlp' = 'nlp';
+        let nlpUncertainty: { p10: number; p50: number; p90: number } | undefined;
+
+        if (nlp.size_fp) {
+          if (typeof nlp.size_fp === 'number') {
+            nlpFpValue = nlp.size_fp;
+          } else if (typeof nlp.size_fp === 'object') {
+            nlpFpValue = nlp.size_fp.value;
+            if (nlp.size_fp.source) nlpSource = nlp.size_fp.source;
+            if (nlp.size_fp.uncertainty) nlpUncertainty = nlp.size_fp.uncertainty;
+          }
+        }
+        if (!nlpFpValue) {
+          nlpFpValue = estimateFunctionPoints(extractedFeatures, extractedIntegrations);
+        }
 
         setFeatureCount(extractedFeatures);
+        setSizeSource(nlpSource);
+        setSizeUncertainty(nlpUncertainty);
         setParams({
           project_name: nlp.project_name || file.name.replace(/\.[^/.]+$/, ''),
           project_type: nlp.project_type || 'Web App',
@@ -217,7 +231,7 @@ export default function NewEstimatePage() {
           integration_count: extractedIntegrations,
           volatility_score: nlp.volatility_score || 3,
           team_experience: typeof expValue === 'number' ? expValue : 2,
-          size_fp: nlp.size_fp ?? undefined,
+          size_fp: nlpFpValue,
         });
 
         addToast('success', 'Document analyzed!');
@@ -247,17 +261,33 @@ export default function NewEstimatePage() {
         ? params.tech_stack.split(',').map((t) => t.trim()).filter(Boolean)
         : [];
 
+      const finalFp = params.size_fp ?? estimateFunctionPoints(featureCount, params.integration_count);
+
       let response;
 
       if (documentId && !useManual) {
         response = await analyzeEstimate({
           document_id: documentId,
-          overrides: { ...params, tech_stack: techArray, feature_count: featureCount },
+          size_fp: finalFp,
+          size_source: sizeSource,
+          size_uncertainty: sizeUncertainty,
+          overrides: {
+            ...params,
+            size_fp: finalFp,
+            size_source: sizeSource,
+            size_uncertainty: sizeUncertainty,
+            tech_stack: techArray,
+            feature_count: featureCount,
+          },
         });
       } else {
         response = await createManualEstimate({
           ...params,
           tech_stack: techArray,
+          feature_count: featureCount,
+          size_fp: finalFp,
+          size_source: sizeSource,
+          size_uncertainty: sizeUncertainty,
         });
       }
 
@@ -386,7 +416,7 @@ export default function NewEstimatePage() {
           style={{
             flex: 1,
             padding: '2rem 1.5rem',
-            maxWidth: 900,
+            maxWidth: 1100,
             margin: '0 auto',
             width: '100%',
           }}
@@ -466,8 +496,17 @@ export default function NewEstimatePage() {
                 featureCount={featureCount}
                 integrationCount={params.integration_count}
                 customFp={params.size_fp}
-                onFeatureChange={(c) => setFeatureCount(c)}
-                onIntegrationChange={(ic) => setParams({ ...params, integration_count: ic })}
+                onFeatureChange={(c) => {
+                  setFeatureCount(c);
+                  const fp = estimateFunctionPoints(c, params.integration_count);
+                  setParams((p) => ({ ...p, size_fp: fp }));
+                  setSizeSource('user');
+                }}
+                onIntegrationChange={(ic) => {
+                  const fp = estimateFunctionPoints(featureCount, ic);
+                  setParams((p) => ({ ...p, integration_count: ic, size_fp: fp }));
+                  setSizeSource('user');
+                }}
                 source={useManual ? 'manual' : file ? 'upload' : 'manual'}
               />
 
@@ -842,12 +881,16 @@ export default function NewEstimatePage() {
                       max={15}
                       id="estimate-integration_count"
                       value={params.integration_count}
-                      onChange={(e) =>
-                        setParams({
-                          ...params,
-                          integration_count: Number(e.target.value),
-                        })
-                      }
+                      onChange={(e) => {
+                        const ic = Number(e.target.value);
+                        const fp = estimateFunctionPoints(featureCount, ic);
+                        setParams((p) => ({
+                          ...p,
+                          integration_count: ic,
+                          size_fp: fp,
+                        }));
+                        setSizeSource('user');
+                      }}
                     />
                     <p style={hintStyle}>Third-party APIs, payment gateways, CRM integrations</p>
                   </div>

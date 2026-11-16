@@ -34,7 +34,7 @@ from app.services.cost_calculator import (
     calculate_cost,
     calculate_phase_breakdown,
     calculate_timeline,
-    estimate_function_points,
+    compute_functional_size,
 )
 from app.services.ml_service import ml_service
 from app.services.risk_analyzer import analyze_risk
@@ -63,12 +63,15 @@ class EstimateService:
         integration_count: int = 2,
         volatility_score: int = 3,
         team_experience: float = 2.0,
+        size_fp: float | None = None,
+        size_source: str = "user",
+        size_uncertainty: dict[str, float] | None = None,
         db_pool: Any = None,
     ) -> EstimateResult:
         """Core estimation pipeline — shared by both document and manual flows.
 
         Steps:
-          1. IFPUG Function Points → size_fp
+          1. Functional Size → size_fp (user-provided or compute_functional_size)
           2. ML prediction → effort_hours
           3. Cost conversion → cost_usd
           4. Timeline calculation
@@ -76,13 +79,11 @@ class EstimateService:
           6. Benchmark comparison
           7. Save to database
         """
-        # Step 1: IFPUG Function Points
-        size_fp = estimate_function_points(
-            feature_count=feature_count,
-            complexity=complexity,
-            tech_stack_count=len(tech_stack),
-            external_interface_files=min(integration_count, 15),
-        )
+        # Step 1: Functional Size (single source of truth)
+        if size_fp is not None and float(size_fp) > 0:
+            final_size_fp = float(size_fp)
+        else:
+            final_size_fp = compute_functional_size(feature_count, integration_count)
 
         # Query consented organization actuals for Empirical-Bayes calibration (R05)
         org_actuals: list[dict[str, float]] = []
@@ -119,7 +120,9 @@ class EstimateService:
             "duration_months": duration_months,
             "complexity": complexity,
             "tech_stack": tech_stack,
-            "size_fp": size_fp,
+            "size_fp": final_size_fp,
+            "size_source": size_source,
+            "size_uncertainty": size_uncertainty,
             "feature_count": feature_count,
             "integration_count": integration_count,
             "methodology": methodology,
@@ -166,7 +169,7 @@ class EstimateService:
 
         # Step 6: Benchmark comparison
         benchmark = get_benchmark_comparison(
-            size_fp=size_fp,
+            size_fp=final_size_fp,
             effort_hours_likely=effort_likely,
             cost_likely_usd=costs["cost_likely_usd"],
             duration_months=duration_months,
@@ -191,7 +194,7 @@ class EstimateService:
             integration_count=integration_count,
             volatility_score=volatility_score,
             team_experience=team_experience,
-            size_fp=size_fp,
+            size_fp=final_size_fp,
         )
 
         outputs = EstimateOutputs(
@@ -261,6 +264,7 @@ class EstimateService:
             status="complete",
             inputs=inputs,
             outputs=outputs,
+            size=ml_result.get("size"),
             model_version=model_version,
         )
 
@@ -346,6 +350,10 @@ class EstimateService:
         if isinstance(outputs_json, str):
             outputs_json = json.loads(outputs_json)
 
+        size_dict = outputs_json.get("size")
+        if not size_dict and inputs_json.get("size_fp") is not None:
+            size_dict = {"value": float(inputs_json["size_fp"]), "source": "user"}
+
         return EstimateResult(
             estimate_id=str(row["id"]),
             document_id=str(row["document_id"]) if row.get("document_id") else None,
@@ -356,6 +364,7 @@ class EstimateService:
             status=row["status"],
             inputs=EstimateInputs(**inputs_json),
             outputs=EstimateOutputs(**outputs_json),
+            size=size_dict,
             model_version=row.get("model_version", "1.0.0"),
         )
 

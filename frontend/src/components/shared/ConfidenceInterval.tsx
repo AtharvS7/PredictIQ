@@ -87,11 +87,6 @@ export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
   const p75Pct = hasInner ? Math.max(0, Math.min(100, ((p75 - trackMin) / rangeSpan) * 100)) : null;
   const innerBandWidth = (hasInner && p25Pct !== null && p75Pct !== null) ? Math.max(2, p75Pct - p25Pct) : 0;
 
-  // Compute spread metric
-  const spreadRatio = p10 > 0 ? (p90 / p10).toFixed(1) : null;
-  const deltaUpperPct = p50 > 0 ? Math.round(((p90 - p50) / p50) * 100) : 0;
-  const deltaLowerPct = p50 > 0 ? Math.round(((p50 - p10) / p50) * 100) : 0;
-
   return (
     <div
       className={`confidence-range-container w-full ${className}`.trim()}
@@ -153,75 +148,67 @@ export const ConfidenceRangeBar: React.FC<ConfidenceRangeBarProps> = ({
         />
       </div>
 
-      {/* Quantile Numerical Labels */}
+      {/* Quantile Numerical Labels - Stacked cleanly with generous vertical spacing */}
       {showLabels && (
-        <div className="flex justify-between items-start mt-1 gap-2 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-3 border-t border-[var(--border-subtle)]">
           {/* p10 */}
-          <div className="flex flex-col items-start" style={{ width: '32%' }}>
-            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              p10 (Best Case)
+          <div className="flex flex-col items-start p-2.5 rounded-lg bg-[var(--bg-elevated)]">
+            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              Optimistic (P10)
             </span>
-            <span className="font-mono text-sm font-bold text-[var(--text-primary)] tabular-nums mt-0.5">
+            <span className="font-mono text-base font-bold text-[var(--text-primary)] tabular-nums mt-1">
               {format(p10)}
-            </span>
-            <span className="text-[10px] text-[var(--text-tertiary)]">
-              -{deltaLowerPct}% from median
             </span>
           </div>
 
           {/* p50 & Inner Likely Band */}
-          <div className="flex flex-col items-center text-center" style={{ width: '36%' }}>
-            <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-              p50 (Median)
+          <div className="flex flex-col items-center text-center p-2.5 rounded-lg bg-[var(--bg-elevated)] border border-blue-500/30">
+            <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              Median (P50)
             </span>
-            <span className="font-mono text-base font-extrabold text-[var(--color-primary)] dark:text-blue-400 tabular-nums mt-0.5">
+            <span className="font-mono text-base font-extrabold text-[var(--color-primary)] dark:text-blue-400 tabular-nums mt-1">
               {format(p50)}
             </span>
-            {hasInner ? (
-              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
-                Likely: {format(p25)} – {format(p75)}
-              </span>
-            ) : (
-              <span className="text-[10px] text-[var(--text-tertiary)]">
-                expected center
-              </span>
-            )}
           </div>
 
           {/* p90 */}
-          <div className="flex flex-col items-end text-right" style={{ width: '32%' }}>
-            <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1 justify-end">
-              p90 (Budget Cap)
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          <div className="flex flex-col items-end text-right p-2.5 rounded-lg bg-[var(--bg-elevated)]">
+            <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5 justify-end">
+              Conservative (P90)
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
             </span>
-            <span className="font-mono text-sm font-bold text-[var(--text-primary)] tabular-nums mt-0.5">
+            <span className="font-mono text-base font-bold text-[var(--text-primary)] tabular-nums mt-1">
               {format(p90)}
-            </span>
-            <span className="text-[10px] text-[var(--text-tertiary)]">
-              +{deltaUpperPct}% from median
             </span>
           </div>
         </div>
       )}
 
-      {/* Uncertainty Spread Summary Banner */}
-      {showDetails && !compact && spreadRatio && (
-        <div className="mt-3 pt-2.5 border-t border-[var(--border-subtle)] space-y-1.5 text-xs text-[var(--text-secondary)]">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="font-medium">Uncertainty Spread:</span>
-              <span className="font-mono font-semibold text-[var(--text-primary)]">
-                {spreadRatio}x (p90/p10)
+      {/* Clean Range Summary & Planning Guidance */}
+      {showDetails && !compact && (
+        <div className="mt-4 pt-3 border-t border-[var(--border-subtle)] space-y-2 text-xs text-[var(--text-secondary)]">
+          <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+            {hasInner && (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="font-semibold text-[var(--text-primary)]">Likely range:</span>
+                <span className="font-mono font-medium text-blue-600 dark:text-blue-400">
+                  {format(p25!)} – {format(p75!)}
+                </span>
+                <span className="text-[var(--text-tertiary)]">(middle half of outcomes)</span>
               </span>
-            </span>
-            <span className="text-[11px] text-[var(--text-tertiary)]">
-              50% Likely Band (Inner) [51.2% measured coverage] &bull; 80% Plausible Range (Outer) [79.0% holdout pooled coverage]
+            )}
+            <span className="inline-flex items-center gap-1.5">
+              <span className="font-semibold text-[var(--text-primary)]">Plausible range:</span>
+              <span className="font-mono font-medium text-[var(--text-primary)]">
+                {format(p10)} – {format(p90)}
+              </span>
+              <span className="text-[var(--text-tertiary)]">(almost all outcomes)</span>
             </span>
           </div>
-          <p className="text-[11px] text-[var(--text-tertiary)] leading-relaxed">
-            <strong className="text-[var(--text-secondary)]">Uncertainty Guide:</strong> Typical error is roughly ±50% on novel projects. Use the 50% Likely Band (P25–P75) for expected sprint planning and target commitments, and the 80% Plausible Range (P10–P90) as your conservative risk ceiling / budget cap.
+          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+            Use the likely range for planning and the plausible range for budget reserves.
           </p>
         </div>
       )}

@@ -23,15 +23,22 @@ class EstimateOverrides(BaseModel):
     hourly_rate_usd: Optional[float] = Field(None, ge=10, le=500)
     tech_stack: Optional[TechStack] = None
     project_name: Optional[ProjectName] = None
+    feature_count: Optional[int] = Field(None, ge=1, le=1000)
     integration_count: Optional[int] = Field(None, ge=0, le=15)
     volatility_score: Optional[int] = Field(None, ge=1, le=5)
     team_experience: Optional[float] = Field(None, ge=1, le=4)
+    size_fp: Optional[float] = Field(None, ge=1.0, le=50000.0)
+    size_source: Optional[Literal["user", "nlp"]] = "user"
+    size_uncertainty: Optional[dict[str, float]] = None
 
 
 class EstimateRequest(BaseModel):
     """Request body for POST /api/v1/estimates/analyze."""
     document_id: UUID
     overrides: Optional[EstimateOverrides] = None
+    size_fp: Optional[float] = Field(None, ge=1.0, le=50000.0)
+    size_source: Optional[Literal["user", "nlp"]] = "user"
+    size_uncertainty: Optional[dict[str, float]] = None
 
 
 class ManualEstimateRequest(BaseModel):
@@ -44,9 +51,13 @@ class ManualEstimateRequest(BaseModel):
     methodology: Literal["Agile", "Waterfall", "Hybrid"] = "Agile"
     hourly_rate_usd: float = Field(75.0, ge=10, le=500)
     tech_stack: TechStack = Field(default_factory=list)
+    feature_count: int = Field(10, ge=1, le=1000)
     integration_count: int = Field(2, ge=0, le=15)
     volatility_score: int = Field(3, ge=1, le=5)
     team_experience: float = Field(2.0, ge=1, le=4)
+    size_fp: Optional[float] = Field(None, ge=1.0, le=50000.0)
+    size_source: Optional[Literal["user", "nlp"]] = "user"
+    size_uncertainty: Optional[dict[str, float]] = None
 
 
 class PhaseBreakdown(BaseModel):
@@ -123,6 +134,7 @@ class EstimateResult(BaseModel):
     status: str = "complete"
     inputs: EstimateInputs
     outputs: EstimateOutputs
+    size: Optional[dict[str, Any]] = None
     model_version: str = "2.0.0"
 
 
